@@ -19,7 +19,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 CONFIG_STATUS_DEPENDENCIES = $(top_srcdir)/mc-version.h
 
-.PHONY: update-version man-in
+.PHONY: update-version man-in indent
 
 update-version:
 	@if test -x $(top_srcdir)/version.sh; then \
@@ -33,23 +33,15 @@ update-version:
 
 $(top_srcdir)/mc-version.h: update-version
 
-INDENT_CMD = clang-format -i
-
-INDENT_DIRS = \
-    "$(top_srcdir)/lib" \
-    "$(top_srcdir)/src" \
-    "$(top_srcdir)/tests"
-
 # The roff of the man pages, made from their markdown before a commit.
 # Needs go-md2man; the build itself does not.
 man-in:
 	$(top_srcdir)/maint/update-man-in.sh $(top_srcdir)
 
+# Only the clang-format version named in the script formats this tree; see
+# there.  CLANG_FORMAT=<path> names the binary to use.
 indent:
-	for directory in $(INDENT_DIRS); do \
-	    find "$${directory}" -name '*.[ch]' -print0 | \
-	        xargs -0 $(INDENT_CMD); \
-	done
+	$(top_srcdir)/maint/indent.sh $(top_srcdir)
 
 .PHONY: buildcheck check-glib-api
 
