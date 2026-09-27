@@ -5,16 +5,16 @@ date: wrzesień 2026
 <!-- help:topics "Spis treści:" -->
 # NAZWA <!-- help:skip -->
 
-mdiff - Wbudowany podgląd różnic.
+mcdiff6 - Wbudowany podgląd różnic.
 
 # UŻYTKOWANIE <!-- help:skip -->
 
-**mdiff**
+**mcdiff6**
 [-bcCdfhstVx?] plik1 plik2
 
 # OPIS
 
-mdiff to dowiązanie do
+mcdiff6 to dowiązanie do
 **mcommander**,
 głównego programu menedżera plików. Uruchomiony pod tą nazwą otwiera
 wbudowany podgląd różnic, który porównuje
@@ -25,7 +25,7 @@ podanymi w wierszu poleceń.
 
 # Wbudowany podgląd różnic <a id="diff-viewer"></a>
 
-mdiff to narzędzie do poglądowego porównywania. Dwa pliki można porównać i od
+mcdiff6 to narzędzie do poglądowego porównywania. Dwa pliki można porównać i od
 razu edytować, a różnica jest liczona na nowo po każdej zmianie. Otwiera go
 też wtyczka panelu git, z plikiem takim, jaki widzi go HEAD, po jednej
 stronie i plikiem z katalogu roboczego po drugiej.

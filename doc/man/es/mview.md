@@ -361,4 +361,4 @@ forma predeterminada.
 
 # VÉASE TAMBIÉN <a id="see-also"></a>
 
-mcommander(1), mcedit6(1), mdiff(1).
+mcommander(1), mcedit6(1), mcdiff6(1).

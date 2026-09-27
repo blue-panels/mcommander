@@ -1,20 +1,20 @@
-.\" Generated from mdiff.md by maint/update-man-in.sh. Do not edit.
-.TH MDIFF 1 "settembre 2026" "MCommander {{MAN_VERSION}}" "M\-Commander"
+.\" Generated from mcdiff6.md by maint/update-man-in.sh. Do not edit.
+.TH MCDIFF6 1 "settembre 2026" "MCommander {{MAN_VERSION}}" "M\-Commander"
 
 .SH NOME
 .PP
-mdiff \- Visualizzatore di differenze interno.
+mcdiff6 \- Visualizzatore di differenze interno.
 
 
 .SH USO
 .PP
-\fBmdiff\fP
+\fBmcdiff6\fP
 [\-bcCdfhstVx?] file1 file2
 
 
 .SH DESCRIZIONE
 .PP
-mdiff è un collegamento a
+mcdiff6 è un collegamento a
 \fBmcommander\fP,
 il programma principale del gestore di file. Eseguito con questo nome, apre
 il visualizzatore di differenze interno, che confronta
@@ -26,7 +26,7 @@ indicati sulla riga di comando.
 
 .SH Visualizzatore di differenze interno
 .PP
-mdiff è uno strumento visuale di confronto. Permette di confrontare due file
+mcdiff6 è uno strumento visuale di confronto. Permette di confrontare due file
 e di modificarli sul posto, e la differenza viene ricalcolata dopo ogni
 modifica. Lo apre anche il componente di pannello git, con il file come lo
 tiene HEAD da una parte e il file della copia di lavoro dall'altra.

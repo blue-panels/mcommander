@@ -81,7 +81,7 @@ helpers_dir1=
 helpers_dir2=
 
 opt_create_output=no        # "yes" if '--create-output' provided.
-opt_run_mcdiff_on_error=no  # "yes" if '--mdiff' provided.
+opt_run_mcdiff_on_error=no  # "yes" if '--mcdiff6' provided.
 
 ############################ Coding guidance ###############################
 
@@ -363,12 +363,12 @@ run() {
       err
       if is_interactive; then
         if [ $opt_run_mcdiff_on_error = "yes" ]; then
-          notice "Hit ENTER to launch mdiff ..."
+          notice "Hit ENTER to launch mcdiff6 ..."
           read -r _dummy_argument  # dash needs an argument
-          ${MCDIFF:-mdiff} "$expected_parsed_output" "$actual_parsed_output"
+          ${MCDIFF:-mcdiff6} "$expected_parsed_output" "$actual_parsed_output"
         else
-          notice "Tip: invoke this program with '--mdiff' to automatically launch"
-          notice "mdiff to visually inspect the diff."
+          notice "Tip: invoke this program with '--mcdiff6' to automatically launch"
+          notice "mcdiff6 to visually inspect the diff."
           notice
           notice "(Running this program non-interactively (i.e., redirecting the"
           notice "output to a file or pipe) automatically adds diff to the output.)"
@@ -420,7 +420,7 @@ parse_command_line_arguments() {
         opt_create_output=yes
         shift
         ;;
-      --mdiff)
+      --mcdiff6)
         opt_run_mcdiff_on_error=yes
         shift
         ;;

@@ -2,7 +2,7 @@ usr/bin/mcommander
 usr/bin/mc6
 usr/bin/mcedit6
 usr/bin/mview
-usr/bin/mdiff
+usr/bin/mcdiff6
 usr/bin/mctree
 usr/lib/mcommander/ext.d/
 usr/lib/mcommander/extfs.d/
@@ -28,7 +28,7 @@ usr/share/man/man1/mcommander.1
 usr/share/man/man1/mc6.1
 usr/share/man/man1/mcedit6.1
 usr/share/man/man1/mview.1
-usr/share/man/man1/mdiff.1
+usr/share/man/man1/mcdiff6.1
 usr/share/man/man1/mctree.1
 usr/share/man/*/man1/
 usr/share/locale/

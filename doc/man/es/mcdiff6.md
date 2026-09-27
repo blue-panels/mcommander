@@ -5,16 +5,16 @@ date: septiembre de 2026
 <!-- help:topics "Índice de Contenidos:" -->
 # NOMBRE <!-- help:skip -->
 
-mdiff - Comparador de Archivos Interno.
+mcdiff6 - Comparador de Archivos Interno.
 
 # SINOPSIS <!-- help:skip -->
 
-**mdiff**
+**mcdiff6**
 [-bcCdfhstVx?] arch
 
 # Comparador de Archivos Interno <a id="diff-viewer"></a>
 
-mdiff es una herramienta visual de comparación. Permite comparar dos
+mcdiff6 es una herramienta visual de comparación. Permite comparar dos
 archivos y editarlos en el sitio, y la diferencia se calcula de nuevo tras
 cada cambio. El complemento de panel git también lo abre, con el archivo tal
 como lo tiene HEAD a un lado y el archivo del árbol de trabajo al otro.

@@ -118,7 +118,7 @@ Frequently Asked Questions
 
    The command is called mcommander, with mc6 as a short alias for it.
    The editor, the viewer and the diff viewer are mcedit6, mview and
-   mdiff, and the tree and structure views keep the names mctree and
+   mcdiff6, and the tree and structure views keep the names mctree and
    mcstruct.  The package is called mcommander, the repository and the
    configuration directories mc6.
 

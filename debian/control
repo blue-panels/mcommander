@@ -46,7 +46,7 @@ Description: twin-panel text-mode file manager with loadable panel plugins
  editor with syntax highlighting and a viewer that supports both text and
  binary formats.
  .
- It installs /usr/bin/mcommander and the mc6, mcedit6, mview, mdiff and mctree
+ It installs /usr/bin/mcommander and the mc6, mcedit6, mview, mcdiff6 and mctree
  symbolic links, so it can be installed beside the mc package.
  .
  The mcommander-plugins package adds panels for archives and for files on

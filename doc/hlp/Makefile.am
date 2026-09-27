@@ -6,7 +6,7 @@ endif
 hlpdir = $(pkgdatadir)/help
 # The help is split by program: a node the manual of the file manager does not
 # have is looked for in these files.
-hlp_DATA = mcommander.md mview.md mcedit6.md mdiff.md
+hlp_DATA = mcommander.md mview.md mcedit6.md mcdiff6.md
 # the license is a source file: it is installed as it stands, and make clean
 # has no business with it
 dist_hlp_DATA = gnu-gpl-v3.0.md
@@ -25,5 +25,5 @@ mview.md: $(top_srcdir)/doc/man/mview.md
 mcedit6.md: $(top_srcdir)/doc/man/mcedit6.md
 	cat $(top_srcdir)/doc/man/mcedit6.md > $@
 
-mdiff.md: $(top_srcdir)/doc/man/mdiff.md
-	cat $(top_srcdir)/doc/man/mdiff.md > $@
+mcdiff6.md: $(top_srcdir)/doc/man/mcdiff6.md
+	cat $(top_srcdir)/doc/man/mcdiff6.md > $@

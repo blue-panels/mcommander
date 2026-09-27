@@ -5,16 +5,16 @@ date: 2026. szeptember
 <!-- help:topics "Tartalomjegyzék" -->
 # NÉV <!-- help:skip -->
 
-mdiff - Belső összehasonlító.
+mcdiff6 - Belső összehasonlító.
 
 # ALKALMAZÁSA <!-- help:skip -->
 
-**mdiff**
+**mcdiff6**
 [-bcCdfhstVx?] fájl1 fájl2
 
 # LEÍRÁS
 
-Az mdiff az
+Az mcdiff6 az
 **mcommander**
 program, a fájlkezelő fő programja felé mutató link. A program ezen a néven
 indítva a belső összehasonlítót nyitja meg, amely a parancssorban megadott
@@ -25,7 +25,7 @@ tartalmát veti össze.
 
 # Belső összehasonlító <a id="diff-viewer"></a>
 
-Az mdiff szemléletes összehasonlító eszköz. Két fájlt lehet vele összevetni
+Az mcdiff6 szemléletes összehasonlító eszköz. Két fájlt lehet vele összevetni
 és helyben szerkeszteni, a különbség pedig minden változtatás után újra
 kiszámolódik. A git panelbővítmény is ezt nyitja meg, az egyik oldalon a
 fájllal úgy, ahogy a HEAD tartalmazza, a másikon a munkapéldánnyal.

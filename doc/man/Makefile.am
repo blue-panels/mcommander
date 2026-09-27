@@ -10,7 +10,7 @@ man_MANS += mcedit6.1
 endif
 
 if USE_DIFF
-man_MANS += mdiff.1
+man_MANS += mcdiff6.1
 endif
 
 CLEANFILES = $(man_MANS)
@@ -30,8 +30,8 @@ EXTRA_DIST = \
 	roff/mctree.1.in \
 	mcstruct.md \
 	roff/mcstruct.1.in \
-	mdiff.md \
-	roff/mdiff.1.in
+	mcdiff6.md \
+	roff/mcdiff6.1.in
 
 include man-include.am
 
@@ -56,6 +56,6 @@ mcedit6.1: $(srcdir)/roff/mcedit6.1.in
 endif
 
 if USE_DIFF
-mdiff.1: $(srcdir)/roff/mdiff.1.in
-	$(SED) $(SED_PARAMETERS) '$(srcdir)/roff/mdiff.1.in' > '$@'
+mcdiff6.1: $(srcdir)/roff/mcdiff6.1.in
+	$(SED) $(SED_PARAMETERS) '$(srcdir)/roff/mcdiff6.1.in' > '$@'
 endif

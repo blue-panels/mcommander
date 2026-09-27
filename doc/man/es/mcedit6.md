@@ -211,4 +211,4 @@ del gestor de archivos.
 
 # VÉASE TAMBIÉN <a id="see-also"></a>
 
-mcommander(1), mview(1), mdiff(1).
+mcommander(1), mview(1), mcdiff6(1).

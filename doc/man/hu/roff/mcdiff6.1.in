@@ -1,20 +1,20 @@
-.\" Generated from mdiff.md by maint/update-man-in.sh. Do not edit.
-.TH MDIFF 1 "2026. szeptember" "MCommander {{MAN_VERSION}}" "M\-Commander"
+.\" Generated from mcdiff6.md by maint/update-man-in.sh. Do not edit.
+.TH MCDIFF6 1 "2026. szeptember" "MCommander {{MAN_VERSION}}" "M\-Commander"
 
 .SH NÉV
 .PP
-mdiff \- Belső összehasonlító.
+mcdiff6 \- Belső összehasonlító.
 
 
 .SH ALKALMAZÁSA
 .PP
-\fBmdiff\fP
+\fBmcdiff6\fP
 [\-bcCdfhstVx?] fájl1 fájl2
 
 
 .SH LEÍRÁS
 .PP
-Az mdiff az
+Az mcdiff6 az
 \fBmcommander\fP
 program, a fájlkezelő fő programja felé mutató link. A program ezen a néven
 indítva a belső összehasonlítót nyitja meg, amely a parancssorban megadott
@@ -26,7 +26,7 @@ tartalmát veti össze.
 
 .SH Belső összehasonlító
 .PP
-Az mdiff szemléletes összehasonlító eszköz. Két fájlt lehet vele összevetni
+Az mcdiff6 szemléletes összehasonlító eszköz. Két fájlt lehet vele összevetni
 és helyben szerkeszteni, a különbség pedig minden változtatás után újra
 kiszámolódik. A git panelbővítmény is ezt nyitja meg, az egyik oldalon a
 fájllal úgy, ahogy a HEAD tartalmazza, a másikon a munkapéldánnyal.

@@ -5,16 +5,16 @@ date: September 2026
 <!-- help:topics "Topics:" -->
 # NAME <!-- help:skip -->
 
-mdiff - Internal diff viewer of M-Commander.
+mcdiff6 - Internal diff viewer of M-Commander.
 
 # USAGE <!-- help:skip -->
 
-**mdiff**
+**mcdiff6**
 [-bcdfhstVx?] file1 file2
 
 # DESCRIPTION
 
-mdiff is a link to
+mcdiff6 is a link to
 **mcommander**,
 the main M-Commander executable.  Executing
 M-Commander under this name requests starting the internal diff viewer
@@ -31,7 +31,7 @@ specified on the command line.
 
 *-c*
 : Force color mode on terminals where
-**mdiff**
+**mcdiff6**
 defaults to black and white.
 
 *-d*
@@ -67,7 +67,7 @@ screen modes, and able to send mouse escape sequences).
 
 # Internal Diff Viewer <a id="diff-viewer"></a>
 
-The mdiff is a visual diff tool. You can compare two files and edit them
+The mcdiff6 is a visual diff tool. You can compare two files and edit them
 in place; the difference is computed anew after every change. The git panel
 plugin opens it as well, with the file as HEAD has it on one side and the
 file of the working tree on the other.

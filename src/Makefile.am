@@ -134,7 +134,7 @@ if USE_INTERNAL_EDIT
 	$(MAKE) install_mcedit6
 endif
 if USE_DIFF
-	$(MAKE) install_mdiff
+	$(MAKE) install_mcdiff6
 endif
 
 #
@@ -155,8 +155,8 @@ install_mcstruct:
 install_mcedit6:
 	cd $(DESTDIR)$(bindir)/$(binprefix) && rm -f mcedit6 && $(LN_S) mcommander mcedit6
 
-install_mdiff:
-	cd $(DESTDIR)$(bindir)/$(binprefix) && rm -f mdiff && $(LN_S) mcommander mdiff
+install_mcdiff6:
+	cd $(DESTDIR)$(bindir)/$(binprefix) && rm -f mcdiff6 && $(LN_S) mcommander mcdiff6
 
 uninstall-hook:
 	rm -f $(DESTDIR)$(bindir)/$(binprefix)/mc6
@@ -167,5 +167,5 @@ if USE_INTERNAL_EDIT
 	rm -f $(DESTDIR)$(bindir)/$(binprefix)/mcedit6
 endif
 if USE_DIFF
-	rm -f $(DESTDIR)$(bindir)/$(binprefix)/mdiff
+	rm -f $(DESTDIR)$(bindir)/$(binprefix)/mcdiff6
 endif
