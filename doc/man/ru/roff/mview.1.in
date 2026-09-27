@@ -557,7 +557,7 @@ F6           отфильтровать дерево по шаблону
 
 .SH Другие источники
 .PP
-mcommander(1), mcedit6(1), mdiff(1).
+mcommander(1), mcedit6(1), mcdiff6(1).
 
 
 .SH Недоработки

@@ -1,20 +1,20 @@
-.\" Generated from mdiff.md by maint/update-man-in.sh. Do not edit.
-.TH MDIFF 1 "September 2026" "MCommander {{MAN_VERSION}}" "M\-Commander"
+.\" Generated from mcdiff6.md by maint/update-man-in.sh. Do not edit.
+.TH MCDIFF6 1 "September 2026" "MCommander {{MAN_VERSION}}" "M\-Commander"
 
 .SH NAME
 .PP
-mdiff \- Internal diff viewer of M\-Commander.
+mcdiff6 \- Internal diff viewer of M\-Commander.
 
 
 .SH USAGE
 .PP
-\fBmdiff\fP
+\fBmcdiff6\fP
 [\-bcdfhstVx?] file1 file2
 
 
 .SH DESCRIPTION
 .PP
-mdiff is a link to
+mcdiff6 is a link to
 \fBmcommander\fP,
 the main M\-Commander executable.  Executing
 M\-Commander under this name requests starting the internal diff viewer
@@ -33,7 +33,7 @@ Force black and white display.
 .TP
 \fI\-c\fP
 Force color mode on terminals where
-\fBmdiff\fP
+\fBmcdiff6\fP
 defaults to black and white.
 
 .TP
@@ -78,7 +78,7 @@ screen modes, and able to send mouse escape sequences).
 
 .SH Internal Diff Viewer
 .PP
-The mdiff is a visual diff tool. You can compare two files and edit them
+The mcdiff6 is a visual diff tool. You can compare two files and edit them
 in place; the difference is computed anew after every change. The git panel
 plugin opens it as well, with the file as HEAD has it on one side and the
 file of the working tree on the other.

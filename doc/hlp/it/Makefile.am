@@ -1,5 +1,5 @@
 HLP_LANG=it
-HLP_DOMAIN_MD = mview.it.md mcedit6.it.md mdiff.it.md
+HLP_DOMAIN_MD = mview.it.md mcedit6.it.md mcdiff6.it.md
 
 include ../hlp-lang-include.am
 
@@ -9,5 +9,5 @@ mview.it.md: $(top_srcdir)/doc/man/it/mview.md
 mcedit6.it.md: $(top_srcdir)/doc/man/it/mcedit6.md
 	cat $(top_srcdir)/doc/man/it/mcedit6.md > $@
 
-mdiff.it.md: $(top_srcdir)/doc/man/it/mdiff.md
-	cat $(top_srcdir)/doc/man/it/mdiff.md > $@
+mcdiff6.it.md: $(top_srcdir)/doc/man/it/mcdiff6.md
+	cat $(top_srcdir)/doc/man/it/mcdiff6.md > $@

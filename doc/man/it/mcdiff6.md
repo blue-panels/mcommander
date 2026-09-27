@@ -5,16 +5,16 @@ date: settembre 2026
 <!-- help:topics "Indice:" -->
 # NOME <!-- help:skip -->
 
-mdiff - Visualizzatore di differenze interno.
+mcdiff6 - Visualizzatore di differenze interno.
 
 # USO <!-- help:skip -->
 
-**mdiff**
+**mcdiff6**
 [-bcCdfhstVx?] file1 file2
 
 # DESCRIZIONE
 
-mdiff è un collegamento a
+mcdiff6 è un collegamento a
 **mcommander**,
 il programma principale del gestore di file. Eseguito con questo nome, apre
 il visualizzatore di differenze interno, che confronta
@@ -25,7 +25,7 @@ indicati sulla riga di comando.
 
 # Visualizzatore di differenze interno <a id="diff-viewer"></a>
 
-mdiff è uno strumento visuale di confronto. Permette di confrontare due file
+mcdiff6 è uno strumento visuale di confronto. Permette di confrontare due file
 e di modificarli sul posto, e la differenza viene ricalcolata dopo ogni
 modifica. Lo apre anche il componente di pannello git, con il file come lo
 tiene HEAD da una parte e il file della copia di lavoro dall'altra.

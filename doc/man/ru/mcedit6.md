@@ -757,7 +757,7 @@ keyword  #include  red/Orange
 
 # Другие источники
 
-mcommander(1), mview(1), mdiff(1).
+mcommander(1), mview(1), mcdiff6(1).
 
 # Недоработки
 

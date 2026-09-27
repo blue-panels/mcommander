@@ -14,7 +14,7 @@ printf '%s' "$out" | grep -q "M-Commander"
 printf '%s' "$out" | grep -qE "v?[0-9]+\.[0-9]+\.[0-9]+"
 
 # Every name the package installs points at the same program.
-for name in mc6 mcedit6 mview mdiff mctree; do
+for name in mc6 mcedit6 mview mcdiff6 mctree; do
     command -v "$name" >/dev/null
     test "$(readlink -f "$(command -v "$name")")" = "$(command -v mcommander)"
 done

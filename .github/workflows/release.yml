@@ -674,7 +674,7 @@ jobs:
             "M-Commander $VERSION - $NAME" \
             '' \
             'Double-click the .pkg and follow the installer.' \
-            'It installs mcommander, mc6, mcedit6, mview and mdiff under /opt/mcommander.' \
+            'It installs mcommander, mc6, mcedit6, mview and mcdiff6 under /opt/mcommander.' \
             'Run /opt/mcommander/bin/mcommander, or add /opt/mcommander/bin to your PATH.' \
             'The package includes its runtime libraries; Homebrew is not required.' \
             '' \

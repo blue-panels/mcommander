@@ -72,7 +72,7 @@ sudo make install
 
 This fork is packaged as **`mcommander`**, and its main command is `mcommander`,
 with `mc6` as a short alias for it.  The others are `mcedit6`, `mview`,
-`mdiff`, `mctree` and `mcstruct`.  It installs beside the
+`mcdiff6`, `mctree` and `mcstruct`.  It installs beside the
 distribution `mc` package instead of replacing it.
 
 There is no public package repository yet.  Each release builds `.deb`, `.rpm`

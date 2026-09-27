@@ -106,6 +106,8 @@ static const mc_run_name_t mc_run_names[] = {
     { "vi", MC_RUN_EDITOR, NULL },
 #endif
 #ifdef USE_DIFF_VIEW
+    { "mcdiff6", MC_RUN_DIFFVIEWER, NULL },
+    // the name before 6.1.1; a link left by an older install still opens the diff viewer
     { "mdiff", MC_RUN_DIFFVIEWER, NULL },
     { "diff", MC_RUN_DIFFVIEWER, NULL },
 #endif

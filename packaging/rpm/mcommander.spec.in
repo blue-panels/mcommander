@@ -126,7 +126,7 @@ rm -rf %{buildroot}%{_docdir}/%{name}
 %{_bindir}/mc6
 %{_bindir}/mcedit6
 %{_bindir}/mview
-%{_bindir}/mdiff
+%{_bindir}/mcdiff6
 %{_bindir}/mctree
 %{_libexecdir}/mcommander/
 # Owned here so that the directory does not depend on the lua subpackage.
@@ -140,7 +140,7 @@ rm -rf %{buildroot}%{_docdir}/%{name}
 %{_datadir}/mcommander/syntax/
 %config(noreplace) %{_sysconfdir}/mcommander/*
 %{_mandir}/man1/*
-# Translated manuals: mcommander.1 in six languages, mcedit6.1 and mdiff.1 in Serbian.
+# Translated manuals: mcommander.1 in six languages, mcedit6.1 and mcdiff6.1 in Serbian.
 %{_mandir}/*/man1/
 # Owned here so that the directory does not depend on the plugins subpackage.
 %dir %{_libdir}/mcommander/

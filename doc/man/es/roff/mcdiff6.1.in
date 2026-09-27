@@ -1,20 +1,20 @@
-.\" Generated from mdiff.md by maint/update-man-in.sh. Do not edit.
-.TH MDIFF 1 "septiembre de 2026" "MCommander {{MAN_VERSION}}" "M\-Commander"
+.\" Generated from mcdiff6.md by maint/update-man-in.sh. Do not edit.
+.TH MCDIFF6 1 "septiembre de 2026" "MCommander {{MAN_VERSION}}" "M\-Commander"
 
 .SH NOMBRE
 .PP
-mdiff \- Comparador de Archivos Interno.
+mcdiff6 \- Comparador de Archivos Interno.
 
 
 .SH SINOPSIS
 .PP
-\fBmdiff\fP
+\fBmcdiff6\fP
 [\-bcCdfhstVx?] arch
 
 
 .SH Comparador de Archivos Interno
 .PP
-mdiff es una herramienta visual de comparación. Permite comparar dos
+mcdiff6 es una herramienta visual de comparación. Permite comparar dos
 archivos y editarlos en el sitio, y la diferencia se calcula de nuevo tras
 cada cambio. El complemento de panel git también lo abre, con el archivo tal
 como lo tiene HEAD a un lado y el archivo del árbol de trabajo al otro.

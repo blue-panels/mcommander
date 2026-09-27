@@ -1,7 +1,7 @@
 # Packaging mcommander
 
 `mcommander` is the package name for this fork.  It installs `mcommander` and
-the `mc6`, `mcedit6`, `mview`, `mdiff`, `mctree` and `mcstruct` symbolic links,
+the `mc6`, `mcedit6`, `mview`, `mcdiff6`, `mctree` and `mcstruct` symbolic links,
 under paths of its own, so it can be installed beside the distribution `mc`.
 
 Three packages come out of it: `mcommander`, `mcommander-plugins` with the panel
