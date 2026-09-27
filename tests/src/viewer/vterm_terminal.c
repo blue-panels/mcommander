@@ -1386,6 +1386,25 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_cursor_position_is_reported)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 24, 80);
+    mcview_vterm_reset (vt);
+
+    ck_assert_str_eq (reply_to (vt, "\033[5n"), "\033[0n");
+    ck_assert_str_eq (reply_to (vt, "\033[6n"), "\033[1;1R");
+    ck_assert_str_eq (reply_to (vt, "\033[5;10Habc\033[6n"), "\033[5;13R");
+    ck_assert_str_eq (reply_to (vt, "\033[24;80Hx\033[6n"), "\033[24;80R");
+    ck_assert_ptr_null (reply_to (vt, "\033[?6n"));
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_sixel_keeps_only_what_sixel_is_made_of)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -1657,6 +1676,7 @@ main (void)
     tcase_add_test (tc_core, test_oversized_sixel_is_dropped_whole);
     tcase_add_test (tc_core, test_xtgettcap_is_still_answered);
     tcase_add_test (tc_core, test_sixel_terminal_says_so_when_asked);
+    tcase_add_test (tc_core, test_cursor_position_is_reported);
     tcase_add_test (tc_core, test_sixel_keeps_only_what_sixel_is_made_of);
     tcase_add_test (tc_core, test_sixel_without_a_terminal_for_it_takes_its_place_only);
     tcase_add_test (tc_core, test_sixel_wider_than_the_screen_keeps_its_width);

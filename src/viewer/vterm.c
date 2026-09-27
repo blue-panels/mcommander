@@ -250,6 +250,25 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
         return ev;
     }
 
+    /* DSR: CSI 5 n asks whether the terminal is well, CSI 6 n where the cursor is.
+       Programs that ask the second one wait for the answer and give up without it. */
+    if (final_byte == 'n' && !vt->csi_private && vt->param_count > 0
+        && (vt->params[0] == 5 || vt->params[0] == 6))
+    {
+        vterm_event_t ev = vterm_make (vt, VTERM_REPLY);
+
+        if (vt->params[0] == 5)
+            ev.reply = ESC_STR "[0n";
+        else
+        {
+            g_snprintf (vt->reply_buf, sizeof (vt->reply_buf), ESC_STR "[%d;%dR",
+                        CLAMP (vt->cursor_row, 0, MAX (vt->term_rows - 1, 0)) + 1,
+                        CLAMP (vt->cursor_col, 0, MAX (vt->term_cols - 1, 0)) + 1);
+            ev.reply = vt->reply_buf;
+        }
+        return ev;
+    }
+
     if (vt->csi_private)
     {
         if (vt->param_count > 0)
