@@ -36,7 +36,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-09-25 22:53+0000\n"
+"PO-Revision-Date: 2026-09-28 01:27+0000\n"
 "Last-Translator: Andrei Stepanov <adem4ik@gmail.com>\n"
 "Language-Team: Russian <https://translate.codeberg.org/projects/mc6/mc6/ru/>"
 "\n"
@@ -2732,7 +2732,7 @@ msgid "Pl&ugins"
 msgstr "Пла&гины"
 
 msgid "&Options"
-msgstr "&Настройки"
+msgstr "&Параметры"
 
 msgid "Lua action"
 msgstr "Действие Lua"
@@ -3211,13 +3211,11 @@ msgstr "Маркер конца файла:"
 msgid "Redraws to skip at most:"
 msgstr "Максимум пропускаемых перерисовок:"
 
-#, fuzzy
-#| msgid "&Brief file list:"
 msgid "Tree view file limit, MB:"
-msgstr "&Укороченный:"
+msgstr "Ограничение файлов в дереве, МБ:"
 
 msgid "Tree view node limit:"
-msgstr ""
+msgstr "Ограничение узлов в дереве:"
 
 msgid "&Full file list"
 msgstr "&Стандартный"
@@ -4332,25 +4330,17 @@ msgstr "О&братить выделение"
 msgid "E&xit"
 msgstr "Вы&ход"
 
-#, fuzzy
-#| msgid "C&hmod"
 msgid "C&hmod..."
-msgstr "Права &доступа"
+msgstr "П&рава доступа..."
 
-#, fuzzy
-#| msgid "Ch&own"
 msgid "Ch&own..."
-msgstr "&Владелец/группа"
+msgstr "В&ладелец/группа..."
 
-#, fuzzy
-#| msgid "&Advanced chown"
 msgid "&Advanced chown..."
-msgstr "Права (рас&ширенные)"
+msgstr "Пр&ава (расширенные)..."
 
-#, fuzzy
-#| msgid "Cha&ttr"
 msgid "Cha&ttr flags..."
-msgstr "А&трибуты"
+msgstr "Флаги а&трибутов..."
 
 msgid "&User menu"
 msgstr "&Меню пользователя"
@@ -4433,18 +4423,14 @@ msgstr "&Настройки редактора…"
 msgid "&Manage plugins..."
 msgstr "&Управление плагинами..."
 
-#, fuzzy
-#| msgid "Edit &extension file"
 msgid "Edit e&xtension file"
-msgstr "Править файл рас&ширений"
+msgstr "Пра&вить файл расширений"
 
 msgid "Edit hi&ghlighting group file"
 msgstr "Править файл рас&цветки имён"
 
-#, fuzzy
-#| msgid "Attributes:"
 msgid "&Attributes"
-msgstr "Атрибуты:"
+msgstr "&Атрибуты"
 
 msgid "Panels:"
 msgstr "Панели:"
@@ -5458,15 +5444,11 @@ msgstr ""
 msgid "unspecified"
 msgstr "не указано"
 
-#, fuzzy
-#| msgid "Lua scripts:"
 msgid "Lua scripts"
-msgstr "Скрипты Lua:"
+msgstr "Скрипты Lua"
 
-#, fuzzy
-#| msgid "This plugin has no settings."
 msgid "This script has no entry file."
-msgstr "У этого плагина нет настроек."
+msgstr "У этого скрипта нет входного файла."
 
 msgid "Lua"
 msgstr "Lua"
@@ -5474,23 +5456,17 @@ msgstr "Lua"
 msgid "Unknown error"
 msgstr "Неизвестная ошибка"
 
-#, fuzzy
-#| msgid "This plugin has no settings."
 msgid "This script has no settings."
-msgstr "У этого плагина нет настроек."
+msgstr "У этого скрипта нет настроек."
 
-#, fuzzy
-#| msgid "No global or user Lua editor scripts were found."
 msgid "No global or user Lua scripts were found."
-msgstr "Глобальные или пользовательские скрипты редактора Lua не найдены."
+msgstr "Глобальные или пользовательские скрипты Lua не найдены."
 
 msgid "Lua runtime is disabled. Enable Lua engine and restart MC."
 msgstr "Среда Lua отключена. Включите движок Lua и перезапустите MC."
 
-#, fuzzy
-#| msgid "VFS settings"
 msgid "&Settings"
-msgstr "Настройки ВФС"
+msgstr "&Настройки"
 
 msgid "Lua action failed"
 msgstr "Действие Lua не выполнено"
@@ -8257,8 +8233,6 @@ msgstr "Счётчик"
 msgid "Skin &editor"
 msgstr "&Редактор тем"
 
-#, fuzzy
-#| msgid "S&kin editor..."
 msgid "Ski&n editor..."
 msgstr "Редактор &тем..."
 
