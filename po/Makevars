@@ -46,4 +46,7 @@ EXTRA_LOCALE_CATEGORIES =
 # Suppress location information by default
 MSGMERGE_FLAGS =	--no-location
 MSGMERGE =		msgmerge ${MSGMERGE_FLAGS}
-MSGMERGE_UPDATE =	msgmerge --update ${MSGMERGE_FLAGS}
+# PO files are translation sources kept in version control. Disable gettext's
+# automatic in-place merge during ordinary builds, even when the POT is newer.
+# Explicit update-po (also run by dist) still uses MSGMERGE above.
+MSGMERGE_UPDATE =	:
