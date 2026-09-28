@@ -479,9 +479,7 @@ slv_format_value (const slv_item_t *item, const unsigned char *buf, gsize len,
 static void
 append_utf8 (GString *out, const char *text, gsize len)
 {
-    const char *end;
-
-    if (g_utf8_validate_len (text, len, &end))
+    if (len <= G_MAXSSIZE && g_utf8_validate (text, (gssize) len, NULL))
     {
         g_string_append_len (out, text, len);
         return;

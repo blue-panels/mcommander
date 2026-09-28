@@ -9,6 +9,7 @@
 
 #include "tests/mctest.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include "src/editor/edit-impl.h"
