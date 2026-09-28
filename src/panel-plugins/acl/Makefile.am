@@ -1,5 +1,6 @@
 acldir = $(panel_plugins_dir)/acl
 acl_LTLIBRARIES = mc-panel-acl.la
+dist_acl_DATA = acl_panel.md
 
 mc_panel_acl_la_SOURCES = \
 	acl.c \
