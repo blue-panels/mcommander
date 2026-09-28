@@ -20,6 +20,7 @@ BuildRequires:   e2fsprogs-devel
 BuildRequires:   file-devel
 BuildRequires:   pkgconf-pkg-config
 BuildRequires:   libsmbclient-devel
+BuildRequires:   libacl-devel
 BuildRequires:   slang-devel
 BuildRequires:   lua-devel
 BuildRequires:   sqlite-devel
@@ -62,7 +63,8 @@ remote system in a panel, so that its contents are handled like ordinary
 files: tar, zip and the other formats libarchive reads, FTP, SFTP, Samba, S3,
 Git, Docker, Kubernetes, MongoDB, SQLite, systemd units and shell links over
 ssh.  The Docker and Kubernetes panels talk to the docker and kubectl
-commands, which have to be installed separately.
+commands, which have to be installed separately.  The package also adds the
+access control list editor to the Attributes menu.
 
 %package lua
 Summary:         Lua runtime and scripts for M-Commander
@@ -96,6 +98,7 @@ absent.
     --enable-lua-plugin=yes \
     --enable-mctree-magic=yes \
     --enable-panel-plugin-samba=yes \
+    --enable-panel-plugin-acl=yes \
     --enable-panel-plugin-ftp=yes \
     --enable-panel-plugin-arcmc=yes \
     --enable-panel-plugin-s3=yes \

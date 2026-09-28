@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           apk add autoconf automake build-base libtool pkgconf sudo
-          apk add check-dev e2fsprogs-dev gettext-dev glib-dev gpm-dev libssh2-dev perl slang-dev
+          apk add acl-dev check-dev e2fsprogs-dev gettext-dev glib-dev gpm-dev libssh2-dev perl slang-dev
 
       - name: Bootstrap build system
         run: ./autogen.sh

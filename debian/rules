@@ -28,6 +28,7 @@ override_dh_auto_configure:
 		--enable-lua-plugin=yes \
 		--enable-mctree-magic=yes \
 		--enable-panel-plugin-samba=yes \
+		--enable-panel-plugin-acl=yes \
 		--enable-panel-plugin-ftp=yes \
 		--enable-panel-plugin-arcmc=yes \
 		--enable-panel-plugin-s3=yes \

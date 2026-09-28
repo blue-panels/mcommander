@@ -24,7 +24,7 @@ jobs:
             git `# Install git inside container` \
             \
             autoconf automake clang-tools-extra gcc gettext-devel groff libtool make pkgconfig \
-            check-devel gpm-devel libX11-devel "pkgconfig(ext2fs)" "pkgconfig(glib-2.0)" "pkgconfig(gmodule-2.0)" "pkgconfig(libssh2)" "pkgconfig(slang)" \
+            check-devel gpm-devel libX11-devel "pkgconfig(ext2fs)" "pkgconfig(glib-2.0)" "pkgconfig(gmodule-2.0)" "pkgconfig(libssh2)" "pkgconfig(slang)" "pkgconfig(libacl)" \
             \
             glibc-gconv-extra util-linux `# For tests` \
             python3-pip \
