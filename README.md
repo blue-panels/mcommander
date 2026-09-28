@@ -111,6 +111,11 @@ Sign in with a Codeberg account and start translating, no other setup is
 needed. A maintainer brings the finished translations into `po/`, so please
 do not open pull requests that edit `po/*.po` by hand.
 
+An ordinary build compiles the checked-in translations without updating the
+`.po` files. Maintainers can merge them with the current template using
+`make -C po update-po`; creating a release archive with `make dist` also runs
+that update.
+
 ## Reporting problems
 
 Open an issue: <https://github.com/blue-panels/mcommander/issues>
