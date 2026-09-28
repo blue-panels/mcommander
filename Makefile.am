@@ -7,7 +7,7 @@ if HAVE_TESTS
     SUBDIRS += tests
 endif
 
-EXTRA_DIST = maint/generate-lua-api.py
+EXTRA_DIST = maint/generate-lua-api.py maint/check-glib-api.sh
 
 dist_noinst_SCRIPTS = \
     build-glib2.sh \
@@ -51,9 +51,12 @@ indent:
 	        xargs -0 $(INDENT_CMD); \
 	done
 
+.PHONY: buildcheck check-glib-api
+
+check-glib-api:
+	$(SHELL) $(top_srcdir)/maint/check-glib-api.sh
+
 # What the ubuntu job of the CI does, in a container, here. REF names what to
 # build (default HEAD), BUILDCHECK_IMAGE the image to build it in.
-.PHONY: buildcheck
-
 buildcheck:
 	$(top_srcdir)/maint/buildcheck.sh $(REF)
