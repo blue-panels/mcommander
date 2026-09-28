@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include "acl-model.h"
+#include "acl-nt.h"
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
@@ -66,6 +67,9 @@ typedef struct
 acl_dlg_result_t acl_dialog_run (acl_dlg_state_t *st);
 
 const char *acl_help_file (void);
+
+acl_dlg_result_t acl_nt_dialog_run (const char *shown_path, const char *source, const char *attr,
+                                    int index, int count, gboolean is_dir, acl_nt_sd_t *sd);
 
 char *acl_choose (gboolean group, const char *current);
 gchar **acl_split_names (const char *text);

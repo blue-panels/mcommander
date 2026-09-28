@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/vfs.h>
+#include <sys/xattr.h>
 #include <unistd.h>
 
 #include "lib/global.h"
@@ -36,6 +38,7 @@
 
 #include "acl-dialog.h"
 #include "acl-model.h"
+#include "acl-nt.h"
 
 /*** file scope type declarations ****************************************************************/
 
@@ -120,6 +123,10 @@ acl_report (const char *what, const char *path, int err)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/**
+ * Read the POSIX lists. An unsupported access ACL leaves the file loaded so
+ * the caller can look for a Windows or NFSv4 list.
+ */
 static acl_file_t *
 acl_file_load (const char *dir, const char *name, acl_step_t *step)
 {
@@ -158,6 +165,10 @@ acl_file_load (const char *dir, const char *name, acl_step_t *step)
     f->lists[ACLM_ACCESS] = aclm_read (f->path, ACLM_ACCESS, &err);
     if (f->lists[ACLM_ACCESS] == NULL)
     {
+        /* no POSIX ACL here: the caller looks for another kind */
+        if (err == ENOTSUP || err == EOPNOTSUPP)
+            return f;
+
         *step = acl_report (_ ("Cannot read the access control list of"), f->path, err);
         acl_file_free (f);
         return NULL;
@@ -181,6 +192,116 @@ acl_file_load (const char *dir, const char *name, acl_step_t *step)
     }
 
     return f;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The name of the file system of @path, for the messages. */
+static char *
+acl_fs_name (const char *path)
+{
+    static const struct
+    {
+        unsigned long magic;
+        const char *name;
+    } names[] = {
+        { 0xEF53, "ext2/3/4" },      { 0x58465342, "xfs" },      { 0x9123683E, "btrfs" },
+        { 0x01021994, "tmpfs" },     { 0xFF534D42, "cifs" },     { 0xFE534D42, "smb3" },
+        { 0x6969, "nfs" },           { 0x65735546, "fuse" },     { 0x4d44, "vfat" },
+        { 0x2011BAB0, "exfat" },     { 0x7366746e, "ntfs3" },    { 0x5346544e, "ntfs" },
+        { 0x9660, "iso9660" },       { 0x73717368, "squashfs" }, { 0x2FC12FC1, "zfs" },
+        { 0xF2F52010, "f2fs" },      { 0x9fa0, "proc" },         { 0x62656572, "sysfs" },
+        { 0x1cd1, "devpts" },        { 0x63677270, "cgroup2" },  { 0x01021997, "9p" },
+        { 0x794c7630, "overlayfs" },
+    };
+    struct statfs sfs;
+    size_t i;
+
+    if (statfs (path, &sfs) != 0)
+        return g_strdup ("?");
+
+    for (i = 0; i < G_N_ELEMENTS (names); i++)
+        if ((unsigned long) sfs.f_type == names[i].magic)
+            return g_strdup (names[i].name);
+
+    return g_strdup_printf ("0x%lx", (unsigned long) sfs.f_type);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A file with no POSIX ACL: show the Windows list it has, say that it has an
+ * NFSv4 one, or say that the file system has none.  An attribute counts only
+ * when its value can be read.
+ */
+static acl_step_t
+acl_other_kind (const acl_file_t *f, int index, int count)
+{
+    acl_nt_sd_t *sd;
+    const char *attr = NULL;
+    char *fs;
+    acl_step_t step = ACL_GO_ON;
+    ssize_t n;
+
+    fs = acl_fs_name (f->path);
+
+    sd = acl_nt_read (f->path, &attr, NULL);
+    if (sd != NULL)
+    {
+        char *source;
+        acl_dlg_result_t r;
+
+        /* statfs can fail on a cifs mount whose session is stuck; the attribute
+           still tells where the list comes from */
+        if (strcmp (fs, "?") == 0)
+        {
+            g_free (fs);
+            fs = g_strdup (strcmp (attr, "system.cifs_acl") == 0 ? "cifs" : "ntfs");
+        }
+        source = g_strdup_printf ("%s, %s", fs, attr);
+
+        r = acl_nt_dialog_run (f->shown_path, source, attr, index, count, S_ISDIR (f->st.st_mode),
+                               sd);
+        if (r == ACL_DLG_CANCEL)
+            step = ACL_ABORT;
+        else
+        {
+            acl_nt_sd_t *before = acl_nt_read (f->path, NULL, NULL);
+            int err = 0;
+
+            switch (acl_nt_write (f->path, attr, before, sd, &err))
+            {
+            case ACL_NT_WRITE_OK:
+                break;
+            case ACL_NT_WRITE_CHANGED:
+                message (D_NORMAL, _ ("Access control list"),
+                         _ ("%s\nThe server stored the list in a form of its own.\n"
+                            "Open the dialog again to see it."),
+                         f->shown_path);
+                break;
+            default:
+                step = acl_report (_ ("Cannot set the access control list of"), f->path, err);
+                break;
+            }
+            acl_nt_free (before);
+        }
+        g_free (source);
+        acl_nt_free (sd);
+    }
+    else if ((n = getxattr (f->path, "system.nfs4_acl", NULL, 0)) > 0)
+        message (D_NORMAL, _ ("Access control list"),
+                 _ ("%s\nhas an NFSv4 access control list (%s).\n"
+                    "M-Commander does not show these yet; nfs4_getfacl does."),
+                 f->shown_path, fs);
+    else
+    {
+        message (D_ERROR, MSG_ERROR,
+                 _ ("Access control lists are not supported on this file system (%s)"), fs);
+        step = ACL_ABORT;
+    }
+
+    g_free (fs);
+    return step;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -258,6 +379,15 @@ acl_to_the_rest (GPtrArray *names, guint from, const char *dir, const acl_file_t
                 return;
             continue;
         }
+        if (f->lists[ACLM_ACCESS] == NULL)
+        {
+            step = acl_report (_ ("Cannot set a POSIX access control list on"), f->path, ENOTSUP);
+            acl_file_free (f);
+            if (step == ACL_ABORT)
+                return;
+            continue;
+        }
+
         if (changes == NULL)
         {
             a = aclm_list_copy (access);
@@ -340,6 +470,15 @@ acl_action_edit (mc_panel_host_t *host, const char *open_path)
                 break;
             continue;
         }
+        if (f->lists[ACLM_ACCESS] == NULL)
+        {
+            step = acl_other_kind (f, (int) i + 1, (int) names->len);
+            acl_file_free (f);
+            if (step == ACL_ABORT)
+                break;
+            continue;
+        }
+
         memset (&st, 0, sizeof (st));
         st.shown_path = f->shown_path;
         st.index = (int) i + 1;
