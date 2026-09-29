@@ -229,22 +229,27 @@ Options of Midnight Commander that are gone:
 
 configure does not know these options.  It only prints
 "WARNING: unrecognized options" at the end and goes on, so check that
-line.
+line, or add `--enable-option-checking=fatal' to make configure stop on
+any unknown option.
 
   --disable-vfs-ftp      use --disable-panel-plugin-ftp
   --disable-vfs-sftp     use --disable-panel-plugin-sftp
   --disable-vfs-smb      use --disable-panel-plugin-samba
-  --disable-vfs-shell    use --disable-panel-plugin-shell-link
+  --disable-vfs-shell,
   --disable-vfs-fish     use --disable-panel-plugin-shell-link
   --disable-vfs-tarfs,
   --disable-vfs-cpiofs   use --disable-panel-plugin-arcmc
-  --without-edit,
-  --disable-mce          use --without-internal-edit
+  --without-edit         use --without-internal-edit
+
+Some build scripts pass options that neither Midnight Commander nor
+M-Commander ever had:
+
   --without-nls          use --disable-nls
-  --without-iconv        no replacement: iconv comes from glib and
-                         is always used
-  --without-curses       no replacement: choose the screen library
-                         with --with-screen
+  --without-iconv        not needed: iconv comes from glib and is
+                         always used
+  --without-curses       choose the screen library with --with-screen
+  --disable-mce          use --without-internal-edit to build without
+                         the editor
 
 
 Screen library:
