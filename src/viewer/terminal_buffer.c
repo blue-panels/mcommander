@@ -56,6 +56,7 @@ cell_attr_from_ansi (mcview_cell_attr_t *attr, const mcview_ansi_state_t *ansi)
     attr->fg = ansi->fg;
     attr->bg = ansi->bg;
     attr->bold = ansi->bold;
+    attr->dim = ansi->dim;
     attr->italic = ansi->italic;
     attr->underline = ansi->underline;
     attr->blink = ansi->blink;

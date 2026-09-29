@@ -655,6 +655,50 @@ START_TEST (test_ansi_rapid_blink_and_conceal)
 END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
+START_TEST (test_ansi_dim)
+{
+    // given
+    mcview_ansi_state_t state;
+
+    mcview_ansi_state_init (&state);
+
+    // when - ESC[1;2m = bold and faint
+    g_string_free (parse_and_collect (&state, "\033[1;2m"), TRUE);
+
+    // then
+    mctest_assert_true (state.bold);
+    mctest_assert_true (state.dim);
+
+    // when - ESC[22m = normal intensity
+    g_string_free (parse_and_collect (&state, "\033[22m"), TRUE);
+
+    // then - neither
+    mctest_assert_false (state.bold);
+    mctest_assert_false (state.dim);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+START_TEST (test_ansi_dim_color)
+{
+    // 16 colors: the bright ones turn normal, the light gray and the default turn gray
+    ck_assert_int_eq (mcview_ansi_dim_color (MCVIEW_ANSI_COLOR_DEFAULT, FALSE), 8);
+    ck_assert_int_eq (mcview_ansi_dim_color (7, FALSE), 8);
+    ck_assert_int_eq (mcview_ansi_dim_color (15, FALSE), 7);
+    ck_assert_int_eq (mcview_ansi_dim_color (9, FALSE), 1);
+    ck_assert_int_eq (mcview_ansi_dim_color (1, FALSE), 1);
+
+    // 256 colors: half the brightness
+    ck_assert_int_eq (mcview_ansi_dim_color (15, TRUE), 243);  // 255 -> 127: gray ramp
+    ck_assert_int_eq (mcview_ansi_dim_color (MCVIEW_ANSI_COLOR_DEFAULT, TRUE), 242);  // as 7
+    ck_assert_int_eq (mcview_ansi_dim_color (9, TRUE), 16 + 36 * 2);    // 255,0,0 -> 127,0,0
+    ck_assert_int_eq (mcview_ansi_dim_color (196, TRUE), 16 + 36 * 2);  // cube red
+    ck_assert_int_eq (mcview_ansi_dim_color (255, TRUE), 232 + 11);     // gray 238 -> 119
+    ck_assert_int_eq (mcview_ansi_dim_color (0, TRUE), 16);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
 START_TEST (test_ansi_empty_param_is_zero)
 {
     // given
@@ -932,6 +976,8 @@ main (void)
     tcase_add_test (tc_core, test_ansi_double_underline);
     tcase_add_test (tc_core, test_ansi_underline_sub_param);
     tcase_add_test (tc_core, test_ansi_rapid_blink_and_conceal);
+    tcase_add_test (tc_core, test_ansi_dim);
+    tcase_add_test (tc_core, test_ansi_dim_color);
     tcase_add_test (tc_core, test_ansi_empty_param_is_zero);
     tcase_add_test (tc_core, test_ansi_colon_256_color);
     tcase_add_test (tc_core, test_ansi_colon_nested_no_leak);

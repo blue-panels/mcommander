@@ -409,6 +409,7 @@ mcview_render_terminal_canvas (const mcview_terminal_buffer_t *buf, int top_row,
                 tmp.fg = a->fg;
                 tmp.bg = a->bg;
                 tmp.bold = a->bold;
+                tmp.dim = a->dim;
                 tmp.italic = a->italic;
                 tmp.underline = a->underline;
                 tmp.blink = a->blink;

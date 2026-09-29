@@ -19,6 +19,7 @@ typedef struct
     int fg;
     int bg;
     gboolean bold;
+    gboolean dim;
     gboolean italic;
     gboolean underline;
     gboolean blink;
