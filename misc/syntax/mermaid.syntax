@@ -1,0 +1,165 @@
+# Mermaid diagrams, https://mermaid.js.org
+#
+# The type of the diagram, the words the types know, arrows and relations,
+# edge labels, strings, comments and directives.
+#
+# The text of a node, A[text], B(text) or C{text}, and what follows a colon -
+# the message of a sequence, the description of a state, the data of a task -
+# is left plain, and keeps to its line.  The brace of an ER relation belongs
+# to the relation, and the one that opens a class body ends its line.
+
+context default
+    keyword whole graph brightmagenta
+    keyword whole flowchart brightmagenta
+    keyword whole sequenceDiagram brightmagenta
+    keyword whole classDiagram brightmagenta
+    keyword whole stateDiagram-v2 brightmagenta
+    keyword whole stateDiagram brightmagenta
+    keyword whole erDiagram brightmagenta
+    keyword whole gantt brightmagenta
+    keyword whole pie brightmagenta
+    keyword whole journey brightmagenta
+    keyword whole gitGraph brightmagenta
+    keyword whole mindmap brightmagenta
+    keyword whole timeline brightmagenta
+    keyword whole quadrantChart brightmagenta
+    keyword whole requirementDiagram brightmagenta
+    keyword whole C4Context brightmagenta
+    keyword whole C4Container brightmagenta
+    keyword whole C4Component brightmagenta
+    keyword whole C4Dynamic brightmagenta
+    keyword whole C4Deployment brightmagenta
+    keyword whole sankey-beta brightmagenta
+    keyword whole xychart-beta brightmagenta
+    keyword whole block-beta brightmagenta
+    keyword whole packet-beta brightmagenta
+    keyword whole architecture-beta brightmagenta
+    keyword whole kanban brightmagenta
+    keyword whole zenuml brightmagenta
+
+    keyword whole TB brightcyan
+    keyword whole TD brightcyan
+    keyword whole BT brightcyan
+    keyword whole RL brightcyan
+    keyword whole LR brightcyan
+
+    keyword whole subgraph yellow
+    keyword whole end yellow
+    keyword whole direction yellow
+    keyword whole click yellow
+    keyword whole href yellow
+    keyword whole style yellow
+    keyword whole classDef yellow
+    keyword whole class yellow
+    keyword whole linkStyle yellow
+    keyword whole participant yellow
+    keyword whole actor yellow
+    keyword whole Note yellow
+    keyword whole note yellow
+    keyword whole loop yellow
+    keyword whole alt yellow
+    keyword whole else yellow
+    keyword whole opt yellow
+    keyword whole par yellow
+    keyword whole critical yellow
+    keyword whole break yellow
+    keyword whole rect yellow
+    keyword whole activate yellow
+    keyword whole deactivate yellow
+    keyword whole autonumber yellow
+    keyword whole box yellow
+    keyword whole namespace yellow
+    keyword whole state yellow
+    keyword whole title yellow
+    keyword whole dateFormat yellow
+    keyword whole axisFormat yellow
+    keyword whole tickInterval yellow
+    keyword whole todayMarker yellow
+    keyword whole excludes yellow
+    keyword whole section yellow
+    keyword whole after yellow
+    keyword whole crit yellow
+    keyword whole done yellow
+    keyword whole active yellow
+    keyword whole milestone yellow
+    keyword whole showData yellow
+    keyword whole accTitle yellow
+    keyword whole accDescr yellow
+    keyword whole x-axis yellow
+    keyword whole y-axis yellow
+    keyword whole quadrant-1 yellow
+    keyword whole quadrant-2 yellow
+    keyword whole quadrant-3 yellow
+    keyword whole quadrant-4 yellow
+    keyword whole commit yellow
+    keyword whole branch yellow
+    keyword whole checkout yellow
+    keyword whole merge yellow
+    keyword whole cherry-pick yellow
+    keyword whole HIGHLIGHT yellow
+    keyword whole REVERSE yellow
+    keyword whole NORMAL yellow
+
+    # arrows and relations; the longer first, as the first that fits is taken
+    keyword \{|}\}\{|o\}\{-.\}\{-.\}\{|o\}\{|{\} brightred
+    keyword <--> brightred
+    keyword <==> brightred
+    keyword <-.-> brightred
+    keyword -.-> brightred
+    keyword -->> brightred
+    keyword ->> brightred
+    keyword <|-- brightred
+    keyword --|> brightred
+    keyword --\* brightred
+    keyword --> brightred
+    keyword ==> brightred
+    keyword wholeright --x brightred
+    keyword wholeright --o brightred
+    keyword --- brightred
+    keyword --) brightred
+    keyword -- brightred
+    keyword === brightred
+    keyword -.- brightred
+    keyword -) brightred
+    keyword wholeright -x brightred
+    keyword -> brightred
+    keyword ~~~ brightred
+    keyword <|.. brightred
+    keyword ..|> brightred
+    keyword ..> brightred
+    keyword .. brightred
+    keyword <.. brightred
+    keyword \*-- brightred
+    keyword wholeleft o-- brightred
+
+    # the marks of nodes, groups and annotations
+    keyword [\*] brightcyan
+    keyword [ brightcyan
+    keyword ] brightcyan
+    keyword ( brightcyan
+    keyword ) brightcyan
+    keyword { brightcyan
+    keyword } brightcyan
+    keyword << brightcyan
+    keyword >> brightcyan
+    keyword : brightcyan
+    keyword ; brightcyan
+
+# a directive: %%{init: {...}}%%
+context %%{ }%% brightgreen
+
+# a comment
+context %% \n brown
+
+# the text of a node
+context exclusive oneline [ ]
+context exclusive oneline ( )
+context exclusive oneline { }
+
+# the label of an edge: A -->|label| B
+context oneline | | green
+
+# a message, a description, the data of a task
+context exclusive : \n
+
+context oneline " " green

@@ -107,6 +107,9 @@ context linestart ```diff*\n linestart ``` cyan
 context linestart ```make*\n linestart ``` cyan
     embed Makefile
 
+context linestart ```mermaid*\n linestart ``` cyan
+    embed Mermaid\sDiagram
+
 # a fence that names no language known above
 context linestart ``` linestart ``` cyan
 

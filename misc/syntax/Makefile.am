@@ -63,6 +63,7 @@ SYNTAXFILES =			\
 	mail.syntax		\
 	makefile.syntax		\
 	markdown.syntax		\
+	mermaid.syntax		\
 	ml.syntax		\
 	meson.syntax		\
 	muttrc.syntax		\

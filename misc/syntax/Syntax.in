@@ -343,6 +343,9 @@ include r.syntax
 file ..\*\\.(?i:md)$ Markdown
 include markdown.syntax
 
+file ..\*\\.(?i:mmd|mermaid)$ Mermaid\sDiagram
+include mermaid.syntax
+
 file ..\*\\.proto$ Protobuf\sFile
 include protobuf.syntax
 
