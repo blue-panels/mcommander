@@ -40,6 +40,15 @@ context default
     keyword : brightcyan
 
 #=============================
+# Comments.  JSON has none, but many files that are read as JSON take them:
+# "//" to the end of the line, and "/* */"
+context // \n brown
+    spellcheck
+
+context /\* \*/ brown
+    spellcheck
+
+#=============================
 # String values
 context " " green
     spellcheck
