@@ -39,6 +39,7 @@ jobs:
               \
               ./configure \
                 --prefix="$(pwd)/install-prefix" \
+                --enable-option-checking=fatal \
                 --with-screen=ncurses \
                 --enable-mclib \
                 --enable-werror \

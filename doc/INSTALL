@@ -32,7 +32,8 @@ Build requirements for M-Commander
   - https://www.gnu.org/software/gettext/
 - gpm (general purpose mouse daemon as an alternative to xterm mouse)
   - https://www.nico.schottelius.org/software/gpm/
-- libssh2 >= 1.2.8 (required only for sftp vfs)
+- libssh2 >= 1.9.0 (required only for the sftp panel plugin and the
+  libssh2 transport of the shell link plugin)
   - https://libssh2.org
 - libaspell (spell checking support in the internal editor)
   - https://github.com/GNUAspell/aspell
@@ -98,7 +99,7 @@ incomplete, use `configure --help' to get the full list):
      Print the version of Autoconf used to generate the `configure'
      script, and exit.
 
-`--without-edit'
+`--without-internal-edit'
      Configure M-Commander to be compiled without the
      built-in file editor.  The built-in editor is compiled in by
      default.
@@ -108,6 +109,13 @@ incomplete, use `configure --help' to get the full list):
      the built-in editor plugin named `spell'.  The plugin opens
      libaspell or libhunspell at run time, so neither library is needed
      to build; the settings dialog selects the engine and the language.
+
+`--without-diff-viewer'
+     Build without the internal diff viewer.  It is compiled in by
+     default.
+
+`--disable-nls'
+     Build without translations of the user interface.
 
 `--without-gpm-mouse'
      Use this flag to disable gpm mouse support (e.g. if you want to
@@ -142,13 +150,6 @@ incomplete, use `configure --help' to get the full list):
      default.  Background code is known to be less stable than the rest
      of the code, so you may want to disable it at the compile time.
 
-`--with-homedir'
-     This option allow users  to place user config directories in any
-     place. By default value is 'XDG', this mean, mc will respect XDG
-     standards. If other value is specified, this will used as directory
-     name (relative to $HOME if path is relative, or as is if path is
-     absolute).
-
 VFS options:
 - - - - - -
 
@@ -158,53 +159,106 @@ VFS options:
      file access.  If you specify this option, you won't get the
      transparent access to archives and remote directories.
 
-`--enable-panel-plugin-ftp'
-     (auto)
-     Support for FTP.  Built as a panel plugin (mc-panel-ftp.so).
-     Requires libcurl >= 7.20.0.
-
-`--enable-panel-plugin-shell-link'
-     (auto)
-     Support for the shell link (FISH) protocol.  Built as a panel
-     plugin (mc-panel-shell-link.so) with the protocol library and its
-     helper scripts.
-
-`--enable-vfs-sftp'
-     (auto)
-     Support for SFTP.  Built as a panel plugin (mc-panel-sftp.so)
-     installed into the panel plugins directory.  Requires
-     libssh2 >= 1.2.8, which the plugin carries itself.
-
 `--enable-vfs-extfs'
      (on by default)
      Support for extfs
 
-`--enable-vfs-sfs`
+`--enable-vfs-sfs'
      (on by default)
      Support for sfs
 
+Panel plugins:
+- - - - - - -
+
+Network file systems and archives are panel plugins, not parts of the
+VFS.  Each plugin has an option that takes `auto', `yes' or `no'.  With
+`auto' (the default) the plugin is built when its library is found.
+With `yes' configure stops with an error if the library is missing.
+Use `--disable-panel-plugin-NAME' to leave a plugin out.
+
+`--enable-panel-plugin-ftp'
+     FTP.  Requires libcurl >= 7.20.0.
+
+`--enable-panel-plugin-sftp'
+     SFTP.  Requires libssh2 >= 1.9.0.
+
+`--enable-panel-plugin-samba'
+     SMB/CIFS.  Requires libsmbclient.
+
+`--enable-panel-plugin-shell-link'
+     The shell link (FISH) protocol, with its helper scripts.
+
+`--enable-shell-ssh2'
+     Use libssh2 as the transport of the shell link plugin instead of
+     the ssh program.  Requires libssh2 >= 1.9.0.
+
+`--enable-panel-plugin-arcmc'
+     Archive browser.  Requires libarchive >= 3.0.
+
+`--enable-panel-plugin-s3'
+     S3 object storage.  Requires libcurl >= 7.75.0.
+
+`--enable-panel-plugin-mongo'
+     MongoDB.  Requires libmongoc-1.0 >= 1.21 or mongoc2 >= 2.0.
+
+`--enable-panel-plugin-sqlite'
+     SQLite database browser.  Requires sqlite3 >= 3.26.
+
+`--enable-lua-plugin'
+     The Lua runtime extension.  Requires Lua 5.3 or newer; use
+     `--with-lua=PREFIX' if Lua is not in a standard place.
+
 `--with-panel-plugins-dir=DIR'
      Set the directory where M-Commander looks for dynamic panel
-     plugins at runtime [default=LIBDIR/mc/panel-plugins].  A dynamic
-     panel plugin is a shared object (.so) that exports the
+     plugins at runtime [default=LIBDIR/mcommander/panel-plugins].  A
+     dynamic panel plugin is a shared object (.so) that exports the
      mc_panel_plugin_register symbol.
 
 `--with-editor-plugins-dir=DIR'
      Set the directory where M-Commander looks for dynamic editor
-     plugins at runtime [default=LIBDIR/mc/editor-plugins].  A dynamic
-     editor plugin is a shared object (.so) that exports the
+     plugins at runtime [default=LIBDIR/mcommander/editor-plugins].  A
+     dynamic editor plugin is a shared object (.so) that exports the
      mc_editor_plugin_register symbol.
+
+`--with-runtime-plugins-dir=DIR'
+     Set the directory for dynamic runtime plugins
+     [default=LIBDIR/mcommander/runtime-plugins].
+
+Options of Midnight Commander that are gone:
+- - - - - - - - - - - - - - - - - - - - - -
+
+configure does not know these options.  It only prints
+"WARNING: unrecognized options" at the end and goes on, so check that
+line, or add `--enable-option-checking=fatal' to make configure stop on
+any unknown option.
+
+  --disable-vfs-ftp      use --disable-panel-plugin-ftp
+  --disable-vfs-sftp     use --disable-panel-plugin-sftp
+  --disable-vfs-smb      use --disable-panel-plugin-samba
+  --disable-vfs-shell,
+  --disable-vfs-fish     use --disable-panel-plugin-shell-link
+  --disable-vfs-tarfs,
+  --disable-vfs-cpiofs   use --disable-panel-plugin-arcmc
+  --without-edit         use --without-internal-edit
+
+Some build scripts pass options that neither Midnight Commander nor
+M-Commander ever had:
+
+  --without-nls          use --disable-nls
+  --without-iconv        not needed: iconv comes from glib and is
+                         always used
+  --without-curses       choose the screen library with --with-screen
+  --disable-mce          use --without-internal-edit to build without
+                         the editor
 
 
 Screen library:
 - - - - - - - -
 
 You may also tell configure which screen library you want to use with
-M-Commander.  The configure script will use S-Lang as
-default, and prefers an already installed S-Lang library over the
-included one, but you can override this by using the following flag
-(please note that since S-Lang is default, it is tested better than
-ncurses):
+M-Commander.  The configure script uses S-Lang by default, but you
+can override this by using the following flag (please note that since
+S-Lang is default, it is tested better than ncurses):
 
 `--with-screen={slang|ncurses}'
      Choose the library used to manage interaction with the terminal.
@@ -212,12 +266,12 @@ ncurses):
      `ncurses' means ncurses library already installed on the system.
      The S-Lang library is used by default if found.
 
-`--with-ncurses-includes=[DIR]'
+`--with-ncurses-includedir=[DIR]'
      Set path to ncurses includes [default=/usr/include]; make
      sense only if --with-screen=ncurses is used;
      for /usr/local/include/ncurses specify /usr/local/include.
 
-`--with-ncurses-libs=[DIR]'
+`--with-ncurses-libdir=[DIR]'
      Set path to ncurses library [default=/usr/lib]; make sense
      only if --with-screen=ncurses is used.
 

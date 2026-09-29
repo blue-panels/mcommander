@@ -28,7 +28,6 @@ build() {
     --with-screen=slang \
     --with-panel-plugins-dir=/usr/lib/mcommander/panel-plugins \
     --with-editor-plugins-dir=/usr/lib/mcommander/editor-plugins \
-    --enable-mcterm=yes \
     --enable-lua-plugin=yes \
     --enable-mctree-magic=yes \
     --enable-panel-plugin-samba=yes \
@@ -37,7 +36,7 @@ build() {
     --enable-panel-plugin-s3=yes \
     --enable-panel-plugin-mongo=yes \
     --enable-panel-plugin-sqlite=yes \
-    --enable-vfs-sftp=yes \
+    --enable-panel-plugin-sftp=yes \
     --enable-panel-plugin-shell-link=yes \
     --enable-shell-ssh2=yes
   make
