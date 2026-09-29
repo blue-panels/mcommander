@@ -54,6 +54,10 @@ include lsm.syntax
 file .\*(bash(_completion|rc)|profile|\\.(sh|bash(rc|_(completion|profile|log(in|out)|aliases|exports|history))|profile|zlog(in|out)|zprofile|zsh(env|rc)?))$ Shell\sScript ^#!\s\*/(.\*/|usr/bin/env\s)([a-z]?|ba|pdk)sh
 include sh.syntax
 
+# what stands inside ${...} of a shell script, embedded by sh.syntax
+file ^$ Shell\sParameter
+include sh-parameter.syntax
+
 # Since openrc scripts have no extension "by definition", use an empty pattern
 # that doesn't match any file name, and therefore only the shebang is used to detect
 # syntax highlighting rules (see tickets #4246 and #4252 for details).

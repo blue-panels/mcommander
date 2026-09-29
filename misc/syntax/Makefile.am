@@ -87,6 +87,7 @@ SYNTAXFILES =			\
 	r.syntax		\
 	ruby.syntax		\
 	rust.syntax		\
+	sh-parameter.syntax	\
 	turtle.syntax		\
 	sh.syntax		\
 	slang.syntax		\

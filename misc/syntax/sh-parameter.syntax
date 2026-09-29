@@ -1,0 +1,27 @@
+# Shell parameter expansion: what stands inside ${...}
+#
+# Embedded by sh.syntax, never chosen for a file of its own.  The "}" that
+# ends the expansion counts outside the strings and escapes below, so that
+# ${X="${Y}"} and ${x/\}/y} end where the shell ends them.
+
+context default brightgreen
+    keyword \\} brightgreen
+    keyword \\" brightgreen
+    keyword \\' brightgreen
+    keyword \\$ brightgreen
+    keyword $(*) brightgreen
+
+# a parameter expanded inside, as in ${a:-${b}}
+context ${ } brightgreen
+    embed soft Shell\sParameter
+
+context " " green
+    keyword \\" brightgreen
+    keyword \\$ brightgreen
+    keyword \\\\ brightgreen
+    keyword $(*) brightgreen
+    keyword ${*} brightgreen
+    keyword wholeright $+ brightgreen
+    keyword $ brightgreen
+
+context ' ' green
