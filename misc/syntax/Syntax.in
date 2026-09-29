@@ -303,6 +303,9 @@ include yxx.syntax
 file ..\*\\.dlink\\.sw$ D-Link\sSwitch\sCommands
 include dlink.syntax
 
+file (?i)\\.j2$|\\.jinja$|\\.jinja2$ Jinja2\sTemplate
+include jinja2.syntax
+
 file ..\*\\.(?i:jalt?)$ Jal\ssource
 include jal.syntax
 
