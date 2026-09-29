@@ -4,23 +4,31 @@
 #
 # Author: Sergii Pylypenko <x.pelya.x@gmail.com>
 #
+# Keys, string values, numbers and constants each have a color of their own.
+# A key is a string followed by a colon, and the colon takes its color: the
+# rules cannot look ahead of what they color.  A key that holds an escaped
+# quote is colored as a value.
 
 context default
 
     #=========================
-    # Constants
-    keyword whole true brightgreen
-    keyword whole false brightgreen
-    keyword whole null brightgreen
+    # Keys
+    keyword "*"\[\s\t\]: yellow
 
     #=========================
-    # Numbers
-    keyword whole \[-\]\{0123456789\}\[0123456789\] brightgreen
-    keyword whole \[-\]\{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\] brightgreen
-    keyword whole \[-\]\{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] brightgreen
-    keyword whole \[-\]\{0123456789\}\[0123456789\]\{eE\}\{\-\+\}\{0123456789\}\[0123456789\] brightgreen
-    keyword whole \[-\]\{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] brightgreen
-    keyword whole \[-\]\{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{\-\+\}\{0123456789\}\[0123456789\] brightgreen
+    # Constants
+    keyword whole true brightred
+    keyword whole false brightred
+    keyword whole null brightred
+
+    #=========================
+    # Numbers, the longest form first: the first that fits is taken
+    keyword whole \[-\]\{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{\-\+\}\{0123456789\}\[0123456789\] brightmagenta
+    keyword whole \[-\]\{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] brightmagenta
+    keyword whole \[-\]\{0123456789\}\[0123456789\]\{eE\}\{\-\+\}\{0123456789\}\[0123456789\] brightmagenta
+    keyword whole \[-\]\{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] brightmagenta
+    keyword whole \[-\]\{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\] brightmagenta
+    keyword whole \[-\]\{0123456789\}\[0123456789\] brightmagenta
 
     #=========================
     # Separators
@@ -32,7 +40,7 @@ context default
     keyword : brightcyan
 
 #=============================
-# Strings
+# String values
 context " " green
     spellcheck
     keyword \\\{"\\/bfnrt\} brightgreen
