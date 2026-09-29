@@ -11,6 +11,9 @@ context default lightgray
     keyword wholeright __ white
     keyword wholeleft  _  yellow
     keyword wholeright _  yellow
+    # inline code in single backticks ends on its line: a backtick left
+    # open colors nothing
+    keyword `*` cyan
 
 context linestart #### \n red
     spellcheck
@@ -104,8 +107,11 @@ context linestart ```diff*\n linestart ``` cyan
 context linestart ```make*\n linestart ``` cyan
     embed Makefile
 
-context ``` ``` cyan
+# a fence that names no language known above
+context linestart ``` linestart ``` cyan
 
-context `` `` cyan
+# inline code in double or triple backticks, which can hold a single one;
+# left open, it ends with its line
+context oneline ``` ``` cyan
 
-context ` ` cyan
+context oneline `` `` cyan
