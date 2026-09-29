@@ -1,0 +1,121 @@
+# Jinja2 expression: what stands inside {{ ... }}
+#
+# Embedded by jinja2.syntax, never chosen for a file of its own.
+
+context default brightred
+    # operators (incl. inline if-expression)
+    keyword whole and brightmagenta
+    keyword whole or brightmagenta
+    keyword whole not brightmagenta
+    keyword whole in brightmagenta
+    keyword whole is brightmagenta
+    keyword whole if brightgreen
+    keyword whole else brightgreen
+
+    # literals
+    keyword whole true magenta
+    keyword whole false magenta
+    keyword whole none magenta
+
+    # pipe (filter separator)
+    keyword | brightmagenta
+
+    # builtin filters
+    keyword whole abs brightgreen
+    keyword whole attr brightgreen
+    keyword whole batch brightgreen
+    keyword whole capitalize brightgreen
+    keyword whole center brightgreen
+    keyword whole default brightgreen
+    keyword whole dictsort brightgreen
+    keyword whole escape brightgreen
+    keyword whole filesizeformat brightgreen
+    keyword whole first brightgreen
+    keyword whole float brightgreen
+    keyword whole forceescape brightgreen
+    keyword whole format brightgreen
+    keyword whole groupby brightgreen
+    keyword whole indent brightgreen
+    keyword whole int brightgreen
+    keyword whole items brightgreen
+    keyword whole join brightgreen
+    keyword whole last brightgreen
+    keyword whole length brightgreen
+    keyword whole list brightgreen
+    keyword whole lower brightgreen
+    keyword whole map brightgreen
+    keyword whole max brightgreen
+    keyword whole min brightgreen
+    keyword whole pprint brightgreen
+    keyword whole random brightgreen
+    keyword whole reject brightgreen
+    keyword whole rejectattr brightgreen
+    keyword whole replace brightgreen
+    keyword whole reverse brightgreen
+    keyword whole round brightgreen
+    keyword whole safe brightgreen
+    keyword whole select brightgreen
+    keyword whole selectattr brightgreen
+    keyword whole slice brightgreen
+    keyword whole sort brightgreen
+    keyword whole string brightgreen
+    keyword whole striptags brightgreen
+    keyword whole sum brightgreen
+    keyword whole title brightgreen
+    keyword whole tojson brightgreen
+    keyword whole trim brightgreen
+    keyword whole truncate brightgreen
+    keyword whole unique brightgreen
+    keyword whole upper brightgreen
+    keyword whole urlencode brightgreen
+    keyword whole urlize brightgreen
+    keyword whole wordcount brightgreen
+    keyword whole wordwrap brightgreen
+    keyword whole xmlattr brightgreen
+
+    # builtin tests
+    keyword whole boolean yellow
+    keyword whole callable yellow
+    keyword whole defined yellow
+    keyword whole divisibleby yellow
+    keyword whole eq yellow
+    keyword whole escaped yellow
+    keyword whole even yellow
+    keyword whole ge yellow
+    keyword whole gt yellow
+    keyword whole integer yellow
+    keyword whole iterable yellow
+    keyword whole le yellow
+    keyword whole lt yellow
+    keyword whole mapping yellow
+    keyword whole ne yellow
+    keyword whole number yellow
+    keyword whole odd yellow
+    keyword whole sameas yellow
+    keyword whole sequence yellow
+    keyword whole test yellow
+    keyword whole undefined yellow
+
+    # builtin global functions
+    keyword whole cycler brightblue
+    keyword whole dict brightblue
+    keyword whole joiner brightblue
+    keyword whole lipsum brightblue
+    keyword whole namespace brightblue
+    keyword whole range brightblue
+
+    # builtin function
+    keyword whole super yellow
+
+    # numbers (most specific first, see note in default context)
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{\+-\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\{eE\}\{\+-\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\} cyan
+
+# strings, where a "%}" or a "}}" is part of the string
+context " " green
+context ' ' green

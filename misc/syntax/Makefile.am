@@ -48,6 +48,8 @@ SYNTAXFILES =			\
 	j.syntax		\
 	jal.syntax		\
 	java.syntax		\
+	jinja2-expression.syntax	\
+	jinja2-statement.syntax	\
 	jinja2.syntax		\
 	js.syntax		\
 	json.syntax		\

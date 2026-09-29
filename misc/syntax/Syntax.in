@@ -306,6 +306,13 @@ include dlink.syntax
 file (?i)\\.j2$|\\.jinja$|\\.jinja2$ Jinja2\sTemplate
 include jinja2.syntax
 
+# what stands inside the tags of a Jinja2 template, embedded by jinja2.syntax
+file ^$ Jinja2\sStatement
+include jinja2-statement.syntax
+
+file ^$ Jinja2\sExpression
+include jinja2-expression.syntax
+
 file ..\*\\.(?i:jalt?)$ Jal\ssource
 include jal.syntax
 

@@ -86,6 +86,12 @@ context linestart ```toml*\n linestart ``` cyan
 context linestart ```html*\n linestart ``` cyan
     embed HTML\sFile
 
+context linestart ```jinja*\n linestart ``` cyan
+    embed Jinja2\sTemplate
+
+context linestart ```j2*\n linestart ``` cyan
+    embed Jinja2\sTemplate
+
 context linestart ```xml*\n linestart ``` cyan
     embed XML\sdocument
 
