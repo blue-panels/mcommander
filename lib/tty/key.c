@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #else
@@ -52,7 +53,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
-#include <termios.h>
 
 #include "lib/global.h"
 
@@ -1159,10 +1159,11 @@ tty_icrnl_enabled (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
 /* Apply corrections for the keycode generated in get_key_code() */
 
 static int
-correct_key_code (int code)
+correct_key_code (int code, gboolean from_sequence)
 {
     unsigned int c = code & ~KEY_M_MASK;   // code without modifier
     unsigned int mod = code & KEY_M_MASK;  // modifier
@@ -1178,12 +1179,14 @@ correct_key_code (int code)
     if (c < 32 || c >= 256)
         mod |= get_modifier ();
 
-    /* Enter arrives as '\r'. A bare '\n' is Ctrl-Enter (or Ctrl-J) unless the
-       tty has ICRNL on: then the kernel has turned Enter into '\n' itself. */
+    /* Only a raw LF needs the legacy Ctrl-Enter inference. A registered
+       sequence already names its key, including any explicit modifiers. */
     if (c == '\r')
         c = '\n';
-    else if (c == '\n' && !tty_icrnl_enabled ())
+    else if (c == '\n' && !from_sequence && !tty_icrnl_enabled ())
         mod |= KEY_M_CTRL;
+    else if (c == KEY_ENTER)
+        c = '\n';
 
     // This is reported to be useful on AIX
     if (c == KEY_SCANCEL)
@@ -1628,6 +1631,9 @@ tty_normalize_keycode (int code)
 {
     unsigned int c = code & ~KEY_M_MASK;   // code without modifier
     unsigned int mod = code & KEY_M_MASK;  // modifier
+
+    if (c == KEY_ENTER)
+        c = '\n';
 
     if (c == KEY_F (0))
         c = KEY_F (10);
@@ -2102,6 +2108,7 @@ int
 get_key_code (int no_delay)
 {
     int c;
+    gboolean from_sequence = FALSE;
     static key_def *this = NULL, *parent;
     static gint64 esc_time = -1;
     static int lastnodelay = -1;
@@ -2199,6 +2206,7 @@ nodelay_try_again:
                     // We got a complete match, return and reset search
                     pending_keys = seq_append = NULL;
                     c = this->code;
+                    from_sequence = TRUE;
                     goto done;
                 }
 
@@ -2222,6 +2230,7 @@ nodelay_try_again:
                         /* no more bytes -- return this node's code */
                         pending_keys = seq_append = NULL;
                         c = this->code;
+                        from_sequence = TRUE;
                         goto done;
                     }
 
@@ -2308,7 +2317,7 @@ nodelay_try_again:
 
 done:
     this = NULL;
-    return correct_key_code (c);
+    return correct_key_code (c, from_sequence);
 }
 
 /* --------------------------------------------------------------------------------------------- */
