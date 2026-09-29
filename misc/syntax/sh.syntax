@@ -1089,6 +1089,27 @@ wholechars abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._
 
 wholechars abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_
 
+# A program that reads a language of its own is read by the rules of that
+# language: the script awk is given in single quotes, the code python is
+# given with -c or in a here-document, the statements an SQL client reads
+# from a here-document.  The quote and the EOF line end it.
+context wholeleft awk*' ' green
+    embed AWK\sFile
+context wholeleft gawk*' ' green
+    embed AWK\sFile
+context wholeleft python\[0123456789.\]\s-c\s' ' green
+    embed Python\sProgram
+context wholeleft python\[0123456789.\]\s<<*EOF*\n linestart EOF green
+    embed Python\sProgram
+context wholeleft python\[0123456789.\]\s-\s<<*EOF*\n linestart EOF green
+    embed Python\sProgram
+context wholeleft sqlite3*<<*EOF*\n linestart EOF green
+    embed SQL\sProgram
+context wholeleft psql*<<*EOF*\n linestart EOF green
+    embed SQL\sProgram
+context wholeleft mysql*<<*EOF*\n linestart EOF green
+    embed SQL\sProgram
+
 context # \n brown
     spellcheck
 
