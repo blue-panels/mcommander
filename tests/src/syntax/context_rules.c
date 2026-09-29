@@ -631,6 +631,19 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_context_over_keyword_starting_with_it)
+{
+    load ("context default\n"
+          "  keyword << red\n"
+          "context <<< >>> green\n");
+
+    // the longer context wins over the keyword, and is entered
+    check_mask ("a<<<x>>>b<<c", ".ggggggg.rr.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_newline_keyword_at_context_start)
 {
     load ("context default\n"
@@ -1449,6 +1462,7 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_exclusive_first_byte);
     tcase_add_test (tc_core, test_newline_keyword_in_newline_context);
     tcase_add_test (tc_core, test_keyword_at_context_start);
+    tcase_add_test (tc_core, test_context_over_keyword_starting_with_it);
     tcase_add_test (tc_core, test_newline_keyword_at_context_start);
     tcase_add_test (tc_core, test_wholechars);
     tcase_add_test (tc_core, test_context_word_borders);

@@ -1175,8 +1175,12 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
                     _rule.end = e;
                     _rule.border = RULE_ON_LEFT_BORDER;
                     _rule._context = count;
-                    if (!r->between_delimiters && _rule.keyword == 0)
+                    /* a keyword of the context around that starts on this byte
+                       too gives way; it used to keep the context from ever
+                       being entered */
+                    if (!r->between_delimiters)
                     {
+                        _rule.keyword = 0;
                         _rule.context = count;
                         found.context_changed = TRUE;
                     }
