@@ -96,6 +96,31 @@ ensure_col (GArray *arr, int col)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Half of a wide character without the other half is a blank. */
+static void
+blank_wide_halves (GArray *arr)
+{
+    guint i;
+
+    for (i = 0; i < arr->len; i++)
+    {
+        mcview_vterm_cell_t *cell = &g_array_index (arr, mcview_vterm_cell_t, i);
+
+        if (cell->ch == MCVIEW_VTERM_WIDE_TAIL)
+            cell->ch = ' ';
+        else if (cell->ch != 0 && g_unichar_iswide (cell->ch))
+        {
+            if (i + 1 < arr->len
+                && g_array_index (arr, mcview_vterm_cell_t, i + 1).ch == MCVIEW_VTERM_WIDE_TAIL)
+                i++;
+            else
+                cell->ch = ' ';
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 free_row_array (gpointer data)
 {
@@ -210,6 +235,8 @@ mcview_terminal_buffer_fill_range (mcview_terminal_buffer_t *buf, int row, int c
         cell->ch = ch;
         cell->attr = attr;
     }
+    // Erased, inserted or deleted cells can cut a wide character in two.
+    blank_wide_halves (arr);
 
     if (row > buf->max_row)
         buf->max_row = row;

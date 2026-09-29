@@ -149,6 +149,7 @@ struct mcview_vterm_struct
        its cells in that line. */
     GArray *reflow_line_start;
     GArray *reflow_offset;
+    GHashTable *reflow_pads;  // old row -> GArray of int: its columns a blank was put before
     gint64 reflow_oldest_abs;
     int reflow_old_cols;
     int reflow_new_cols;
@@ -933,6 +934,23 @@ vterm_cell_is_blank (const mcview_vterm_cell_t *cell)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Where cell @col of the old row @old went in its line in the last reflow. */
+static gint64
+vterm_reflow_off (const mcview_vterm_t *vt, gint64 old, int col)
+{
+    gint64 off = g_array_index (vt->reflow_offset, gint64, old) + col;
+    const GArray *pads = g_hash_table_lookup (vt->reflow_pads, GINT_TO_POINTER ((int) old));
+    guint u;
+
+    for (u = 0; pads != NULL && u < pads->len; u++)
+        if (g_array_index (pads, int, u) <= col)
+            off++;
+
+    return off;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The rows are laid out again for a screen @cols wide: the lines the
    terminal broke are put together and broken where the new width wants
    them. What the screen showed stays on it, the cursor with it; the rest
@@ -975,9 +993,12 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
     {
         vt->reflow_line_start = g_array_new (FALSE, FALSE, sizeof (gint64));
         vt->reflow_offset = g_array_new (FALSE, FALSE, sizeof (gint64));
+        vt->reflow_pads = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+                                                 (GDestroyNotify) g_array_unref);
     }
     g_array_set_size (vt->reflow_line_start, 0);
     g_array_set_size (vt->reflow_offset, 0);
+    g_hash_table_remove_all (vt->reflow_pads);
 
     // The old rows, put together into lines.
     for (i = 0; i < total; i++)
@@ -986,6 +1007,7 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
         gboolean wrapped;
         const int line_idx = (int) lines->len;
         gint64 off;
+        int pads = 0;
 
         if (i < hist_len)
         {
@@ -1000,13 +1022,43 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
 
         if (line == NULL)
             line = g_array_new (FALSE, TRUE, sizeof (mcview_vterm_cell_t));
+        // The blank that sent a wide character to this row is not text.
+        else if (line->len > 0 && g_array_index (line, mcview_vterm_cell_t, line->len - 1).ch == 0
+                 && cells != NULL && cells->len > 1
+                 && g_array_index (cells, mcview_vterm_cell_t, 1).ch == MCVIEW_VTERM_WIDE_TAIL)
+            g_array_set_size (line, line->len - 1);
         off = line->len;
         g_array_append_val (row_line, line_idx);
         g_array_append_val (vt->reflow_offset, off);
 
         if (cells != NULL)
         {
-            g_array_append_vals (line, cells->data, MIN ((int) cells->len, old_cols));
+            const int n = MIN ((int) cells->len, old_cols);
+            int j;
+
+            for (j = 0; j < n; j++)
+            {
+                const mcview_vterm_cell_t *cell = &g_array_index (cells, mcview_vterm_cell_t, j);
+
+                // A wide character the new width would cut in two starts the next row.
+                if (cols > 1 && j + 1 < n && (gint64) line->len % cols == cols - 1
+                    && cell->ch != MCVIEW_VTERM_WIDE_TAIL
+                    && g_array_index (cells, mcview_vterm_cell_t, j + 1).ch
+                        == MCVIEW_VTERM_WIDE_TAIL)
+                {
+                    GArray *at = g_hash_table_lookup (vt->reflow_pads, GINT_TO_POINTER (i));
+
+                    if (at == NULL)
+                    {
+                        at = g_array_new (FALSE, FALSE, sizeof (int));
+                        g_hash_table_insert (vt->reflow_pads, GINT_TO_POINTER (i), at);
+                    }
+                    g_array_append_val (at, j);
+                    g_array_append_val (line, empty);
+                    pads++;
+                }
+                g_array_append_val (line, *cell);
+            }
             if (i >= hist_len)
                 g_array_unref (cells);
         }
@@ -1014,7 +1066,7 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
         if (wrapped && i + 1 < total)
         {
             // A broken row is full to the edge, whatever the buffer kept of it.
-            while ((gint64) line->len < off + old_cols)
+            while ((gint64) line->len < off + old_cols + pads)
                 g_array_append_val (line, empty);
             continue;
         }
@@ -1061,8 +1113,7 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
     vt->reflow_new_cols = cols;
 
     // The screen starts where its first row's line starts, and keeps the cursor.
-    cursor_off =
-        g_array_index (vt->reflow_offset, gint64, hist_len + vt->cursor_row) + vt->cursor_col;
+    cursor_off = vterm_reflow_off (vt, hist_len + vt->cursor_row, vt->cursor_col);
     cursor = g_array_index (vt->reflow_line_start, gint64, hist_len + vt->cursor_row)
         + cursor_off / cols;
     screen_start = g_array_index (vt->reflow_line_start, gint64, hist_len);
@@ -1080,7 +1131,7 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
 
             if (image->row >= 0 && old < total)
                 row = g_array_index (vt->reflow_line_start, gint64, old)
-                    + g_array_index (vt->reflow_offset, gint64, old) / cols - screen_start;
+                    + vterm_reflow_off (vt, old, 0) / cols - screen_start;
             if (row >= 0 && row < vt->term_rows)
             {
                 image->row = (int) row;
@@ -1291,7 +1342,7 @@ mcview_vterm_reflow_map (const mcview_vterm_t *vt, gint64 abs_row, int col, gint
     if (old < 0 || old >= (gint64) vt->reflow_line_start->len)
         return FALSE;
 
-    off = g_array_index (vt->reflow_offset, gint64, old) + CLAMP (col, 0, vt->reflow_old_cols - 1);
+    off = vterm_reflow_off (vt, old, CLAMP (col, 0, vt->reflow_old_cols - 1));
     *new_abs_row = vt->reflow_oldest_abs + g_array_index (vt->reflow_line_start, gint64, old)
         + off / vt->reflow_new_cols;
     *new_col = (int) (off % vt->reflow_new_cols);
@@ -1340,6 +1391,7 @@ mcview_vterm_free (mcview_vterm_t *vt)
     {
         g_array_unref (vt->reflow_line_start);
         g_array_unref (vt->reflow_offset);
+        g_hash_table_destroy (vt->reflow_pads);
     }
     mcview_terminal_buffer_free (vt->alt_frame_buf);
     g_free (vt->osc7_raw);
