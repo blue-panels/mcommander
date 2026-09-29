@@ -7,6 +7,7 @@ dnl
 AC_DEFUN([mc_MCTERM], [
 
     AC_CHECK_HEADERS([pty.h libutil.h util.h])
+    AC_CHECK_FUNCS([closefrom])
     have_openpty=no
     AC_CHECK_FUNCS([openpty], [have_openpty=yes],
         [AC_CHECK_LIB([util], [openpty],
