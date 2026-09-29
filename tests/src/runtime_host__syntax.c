@@ -58,9 +58,11 @@ setup (void)
 
     tmpdir = g_dir_make_tmp ("mc-runtime-syntax-XXXXXX", NULL);
     ck_assert_ptr_nonnull (tmpdir);
-    /* the rules are looked up in the user configuration first and in the share
-       directory after it; the tests own both */
+    /* the rules are looked up in the user configuration and data directories
+       first and in the share directory after them; the tests own all of them,
+       or a Syntax file of the user's own is taken for theirs */
     g_setenv ("XDG_CONFIG_HOME", tmpdir, TRUE);
+    g_setenv ("XDG_DATA_HOME", tmpdir, TRUE);
     share_dir = g_build_filename (tmpdir, "share", (char *) NULL);
     syntax_dir = g_build_filename (share_dir, EDIT_SYNTAX_DIR, (char *) NULL);
     g_mkdir_with_parents (syntax_dir, 0755);
