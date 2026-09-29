@@ -914,13 +914,15 @@ read_bytes_for (syntax_scanner_t *sc, guint n, off_t i, int *prev)
  * before the one around it.
  *
  * A soft delimiter ends the body only from the default context of the rules
- * it embeds: the "}}" in {{ "}}" }} is part of a string.
+ * it embeds, and not inside a keyword of theirs: the "}}" in {{ "}}" }} is part
+ * of a string, the "}" in ${x/\}/y} part of an escape.
  *
+ * @param keyword whether a keyword is on at @i
  * @param end how far the delimiter found reaches
  * @return the context whose body ends at @i, 0 if none does
  */
 static guint
-find_escape (syntax_scanner_t *sc, guint context, off_t i, off_t *end)
+find_escape (syntax_scanner_t *sc, guint context, gboolean keyword, off_t i, off_t *end)
 {
     guint h;
     gboolean inside = FALSE;  // in a context of the rules that h embeds
@@ -931,7 +933,7 @@ find_escape (syntax_scanner_t *sc, guint context, off_t i, off_t *end)
         int c, prev;
         off_t e;
 
-        inside = inside || context != r->embed;
+        inside = inside || context != r->embed || keyword;
         if (r->soft_escape && inside)
             continue;
 
@@ -1004,7 +1006,7 @@ leave_body (syntax_scanner_t *sc, syntax_rule_t *rule, syntax_found_t *found, of
     if (context_of (sc, rule->context)->host == 0)
         return c;
 
-    escape = find_escape (sc, rule->context, i, &e);
+    escape = find_escape (sc, rule->context, rule->keyword != 0, i, &e);
     if (escape != 0)
     {
         r = context_of (sc, escape);

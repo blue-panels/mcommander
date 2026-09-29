@@ -459,9 +459,10 @@ JavaScript:
 
 With
 **soft**
-the right delimiter ends the embedded text only outside the strings and
-comments of the embedded rules, so that in {{ "}}" }} of a Jinja2 template
-the first }} is part of the string.
+the right delimiter ends the embedded text only outside the strings,
+comments and keywords of the embedded rules, so that in {{ "}}" }} of a
+Jinja2 template the first }} is part of the string, and in ${x/\\}/y} of a
+shell script the first } is part of the escape.
 
 Each rule is a line of the form:
 

@@ -1350,6 +1350,24 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_embed_soft_keyword)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context { } green\n"
+                                     "  embed soft Escapes\n"
+                                     "file \\.none$ Escapes\n"
+                                     "context default\n"
+                                     "  keyword \\\\} yellow\n"),
+                      0);
+
+    // a soft delimiter inside a keyword of the embedded rules is part of it
+    check_mask ("{a\\}b}.", "g.yy.g.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_embed_soft_nested)
 {
     ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
@@ -1526,6 +1544,7 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_embed_shared);
     tcase_add_test (tc_core, test_embed_left_ends_like_right);
     tcase_add_test (tc_core, test_embed_soft);
+    tcase_add_test (tc_core, test_embed_soft_keyword);
     tcase_add_test (tc_core, test_embed_soft_nested);
     tcase_add_test (tc_core, test_embed_errors);
     tcase_add_test (tc_core, test_embed_state_from_checkpoints);
