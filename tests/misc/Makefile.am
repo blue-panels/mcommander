@@ -1,6 +1,7 @@
 SUBDIRS = ext.d
 
 EXTRA_DIST = \
+	docker/glib-api/Dockerfile \
 	docker/README.md \
 	docker/sandbox.sh \
 	docker/reports/.gitignore \

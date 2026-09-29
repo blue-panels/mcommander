@@ -20,6 +20,11 @@ Build requirements for M-Commander
   - https://pkg-config.freedesktop.org/wiki/
 - glib2 >= 2.58
   - https://www.gtk.org
+  - Check the API baseline with: sh maint/check-glib-api.sh
+    This uses Docker to build enabled components and run
+    tests against the real GLib 2.58 headers and library from Debian 10.
+    Sources are mounted read only; build files and logs stay in a temporary
+    directory. Additional configure options can be passed to the script.
 - slang2 or ncurses screen library
   - https://www.jedsoft.org/slang/
   - https://invisible-island.net/ncurses/ncurses.html

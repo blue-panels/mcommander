@@ -130,3 +130,20 @@ jobs:
         with:
           name: test-suite-logs-ubuntu
           path: build-*/**/test-suite.log
+
+  check-glib-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and test with GLib 2.58
+        run: sh maint/check-glib-api.sh
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: glib-258-logs
+          path: |
+            /tmp/mc-glib-api.*/*.log
+            /tmp/mc-glib-api.*/build/**/test-suite.log
