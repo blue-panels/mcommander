@@ -1,20 +1,25 @@
 /*
-   Execution routines for GNU Midnight Commander
+   Execution routines for the M-Commander
 
    Copyright (C) 2003-2025
    Free Software Foundation, Inc.
 
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
+
    Written by:
    Slava Zanko <slavazanko@gmail.com>, 2013
+   Ilia Maslakov <il.smind@gmail.com>, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -102,6 +107,7 @@ edition_post_exec (void)
     channels_up ();
     enable_mouse ();
     enable_bracketed_paste ();
+    enable_kitty_keyboard ();
     if (mc_global.tty.alternate_plus_minus)
         application_keypad_mode ();
 }
@@ -122,6 +128,7 @@ edition_pre_exec (void)
     channels_down ();
     disable_mouse ();
     disable_bracketed_paste ();
+    disable_kitty_keyboard ();
 
     tty_reset_shell_mode ();
     tty_keypad (FALSE);
@@ -473,6 +480,7 @@ toggle_terminal (void)
     channels_down ();
     disable_mouse ();
     disable_bracketed_paste ();
+    disable_kitty_keyboard ();
     if (clear_before_exec)
         tty_clear_screen ();
     if (mc_global.tty.alternate_plus_minus)
@@ -513,6 +521,7 @@ toggle_terminal (void)
 
     enable_mouse ();
     enable_bracketed_paste ();
+    enable_kitty_keyboard ();
     channels_up ();
     if (mc_global.tty.alternate_plus_minus)
         application_keypad_mode ();

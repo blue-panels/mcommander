@@ -4,6 +4,9 @@
    Copyright (C) 1994-2026
    Free Software Foundation, Inc.
 
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
+
    Written by:
    Miguel de Icaza, 1994, 1995
    Janne Kukonlehto, 1994, 1995
@@ -14,14 +17,15 @@
    Egmont Koblinger <egmont@gmail.com>, 2013
    Ilia Maslakov <il.smind@gmail.com>, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -226,6 +230,22 @@ const key_code_name_t key_name_conv_tab[] = {
 
 /* The maximum sequence length (32 + null terminator) */
 #define SEQ_BUFFER_LEN 33
+
+/* Kitty keyboard protocol: disambiguate escape codes (1) and report alternate keys (4) */
+#define KITTY_KEYBOARD_FLAGS "5"
+/* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
+#define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
+
+#define KITTY_MOD_SHIFT   0x01
+#define KITTY_MOD_ALT     0x02
+#define KITTY_MOD_CTRL    0x04
+#define KITTY_MOD_SUPER   0x08
+#define KITTY_MOD_HYPER   0x10
+#define KITTY_MOD_META    0x20
+
+/* Kitty key numbers in the private use area */
+#define KITTY_KEY_KP_0     57399
+#define KITTY_KEY_KP_BEGIN 57427
 
 /*** file scope type declarations ****************************************************************/
 
@@ -541,6 +561,41 @@ static int seq_buffer[SEQ_BUFFER_LEN];
 static int *seq_append = NULL;
 
 static int *pending_keys = NULL;
+
+static gboolean kitty_keyboard_active = FALSE;
+
+/* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
+static const int kitty_keypad_keys[] = {
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '.',
+    '/',
+    KEY_KP_MULTIPLY,
+    KEY_KP_SUBTRACT,
+    KEY_KP_ADD,
+    '\r',
+    '=',
+    ',',
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_UP,
+    KEY_DOWN,
+    KEY_PPAGE,
+    KEY_NPAGE,
+    KEY_HOME,
+    KEY_END,
+    KEY_IC,
+    KEY_DC,
+    -1,
+};
 
 #ifdef __QNXNTO__
 ph_dv_f ph_attach;
@@ -1278,6 +1333,156 @@ getch_with_timeout (unsigned int delay_us)
     c = tty_lowlevel_getch ();
     tty_nodelay (FALSE);
     return c;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Is the pending sequence plus @c the start of a CSI sequence with numeric parameters? */
+
+static gboolean
+kitty_csi_started (int c)
+{
+    const int *p;
+
+    if (seq_append == NULL || seq_append - seq_buffer < 2 || seq_buffer[0] != ESC_CHAR
+        || seq_buffer[1] != '[')
+        return FALSE;
+
+    for (p = seq_buffer + 2; p < seq_append; p++)
+        if (!g_ascii_isdigit (*p) && *p != ';' && *p != ':')
+            return FALSE;
+
+    return g_ascii_isdigit (c) || c == ';' || c == ':' || (c >= 0x40 && c <= 0x7E);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Turn a kitty key event into the code a legacy terminal would give for the same key. */
+
+static int
+kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int base,
+                unsigned int mods)
+{
+    int mod = 0;
+
+    mods = mods > 0 ? mods - 1 : 0;
+    if ((mods & (KITTY_MOD_SUPER | KITTY_MOD_HYPER)) != 0)
+        return -1;
+    if ((mods & KITTY_MOD_SHIFT) != 0)
+        mod |= KEY_M_SHIFT;
+    if ((mods & (KITTY_MOD_ALT | KITTY_MOD_META)) != 0)
+        mod |= KEY_M_ALT;
+    if ((mods & KITTY_MOD_CTRL) != 0)
+        mod |= KEY_M_CTRL;
+
+    switch (final)
+    {
+    case 'P':
+        return mod | KEY_F (1);
+    case 'Q':
+        return mod | KEY_F (2);
+    case 'S':
+        return mod | KEY_F (4);
+    case 'u':
+        break;
+    default:
+        return -1;
+    }
+
+    if (key >= KITTY_KEY_KP_0 && key <= KITTY_KEY_KP_BEGIN)
+    {
+        const int code = kitty_keypad_keys[key - KITTY_KEY_KP_0];
+
+        return code == -1 ? -1 : mod | code;
+    }
+
+    switch (key)
+    {
+    case 13:
+        return mod | '\r';
+    case 9:
+        return mod | '\t';
+    case 27:
+        return mod | ESC_CHAR;
+    case 127:
+        return mod | KEY_BACKSPACE;
+    default:
+        break;
+    }
+
+    // a key of another layout counts as the key at its place in the base layout
+    if (key > 126)
+        key = base;
+    if (key < 32 || key > 126)
+        return -1;
+
+    if ((mod & KEY_M_SHIFT) != 0)
+    {
+        if (shifted > 31 && shifted < 127)
+            key = shifted;
+        else
+            key = (unsigned int) g_ascii_toupper ((gchar) key);
+        mod &= ~KEY_M_SHIFT;
+    }
+
+    if ((mod & KEY_M_CTRL) != 0)
+    {
+        if (key == ' ' || g_ascii_islower ((gchar) key) || (key >= '@' && key <= '_'))
+        {
+            // the control character itself, as a legacy terminal sends it
+            key &= 0x1F;
+            mod &= ~KEY_M_CTRL;
+        }
+        else
+            key = (unsigned int) XCTRL (key);
+    }
+
+    return mod | (int) key;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
+   Returns -1 for a sequence that has no mc key. */
+
+static int
+kitty_read_csi (int c)
+{
+    unsigned int field[2][3] = { { 0, 0, 0 }, { 0, 0, 0 } };
+    unsigned int f = 0, sub = 0;
+    const size_t pending = (size_t) (seq_append - seq_buffer);
+    size_t i;
+    int ch;
+
+    for (i = 2;; i++)
+    {
+        if (i < pending)
+            ch = seq_buffer[i];
+        else if (i == pending)
+            ch = c;
+        else
+        {
+            ch = getch_with_timeout (KITTY_CSI_TIMEOUT);
+            if (ch == -1)
+                return -1;
+        }
+
+        if (g_ascii_isdigit (ch))
+        {
+            if (f < 2 && sub < 3 && field[f][sub] < 0x10FFFF)
+                field[f][sub] = field[f][sub] * 10 + (unsigned int) (ch - '0');
+        }
+        else if (ch == ':')
+            sub++;
+        else if (ch == ';')
+        {
+            f++;
+            sub = 0;
+        }
+        else if (ch >= 0x40 && ch <= 0x7E)
+            break;
+        else
+            return -1;
+    }
+
+    return kitty_key_code (ch, field[0][0], field[0][1], field[0][2], field[1][0]);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2083,6 +2288,18 @@ nodelay_try_again:
             goto done;
         }
 
+        if (kitty_keyboard_active && kitty_csi_started (c))
+        {
+            c = kitty_read_csi (c);
+            pending_keys = seq_append = NULL;
+            if (c == -1)
+            {
+                this = NULL;
+                return -1;
+            }
+            goto done;
+        }
+
         // Unknown sequence. Maybe a prefix of a longer one. Save it.
         push_char (c);
         pending_keys = seq_buffer;
@@ -2515,6 +2732,32 @@ disable_bracketed_paste (void)
     printf (ESC_STR "[?2004l");
     fflush (stdout);
     bracketed_pasting_in_progress = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+enable_kitty_keyboard (void)
+{
+    if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
+        return;
+
+    printf (ESC_STR "[>" KITTY_KEYBOARD_FLAGS "u");
+    fflush (stdout);
+    kitty_keyboard_active = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+disable_kitty_keyboard (void)
+{
+    if (!kitty_keyboard_active)
+        return;
+
+    printf (ESC_STR "[<u");
+    fflush (stdout);
+    kitty_keyboard_active = FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */

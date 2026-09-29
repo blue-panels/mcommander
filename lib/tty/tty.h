@@ -173,13 +173,16 @@ typedef void (*tty_painter_fn) (void *data);
 extern void tty_painter_add (tty_painter_fn fn, void *data);
 extern void tty_painter_remove (tty_painter_fn fn, void *data);
 /* Ask the terminal whether it draws sixel and how big its cells are:
-   Primary Device Attributes and XTWINOPS 16. Once, after tty_init(), while
+   Primary Device Attributes and XTWINOPS 16, and whether it knows the kitty
+   keyboard protocol. Once, after tty_init(), while
    nothing else reads the keyboard; a terminal that does not answer within a
    moment is taken not to know. MC_SIXEL=0 or 1 overrides the answer. */
 extern void tty_probe_graphics (void);
 /* Bytes read past the keyboard's back go back to it, in order. */
 extern void tty_unget_input (const unsigned char *data, size_t len);
 extern gboolean tty_has_sixel (void);
+/* The terminal answered CSI ? u. MC_KITTY_KEYBOARD=0 turns the question off. */
+extern gboolean tty_has_kitty_keyboard (void);
 /* Pixels per cell, 0 when the terminal did not say. */
 extern void tty_cell_size (int *width, int *height);
 

@@ -1,22 +1,27 @@
 /*
-   Main program for the Midnight Commander
+   Main program for the M-Commander
 
    Copyright (C) 1994-2025
    Free Software Foundation, Inc.
+
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
 
    Written by:
    Miguel de Icaza, 1994, 1995, 1996, 1997
    Janne Kukonlehto, 1994, 1995
    Norbert Warmuth, 1997
+   Ilia Maslakov <il.smind@gmail.com>, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -438,6 +443,7 @@ main (int argc, char *argv[])
         /* Done after tty_enter_ca_mode (tty_init) because in VTE bracketed mode is
            separate for the normal and alternate screens */
         enable_bracketed_paste ();
+        enable_kitty_keyboard ();
 
         mc_prompt = g_strdup ((geteuid () == 0) ? "# " : "$ ");
     }
@@ -451,6 +457,7 @@ main (int argc, char *argv[])
     g_free (mc_prompt);
 
     disable_bracketed_paste ();
+    disable_kitty_keyboard ();
 
     disable_mouse ();
 

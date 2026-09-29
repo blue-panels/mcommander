@@ -92,6 +92,7 @@ static gboolean painting = FALSE;
 static int background_rgb = -1;
 
 static gboolean has_sixel = FALSE;
+static gboolean has_kitty_keyboard = FALSE;
 static int cell_width = 0;
 static int cell_height = 0;
 
@@ -295,6 +296,13 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen, gboolean
                     n = n * 10 + (*p - '0');
                     have = TRUE;
                 }
+                else if (*p == 'u' && have)
+                {
+                    /* CSI ? <flags> u: the kitty keyboard protocol is known */
+                    has_kitty_keyboard = TRUE;
+                    taken = (size_t) (p + 1 - (buf + i));
+                    break;
+                }
                 else if (*p == ';' || *p == 'c')
                 {
                     if (have && n == 4)
@@ -350,6 +358,7 @@ void
 tty_probe_graphics (void)
 {
     const char *env = getenv ("MC_SIXEL");
+    const char *kitty_env = getenv ("MC_KITTY_KEYBOARD");
     const char *term = getenv ("TERM");
     char buf[512];
     size_t len = 0;
@@ -357,9 +366,14 @@ tty_probe_graphics (void)
     gboolean bg_seen = FALSE;
     gboolean forced_off = env != NULL && env[0] == '0';
     gboolean forced_on = env != NULL && env[0] == '1';
+    gboolean multiplexer =
+        term != NULL && (strncmp (term, "screen", 6) == 0 || strncmp (term, "tmux", 4) == 0);
+    gboolean no_sixel = forced_off || (!forced_on && multiplexer);
+    gboolean ask_kitty = !multiplexer && (kitty_env == NULL || kitty_env[0] != '0');
     int waited_ms = 0;
 
     has_sixel = FALSE;
+    has_kitty_keyboard = FALSE;
     cell_width = 0;
     cell_height = 0;
 
@@ -380,19 +394,18 @@ tty_probe_graphics (void)
 
     /* A multiplexer answers for itself and keeps the DCS: no sixel through it
        unless the user says so. */
-    if (forced_off
-        || (!forced_on && term != NULL
-            && (strncmp (term, "screen", 6) == 0 || strncmp (term, "tmux", 4) == 0)))
-    {
-        has_sixel = FALSE;
+    if (no_sixel && !ask_kitty)
         return;
-    }
 
     if (isatty (STDIN_FILENO) && isatty (STDOUT_FILENO))
     {
-        static const char query[] = ESC_STR "[c" ESC_STR "[16t" ESC_STR "]11;?\a";
+        /* CSI ? u goes before DA1, so its answer is in before the DA1 one */
+        static const char query[] = ESC_STR "[?u" ESC_STR "[c" ESC_STR "[16t" ESC_STR "]11;?\a";
 
-        tty_raw_write (query, sizeof (query) - 1);
+        if (ask_kitty)
+            tty_raw_write (query, sizeof (query) - 1);
+        else
+            tty_raw_write (query + 4, sizeof (query) - 5);
 
         /* Every terminal answers DA1; not every one answers about the cell or the
            background, so once DA1 is in, the rest gets a short while only, and the
@@ -427,6 +440,8 @@ tty_probe_graphics (void)
             tty_unget_input ((const unsigned char *) buf, len);
     }
 
+    if (no_sixel)
+        has_sixel = FALSE;
     if (forced_on)
         has_sixel = TRUE;
 
@@ -445,6 +460,14 @@ gboolean
 tty_has_sixel (void)
 {
     return has_sixel;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_has_kitty_keyboard (void)
+{
+    return has_kitty_keyboard;
 }
 
 /* --------------------------------------------------------------------------------------------- */
