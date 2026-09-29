@@ -27,6 +27,7 @@
 #include "lib/keybind.h"
 #include "lib/mcconfig.h"
 #include "lib/tty/key.h"
+#include "lib/widget.h"
 
 #include "src/keymap.h"
 
@@ -37,6 +38,16 @@ START_TEST (test_keymap_load_defaults)
     const global_keymap_t *map;
 
     keymap_load (FALSE); /* load from C defaults only, no files */
+
+    /* LF keypad Enter must work in menus without losing Ctrl-Enter actions
+       in the panels or the editor. */
+    ck_assert_int_eq (keybind_lookup_keymap_command (menu_map, '\n'), CK_Enter);
+    ck_assert_int_eq (keybind_lookup_keymap_command (menu_map, KEY_M_CTRL | '\n'), CK_Enter);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_CTRL | '\n'),
+                      CK_PutCurrentSelected);
+#ifdef USE_INTERNAL_EDIT
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_CTRL | '\n'), CK_Return);
+#endif
 
     map = filemanager_map;
     ck_assert_ptr_ne (map, NULL);

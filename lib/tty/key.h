@@ -113,6 +113,10 @@ void application_keypad_mode (void);
 void enable_bracketed_paste (void);
 void disable_bracketed_paste (void);
 
+/* Kitty keyboard protocol, if the terminal knows it */
+void enable_kitty_keyboard (void);
+void disable_kitty_keyboard (void);
+
 /*** inline functions ****************************************************************************/
 
 static inline gboolean

@@ -42,6 +42,8 @@ TESTS = \
 	mctree_view \
 	usermenu_ini \
 	term_key_merge \
+	tty_enter \
+	tty_kitty_keyboard \
 	usermenu__test_condition \
 	usermenu__test_expand_format
 
@@ -114,6 +116,12 @@ usermenu_ini_SOURCES = \
 
 term_key_merge_SOURCES = \
 	term_key_merge.c
+
+tty_enter_SOURCES = \
+	tty_enter.c
+
+tty_kitty_keyboard_SOURCES = \
+	tty_kitty_keyboard.c
 
 usermenu__test_condition_SOURCES = \
 	usermenu__test_condition.c

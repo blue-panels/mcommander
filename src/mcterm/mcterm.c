@@ -794,6 +794,11 @@ mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t
         close (pty_slave);
 
     /* Close all fds inherited from MC so they do not leak into the shell. */
+#ifdef HAVE_CLOSEFROM
+    /* The descriptor limit can be enormous (e.g. on Arch Linux). Closing
+       the open descriptors in bulk avoids scanning every possible number. */
+    closefrom (STDERR_FILENO + 1);
+#else
     {
         int maxfd = (int) sysconf (_SC_OPEN_MAX);
         int i;
@@ -803,6 +808,7 @@ mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t
         for (i = STDERR_FILENO + 1; i < maxfd; i++)
             close (i);
     }
+#endif
 
     shell = (mc_global.shell != NULL) ? mc_global.shell->path : NULL;
     if (shell == NULL || *shell == '\0')
