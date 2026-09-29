@@ -435,6 +435,7 @@ context " " green
 
 .PP
 \fBembed\fP
+[\fBsoft\fP]
 \fIтип\fP
 
 .PP
@@ -452,6 +453,13 @@ context " " green
       embed JavaScript\esProgram
 
 .EE
+
+.PP
+Уз
+\fBsoft\fP
+десни раздвајач завршава угњеждени текст само ван ниски и коментара
+угњеждених правила, па у {{ "}}" }} шаблона Jinja2 прве }} остају део
+ниске.
 
 .PP
 Свако правило је линија у облику:

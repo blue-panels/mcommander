@@ -497,6 +497,7 @@ another syntax, with a line right below it:
 
 .PP
 \fBembed\fP
+[\fBsoft\fP]
 \fItype\fP
 
 .PP
@@ -514,6 +515,13 @@ JavaScript:
       embed JavaScript\esProgram
 
 .EE
+
+.PP
+With
+\fBsoft\fP
+the right delimiter ends the embedded text only outside the strings and
+comments of the embedded rules, so that in {{ "}}" }} of a Jinja2 template
+the first }} is part of the string.
 
 .PP
 Each rule is a line of the form:

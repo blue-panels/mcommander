@@ -431,6 +431,7 @@ A context can hand the text between its delimiters to the rules of
 another syntax, with a line right below it:
 
 **embed**
+[**soft**]
 *type*
 
 where
@@ -446,6 +447,12 @@ JavaScript:
   context <SCRIPT*> </SCRIPT> brightcyan
       embed JavaScript\sProgram
 ```
+
+With
+**soft**
+the right delimiter ends the embedded text only outside the strings and
+comments of the embedded rules, so that in {{ "}}" }} of a Jinja2 template
+the first }} is part of the string.
 
 Each rule is a line of the form:
 

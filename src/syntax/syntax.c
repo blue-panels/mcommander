@@ -137,6 +137,9 @@ typedef struct
     guint base;   // default context of the scope this one belongs to
     guint host;   // the context whose body this scope is, 0 at the top
     guint embed;  // default context of the scope the body opens, 0 if it opens none
+    /* the right delimiter ends the body only where the text is in the default
+       context of the embedded rules, not in a string or a comment of theirs */
+    gboolean soft_escape;
     /* on the default context of a scope: which contexts of it can start on a
        byte, context_candidates[start[b] .. start[b + 1]), in the order named */
     guint32 *context_candidates;
@@ -909,6 +912,9 @@ read_bytes_for (syntax_scanner_t *sc, guint n, off_t i, int *prev)
  * innermost first: a rule set embedded in itself closes its own parenthesis
  * before the one around it.
  *
+ * A soft delimiter ends the body only from the default context of the rules
+ * it embeds: the "}}" in {{ "}}" }} is part of a string.
+ *
  * @param end how far the delimiter found reaches
  * @return the context whose body ends at @i, 0 if none does
  */
@@ -916,12 +922,17 @@ static guint
 find_escape (syntax_scanner_t *sc, guint context, off_t i, off_t *end)
 {
     guint h;
+    gboolean inside = FALSE;  // in a context of the rules that h embeds
 
     for (h = context_of (sc, context)->host; h != 0; h = context_of (sc, h)->host)
     {
         const context_rule_t *r = context_of (sc, h);
         int c, prev;
         off_t e;
+
+        inside = inside || context != r->embed;
+        if (r->soft_escape && inside)
+            continue;
 
         c = read_bytes_for (sc, h, i, &prev);
         if (r->first_right == c && r->right->len != 0
@@ -953,6 +964,40 @@ context_ends_here (const syntax_scanner_t *sc, const syntax_rule_t *rule, off_t 
         && compare_word_to_right (sc, i, prev, r->right, r->whole_word_chars_left,
                                   r->whole_word_chars_right, r->line_start_right)
         > 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Leave the body of an embedded rule set if it ends at @i.
+ *
+ * @return the byte at @i as the rules the text is in now read it, @prev the
+ *         one before; @c and @prev as they were when the body goes on
+ */
+static int
+leave_body (syntax_scanner_t *sc, syntax_rule_t *rule, syntax_found_t *found, off_t i, int c,
+            int *prev)
+{
+    const context_rule_t *r;
+    guint escape;
+    off_t e;
+
+    if (context_of (sc, rule->context)->host == 0)
+        return c;
+
+    escape = find_escape (sc, rule->context, i, &e);
+    if (escape != 0)
+    {
+        r = context_of (sc, escape);
+        rule->context = r->between_delimiters ? r->base : escape;
+        rule->keyword = 0;
+        rule->end = e;
+        rule->border = RULE_ON_RIGHT_BORDER;
+        found->left = TRUE;
+        found->right = TRUE;
+    }
+
+    return read_bytes_for (sc, rule->context, i, prev);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1001,24 +1046,8 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
 
     /* check to leave the body of an embedded rule set, unless the context the
        text is in ends here by itself: that one is inner still */
-    if (context_of (sc, _rule.context)->host != 0 && !context_ends_here (sc, &_rule, i, c, prev))
-    {
-        guint escape;
-        off_t e;
-
-        escape = find_escape (sc, _rule.context, i, &e);
-        if (escape != 0)
-        {
-            r = context_of (sc, escape);
-            _rule.context = r->between_delimiters ? r->base : escape;
-            _rule.keyword = 0;
-            _rule.end = e;
-            _rule.border = RULE_ON_RIGHT_BORDER;
-            found.left = TRUE;
-            found.right = TRUE;
-        }
-        c = read_bytes_for (sc, _rule.context, i, &prev);
-    }
+    if (!context_ends_here (sc, &_rule, i, c, prev))
+        c = leave_body (sc, &_rule, &found, i, c, &prev);
 
     // check to turn off a context
     base = context_of (sc, _rule.context)->base;
@@ -1054,6 +1083,12 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
             _rule.border = 0;
         }
     }
+
+    /* a context of the embedded rules that ended here leaves the text in their
+       default context, where a soft delimiter counts */
+    if (!found.right && _rule.context == base)
+        c = leave_body (sc, &_rule, &found, i, c, &prev);
+    base = context_of (sc, _rule.context)->base;
 
     // check to turn on a keyword
     if (_rule.keyword == 0)
@@ -1101,7 +1136,9 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
             }
         }
 
-        if (!found.right)
+        /* an exclusive context that has just been entered keeps its first
+           byte: no other context starts on it */
+        if (!found.right && _rule.context == base)
         {
             const context_rule_t *scope = context_of (sc, base);
             guint n, last;
@@ -1672,20 +1709,29 @@ directive_spellcheck (syntax_parser_t *p)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * embed <type>: what stands between the delimiters of the context opened last
- * is read by the rules of <type>, until the right delimiter turns up.
+ * embed [soft] <type>: what stands between the delimiters of the context opened
+ * last is read by the rules of <type>, until the right delimiter turns up.
+ * Soft, it turns up only outside the strings and comments of those rules.
  */
 static syntax_directive_result_t
 directive_embed (syntax_parser_t *p)
 {
     context_rule_t *c = p->context;
+    char **a = p->args + 1;
 
     // the default context has no delimiters to embed between
-    if (p->rules->line_local || c == NULL || p->rules->contexts->len < 2 || p->argc != 2
-        || c->embed_type != NULL)
+    if (p->rules->line_local || c == NULL || p->rules->contexts->len < 2 || c->embed_type != NULL)
         return SYNTAX_DIRECTIVE_ERROR;
 
-    c->embed_type = g_strdup (p->args[1]);
+    if (*a != NULL && strcmp (*a, "soft") == 0)
+    {
+        a++;
+        c->soft_escape = TRUE;
+    }
+    if (*a == NULL || a[1] != NULL)
+        return SYNTAX_DIRECTIVE_ERROR;
+
+    c->embed_type = g_strdup (*a);
     c->embed_file = g_strdup (*p->error_file);
     c->embed_line = p->line;
 
@@ -2092,7 +2138,7 @@ syntax_embed_shareable (const context_rule_t *c, const context_rule_t *other)
     if (other->embed == 0 || g_ascii_strcasecmp (c->embed_type, other->embed_type) != 0)
         return FALSE;
     if (c->base != other->base || c->between_delimiters != other->between_delimiters
-        || c->line_start_right != other->line_start_right
+        || c->soft_escape != other->soft_escape || c->line_start_right != other->line_start_right
         || c->whole_word_chars_left != other->whole_word_chars_left
         || c->whole_word_chars_right != other->whole_word_chars_right
         || !g_string_equal (c->right, other->right))

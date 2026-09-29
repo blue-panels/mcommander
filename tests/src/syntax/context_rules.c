@@ -590,6 +590,20 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_exclusive_first_byte)
+{
+    load ("context default\n"
+          "context exclusive < > green\n"
+          "context { } red\n");
+
+    // the body of an exclusive context is its own from the first byte on
+    check_mask ("a<{x}>b", "..ggg..");
+    check_mask ("a<x{y}>b", "..gggg..");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_newline_keyword_in_newline_context)
 {
     load ("context default\n"
@@ -1258,6 +1272,47 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_embed_soft)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context {{ }} green\n"
+                                     "  embed soft Inner\n"
+                                     "context <s> </s> magenta\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // a soft delimiter in a string of the embedded rules is part of the string
+    check_mask ("{{\"}}\"}}.", "ggccccgg.");
+    // and ends the body from the default context of those rules as ever
+    check_mask ("{{int}}.", "ggyyygg.");
+    check_mask ("{{}}.", "gggg.");
+    // a hard one ends it anywhere
+    check_mask ("<s>\"</s>\".", "mmmcmmmm..");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_soft_nested)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context {{ }} green\n"
+                                     "  embed soft Middle\n"
+                                     "file \\.none$ Middle\n"
+                                     "context default\n"
+                                     "context <b> </b> magenta\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // the body of <b> is a context of the rules {{ embeds: its "}}" is no end
+    check_mask ("{{<b>}}</b>}}.", "ggmmm..mmmmgg.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_embed_errors)
 {
     // the default context has no delimiters to embed between
@@ -1281,6 +1336,11 @@ START_TEST (test_embed_errors)
                                      "context default\n"
                                      "context < > green\n"
                                      "  embed Inner Inner\n"),
+                      4);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed soft\n"),
                       4);
     ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
                                      "context default\n"
@@ -1370,6 +1430,7 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_keyword_over_newline);
     tcase_add_test (tc_core, test_nul_byte);
     tcase_add_test (tc_core, test_exclusive_empty);
+    tcase_add_test (tc_core, test_exclusive_first_byte);
     tcase_add_test (tc_core, test_newline_keyword_in_newline_context);
     tcase_add_test (tc_core, test_keyword_at_context_start);
     tcase_add_test (tc_core, test_newline_keyword_at_context_start);
@@ -1405,6 +1466,8 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_embed_nested);
     tcase_add_test (tc_core, test_embed_itself);
     tcase_add_test (tc_core, test_embed_shared);
+    tcase_add_test (tc_core, test_embed_soft);
+    tcase_add_test (tc_core, test_embed_soft_nested);
     tcase_add_test (tc_core, test_embed_errors);
     tcase_add_test (tc_core, test_embed_state_from_checkpoints);
 }
