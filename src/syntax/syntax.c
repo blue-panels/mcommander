@@ -951,6 +951,24 @@ find_escape (syntax_scanner_t *sc, guint context, off_t i, off_t *end)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
+ * Can the right delimiter of @r end it on the byte at hand?
+ *
+ * Not while it is being ended already.  Nor, for a context that embeds a rule
+ * set, while its left delimiter lasts: the right one ends the body, and there is
+ * none yet.  "python -c '" ends with the quote that ends the code as well.
+ */
+inline static gboolean
+right_can_match (const syntax_scanner_t *sc, const context_rule_t *r)
+{
+    if ((sc->rule.border & RULE_ON_RIGHT_BORDER) != 0)
+        return FALSE;
+
+    return r->embed == 0 || (sc->rule.border & RULE_ON_LEFT_BORDER) == 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
  * Does the right delimiter of the context @rule is in start at @i?  Asked the
  * way the part of apply_rules_going_right() that turns a context off asks it.
  */
@@ -960,7 +978,7 @@ context_ends_here (const syntax_scanner_t *sc, const syntax_rule_t *rule, off_t 
     const context_rule_t *r = context_of (sc, rule->context);
 
     return rule->context != r->base && rule->keyword == 0 && r->first_right == c
-        && (sc->rule.border & RULE_ON_RIGHT_BORDER) == 0 && r->right->len != 0
+        && right_can_match (sc, r) && r->right->len != 0
         && compare_word_to_right (sc, i, prev, r->right, r->whole_word_chars_left,
                                   r->whole_word_chars_right, r->line_start_right)
         > 0;
@@ -1056,8 +1074,7 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
         off_t e;
 
         r = context_of (sc, _rule.context);
-        if (r->first_right == c && (sc->rule.border & RULE_ON_RIGHT_BORDER) == 0
-            && r->right->len != 0
+        if (r->first_right == c && right_can_match (sc, r) && r->right->len != 0
             && (e = compare_word_to_right (sc, i, prev, r->right, r->whole_word_chars_left,
                                            r->whole_word_chars_right, r->line_start_right))
                 > 0)

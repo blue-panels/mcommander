@@ -1272,6 +1272,22 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_embed_left_ends_like_right)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context run\\s' ' green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // the quote that ends the left delimiter does not end the body it opens
+    check_mask ("run 'int'.", "gggggyyyg.");
+    check_mask ("run ''.", "gggggg.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_embed_soft)
 {
     ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
@@ -1466,6 +1482,7 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_embed_nested);
     tcase_add_test (tc_core, test_embed_itself);
     tcase_add_test (tc_core, test_embed_shared);
+    tcase_add_test (tc_core, test_embed_left_ends_like_right);
     tcase_add_test (tc_core, test_embed_soft);
     tcase_add_test (tc_core, test_embed_soft_nested);
     tcase_add_test (tc_core, test_embed_errors);
