@@ -1180,10 +1180,11 @@ correct_key_code (int code, gboolean from_sequence)
         mod |= get_modifier ();
 
     /* Only a raw LF needs the legacy Ctrl-Enter inference. A registered
-       sequence already names its key, including any explicit modifiers. */
+       sequence already names its key, including any explicit modifiers.
+       A LF in pasted text is a line break, not a key. */
     if (c == '\r')
         c = '\n';
-    else if (c == '\n' && !from_sequence && !tty_icrnl_enabled ())
+    else if (c == '\n' && !from_sequence && !bracketed_pasting_in_progress && !tty_icrnl_enabled ())
         mod |= KEY_M_CTRL;
     else if (c == KEY_ENTER)
         c = '\n';

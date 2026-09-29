@@ -118,6 +118,15 @@ END_TEST
 START_TEST (test_legacy_ctrl_enter) { ck_assert_int_eq (decode_key ('\n'), KEY_M_CTRL | '\n'); }
 END_TEST
 
+START_TEST (test_lf_in_bracketed_paste)
+{
+    bracketed_pasting_in_progress = TRUE;
+    ck_assert_int_eq (decode_key ('\n'), '\n');
+    bracketed_pasting_in_progress = FALSE;
+    ck_assert_int_eq (decode_key ('\n'), KEY_M_CTRL | '\n');
+}
+END_TEST
+
 START_TEST (test_lf_with_icrnl)
 {
     struct termios mode;
@@ -186,6 +195,7 @@ main (void)
     tcase_add_checked_fixture (tc_core, setup, teardown);
     tcase_add_test (tc_core, test_enter_without_modifiers);
     tcase_add_test (tc_core, test_legacy_ctrl_enter);
+    tcase_add_test (tc_core, test_lf_in_bracketed_paste);
     tcase_add_test (tc_core, test_lf_with_icrnl);
     tcase_add_test (tc_core, test_keypad_enter_sequence);
     tcase_add_test (tc_core, test_keypad_enter_capture_name);
