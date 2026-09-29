@@ -54,7 +54,6 @@ src_configure() {
 		--with-screen="$(usex slang slang ncurses)"
 		--with-panel-plugins-dir="/usr/$(get_libdir)/mcommander/panel-plugins"
 		--with-editor-plugins-dir="/usr/$(get_libdir)/mcommander/editor-plugins"
-		--enable-mcterm=yes
 		$(use_with gpm gpm-mouse)
 		$(use_enable lua lua-plugin)
 		$(use_enable magic mctree-magic)
@@ -65,7 +64,7 @@ src_configure() {
 		$(use_enable mongo panel-plugin-mongo)
 		$(use_enable sqlite panel-plugin-sqlite)
 		$(use_with X x)
-		$(use_enable sftp vfs-sftp)
+		$(use_enable sftp panel-plugin-sftp)
 		$(use_enable shell-link panel-plugin-shell-link)
 		$(use_enable shell-ssh2 shell-ssh2)
 	)
