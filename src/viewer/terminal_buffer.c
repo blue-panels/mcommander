@@ -60,6 +60,7 @@ cell_attr_from_ansi (mcview_cell_attr_t *attr, const mcview_ansi_state_t *ansi)
     attr->underline = ansi->underline;
     attr->blink = ansi->blink;
     attr->reverse = ansi->reverse;
+    attr->conceal = ansi->conceal;
 }
 
 /* --------------------------------------------------------------------------------------------- */

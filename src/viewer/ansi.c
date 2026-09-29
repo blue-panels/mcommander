@@ -153,17 +153,22 @@ mcview_ansi_apply_one_sgr_param (mcview_ansi_state_t *state, int idx)
         state->underline = FALSE;
         state->blink = FALSE;
         state->reverse = FALSE;
+        state->conceal = FALSE;
     }
     else if (code == 1)
         state->bold = TRUE;
     else if (code == 3)
         state->italic = TRUE;
     else if (code == 4)
-        state->underline = TRUE;
-    else if (code == 5)
+        // 4:0 is no underline; 4:1 to 4:5 are its styles, all drawn as one
+        state->underline = !(idx + 1 < state->param_count && state->is_colon_sep[idx + 1]
+                             && state->params[idx + 1] == 0);
+    else if (code == 5 || code == 6)
         state->blink = TRUE;
     else if (code == 7)
         state->reverse = TRUE;
+    else if (code == 8)
+        state->conceal = TRUE;
     else if (code == 21)
         // double underline - map to regular underline (ncurses/slang limitation)
         state->underline = TRUE;
@@ -177,6 +182,8 @@ mcview_ansi_apply_one_sgr_param (mcview_ansi_state_t *state, int idx)
         state->blink = FALSE;
     else if (code == 27)
         state->reverse = FALSE;
+    else if (code == 28)
+        state->conceal = FALSE;
     else if (code >= 30 && code <= 37)
         state->fg = code - 30;
     else if (code == 38)
@@ -248,6 +255,7 @@ mcview_ansi_apply_sgr (mcview_ansi_state_t *state)
         state->underline = FALSE;
         state->blink = FALSE;
         state->reverse = FALSE;
+        state->conceal = FALSE;
         return;
     }
 
@@ -341,6 +349,7 @@ mcview_ansi_state_init (mcview_ansi_state_t *state)
     state->underline = FALSE;
     state->blink = FALSE;
     state->reverse = FALSE;
+    state->conceal = FALSE;
     state->link = FALSE;
     state->in_escape = FALSE;
     state->in_csi = FALSE;

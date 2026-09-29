@@ -47,7 +47,8 @@ typedef struct
     gboolean underline;
     gboolean blink;
     gboolean reverse;
-    gboolean link; /**< inside the text of an OSC 8 hyperlink */
+    gboolean conceal; /**< the text is not shown */
+    gboolean link;    /**< inside the text of an OSC 8 hyperlink */
 
     /* --- internal parser state --- */
     gboolean in_escape;   /**< seen ESC, waiting for '[' */

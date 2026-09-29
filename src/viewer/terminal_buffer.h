@@ -23,6 +23,7 @@ typedef struct
     gboolean underline;
     gboolean blink;
     gboolean reverse;
+    gboolean conceal;
 } mcview_cell_attr_t;
 
 typedef struct

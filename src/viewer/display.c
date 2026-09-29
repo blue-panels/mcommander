@@ -414,8 +414,15 @@ mcview_render_terminal_canvas (const mcview_terminal_buffer_t *buf, int top_row,
                 tmp.blink = a->blink;
                 tmp.reverse = a->reverse;
                 tty_setcolor (mcview_ansi_color_of (&tmp, colors));
-                // Half a wide character is not drawn.
-                tty_print_anychar (wide && !whole ? ' ' : cell->ch);
+                if (a->conceal)
+                {
+                    tty_print_char (' ');
+                    if (whole)
+                        tty_print_char (' ');
+                }
+                else
+                    // Half a wide character is not drawn.
+                    tty_print_anychar (wide && !whole ? ' ' : cell->ch);
                 // The right half is drawn with it; a cell printed there would erase it.
                 if (whole)
                     col++;
