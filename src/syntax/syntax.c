@@ -118,6 +118,7 @@ typedef struct
     gboolean line_start_left;
     gboolean line_start_right;
     gboolean between_delimiters;
+    gboolean one_line;  // ends at the end of its line if the right delimiter is not there
     const syntax_charset_t *whole_word_chars_left;
     const syntax_charset_t *whole_word_chars_right;
     char *keyword_first_chars;
@@ -1050,6 +1051,16 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
         }
     }
 
+    /* a context that keeps to its line is over with the line, right delimiter
+       or not: an unclosed quote colors no more than the rest of its line */
+    if (prev == '\n' && context_of (sc, _rule.context)->one_line)
+    {
+        _rule.context = context_of (sc, _rule.context)->base;
+        _rule.keyword = 0;
+        _rule.border = 0;
+        found.left = TRUE;
+    }
+
     /* the left delimiter of a context that embeds a rule set is over: from here
        on the body is read by the rules it embeds */
     if (is_end && (sc->rule.border & RULE_ON_LEFT_BORDER) != 0
@@ -1630,7 +1641,7 @@ directive_wholechars (syntax_parser_t *p)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/** context [exclusive] [whole...] [linestart] <left> [linestart] <right> [colors] */
+/** context [exclusive] [oneline] [whole...] [linestart] <left> [linestart] <right> [colors] */
 static syntax_directive_result_t
 directive_context (syntax_parser_t *p)
 {
@@ -1666,6 +1677,11 @@ directive_context (syntax_parser_t *p)
         {
             a++;
             c->between_delimiters = TRUE;
+        }
+        if (*a != NULL && strcmp (*a, "oneline") == 0)
+        {
+            a++;
+            c->one_line = TRUE;
         }
         if (*a == NULL)
             return SYNTAX_DIRECTIVE_ERROR;
@@ -2069,6 +2085,7 @@ context_rule_copy (syntax_rules_t *r, const syntax_rules_t *from_rules, const co
     c->line_start_left = from->line_start_left;
     c->line_start_right = from->line_start_right;
     c->between_delimiters = from->between_delimiters;
+    c->one_line = from->one_line;
     c->whole_word_chars_left = syntax_reintern_charset (r, from->whole_word_chars_left);
     c->whole_word_chars_right = syntax_reintern_charset (r, from->whole_word_chars_right);
     c->spelling = from->spelling;

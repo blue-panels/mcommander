@@ -438,6 +438,7 @@ Each context starts with a line of the form:
 .PP
 \fBcontext\fP
 [\fBexclusive\fP]
+[\fBoneline\fP]
 [\fBwhole\fP|\fBwholeright\fP|\fBwholeleft\fP]
 [\fBlinestart\fP]
 \fIdelim\fP
@@ -490,6 +491,15 @@ The
 \fBexclusive\fP
 option causes the text between the delimiters to be highlighted, but not
 the delimiters themselves.
+
+.PP
+The
+\fBoneline\fP
+option, after
+\fBexclusive\fP
+if both are given, ends the context at the end of its line when the right
+delimiter is not there, so that a delimiter left open colors no more than
+the rest of its line.
 
 .PP
 A context can hand the text between its delimiters to the rules of

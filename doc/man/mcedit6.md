@@ -380,6 +380,7 @@ Each context starts with a line of the form:
 
 **context**
 [**exclusive**]
+[**oneline**]
 [**whole**|**wholeright**|**wholeleft**]
 [**linestart**]
 *delim*
@@ -426,6 +427,14 @@ The
 **exclusive**
 option causes the text between the delimiters to be highlighted, but not
 the delimiters themselves.
+
+The
+**oneline**
+option, after
+**exclusive**
+if both are given, ends the context at the end of its line when the right
+delimiter is not there, so that a delimiter left open colors no more than
+the rest of its line.
 
 A context can hand the text between its delimiters to the rules of
 another syntax, with a line right below it:

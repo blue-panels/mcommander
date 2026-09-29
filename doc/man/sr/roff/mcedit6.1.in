@@ -378,6 +378,7 @@ context " " green
 .PP
 \fBcontext\fP
 [\fBexclusive\fP]
+[\fBoneline\fP]
 [\fBwhole\fP|\fBwholeright\fP|\fBwholeleft\fP]
 [\fBlinestart\fP]
 \fIраздвајач\fP
@@ -428,6 +429,15 @@ context " " green
 Опција
 \fBexclusive\fP
 налаже да текст између раздвајача буде истакнут, али не и раздвајачи.
+
+.PP
+Параметар
+\fBoneline\fP,
+после
+\fBexclusive\fP
+ако су задата оба, завршава контекст на крају линије када на њој нема
+десног раздвајача, па незатворен раздвајач боји највише остатак своје
+линије.
 
 .PP
 Контекст може да преда текст између својих раздвајача правилима друге
