@@ -1159,6 +1159,23 @@ mcview_vterm_scroll_up (mcview_vterm_t *vt, int top, int bottom, const mcview_an
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A character over one half of a wide one leaves the other half blank. */
+static void
+vterm_split_wide (mcview_vterm_t *vt, int row, int col, int width, const mcview_ansi_state_t *ansi)
+{
+    const mcview_vterm_cell_t *cell;
+
+    cell = mcview_terminal_buffer_get (vt->buf, row, col);
+    if (cell != NULL && cell->ch == MCVIEW_VTERM_WIDE_TAIL && col > 0)
+        mcview_terminal_buffer_put_char (vt->buf, row, col - 1, ' ', ansi);
+
+    cell = mcview_terminal_buffer_get (vt->buf, row, col + width);
+    if (cell != NULL && cell->ch == MCVIEW_VTERM_WIDE_TAIL)
+        mcview_terminal_buffer_put_char (vt->buf, row, col + width, ' ', ansi);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Down one row, from the bottom of the region by scrolling it. */
 static void
 vterm_linefeed (mcview_vterm_t *vt, const mcview_ansi_state_t *ansi)
@@ -1731,26 +1748,43 @@ mcview_vterm_apply_event (mcview_vterm_t *vt, const vterm_event_t *ev)
     switch (ev->type)
     {
     case VTERM_CHAR:
+    {
+        const int width = g_unichar_iswide (ev->ch) ? 2 : 1;
+
         if (vt->pending_wrap)
         {
             mcview_terminal_buffer_set_wrapped (vt->buf, vt->cursor_row, TRUE);
             vt->pending_wrap = FALSE;
             vterm_linefeed (vt, &ev->ansi);
         }
+        // Both halves of a wide character on one row, as xterm does it.
+        if (width == 2 && vt->autowrap && vt->cursor_col > 0 && vt->cursor_col + 1 >= vt->term_cols)
+        {
+            mcview_terminal_buffer_set_wrapped (vt->buf, vt->cursor_row, TRUE);
+            vterm_linefeed (vt, &ev->ansi);
+            vt->cursor_col = 0;
+        }
         if (vt->insert_mode)
-            mcview_terminal_buffer_insert_chars (vt->buf, vt->cursor_row, vt->cursor_col, 1,
+            mcview_terminal_buffer_insert_chars (vt->buf, vt->cursor_row, vt->cursor_col, width,
                                                  vt->term_cols, &ev->ansi);
         if (vt->cursor_col < MCVIEW_VTERM_MAX_CANVAS_COLS)
+        {
+            vterm_split_wide (vt, vt->cursor_row, vt->cursor_col, width, &ev->ansi);
             mcview_terminal_buffer_put_char (vt->buf, vt->cursor_row, vt->cursor_col, ev->ch,
                                              &ev->ansi);
-        vt->cursor_col++;
+            if (width == 2 && vt->cursor_col + 1 < MCVIEW_VTERM_MAX_CANVAS_COLS)
+                mcview_terminal_buffer_put_char (vt->buf, vt->cursor_row, vt->cursor_col + 1,
+                                                 MCVIEW_VTERM_WIDE_TAIL, &ev->ansi);
+        }
+        vt->cursor_col += width;
         if (vt->autowrap && vt->cursor_col >= vt->term_cols)
         {
             vt->cursor_col = vt->term_cols - 1;
             vt->pending_wrap = TRUE;
         }
         vt->new_chars_since_snapshot = TRUE;
-        break;
+    }
+    break;
 
     case VTERM_CR:
         vt->cursor_col = 0;

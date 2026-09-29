@@ -889,6 +889,79 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_wide_char_takes_two_cells)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_autowrap (vt, TRUE);
+    mcview_vterm_set_size (vt, 3, 8);
+    mcview_vterm_reset (vt);
+
+    FEED (vt,
+          "A\xe4\xb8\xad"
+          "B");
+
+    ck_assert_int_eq (cell_ch (vt, 0, 0), 'A');
+    ck_assert_int_eq (cell_ch (vt, 0, 1), 0x4e2d);
+    ck_assert_int_eq (cell_ch (vt, 0, 2), MCVIEW_VTERM_WIDE_TAIL);
+    ck_assert_int_eq (cell_ch (vt, 0, 3), 'B');
+    ck_assert_int_eq (mcview_vterm_cursor_col (vt), 4);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_wide_char_goes_to_the_next_row_whole)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_autowrap (vt, TRUE);
+    mcview_vterm_set_size (vt, 3, 4);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "abc\xe4\xb8\xad");
+
+    ck_assert_int_eq (cell_ch (vt, 0, 3), 0);
+    ck_assert (mcview_terminal_buffer_is_wrapped (mcview_vterm_buf (vt), 0));
+    ck_assert_int_eq (cell_ch (vt, 1, 0), 0x4e2d);
+    ck_assert_int_eq (cell_ch (vt, 1, 1), MCVIEW_VTERM_WIDE_TAIL);
+    ck_assert_int_eq (mcview_vterm_cursor_row (vt), 1);
+    ck_assert_int_eq (mcview_vterm_cursor_col (vt), 2);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_wide_char_half_overwritten_leaves_a_blank)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_autowrap (vt, TRUE);
+    mcview_vterm_set_size (vt, 3, 8);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "\xe4\xb8\xad\xe4\xb8\xad");
+
+    // over the right half of the first one
+    FEED (vt, "\033[1;2HX");
+    ck_assert_int_eq (cell_ch (vt, 0, 0), ' ');
+    ck_assert_int_eq (cell_ch (vt, 0, 1), 'X');
+
+    // over the left half of the second one
+    FEED (vt, "Y");
+    ck_assert_int_eq (cell_ch (vt, 0, 2), 'Y');
+    ck_assert_int_eq (cell_ch (vt, 0, 3), ' ');
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mcview_vterm_t *
 reflow_vterm (int rows, int cols)
 {
@@ -1659,6 +1732,9 @@ main (void)
     tcase_add_test (tc_core, test_autowrap_off_overwrites_the_last_column);
     tcase_add_test (tc_core, test_autowrap_scrolls_and_the_history_keeps_the_break);
     tcase_add_test (tc_core, test_autowrap_is_off_by_default);
+    tcase_add_test (tc_core, test_wide_char_takes_two_cells);
+    tcase_add_test (tc_core, test_wide_char_goes_to_the_next_row_whole);
+    tcase_add_test (tc_core, test_wide_char_half_overwritten_leaves_a_blank);
     tcase_add_test (tc_core, test_reflow_narrower_breaks_the_lines_again);
     tcase_add_test (tc_core, test_reflow_wider_puts_the_lines_together);
     tcase_add_test (tc_core, test_reflow_keeps_the_cursor_in_its_line);

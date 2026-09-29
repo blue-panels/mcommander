@@ -269,6 +269,8 @@ mcterm_sel_text (const mcterm_sel_t *sel, mcview_vterm_t *vt, int cols, gint64 s
             const mcview_vterm_cell_t *cell = mcterm_sel_cell_at (vt, row, col);
             const gunichar ch = (cell == NULL || cell->ch == 0) ? ' ' : cell->ch;
 
+            if (ch == MCVIEW_VTERM_WIDE_TAIL)
+                continue;
             g_string_append_unichar (text, ch);
             if (ch != ' ')
                 last_word = text->len;
