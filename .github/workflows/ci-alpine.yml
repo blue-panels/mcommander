@@ -33,6 +33,7 @@ jobs:
           su - test -c ' \
             ./configure \
               --prefix="$(pwd)/install-prefix" \
+              --enable-option-checking=fatal \
               --enable-mclib \
               --enable-werror \
               && \

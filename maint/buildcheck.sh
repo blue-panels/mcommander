@@ -136,7 +136,7 @@ configuration() {
     rm -rf "build-$name"
     tar -xjf "$tarball" --one-top-level="build-$name"
     chown -R build "/work/build-$name"
-    if ! as_build "/work/build-$name" "../configure --prefix=\$(pwd)/install $* >/tmp/cf-$name.log 2>&1"; then
+    if ! as_build "/work/build-$name" "../configure --prefix=\$(pwd)/install --enable-option-checking=fatal $* >/tmp/cf-$name.log 2>&1"; then
         bad "$name: configure"; tail -8 "/tmp/cf-$name.log"; return
     fi
     if ! as_build "/work/build-$name" "make -j$JOBS >/tmp/mk-$name.log 2>&1"; then
@@ -156,7 +156,7 @@ configuration ncurses --with-screen=ncurses --enable-werror
 configuration minimal --disable-shared --disable-static --disable-maintainer-mode \
     --disable-largefile --disable-nls --disable-rpath --disable-mclib --disable-assert \
     --disable-background --disable-vfs --without-x --without-gpm-mouse \
-    --without-internal-edit --without-diff-viewer --without-subshell --enable-tests --enable-werror
+    --without-internal-edit --without-diff-viewer --enable-tests --enable-werror
 
 exit "$inner_fail"
 INNER

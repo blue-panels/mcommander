@@ -36,6 +36,7 @@ jobs:
 
           ./configure \
             --prefix="$(pwd)/install-prefix" \
+            --enable-option-checking=fatal \
             --enable-mclib
 
           make -j$(sysctl -n hw.logicalcpu)
