@@ -47,6 +47,9 @@
 
 /*** global variables ****************************************************************************/
 
+/* Far mode: panel keys of Far Manager, see "Far mode" in the manual */
+gboolean keymap_far_mode = FALSE;
+
 GArray *filemanager_keymap = NULL;
 GArray *filemanager_x_keymap = NULL;
 GArray *panel_keymap = NULL;
@@ -776,6 +779,44 @@ static const global_keymap_ini_t default_mcterm_keymap[] = {
 };
 #endif
 
+/* Far mode (opt-in, see "Far mode" in the manual): keys that Far Manager gives to panel actions.
+   It is put over the built-in keymap and over the installed keymap.ini, and under the keymaps of
+   the user, so that keymap.ini of the user has the last word. An action listed here loses the keys
+   that it had before, except the ones kept in the value on purpose. */
+
+static const global_keymap_ini_t far_filemanager_keymap[] = {
+    // Alt-F7: find file; Alt-F8: history of the command line; Alt-F11: history of viewed files
+    { "Find", "alt-f7; alt-question" },
+    { "History", "alt-f8; alt-h" },
+    { "EditorViewerHistory", "alt-f11; alt-shift-e" },
+    // Ctrl-L: info panel, Ctrl-Q: quick view panel, Ctrl-T: tree panel. Ctrl-, is not here: the
+    // key code of a control key keeps the low five bits only, so it is the code of Ctrl-L
+    { "PanelInfo", "ctrl-l" },
+    { "PanelQuickView", "ctrl-q" },
+    { "PanelTree", "ctrl-t" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+static const global_keymap_ini_t far_panel_keymap[] = {
+    // Ctrl-T belongs to the tree panel
+    { "Mark", "insert" },
+    // Alt-F12: history of the directories
+    { "History", "alt-shift-h; alt-f12" },
+    // Ctrl-F3..Ctrl-F6: sort by name, extension, modification time and size; Ctrl-F12: sort menu
+    { "SortByName", "ctrl-f3" },
+    { "SortByExt", "ctrl-f4" },
+    { "SortByMTime", "ctrl-f5" },
+    { "SortBySize", "ctrl-f6" },
+    { "Sort", "ctrl-f12" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
@@ -829,6 +870,20 @@ create_default_keymap (void)
 #endif
 
     return keymap;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Put the keys of Far mode over the keymap; does nothing while the mode is off */
+
+static void
+apply_far_mode_keymap (mc_config_t *keymap)
+{
+    if (!keymap_far_mode)
+        return;
+
+    create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER, far_filemanager_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_PANEL, far_panel_keymap);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -973,7 +1028,10 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
     // 0) Create default keymap
     keymap_config = create_default_keymap ();
     if (!load_from_file)
+    {
+        apply_far_mode_keymap (keymap_config);
         return keymap_config;
+    }
 
     // load and merge global keymaps
 
@@ -985,6 +1043,9 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
     sysconfig_keymap =
         g_build_filename (mc_global.sysconfig_dir, GLOBAL_KEYMAP_FILE, (char *) NULL);
     load_setup_init_config_from_file (&keymap_config, sysconfig_keymap, TRUE);
+
+    // Far mode goes over the global keymaps, which carry every key of the default keymap
+    apply_far_mode_keymap (keymap_config);
 
     // then load and merge one of user-defined keymap
 

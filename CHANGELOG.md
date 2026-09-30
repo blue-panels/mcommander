@@ -2,6 +2,13 @@
 
 The releases of this fork, newest first.
 
+## Unreleased
+
+- Far mode, off by default, gives the panels the keys of Far Manager (Alt-F7,
+  Alt-F8, Alt-F11, Alt-F12, Ctrl-F3 to Ctrl-F6, Ctrl-F12, Ctrl-L, Ctrl-Q,
+  Ctrl-T); it is a check box in the Configuration dialog and the far_mode
+  setting.
+
 ## 6.1.0 - 2026-09-26
 
 - The program is now M-Commander: the main binary is mcommander, the editor,
