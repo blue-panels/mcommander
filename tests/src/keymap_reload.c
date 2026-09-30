@@ -306,6 +306,84 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_keymap_far_mode_listing_modes)
+{
+    int i;
+
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+    /* Ctrl-1 .. Ctrl-9 and Ctrl-0 are the digit with the modifier, not the control characters */
+    for (i = 1; i <= 10; i++)
+        ck_assert_int_eq (
+            keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | (i == 10 ? '0' : '0' + i)),
+            CK_PanelListingMode1 + i - 1);
+
+    /* the control characters of the same codes keep their meaning */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('q')),
+                      CK_PanelQuickView);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('t')), CK_PanelTree);
+
+    /* a key name carries the digit and the modifier, as the keymap files write it */
+    ck_assert_int_eq (tty_keyname_to_keycode ("ctrl-1", NULL), KEY_M_CTRL | '1');
+    ck_assert_int_eq (tty_keyname_to_keycode ("ctrl-q", NULL), XCTRL ('q'));
+
+    keymap_free ();
+
+    /* off: the keys are not bound */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | '1'),
+                      CK_PanelListingMode1);
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_keymap_far_mode_command_line)
+{
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+    /* the history of the command line, the deleting of the line and the name of the file */
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, XCTRL ('e')), CK_HistoryPrev);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, XCTRL ('x')), CK_HistoryNext);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, XCTRL ('y')), CK_Clear);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, KEY_M_CTRL | KEY_BACKSPACE),
+                      CK_DeleteToWordBegin);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('f')),
+                      CK_PutCurrentFullSelected);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('a')), CK_ChangeMode);
+
+    /* the keys they took are given away or kept elsewhere */
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, KEY_END), CK_End);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, ALT ('p')), CK_HistoryPrev);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, ALT ('y')), CK_Yank);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('x')),
+                      CK_ExtendedKeyMap);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('x')),
+                      CK_ExtendedKeyMap);
+    ck_assert_int_eq (
+        keybind_lookup_keymap_command (filemanager_map, KEY_M_CTRL | KEY_M_SHIFT | '\n'),
+        CK_PutCurrentFullSelected);
+
+    keymap_free ();
+
+    /* off: the keys of the Emacs are back */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, XCTRL ('e')), CK_End);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, XCTRL ('y')), CK_Yank);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('x')),
+                      CK_ExtendedKeyMap);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('a')), CK_ChangeMode);
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -323,6 +401,8 @@ main (void)
     tcase_add_test (tc_core, test_keymap_far_mode_off_by_default);
     tcase_add_test (tc_core, test_keymap_far_mode_switch);
     tcase_add_test (tc_core, test_keymap_far_mode_editor_viewer);
+    tcase_add_test (tc_core, test_keymap_far_mode_listing_modes);
+    tcase_add_test (tc_core, test_keymap_far_mode_command_line);
 
     return mctest_run_all (tc_core);
 }

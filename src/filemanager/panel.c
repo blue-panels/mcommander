@@ -5074,6 +5074,18 @@ panel_execute_cmd (WPanel *panel, long command)
     case CK_CycleListingFormat:
         panel_cycle_listing_format (panel);
         break;
+    case CK_PanelListingMode1:
+    case CK_PanelListingMode2:
+    case CK_PanelListingMode3:
+    case CK_PanelListingMode4:
+    case CK_PanelListingMode5:
+    case CK_PanelListingMode6:
+    case CK_PanelListingMode7:
+    case CK_PanelListingMode8:
+    case CK_PanelListingMode9:
+    case CK_PanelListingMode10:
+        panel_apply_far_listing (panel, (guint) (command - CK_PanelListingMode1 + 1));
+        break;
     case CK_PanelModes:
         panel_modes_cmd (panel);
         break;

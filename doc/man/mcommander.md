@@ -342,10 +342,10 @@ files of the system, and under the
 of the user, so the user can still change any key by
 [hand](#keys_redefine).
 
-So far the mode covers the directory panels, the editor and the viewer; the
-dialogs are the next step, and until then they keep the keys they have. These
-are the keys that the mode gives to the panels, with what each of them
-replaces:
+So far the mode covers the directory panels, the editor, the viewer, the
+command line and the edit lines of the dialogs; the other keys of the dialogs
+stay as they are. These are the keys that the mode gives to the panels, with
+what each of them replaces:
 
 **Alt-F7**
 : find file. Alt-? keeps working.
@@ -372,6 +372,36 @@ M-Commander.
 panels Ctrl-L stops redrawing the screen (it still does in the dialogs), and
 Ctrl-T stops tagging a file; Insert tags it, as it does in Far.
 
+**Ctrl-1 to Ctrl-9, Ctrl-0**
+: the listing modes of Far: brief (three columns of names), medium (two
+columns), full (name, size and time), wide (name and size), detailed (with the
+times of access and change and the permissions), names alone (Ctrl-6) and
+names with the modification time (Ctrl-7), which stand for the descriptions
+that M-Commander does not have, owners, links, and the long listing of
+M-Commander for Ctrl-0. The modes are fixed and do not touch the list of
+[panel modes](#panel-modes) of the user.
+
+**Ctrl-A**
+: the attributes of the file, which is the permission dialog (chmod). In the
+command line Ctrl-A no longer moves to the beginning of the line; Home does.
+
+**Ctrl-F**
+: puts the full name of the file under the cursor into the command line
+(Ctrl-Shift-Enter does it too). Ctrl-Enter puts the name alone, as it does in
+the mode off.
+
+**Ctrl-X**
+: is the next command of the history, see below. The prefix of the extended
+commands, which Ctrl-X was, moves to Alt-X.
+
+**In the command line and in the edit lines of the dialogs** (they all share
+the keys):
+Ctrl-E is the previous command of the history and Ctrl-X the next one, as in
+Far, and Ctrl-Y deletes the whole line. Ctrl-Backspace and Ctrl-Delete delete a
+word to the left and to the right. The keys these took are given away: Ctrl-E
+no longer moves to the end of the line (End does), and Yank, which was Ctrl-Y,
+is Alt-y.
+
 **In the editor** (as the far2l help lists them):
 Ctrl-F7 replaces, and F4, which replaced text, quits the editor together with
 F10 and Esc; Alt-F8 goes to a line (Alt-l keeps working); Ctrl-F3 shows the
@@ -392,17 +422,17 @@ Insert and the numeric plus, minus and asterisk.
 What differs from Far, and stays so for now: F3 in the editor still marks a
 block instead of wrapping lines, the clipboard keys Ctrl-C, Ctrl-V and Ctrl-X
 of the editor are not bound (Ctrl-Insert, Shift-Insert and Shift-Delete work),
-and the viewer keeps its own F8, F9, Space and plus and minus keys; the
-panels keep the M-Commander
-listing modes and colors (the Ctrl-1 to Ctrl-0 keys for the modes are not
-bound), the command line keeps its Emacs-style editing keys, so Ctrl-A, Ctrl-E
-and the like edit the line and are not the Far commands, Ctrl-G, Ctrl-Z,
-Ctrl-M, Ctrl-H and the folder shortcuts are not bound, Ctrl-\ keeps opening the
-directory hotlist instead of the root directory, and Ctrl-, does not switch the
-panel layout (a terminal sends it as Ctrl-L, which shows the information panel
-in this mode); Alt-, does.
+and the viewer keeps its own F8, F9, Space and plus and minus keys; the panels
+keep the M-Commander colors and have no descriptions of the files (Ctrl-6 and
+Ctrl-7 show other columns, see above), Ctrl-G, Ctrl-Z, Ctrl-M, Ctrl-H and the
+folder shortcuts are not bound, Ctrl-\ keeps opening the directory hotlist
+instead of the root directory, Ctrl with a square bracket does not put the path
+of the left or of the right panel into the command line (a terminal sends
+Ctrl-left bracket as Esc), and Ctrl-, does not switch the panel layout (a terminal sends it as
+Ctrl-L, which shows the information panel in this mode); Alt-, does. The
+dialogs keep their own keys, apart from the edit lines.
 
-Some keys of the mode (Ctrl with a comma or with a function key) are sent by a
+Some keys of the mode (Ctrl with a digit, with a comma or with a function key) are sent by a
 terminal only when it reports modified keys, as xterm and the terminals that speak the kitty keyboard protocol do.
 In a terminal that does not, the key arrives as another one or does not arrive
 at all, and nothing is lost: every action is also in the menus, and the key it
