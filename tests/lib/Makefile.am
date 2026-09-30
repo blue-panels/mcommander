@@ -82,6 +82,7 @@ EXTRA_DIST = utilunix__my_system-common.c \
 	lua_markdown/table.md.out
 
 TESTS = \
+	far2l \
 	key \
 	library_independ \
 	mc_build_filename \
@@ -151,6 +152,9 @@ lua_runtime_LDADD = $(GMODULE_LIBS)
 
 terminal_SOURCES = \
 	terminal.c
+
+far2l_SOURCES = \
+	far2l.c
 
 tty_SOURCES = \
 	tty.c

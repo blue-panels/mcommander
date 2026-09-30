@@ -62,6 +62,7 @@
 #include "tty-internal.h"  // mouse_enabled
 #include "mouse.h"
 #include "key.h"
+#include "far2l.h"
 
 #include "lib/widget.h"  // mc_refresh()
 
@@ -1772,6 +1773,14 @@ far2l_read_apc (void)
     if (data == NULL)
         return -1;
 
+    // a file drop: nothing to press, the drop is handed over from tty_get_event()
+    if (len > 0 && data[len - 1] == 'D')
+    {
+        code = far2l_dnd_event (data, len) ? MCKEY_FAR2L_DND : -1;
+        g_free (data);
+        return code;
+    }
+
     if (far2l_pop (data, &len, 1, &cmd))
     {
         if (cmd == 'K' || cmd == 'k')
@@ -2684,6 +2693,11 @@ nodelay_try_again:
                 this = NULL;
                 return -1;
             }
+            if (c == MCKEY_FAR2L_DND)
+            {
+                this = NULL;
+                return c;
+            }
             if (c == WIN32_KEY_REREAD)
             {
                 // the character is in the keyboard's input again
@@ -2975,6 +2989,11 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
         xmouse_get_event (event, extended);
         c = (event->type != 0) ? EV_MOUSE : EV_NONE;
     }
+    else if (c == MCKEY_FAR2L_DND)
+    {
+        far2l_dnd_dispatch ();
+        c = EV_NONE;
+    }
     else if (c == MCKEY_BRACKETED_PASTING_START)
     {
         bracketed_pasting_in_progress = TRUE;
@@ -3230,6 +3249,8 @@ enable_far2l_input (void)
     printf (ESC_STR "_far2l1" ESC_STR "\\");
     fflush (stdout);
     far2l_input_active = TRUE;
+    // files dropped on the terminal window come with the extensions
+    far2l_dnd_bind ();
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3240,6 +3261,7 @@ disable_far2l_input (void)
     if (!far2l_input_active)
         return;
 
+    far2l_dnd_unbind ();
     // ST ends it: a terminal that takes only ST would stay in far2l mode after the exit
     printf (ESC_STR "_far2l0" ESC_STR "\\");
     fflush (stdout);

@@ -97,3 +97,29 @@ emulator (`tests/src/viewer/vterm_terminal.c`) and the key encoder
   that the terminal did not answer for.
 - tmux and screen, or over ssh: `TERM=screen*`/`tmux*` is not asked; through ssh the
   answer travels with the rest, so About shows what the terminal at the far end has.
+
+## Dropped files
+
+A terminal that also has the far2l drag and drop protocol (far2l with it, f4; the
+specification is docs/FAR2L_DND.md of https://github.com/unxed/f4) lets files be dragged
+from the desktop onto the M-Commander window. Right after the extensions are switched on
+M-Commander binds drop reception (BIND), and unbinds before the extensions go off, so a
+child program never gets a drop. A terminal without the protocol answers nothing or an
+empty reply, and nothing changes.
+
+A drop is one small event naming an offer. M-Commander lists it (LIST), reads the files
+one bounded chunk at a time (READ) and releases the offer (CLOSE): nothing travels unasked,
+so the same works over SSH. The files go by M-Commander's own file access into the
+directory of the panel under the drop, so a panel that shows an archive or a remote host
+is no special case. If the terminal does not say where the drop landed, M-Commander asks
+before it copies to the active panel. A drop is taken only while the panels are on top,
+not in a dialog, the viewer or the editor. Existing files ask for overwrite, skip,
+overwrite all or cancel, and a file that could not be received whole is removed.
+
+Only plain files are taken, and only names that are plain names: a name with a slash, `..`
+or a control character is refused. Every request is answered within 20 seconds or the drop
+is given up.
+
+Not there yet: directories, a bigger window than one request at a time, a progress bar
+and Esc to cancel a long copy, and dropping into the built-in terminal for the programs
+that run in it.

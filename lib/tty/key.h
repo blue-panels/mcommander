@@ -40,6 +40,9 @@
 #define MCKEY_BRACKETED_PASTING_START -4
 #define MCKEY_BRACKETED_PASTING_END   -5
 
+/* Return code for a file drop announced by a far2l terminal (see far2l.h) */
+#define MCKEY_FAR2L_DND -6
+
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/
