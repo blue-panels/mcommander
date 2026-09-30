@@ -342,8 +342,8 @@ files of the system, and under the
 of the user, so the user can still change any key by
 [hand](#keys_redefine).
 
-So far the mode covers the directory panels; the editor, the viewer and the
-dialogs are the next steps, and until then they keep the keys they have. These
+So far the mode covers the directory panels, the editor and the viewer; the
+dialogs are the next step, and until then they keep the keys they have. These
 are the keys that the mode gives to the panels, with what each of them
 replaces:
 
@@ -372,12 +372,28 @@ M-Commander.
 panels Ctrl-L stops redrawing the screen (it still does in the dialogs), and
 Ctrl-T stops tagging a file; Insert tags it, as it does in Far.
 
+**In the editor** (as the far2l help lists them):
+Ctrl-F7 replaces, and F4, which replaced text, quits the editor together with
+F10 and Esc; Alt-F8 goes to a line (Alt-l keeps working); Ctrl-F3 shows the
+line numbers; Alt-F11 shows the history of the edited files; Ctrl-Z undoes,
+Ctrl-U deselects the block (it undid before) and Ctrl-A selects all. Ctrl-F7
+no longer continues the search, Shift-F7 does, and Ctrl-Z no longer moves a
+word left, Ctrl-Left does.
+
+**In the viewer:**
+Alt-F8 goes to a position (F5 keeps working), Alt-F7 continues the search in the
+opposite direction and Alt-F11 shows the history of the viewed files.
+
 The keys that M-Commander shares with Far are the same with or without the
 mode: F1 to F10, Shift-F4, Shift-F5, Shift-F6 and Shift-F8, Tab, Ctrl-U,
 Ctrl-R, Ctrl-O, Ctrl-F1 and Ctrl-F2, Alt-F1 and Alt-F2, Ctrl-PgUp and Ctrl-PgDn,
 Insert and the numeric plus, minus and asterisk.
 
-What differs from Far, and stays so for now: the panels keep the M-Commander
+What differs from Far, and stays so for now: F3 in the editor still marks a
+block instead of wrapping lines, the clipboard keys Ctrl-C, Ctrl-V and Ctrl-X
+of the editor are not bound (Ctrl-Insert, Shift-Insert and Shift-Delete work),
+and the viewer keeps its own F8, F9, Space and plus and minus keys; the
+panels keep the M-Commander
 listing modes and colors (the Ctrl-1 to Ctrl-0 keys for the modes are not
 bound), the command line keeps its Emacs-style editing keys, so Ctrl-A, Ctrl-E
 and the like edit the line and are not the Far commands, Ctrl-G, Ctrl-Z,
