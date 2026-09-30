@@ -43,11 +43,13 @@ typedef struct
     int fg; /**< foreground: 0-7 base, 8-15 bright, -1 default */
     int bg; /**< background: 0-7 base, 8-15 bright, -1 default */
     gboolean bold;
+    gboolean dim; /**< faint: drawn in a darker color */
     gboolean italic;
     gboolean underline;
     gboolean blink;
     gboolean reverse;
-    gboolean link; /**< inside the text of an OSC 8 hyperlink */
+    gboolean conceal; /**< the text is not shown */
+    gboolean link;    /**< inside the text of an OSC 8 hyperlink */
 
     /* --- internal parser state --- */
     gboolean in_escape;   /**< seen ESC, waiting for '[' */
@@ -76,6 +78,9 @@ void mcview_ansi_state_init (mcview_ansi_state_t *state);
  *  Returns ANSI_RESULT_CHAR if the byte is a displayable character.
  *  Returns ANSI_RESULT_CONSUMED if the byte is part of an escape sequence. */
 mcview_ansi_result_t mcview_ansi_parse_char (mcview_ansi_state_t *state, int ch);
+
+/** The color index that draws @color faint (SGR 2), for a 256- or a 16-color terminal. */
+int mcview_ansi_dim_color (int color, gboolean use_256);
 
 /*** inline functions ****************************************************************************/
 

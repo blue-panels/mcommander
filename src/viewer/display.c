@@ -395,21 +395,38 @@ mcview_render_terminal_canvas (const mcview_terminal_buffer_t *buf, int top_row,
 
             cell = mcview_terminal_buffer_get (buf, canvas_row, col);
 
-            if (cell != NULL && cell->ch != 0)
+            if (cell != NULL && cell->ch != 0 && cell->ch != MCVIEW_VTERM_WIDE_TAIL)
             {
                 const mcview_cell_attr_t *a = &cell->attr;
+                const mcview_vterm_cell_t *next =
+                    mcview_terminal_buffer_get (buf, canvas_row, col + 1);
+                const gboolean wide = g_unichar_iswide (cell->ch);
+                const gboolean whole =
+                    wide && col + 1 < cols && next != NULL && next->ch == MCVIEW_VTERM_WIDE_TAIL;
                 mcview_ansi_state_t tmp;
 
                 mcview_ansi_state_init (&tmp);
                 tmp.fg = a->fg;
                 tmp.bg = a->bg;
                 tmp.bold = a->bold;
+                tmp.dim = a->dim;
                 tmp.italic = a->italic;
                 tmp.underline = a->underline;
                 tmp.blink = a->blink;
                 tmp.reverse = a->reverse;
                 tty_setcolor (mcview_ansi_color_of (&tmp, colors));
-                tty_print_anychar (cell->ch);
+                if (a->conceal)
+                {
+                    tty_print_char (' ');
+                    if (whole)
+                        tty_print_char (' ');
+                }
+                else
+                    // Half a wide character is not drawn.
+                    tty_print_anychar (wide && !whole ? ' ' : cell->ch);
+                // The right half is drawn with it; a cell printed there would erase it.
+                if (whole)
+                    col++;
             }
             else
             {

@@ -7,6 +7,9 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
+/* The right half of a double-width character: the character itself is in the cell before. */
+#define MCVIEW_VTERM_WIDE_TAIL ((gunichar) 0x110000)
+
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/
@@ -16,10 +19,12 @@ typedef struct
     int fg;
     int bg;
     gboolean bold;
+    gboolean dim;
     gboolean italic;
     gboolean underline;
     gboolean blink;
     gboolean reverse;
+    gboolean conceal;
 } mcview_cell_attr_t;
 
 typedef struct

@@ -2102,8 +2102,12 @@ mcterm_draw_selection (WMcTerm *t, const mcterm_geom_t *g)
         {
             const mcview_vterm_cell_t *cell = mcterm_sel_cell_at (t->vterm, abs_row, col);
 
+            // The right half of a wide character goes with its left one, unless it is hidden.
+            if (cell != NULL && cell->ch == MCVIEW_VTERM_WIDE_TAIL && !cell->attr.conceal)
+                continue;
             tty_gotoyx (r->y + row, r->x + col);
-            tty_print_anychar ((cell == NULL || cell->ch == 0) ? ' ' : cell->ch);
+            tty_print_anychar ((cell == NULL || cell->ch == 0 || cell->attr.conceal) ? ' '
+                                                                                     : cell->ch);
         }
     }
 }
@@ -3565,6 +3569,8 @@ mcterm_shell_line_text (WMcTerm *t)
             const mcview_vterm_cell_t *cell = mcview_terminal_buffer_get (buf, (int) row, col);
             gunichar ch = (cell != NULL && cell->ch != 0) ? cell->ch : ' ';
 
+            if (ch == MCVIEW_VTERM_WIDE_TAIL)
+                continue;
             if (ch != ' ')
                 blank = FALSE;
             g_string_append_unichar (text, ch);

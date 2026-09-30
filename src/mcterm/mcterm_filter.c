@@ -34,6 +34,48 @@
 
 /*** file scope functions ************************************************************************/
 
+/* The text of a row has one character where a wide one takes two cells. */
+static int
+mcterm_filter_col_to_char (mcview_vterm_t *vt, gint64 row, int col)
+{
+    int n = 0;
+    int c;
+
+    for (c = 0; c < col; c++)
+    {
+        const mcview_vterm_cell_t *cell = mcterm_sel_cell_at (vt, row, c);
+
+        if (cell == NULL || cell->ch != MCVIEW_VTERM_WIDE_TAIL)
+            n++;
+    }
+
+    return n;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+mcterm_filter_char_to_col (mcview_vterm_t *vt, gint64 row, int cols, int index)
+{
+    int n = 0;
+    int c;
+
+    for (c = 0; c < cols; c++)
+    {
+        const mcview_vterm_cell_t *cell = mcterm_sel_cell_at (vt, row, c);
+
+        if (cell != NULL && cell->ch == MCVIEW_VTERM_WIDE_TAIL)
+            continue;
+        if (n == index)
+            return c;
+        n++;
+    }
+
+    return cols;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* What a log is filtered by is looked for the way the viewer looks for it:
    a plain string, of either case. */
 static mc_search_t *
@@ -262,9 +304,10 @@ mcterm_filter_find (mcview_vterm_t *vt, int cols, gint64 newest, const char *pat
         if (text != NULL && col >= 0)
         {
             const glong chars = g_utf8_strlen (text, -1);
-            const gsize limit = (col >= chars)
+            const int at = mcterm_filter_col_to_char (vt, row, col);
+            const gsize limit = (at >= chars)
                 ? strlen (text)
-                : (gsize) (g_utf8_offset_to_pointer (text, col) - text);
+                : (gsize) (g_utf8_offset_to_pointer (text, at) - text);
             gsize start, len;
             gboolean hit;
 
@@ -272,9 +315,14 @@ mcterm_filter_find (mcview_vterm_t *vt, int cols, gint64 newest, const char *pat
                      : mcterm_filter_first_match (search, text, limit, &start, &len);
             if (hit)
             {
+                const int first = (int) g_utf8_pointer_to_offset (text, text + start);
+
                 *found_row = row;
-                *found_col = (int) g_utf8_pointer_to_offset (text, text + start);
-                *found_width = (int) g_utf8_strlen (text + start, (gssize) len);
+                *found_col = mcterm_filter_char_to_col (vt, row, cols, first);
+                *found_width =
+                    mcterm_filter_char_to_col (
+                        vt, row, cols, first + (int) g_utf8_strlen (text + start, (gssize) len))
+                    - *found_col;
                 found = TRUE;
             }
         }
@@ -317,6 +365,8 @@ mcterm_filter_row_text (mcview_vterm_t *vt, gint64 row, int cols)
         const mcview_vterm_cell_t *cell = mcterm_sel_cell_at (vt, row, col);
         const gunichar ch = (cell == NULL || cell->ch == 0) ? ' ' : cell->ch;
 
+        if (ch == MCVIEW_VTERM_WIDE_TAIL)
+            continue;
         g_string_append_unichar (text, ch);
         if (ch != ' ')
             last_word = text->len;

@@ -645,6 +645,19 @@ mcview_get_next_char (WView *view, mcview_state_machine_t *state, int *c)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mcview_ansi_use_256 (void)
+{
+    static int use_256 = -1;
+
+    if (use_256 < 0)
+        use_256 = tty_use_256colors (NULL) ? 1 : 0;
+
+    return use_256 != 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /**
  * Convert ANSI parser color state to a tty color pair index.
  *
@@ -663,18 +676,18 @@ mcview_ansi_color_of (const mcview_ansi_state_t *ansi, const mcview_canvas_color
     const char *bg_name;
     gboolean has_attrs;
     const gboolean underline = ansi->underline || ansi->link;
+    const int fg = ansi->dim ? mcview_ansi_dim_color (ansi->fg, mcview_ansi_use_256 ()) : ansi->fg;
 
     has_attrs = ansi->bold || ansi->italic || underline || ansi->blink || ansi->reverse;
 
     // all defaults -> use the skin's normal color
-    if (ansi->fg == MCVIEW_ANSI_COLOR_DEFAULT && ansi->bg == MCVIEW_ANSI_COLOR_DEFAULT
-        && !has_attrs)
+    if (fg == MCVIEW_ANSI_COLOR_DEFAULT && ansi->bg == MCVIEW_ANSI_COLOR_DEFAULT && !has_attrs)
         return colors->normal;
 
     /* bold-only and underline-only map to the colors the skin has for them, and
        are built below by a skin that has none. */
-    if (ansi->fg == MCVIEW_ANSI_COLOR_DEFAULT && ansi->bg == MCVIEW_ANSI_COLOR_DEFAULT
-        && !ansi->italic && !ansi->blink && !ansi->reverse)
+    if (fg == MCVIEW_ANSI_COLOR_DEFAULT && ansi->bg == MCVIEW_ANSI_COLOR_DEFAULT && !ansi->italic
+        && !ansi->blink && !ansi->reverse)
     {
         if (ansi->bold && underline && colors->bold_underline >= 0)
             return colors->bold_underline;
@@ -692,9 +705,9 @@ mcview_ansi_color_of (const mcview_ansi_state_t *ansi, const mcview_canvas_color
         skin = (tty_color_pair_t *) g_hash_table_lookup (mc_skin__default.colors, "core._default_");
 
     // build fg color name
-    if (ansi->fg != MCVIEW_ANSI_COLOR_DEFAULT)
+    if (fg != MCVIEW_ANSI_COLOR_DEFAULT)
     {
-        fg_name = tty_color_get_name_by_index (ansi->fg);
+        fg_name = tty_color_get_name_by_index (fg);
         g_strlcpy (fg_buf, fg_name, sizeof (fg_buf));
         color.fg = fg_buf;
     }
@@ -852,8 +865,8 @@ mcview_nroff_color (const mcview_ansi_state_t *ansi, nroff_type_t type)
     {
     case NROFF_TYPE_HEADING:
         if (attrs.fg == MCVIEW_ANSI_COLOR_DEFAULT && attrs.bg == MCVIEW_ANSI_COLOR_DEFAULT
-            && !attrs.bold && !attrs.italic && !attrs.underline && !attrs.link && !attrs.blink
-            && !attrs.reverse)
+            && !attrs.bold && !attrs.dim && !attrs.italic && !attrs.underline && !attrs.link
+            && !attrs.blink && !attrs.reverse)
             return VIEWER_HEADING_COLOR;
         attrs.bold = TRUE;
         break;

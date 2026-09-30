@@ -149,26 +149,37 @@ mcview_ansi_apply_one_sgr_param (mcview_ansi_state_t *state, int idx)
         state->fg = MCVIEW_ANSI_COLOR_DEFAULT;
         state->bg = MCVIEW_ANSI_COLOR_DEFAULT;
         state->bold = FALSE;
+        state->dim = FALSE;
         state->italic = FALSE;
         state->underline = FALSE;
         state->blink = FALSE;
         state->reverse = FALSE;
+        state->conceal = FALSE;
     }
     else if (code == 1)
         state->bold = TRUE;
+    else if (code == 2)
+        state->dim = TRUE;
     else if (code == 3)
         state->italic = TRUE;
     else if (code == 4)
-        state->underline = TRUE;
-    else if (code == 5)
+        // 4:0 is no underline; 4:1 to 4:5 are its styles, all drawn as one
+        state->underline = !(idx + 1 < state->param_count && state->is_colon_sep[idx + 1]
+                             && state->params[idx + 1] == 0);
+    else if (code == 5 || code == 6)
         state->blink = TRUE;
     else if (code == 7)
         state->reverse = TRUE;
+    else if (code == 8)
+        state->conceal = TRUE;
     else if (code == 21)
         // double underline - map to regular underline (ncurses/slang limitation)
         state->underline = TRUE;
     else if (code == 22)
+    {
         state->bold = FALSE;
+        state->dim = FALSE;
+    }
     else if (code == 23)
         state->italic = FALSE;
     else if (code == 24)
@@ -177,6 +188,8 @@ mcview_ansi_apply_one_sgr_param (mcview_ansi_state_t *state, int idx)
         state->blink = FALSE;
     else if (code == 27)
         state->reverse = FALSE;
+    else if (code == 28)
+        state->conceal = FALSE;
     else if (code >= 30 && code <= 37)
         state->fg = code - 30;
     else if (code == 38)
@@ -244,10 +257,12 @@ mcview_ansi_apply_sgr (mcview_ansi_state_t *state)
         state->fg = MCVIEW_ANSI_COLOR_DEFAULT;
         state->bg = MCVIEW_ANSI_COLOR_DEFAULT;
         state->bold = FALSE;
+        state->dim = FALSE;
         state->italic = FALSE;
         state->underline = FALSE;
         state->blink = FALSE;
         state->reverse = FALSE;
+        state->conceal = FALSE;
         return;
     }
 
@@ -337,10 +352,12 @@ mcview_ansi_state_init (mcview_ansi_state_t *state)
     state->fg = MCVIEW_ANSI_COLOR_DEFAULT;
     state->bg = MCVIEW_ANSI_COLOR_DEFAULT;
     state->bold = FALSE;
+    state->dim = FALSE;
     state->italic = FALSE;
     state->underline = FALSE;
     state->blink = FALSE;
     state->reverse = FALSE;
+    state->conceal = FALSE;
     state->link = FALSE;
     state->in_escape = FALSE;
     state->in_csi = FALSE;
@@ -474,6 +491,62 @@ mcview_ansi_parse_char (mcview_ansi_state_t *state, int ch)
 
     // regular displayable character
     return ANSI_RESULT_CHAR;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* @color at about half its brightness, for SGR 2: the terminals mc draws on have no faint
+   attribute it can ask for. With 16 colors the bright ones turn normal and the light gray
+   turns gray. */
+int
+mcview_ansi_dim_color (int color, gboolean use_256)
+{
+    // xterm's default palette
+    static const int base[16][3] = {
+        { 0, 0, 0 },       { 205, 0, 0 },   { 0, 205, 0 },   { 205, 205, 0 },
+        { 0, 0, 238 },     { 205, 0, 205 }, { 0, 205, 205 }, { 229, 229, 229 },
+        { 127, 127, 127 }, { 255, 0, 0 },   { 0, 255, 0 },   { 255, 255, 0 },
+        { 92, 92, 255 },   { 255, 0, 255 }, { 0, 255, 255 }, { 255, 255, 255 },
+    };
+    static const int cube[6] = { 0, 95, 135, 175, 215, 255 };
+    int r, g, b;
+
+    if (!use_256)
+    {
+        if (color == MCVIEW_ANSI_COLOR_DEFAULT || color == 7 || color == 15)
+            return color == 15 ? 7 : 8;
+        return (color > 8 && color < 16) ? color - 8 : color;
+    }
+
+    if (color == MCVIEW_ANSI_COLOR_DEFAULT)
+        color = 7;
+
+    if (color < 16)
+    {
+        r = base[color][0];
+        g = base[color][1];
+        b = base[color][2];
+    }
+    else if (color < 232)
+    {
+        r = cube[(color - 16) / 36];
+        g = cube[(color - 16) / 6 % 6];
+        b = cube[(color - 16) % 6];
+    }
+    else
+        r = g = b = 8 + 10 * (color - 232);
+
+    r /= 2;
+    g /= 2;
+    b /= 2;
+
+    // a gray stays on the gray ramp, finer than the cube
+    if (r == g && g == b)
+        return (r < 8) ? 16 : 232 + MIN ((r - 8) / 10, 23);
+
+    return mcview_ansi_rgb_to_256 (r, g, b);
 }
 
 /* --------------------------------------------------------------------------------------------- */
