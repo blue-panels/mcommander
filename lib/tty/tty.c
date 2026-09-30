@@ -93,6 +93,8 @@ static int background_rgb = -1;
 
 static gboolean has_sixel = FALSE;
 static gboolean has_kitty_keyboard = FALSE;
+static gboolean has_win32_input = FALSE;
+static gboolean has_far2l_input = FALSE;
 static int cell_width = 0;
 static int cell_height = 0;
 
@@ -278,6 +280,24 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
             continue;
         }
 
+        if (buf[i] == ESC_CHAR && buf[i + 1] == '_' && end - p >= 7
+            && strncmp (p, "far2lok", 7) == 0)
+        {
+            /* APC far2lok, ended by BEL or ST: the terminal speaks the far2l extensions */
+            if (p + 7 < end && p[7] == '\a')
+                taken = 10;
+            else if (p + 8 < end && p[7] == ESC_CHAR && p[8] == '\\')
+                taken = 11;
+
+            if (taken != 0)
+            {
+                has_far2l_input = TRUE;
+                memmove (buf + i, buf + i + taken, *len - i - taken);
+                *len -= taken;
+                continue;
+            }
+        }
+
         if (buf[i] != ESC_CHAR || buf[i + 1] != '[')
         {
             i++;
@@ -286,8 +306,8 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
 
         if (*p == '?')
         {
-            int n = 0;
-            gboolean have = FALSE, sixel = FALSE;
+            int n = 0, first = 0;
+            gboolean have = FALSE, sixel = FALSE, have_first = FALSE;
 
             for (p++; p < end; p++)
             {
@@ -295,6 +315,15 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
                 {
                     n = n * 10 + (*p - '0');
                     have = TRUE;
+                }
+                else if (*p == '$' && have_first && first == 9001 && have && p + 1 < end
+                         && p[1] == 'y')
+                {
+                    /* CSI ? 9001 ; <state> $ y: Win32 input mode is known (1 set, 2 reset) */
+                    if (n == 1 || n == 2)
+                        has_win32_input = TRUE;
+                    taken = (size_t) (p + 2 - (buf + i));
+                    break;
                 }
                 else if (*p == 'u' && have)
                 {
@@ -305,6 +334,11 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
                 }
                 else if (*p == ';' || *p == 'c')
                 {
+                    if (have && !have_first)
+                    {
+                        first = n;
+                        have_first = TRUE;
+                    }
                     if (have && n == 4)
                         sixel = TRUE;
                     n = 0;
@@ -368,10 +402,16 @@ tty_probe_graphics (void)
         term != NULL && (strncmp (term, "screen", 6) == 0 || strncmp (term, "tmux", 4) == 0);
     gboolean no_sixel = forced_off || (!forced_on && multiplexer);
     gboolean ask_kitty = !multiplexer && (kitty_env == NULL || kitty_env[0] != '0');
+    const char *win32_env = getenv ("MC_WIN32_INPUT");
+    gboolean ask_win32 = !multiplexer && (win32_env == NULL || win32_env[0] != '0');
+    const char *far2l_env = getenv ("MC_FAR2L");
+    gboolean ask_far2l = !multiplexer && (far2l_env == NULL || far2l_env[0] != '0');
     int waited_ms = 0;
 
     has_sixel = FALSE;
     has_kitty_keyboard = FALSE;
+    has_win32_input = FALSE;
+    has_far2l_input = FALSE;
     cell_width = 0;
     cell_height = 0;
 
@@ -391,22 +431,30 @@ tty_probe_graphics (void)
 
     /* A multiplexer answers for itself and keeps the DCS: no sixel through it
        unless the user says so. */
-    if (no_sixel && !ask_kitty)
+    if (no_sixel && !ask_kitty && !ask_win32 && !ask_far2l)
         return;
 
     if (isatty (STDIN_FILENO) && isatty (STDOUT_FILENO))
     {
         /* Every terminal answers DA1, and answers in the order it is asked: DA1 goes
-           last, so its answer comes after all the others. OSC 11 ends with ST, not BEL:
-           the answer ends the same way, and with S-Lang BEL (Ctrl-G) is the interrupt
-           character, which the tty takes out of the input. */
-        static const char query[] =
-            ESC_STR "[?u" ESC_STR "[16t" ESC_STR "]11;?" ESC_STR "\\" ESC_STR "[c";
+           last, so its answer comes after all the others, the ones about the kitty keyboard
+           protocol, the Win32 input mode (DECRQM 9001) and the far2l extensions too. OSC 11
+           ends with ST, not BEL: the answer ends the same way, and with S-Lang BEL (Ctrl-G)
+           is the interrupt character, which the tty takes out of the input. */
+        static const char kitty_query[] = ESC_STR "[?u";
+        static const char win32_query[] = ESC_STR "[?9001$p";
+        /* APC far2l1 turns the far2l extensions on; a terminal that has them answers
+           APC far2lok, and every other one ignores the sequence */
+        static const char far2l_query[] = ESC_STR "_far2l1" ESC_STR "\\";
+        static const char query[] = ESC_STR "[16t" ESC_STR "]11;?" ESC_STR "\\" ESC_STR "[c";
 
         if (ask_kitty)
-            tty_raw_write (query, sizeof (query) - 1);
-        else
-            tty_raw_write (query + 4, sizeof (query) - 5);
+            tty_raw_write (kitty_query, sizeof (kitty_query) - 1);
+        if (ask_win32)
+            tty_raw_write (win32_query, sizeof (win32_query) - 1);
+        if (ask_far2l)
+            tty_raw_write (far2l_query, sizeof (far2l_query) - 1);
+        tty_raw_write (query, sizeof (query) - 1);
 
         /* A terminal that answers nothing costs the whole wait once, at startup. */
         while (len < sizeof (buf) - 1 && !sixel_seen && waited_ms < 1000)
@@ -472,6 +520,23 @@ tty_cell_size (int *width, int *height)
     *width = cell_width;
     *height = cell_height;
 }
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_has_win32_input (void)
+{
+    return has_win32_input;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_has_far2l_input (void)
+{
+    return has_far2l_input;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 /**

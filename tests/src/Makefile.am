@@ -43,12 +43,15 @@ TESTS = \
 	usermenu_ini \
 	term_key_merge \
 	tty_enter \
+	tty_far2l_input \
 	tty_kitty_keyboard \
+	tty_win32_input \
 	usermenu__test_condition \
 	usermenu__test_expand_format
 
 if ENABLE_MCTERM
 TESTS += \
+	mcterm_far2l \
 	mcterm_key_encode \
 	mcterm_osc7_parse \
 	mcterm_protocol_parse \
@@ -87,6 +90,9 @@ runtime_host__syntax_SOURCES = \
 learn_modifiers_SOURCES = \
 	learn_modifiers.c
 
+mcterm_far2l_SOURCES = \
+	mcterm_far2l.c
+
 mcterm_key_encode_SOURCES = \
 	mcterm_key_encode.c
 
@@ -120,8 +126,14 @@ term_key_merge_SOURCES = \
 tty_enter_SOURCES = \
 	tty_enter.c
 
+tty_far2l_input_SOURCES = \
+	tty_far2l_input.c
+
 tty_kitty_keyboard_SOURCES = \
 	tty_kitty_keyboard.c
+
+tty_win32_input_SOURCES = \
+	tty_win32_input.c
 
 usermenu__test_condition_SOURCES = \
 	usermenu__test_condition.c

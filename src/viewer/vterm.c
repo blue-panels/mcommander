@@ -72,6 +72,17 @@ struct mcview_vterm_struct
     gboolean osc_overflow;
     gboolean in_dcs;
     gboolean in_dcs_esc;
+    /* APC (ESC _ ... BEL or ST). The far2l extensions are asked for with far2l1 and given up with
+       far2l0 (answered here); what else arrives whole is kept for the host, which answers it. The
+       terminal itself draws nothing of it. */
+    gboolean in_apc;
+    gboolean in_apc_esc;
+    gboolean apc_overflow;
+    GString *apc;
+    GQueue *apc_ready;
+    gboolean
+        far2l_allowed;      // the terminal mc runs in has the extensions: the program may have them
+    gboolean far2l_active;  // ... and asked for them
     gboolean csi_gt;
     gboolean in_esc_char;
     /* Which of G0..G3 the designation being read names, -1 when it names none. */
@@ -159,6 +170,11 @@ struct mcview_vterm_struct
 
 /*** file scope variables ************************************************************************/
 
+/* An application command (APC) longer than this is dropped whole, up to its terminator: the far2l
+   drag and drop frames are at most 64 KiB. Not more than a few may wait for the host. */
+#define VTERM_APC_MAX_LEN   (2 * 65536)
+#define VTERM_APC_MAX_QUEUE 32
+
 /*** forward declarations (file scope functions) *************************************************/
 
 static vterm_event_t vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte);
@@ -166,6 +182,7 @@ static vterm_event_t vterm_handle_utf8 (mcview_vterm_t *vt, unsigned char byte);
 static void vterm_finalize_param (mcview_vterm_t *vt);
 static vterm_event_t vterm_make (mcview_vterm_t *vt, vterm_result_t type);
 static void vterm_handle_osc (mcview_vterm_t *vt);
+static vterm_event_t vterm_finish_apc (mcview_vterm_t *vt);
 static void vterm_finish_osc (mcview_vterm_t *vt);
 static void vterm_finish_sixel (mcview_vterm_t *vt);
 static void vterm_images_clear (mcview_vterm_t *vt);
@@ -562,6 +579,44 @@ vterm_handle_utf8 (mcview_vterm_t *vt, unsigned char byte)
 
         return vterm_make (vt, VTERM_CONSUMED);
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* ESC _ ... ST ended. The far2l extensions are asked for and given up with far2l1 and far2l0; the
+   answer to the first is far2lok, and only a terminal that has them itself gives it. The host is
+   told of every APC that arrived whole, except a far2l1 nobody answered, and it is for the host to
+   answer what is meant for it (far2l drag and drop). Too long a one is dropped whole. */
+
+static vterm_event_t
+vterm_finish_apc (mcview_vterm_t *vt)
+{
+    const gboolean overflow = vt->apc_overflow;
+    gboolean keep = !overflow && vt->apc->len > 0;
+    vterm_event_t ev = vterm_make (vt, VTERM_CONSUMED);
+
+    vt->in_apc = FALSE;
+    vt->in_apc_esc = FALSE;
+    vt->apc_overflow = FALSE;
+
+    if (!overflow && strcmp (vt->apc->str, "far2l1") == 0)
+    {
+        if (vt->far2l_allowed)
+        {
+            vt->far2l_active = TRUE;
+            ev = vterm_make (vt, VTERM_REPLY);
+            ev.reply = ESC_STR "_far2lok" ESC_STR "\\";
+        }
+        else
+            keep = FALSE;
+    }
+    else if (!overflow && strcmp (vt->apc->str, "far2l0") == 0)
+        vt->far2l_active = FALSE;
+
+    if (keep && g_queue_get_length (vt->apc_ready) < VTERM_APC_MAX_QUEUE)
+        g_queue_push_tail (vt->apc_ready, g_strdup (vt->apc->str));
+
+    g_string_truncate (vt->apc, 0);
+    return ev;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1358,6 +1413,7 @@ mcview_vterm_new (void)
     mcview_vterm_t *vt;
 
     vt = g_new0 (mcview_vterm_t, 1);
+    vt->apc_ready = g_queue_new ();
     mcview_ansi_state_init (&vt->ansi);
     vt->buf = mcview_terminal_buffer_new ();
     vt->dpy_top_row = MCVIEW_VTERM_FOLLOW_END;
@@ -1380,6 +1436,13 @@ mcview_vterm_free (mcview_vterm_t *vt)
 {
     if (vt == NULL)
         return;
+    if (vt->apc != NULL)
+        g_string_free (vt->apc, TRUE);
+    if (vt->apc_ready != NULL)
+    {
+        g_queue_free_full (vt->apc_ready, g_free);
+        vt->apc_ready = NULL;
+    }
     mcview_terminal_buffer_free (vt->buf);
     mcview_terminal_buffer_free (vt->snapshot_buf);
     if (vt->history != NULL)
@@ -1416,6 +1479,12 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     vt->osc_overflow = FALSE;
     vt->in_dcs = FALSE;
     vt->in_dcs_esc = FALSE;
+    vt->in_apc = FALSE;
+    vt->in_apc_esc = FALSE;
+    vt->apc_overflow = FALSE;
+    if (vt->apc != NULL)
+        g_string_truncate (vt->apc, 0);
+    vt->far2l_active = FALSE;
     vt->dcs_len = 0;
     vt->in_sixel = FALSE;
     vt->sixel_overflow = FALSE;
@@ -1632,6 +1701,25 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
         return vterm_make (vt, VTERM_CONSUMED);
     }
 
+    if (vt->in_apc)
+    {
+        if (vt->in_apc_esc)
+        {
+            vt->in_apc_esc = FALSE;
+            if (byte == '\\')
+                return vterm_finish_apc (vt);
+        }
+        else if (byte == 0x07u)
+            return vterm_finish_apc (vt);
+        else if (byte == ESC_CHAR)
+            vt->in_apc_esc = TRUE;
+        else if (vt->apc->len < VTERM_APC_MAX_LEN)
+            g_string_append_c (vt->apc, (char) byte);
+        else
+            vt->apc_overflow = TRUE;
+        return vterm_make (vt, VTERM_CONSUMED);
+    }
+
     if (vt->in_osc)
     {
         if (vt->in_osc_esc)
@@ -1690,6 +1778,15 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
             vt->param_count = 0;
             vt->current_param = 0;
             vt->has_current = FALSE;
+        }
+        else if (byte == '_')
+        {
+            vt->in_apc = TRUE;
+            vt->in_apc_esc = FALSE;
+            vt->apc_overflow = FALSE;
+            if (vt->apc == NULL)
+                vt->apc = g_string_new (NULL);
+            g_string_truncate (vt->apc, 0);
         }
         else if (byte == ']')
         {
@@ -2360,6 +2457,14 @@ mcview_vterm_osc133_raw (const mcview_vterm_t *vt)
 
 /* --------------------------------------------------------------------------------------------- */
 
+char *
+mcview_vterm_take_apc (mcview_vterm_t *vt)
+{
+    return (vt != NULL && vt->apc_ready != NULL) ? g_queue_pop_head (vt->apc_ready) : NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 guint
 mcview_vterm_osc133_generation (const mcview_vterm_t *vt)
 {
@@ -2372,6 +2477,24 @@ guint
 mcview_vterm_osc7_generation (const mcview_vterm_t *vt)
 {
     return (vt != NULL) ? vt->osc7_generation : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mcview_vterm_set_far2l (mcview_vterm_t *vt, gboolean allowed)
+{
+    vt->far2l_allowed = allowed;
+    if (!allowed)
+        vt->far2l_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcview_vterm_far2l_active (const mcview_vterm_t *vt)
+{
+    return vt->far2l_active;
 }
 
 /* --------------------------------------------------------------------------------------------- */
