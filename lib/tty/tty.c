@@ -472,6 +472,44 @@ tty_has_kitty_keyboard (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+char *
+tty_osc52_sequence (const char *data, size_t len)
+{
+    char *encoded, *sequence;
+
+    if (data == NULL || len == 0 || len > TTY_OSC52_MAX_TEXT)
+        return NULL;
+
+    encoded = g_base64_encode ((const guchar *) data, len);
+    sequence = g_strconcat (ESC_STR "]52;c;", encoded, "\a", (char *) NULL);
+    g_free (encoded);
+
+    return sequence;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_osc52_write (const char *data, size_t len)
+{
+    const char *env = getenv ("MC_OSC52");
+    char *sequence;
+
+    if ((env != NULL && env[0] == '0') || !isatty (STDOUT_FILENO))
+        return FALSE;
+
+    sequence = tty_osc52_sequence (data, len);
+    if (sequence == NULL)
+        return FALSE;
+
+    tty_raw_write (sequence, strlen (sequence));
+    g_free (sequence);
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 void
 tty_cell_size (int *width, int *height)
 {
