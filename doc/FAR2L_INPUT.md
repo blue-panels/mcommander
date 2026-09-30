@@ -49,6 +49,33 @@ horizontal wheel turns are not reported, and nothing is if the mouse is off.
 A character outside ASCII in a key packet goes back to the keyboard as UTF-8 and is
 read as a typed character.
 
+## The embedded terminal
+
+A program run in mcterm (Ctrl-O's shell, or f4 or far2l inside it) is a program on a
+terminal of its own, the emulator, and the two sides are kept apart:
+
+- The negotiation of M-Commander with the terminal it runs in never reaches the
+  program, and the program's never reaches that terminal. The emulator takes
+  `ESC _ ... ST` strings itself (before, their text was drawn on the screen).
+- A program that asks with `ESC _ far2l1 ST` is answered `ESC _ far2lok ST` only when
+  the terminal M-Commander runs in has the extensions; otherwise it gets no answer, as
+  on any terminal without them. `far2l0` gives them up again, and the mode ends with
+  the emulator's reset.
+- With the extensions on, the keys M-Commander hands to the program are packets
+  (`ESC _ f2l:<base64> BEL`, a press and a release each) with the virtual key, the
+  character and the control key state, so the program tells Ctrl-Enter from Enter and
+  Shift-Tab from Tab as far as M-Commander did. A byte of a character out of ASCII
+  and a key without a virtual key go as before, in xterm form.
+- The other requests of the extensions (clipboard, images, drag and drop) are not
+  passed on; a program that asks gets no answer and falls back, as it does on a
+  terminal without them.
+
+## Which input is active
+
+Help, About shows `Keyboard input:` with `far2l`, `kitty`, `win32` or `legacy`: the
+one the keys come in now. Terminal reports can name it, and it tells at once which of
+`MC_FAR2L=0`, `MC_KITTY_KEYBOARD=0` and `MC_WIN32_INPUT=0` to try.
+
 ## Plugin authors
 
 Nothing changes for plugins: a key is the same integer code as before, whichever
@@ -57,7 +84,16 @@ as it did.
 
 ## Checking by hand
 
-The tests in `tests/src/tty_far2l_input.c` replay packets through the real decoder.
-By hand: in far2l's terminal or f4 run `mcommander`, press Ctrl-Enter, Shift-Tab and
-Alt-F4 in the panels and see that each does its own action; run with
-`MC_FAR2L=0` to compare with the legacy stream.
+The tests replay packets through the real decoder (`tests/src/tty_far2l_input.c`), the
+emulator (`tests/src/viewer/vterm_terminal.c`) and the key encoder
+(`tests/src/mcterm_key_encode.c`). By hand, one line each:
+
+- Linux, far2l's terminal or f4: `mcommander`, About shows `far2l`; Ctrl-Enter, Shift-Tab
+  and Alt-F4 in the panels each do their own action; Ctrl-O, and in the shell run
+  `f4`: About of that program (or its key check) shows the extensions on.
+- Linux, any other terminal: `MC_FAR2L=0 mcommander` and a terminal that does not know
+  the extensions both show `legacy` or `kitty`, and behave as before.
+- Windows Terminal (through `ssh`, or MSYS2 build): About shows `win32`; nothing is sent
+  that the terminal did not answer for.
+- tmux and screen, or over ssh: `TERM=screen*`/`tmux*` is not asked; through ssh the
+  answer travels with the rest, so About shows what the terminal at the far end has.

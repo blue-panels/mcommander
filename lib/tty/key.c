@@ -3247,3 +3247,17 @@ disable_far2l_input (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+const char *
+tty_input_protocol (void)
+{
+    if (far2l_input_active)
+        return "far2l";
+    if (kitty_keyboard_active)
+        return "kitty";
+    if (win32_input_active)
+        return "win32";
+    return "legacy";
+}
+
+/* --------------------------------------------------------------------------------------------- */

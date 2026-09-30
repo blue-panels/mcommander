@@ -123,6 +123,8 @@ void disable_win32_input (void);
    Kitty and Win32 input mode stay off while they are on. */
 void enable_far2l_input (void);
 void disable_far2l_input (void);
+/* Which of them the keys come in now: "far2l", "kitty", "win32" or "legacy" */
+const char *tty_input_protocol (void);
 
 /*** inline functions ****************************************************************************/
 
