@@ -44,6 +44,7 @@ TESTS = \
 	term_key_merge \
 	tty_enter \
 	tty_kitty_keyboard \
+	tty_win32_input \
 	usermenu__test_condition \
 	usermenu__test_expand_format
 
@@ -122,6 +123,9 @@ tty_enter_SOURCES = \
 
 tty_kitty_keyboard_SOURCES = \
 	tty_kitty_keyboard.c
+
+tty_win32_input_SOURCES = \
+	tty_win32_input.c
 
 usermenu__test_condition_SOURCES = \
 	usermenu__test_condition.c

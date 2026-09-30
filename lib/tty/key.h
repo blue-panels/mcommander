@@ -116,6 +116,9 @@ void disable_bracketed_paste (void);
 /* Kitty keyboard protocol, if the terminal knows it */
 void enable_kitty_keyboard (void);
 void disable_kitty_keyboard (void);
+/* Win32 input mode, if the terminal knows it: every key comes as CSI Vk;Sc;Uc;Kd;Cs;Rc _ */
+void enable_win32_input (void);
+void disable_win32_input (void);
 
 /*** inline functions ****************************************************************************/
 

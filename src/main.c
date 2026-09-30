@@ -444,6 +444,7 @@ main (int argc, char *argv[])
            separate for the normal and alternate screens */
         enable_bracketed_paste ();
         enable_kitty_keyboard ();
+        enable_win32_input ();
 
         mc_prompt = g_strdup ((geteuid () == 0) ? "# " : "$ ");
     }
@@ -457,6 +458,7 @@ main (int argc, char *argv[])
     g_free (mc_prompt);
 
     disable_bracketed_paste ();
+    disable_win32_input ();
     disable_kitty_keyboard ();
 
     disable_mouse ();
