@@ -14,6 +14,16 @@ The releases of this fork, newest first.
   deleting the line); the prefix of the extended commands moves to Alt-X while
   the mode is on. Ctrl with a digit is now the digit with the modifier, where
   it was the control character of the same code (Ctrl-1 was Ctrl-Q).
+- Far mode goes on to the dialogs and the Windows-minded workflows: Ctrl-Enter
+  does the default action of a dialog and the plus and the minus turn a check
+  box on and off; Ctrl-\\ goes to the root directory (the hotlist moves to
+  Alt-\\), Alt with a character is the fast find, with Ctrl-Enter and
+  Ctrl-Shift-Enter for the next and the previous match; Ctrl-F7, Ctrl-F8,
+  Ctrl-F9 and Ctrl-F11 sort by nothing, by the time of change, by the time of
+  access and by the owner; Ctrl-G applies a command to the files (new action
+  ApplyCommand), and Alt-F6, Alt-F10, Shift-F9 and Shift-F10 create a hard
+  link, show the tree of directories, save the setup and choose the last menu
+  item. The mode stays off by default.
 
 ## 6.1.0 - 2026-09-26
 

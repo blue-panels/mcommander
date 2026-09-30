@@ -207,6 +207,8 @@ enum
     CK_PanelToggleLeft,
     CK_PanelToggleRight,
 #endif
+    // Far mode: Ctrl-G of Far Manager
+    CK_ApplyCommand,
 
     // panels
     CK_PanelOtherCd = 200L,
@@ -250,6 +252,12 @@ enum
     CK_PanelListingMode8,
     CK_PanelListingMode9,
     CK_PanelListingMode10,
+    // Far mode: the sort keys and Ctrl-\ of Far Manager that have no name of their own
+    CK_SortByUnsorted,
+    CK_SortByCTime,
+    CK_SortByATime,
+    CK_SortByOwner,
+    CK_CdRoot,
 
     // dialog
     CK_Ok = 300L,

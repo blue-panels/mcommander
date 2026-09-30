@@ -223,6 +223,7 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (PanelToggleLeft, N_ ("Toggle left panel in terminal mode")),
     ADD_KEYMAP_NAME_DESC (PanelToggleRight, N_ ("Toggle right panel in terminal mode")),
 #endif
+    ADD_KEYMAP_NAME_DESC (ApplyCommand, N_ ("Apply command to the files")),
     ADD_KEYMAP_NAME_DESC_FLAGS (Select, N_ ("Select files by pattern"), PANEL_FILTER_SELECTION),
     ADD_KEYMAP_NAME_DESC_FLAGS (Unselect, N_ ("Unselect files by pattern"), PANEL_FILTER_SELECTION),
 
@@ -264,6 +265,11 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (PanelListingMode8, N_ ("Far listing mode 8")),
     ADD_KEYMAP_NAME_DESC (PanelListingMode9, N_ ("Far listing mode 9")),
     ADD_KEYMAP_NAME_DESC (PanelListingMode10, N_ ("Far listing mode 10")),
+    ADD_KEYMAP_NAME_DESC (SortByUnsorted, N_ ("Keep files unsorted")),
+    ADD_KEYMAP_NAME_DESC (SortByCTime, N_ ("Sort by change time")),
+    ADD_KEYMAP_NAME_DESC (SortByATime, N_ ("Sort by access time")),
+    ADD_KEYMAP_NAME_DESC (SortByOwner, N_ ("Sort by owner")),
+    ADD_KEYMAP_NAME_DESC (CdRoot, N_ ("Go to the root directory")),
 
     // dialog
     ADD_KEYMAP_NAME (Ok),

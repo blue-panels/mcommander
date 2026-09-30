@@ -342,10 +342,10 @@ files of the system, and under the
 of the user, so the user can still change any key by
 [hand](#keys_redefine).
 
-So far the mode covers the directory panels, the editor, the viewer, the
-command line and the edit lines of the dialogs; the other keys of the dialogs
-stay as they are. These are the keys that the mode gives to the panels, with
-what each of them replaces:
+The mode covers the directory panels, the editor, the viewer, the command
+line, the edit lines of the dialogs and a few keys of the dialogs
+themselves. These are the keys that the mode gives to the panels, with what
+each of them replaces:
 
 **Alt-F7**
 : find file. Alt-? keeps working.
@@ -363,6 +363,12 @@ what each of them replaces:
 : sort the panel by name, by extension, by modification time and by size.
 Far reverses the order when the same key is pressed twice; so does
 M-Commander.
+
+**Ctrl-F7, Ctrl-F8, Ctrl-F9, Ctrl-F11**
+: keep the files unsorted, sort them by the time of change (Far has the
+creation time there, which a Unix file system does not keep), by the time of
+access and by the owner. Ctrl-F10, the sort by descriptions, is not bound:
+M-Commander has no descriptions.
 
 **Ctrl-F12**
 : the sort order menu.
@@ -394,6 +400,33 @@ the mode off.
 : is the next command of the history, see below. The prefix of the extended
 commands, which Ctrl-X was, moves to Alt-X.
 
+**Ctrl-\\ (control-backslash)**
+: goes to the root directory of the panel: of the file system, of the archive
+or of the remote host that the panel shows (a panel of a plugin stays where it
+is). The directory hotlist, which was Ctrl-\\, moves to Alt-\\.
+
+**Alt with a character, Alt-Shift with a character**
+: the fast find of Far: the panel goes to the file whose name begins with the
+characters typed while Alt is held down, and Ctrl-Enter and Ctrl-Shift-Enter go
+on to the next and to the previous file that matches. The search ends with Esc
+or with a key that is not a character, as the quick search of M-Commander does.
+Every Alt key that has an action in M-Commander keeps it (Alt-h, Alt-a and so
+on), and so does every Alt key of the command line editing while there is text
+in the command line, but once the search has begun all Alt keys go to it; the
+Alt-Shift keys of the same letters are free for it when the Alt keys are
+taken. The quick search of M-Commander (Ctrl-s and Alt-s) works as before.
+
+**Ctrl-G**
+: applies a command to the files: it asks for a command and runs it for every
+tagged file, or for the file under the cursor if none is tagged. In the
+command, %f (or %p) is the name of the file, %n the name without the extension
+and %x the extension, all quoted for the shell; the other macros of the user
+menu work as they do there.
+
+**Alt-F6, Alt-F10, Shift-F9, Shift-F10**
+: create a hard link, show the tree of directories, save the setup and choose
+the menu item chosen last (Shift-F7, which was it, still does).
+
 **In the command line and in the edit lines of the dialogs** (they all share
 the keys):
 Ctrl-E is the previous command of the history and Ctrl-X the next one, as in
@@ -414,6 +447,14 @@ word left, Ctrl-Left does.
 Alt-F8 goes to a position (F5 keeps working), Alt-F7 continues the search in the
 opposite direction and Alt-F11 shows the history of the viewed files.
 
+**In the dialogs:**
+Ctrl-Enter does what Enter does when no button has the focus, which is the
+default action of the dialog, and the numeric plus and minus (and the plus and
+the minus of the main keyboard) switch the check box that has the focus on and
+off, where Space switches it over. Esc, F10, Tab, the arrow keys and the
+hotkeys of the buttons are the same in Far and in M-Commander. Ctrl-Enter is
+sent by a terminal only when it reports modified keys (see below).
+
 The keys that M-Commander shares with Far are the same with or without the
 mode: F1 to F10, Shift-F4, Shift-F5, Shift-F6 and Shift-F8, Tab, Ctrl-U,
 Ctrl-R, Ctrl-O, Ctrl-F1 and Ctrl-F2, Alt-F1 and Alt-F2, Ctrl-PgUp and Ctrl-PgDn,
@@ -424,15 +465,22 @@ block instead of wrapping lines, the clipboard keys Ctrl-C, Ctrl-V and Ctrl-X
 of the editor are not bound (Ctrl-Insert, Shift-Insert and Shift-Delete work),
 and the viewer keeps its own F8, F9, Space and plus and minus keys; the panels
 keep the M-Commander colors and have no descriptions of the files (Ctrl-6 and
-Ctrl-7 show other columns, see above), Ctrl-G, Ctrl-Z, Ctrl-M, Ctrl-H and the
-folder shortcuts are not bound, Ctrl-\ keeps opening the directory hotlist
-instead of the root directory, Ctrl with a square bracket does not put the path
-of the left or of the right panel into the command line (a terminal sends
-Ctrl-left bracket as Esc), and Ctrl-, does not switch the panel layout (a terminal sends it as
-Ctrl-L, which shows the information panel in this mode); Alt-, does. The
-dialogs keep their own keys, apart from the edit lines.
+Ctrl-7 show other columns, see above), Ctrl-Z, Ctrl-M and the folder shortcuts
+are not bound, nor is Ctrl-H for the hidden files (a terminal sends Backspace
+as Ctrl-H, and Enter as Ctrl-M, and M-Commander cannot tell the two apart;
+Alt-. shows and hides the hidden files, as it does without the mode), Ctrl with
+a square bracket does not put the path of the left or of the right panel into
+the command line (a terminal sends Ctrl-left bracket as Esc), and Ctrl-, does
+not switch the panel layout (a terminal sends it as Ctrl-L, which shows the
+information panel in this mode); Alt-, does. Alt with a character is the fast
+find only where no action of M-Commander has the key, see above, and the fast
+find takes no characters that are not Latin-1. The dialogs keep their own keys,
+apart from the edit lines, Ctrl-Enter and the check boxes: M-Commander has no
+Far key for moving a dialog, for the focus on the default button (PgDn) or for
+a file name in an edit line of a dialog (Shift-Enter), and the mouse is not
+part of the mode.
 
-Some keys of the mode (Ctrl with a digit, with a comma or with a function key) are sent by a
+Some keys of the mode (Ctrl with a digit, with a comma, with Enter or with a function key) are sent by a
 terminal only when it reports modified keys, as xterm and the terminals that speak the kitty keyboard protocol do.
 In a terminal that does not, the key arrives as another one or does not arrive
 at all, and nothing is lost: every action is also in the menus, and the key it

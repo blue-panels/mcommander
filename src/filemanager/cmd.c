@@ -63,7 +63,8 @@
 
 #include "src/setup.h"
 #include "src/usermenu_ini.h"
-#include "src/execute.h"  // toggle_panels()
+#include "src/usermenu.h"  // user_menu_execute()
+#include "src/execute.h"   // toggle_panels()
 #include "src/history.h"
 #include "src/util.h"  // check_for_default(), file_error_message()
 
@@ -1019,6 +1020,139 @@ view_filtered_cmd (const WPanel *panel)
         g_free (command);
         dialog_switch_process_pending ();
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Put a file name into the command to apply: %f (or %p) is the name, %n the name without the
+ * extension and %x the extension, quoted for the shell. The other macros of the user menu are
+ * left for it to expand, and so is %%.
+ */
+
+static void
+apply_add_line (GString *script, const char *command, const char *fname)
+{
+    const char *ext;
+    const char *s;
+
+    // a name that begins with a dot has no extension
+    ext = strrchr (fname, '.');
+    if (ext == fname)
+        ext = NULL;
+
+    g_string_append_c (script, '\t');
+
+    for (s = command; *s != '\0'; s++)
+    {
+        char *text = NULL;
+
+        if (*s != '%' || s[1] == '\0')
+        {
+            g_string_append_c (script, *s);
+            continue;
+        }
+
+        s++;
+        switch (*s)
+        {
+        case 'f':
+        case 'p':
+            text = name_quote (fname, TRUE);
+            break;
+        case 'n':
+        {
+            char *stem;
+
+            stem = ext == NULL ? g_strdup (fname) : g_strndup (fname, (gsize) (ext - fname));
+            text = name_quote (stem, TRUE);
+            g_free (stem);
+            break;
+        }
+        case 'x':
+            text = ext == NULL ? NULL : name_quote (ext + 1, TRUE);
+            break;
+        default:
+            g_string_append_c (script, '%');
+            g_string_append_c (script, *s);
+            continue;
+        }
+
+        if (text != NULL)
+        {
+            g_string_append (script, text);
+            g_free (text);
+        }
+    }
+
+    g_string_append_c (script, '\n');
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Apply a command to the files of the panel, which is Ctrl-G of Far mode: the command is run for
+ * every tagged file, or for the file under the cursor when none is tagged.
+ */
+
+void
+apply_cmd (WPanel *panel)
+{
+    char *command;
+    GString *script;
+    gboolean any = FALSE;
+
+    if (panel == NULL)
+        return;
+
+    command = input_dialog (_ ("Apply command"),
+                            _ ("Command for the files (%f name, %n name without extension, "
+                               "%x extension):"),
+                            MC_HISTORY_FM_APPLY_COMMAND, "",
+                            INPUT_COMPLETE_FILENAMES | INPUT_COMPLETE_COMMANDS);
+    if (command == NULL)
+        return;
+
+    if (*command == '\0')
+    {
+        g_free (command);
+        return;
+    }
+
+    // the first line is the title of a menu entry, the lines under it are the commands
+    script = g_string_new (_ ("Apply command"));
+    g_string_append_c (script, '\n');
+
+    if (panel->marked != 0)
+    {
+        int i;
+
+        for (i = 0; i < panel->dir.len; i++)
+            if (panel->dir.list[i].f.marked != 0 && !DIR_IS_DOTDOT (panel->dir.list[i].fname->str))
+            {
+                apply_add_line (script, command, panel->dir.list[i].fname->str);
+                any = TRUE;
+            }
+    }
+    else
+    {
+        const file_entry_t *fe;
+
+        fe = panel_current_entry (panel);
+        if (fe != NULL && !DIR_IS_DOTDOT (fe->fname->str))
+        {
+            apply_add_line (script, command, fe->fname->str);
+            any = TRUE;
+        }
+    }
+
+    if (any)
+    {
+        user_menu_execute (NULL, script->str, TRUE);
+        update_panels (UP_OPTIMIZE, UP_KEEPSEL);
+        repaint_screen ();
+    }
+
+    g_string_free (script, TRUE);
+    g_free (command);
 }
 
 /* --------------------------------------------------------------------------------------------- */
