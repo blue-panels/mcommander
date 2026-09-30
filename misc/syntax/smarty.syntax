@@ -1,0 +1,25 @@
+# Smarty templates, https://www.smarty.net
+#
+# A layer over HTML: the tags of Smarty are colored wherever they stand, in
+# the text, inside an HTML tag, in a string of an attribute, in a script or a
+# style sheet, and HTML, with the scripts and style sheets it embeds, reads
+# the rest with the tags left out.
+#
+# As in Smarty itself, a brace followed by a blank is no tag, so the braces
+# of scripts and style sheets stay theirs.  What {literal} holds is read as
+# tags all the same.
+
+overlay HTML\sFile
+
+context default
+    # a brace and a blank: no tag
+    keyword {\s
+    keyword {\t
+    keyword {\n
+
+# a comment
+context {\* \*} brown
+
+# a tag: {$variable}, {function ...}, {block} and {/block}
+context { } brightcyan
+    embed soft Smarty\sTag

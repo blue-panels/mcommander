@@ -88,6 +88,8 @@ SYNTAXFILES =			\
 	ruby.syntax		\
 	rust.syntax		\
 	sh-parameter.syntax	\
+	smarty-tag.syntax	\
+	smarty.syntax		\
 	turtle.syntax		\
 	sh.syntax		\
 	slang.syntax		\

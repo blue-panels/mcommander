@@ -85,6 +85,13 @@ include nroff.syntax
 file ..\*\\.(?i:html?)$ HTML\sFile
 include html.syntax
 
+file ..\*\\.(?i:tpl)$ Smarty\sTemplate
+include smarty.syntax
+
+# what stands inside the braces of a Smarty tag, embedded by smarty.syntax
+file ^$ Smarty\sTag
+include smarty-tag.syntax
+
 file ..\*\\.((?i:xml|xsd|xslt?|dtd)|qpg|qpg\\.in)$ XML\sdocument (\\?xml\sversion|!DOCTYPE\s)
 include xml.syntax
 

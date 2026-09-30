@@ -1,0 +1,91 @@
+# Smarty: what stands inside the braces of a tag
+#
+# Embedded by smarty.syntax, never chosen for a file of its own.
+
+context default brightcyan
+    keyword whole if yellow
+    keyword whole elseif yellow
+    keyword whole else yellow
+    keyword whole foreach yellow
+    keyword whole foreachelse yellow
+    keyword whole as yellow
+    keyword whole section yellow
+    keyword whole sectionelse yellow
+    keyword whole while yellow
+    keyword whole for yellow
+    keyword whole to yellow
+    keyword whole step yellow
+    keyword whole include yellow
+    keyword whole include_php yellow
+    keyword whole assign yellow
+    keyword whole append yellow
+    keyword whole capture yellow
+    keyword whole strip yellow
+    keyword whole literal yellow
+    keyword whole block yellow
+    keyword whole extends yellow
+    keyword whole function yellow
+    keyword whole call yellow
+    keyword whole nocache yellow
+    keyword whole insert yellow
+    keyword whole ldelim yellow
+    keyword whole rdelim yellow
+    keyword whole config_load yellow
+    keyword whole break yellow
+    keyword whole continue yellow
+
+    # variables, properties and config values
+    keyword wholeright $+ brightgreen
+    keyword #+# brightgreen
+
+    # modifiers: {$x|escape|default:"-"}
+    keyword wholeright |+ brightmagenta
+
+    keyword whole eq brightred
+    keyword whole ne brightred
+    keyword whole neq brightred
+    keyword whole gt brightred
+    keyword whole lt brightred
+    keyword whole gte brightred
+    keyword whole ge brightred
+    keyword whole lte brightred
+    keyword whole le brightred
+    keyword whole not brightred
+    keyword whole and brightred
+    keyword whole or brightred
+    keyword whole mod brightred
+    keyword whole is brightred
+    keyword whole div brightred
+    keyword whole by brightred
+    keyword whole even brightred
+    keyword whole odd brightred
+
+    keyword === brightred
+    keyword == brightred
+    keyword != brightred
+    keyword >= brightred
+    keyword <= brightred
+    keyword && brightred
+    keyword || brightred
+    keyword -> brightred
+
+    # attributes: from=$list item=x; after the operators, the first that fits is taken
+    keyword wholeleft \[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_\]= white
+
+    keyword whole true brightmagenta
+    keyword whole false brightmagenta
+    keyword whole null brightmagenta
+    keyword whole TRUE brightmagenta
+    keyword whole FALSE brightmagenta
+    keyword whole NULL brightmagenta
+
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\] brightmagenta
+    keyword whole \{0123456789\}\[0123456789\] brightmagenta
+
+context " " green
+    keyword \\" brightgreen
+    keyword wholeright $+ brightgreen
+    keyword `*` brightgreen
+
+context ' ' green
+    keyword \\' brightgreen
