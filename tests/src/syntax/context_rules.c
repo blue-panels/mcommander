@@ -1387,6 +1387,62 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_embed_unknown_type)
+{
+    // a type no Syntax file names leaves the context in its own colors
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "  keyword whole int red\n"
+                                     "context < > green\n"
+                                     "  embed Nowhere\n" INNER_RULES),
+                      0);
+    check_mask ("int <int> int", "rrr.ggggg.rrr");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_from_installed_syntax)
+{
+    char *saved_share = mc_global.share_data_dir;
+    char *share, *dir, *installed, *lang, *content;
+
+    /* the Syntax file the user keeps is older than the rules and does not know
+       the type they embed; the one installed with the program does */
+    share = g_build_filename (tmpdir, "share", (char *) NULL);
+    dir = g_build_filename (share, "syntax", (char *) NULL);
+    g_mkdir_with_parents (dir, 0700);
+    lang = g_build_filename (dir, "inner.syntax", (char *) NULL);
+    write_file (lang,
+                "context default\n"
+                "  keyword whole int yellow\n");
+    installed = g_build_filename (dir, "Syntax", (char *) NULL);
+    content = g_strdup_printf ("file \\.none$ Inner\ninclude %s\n", lang);
+    write_file (installed, content);
+    mc_global.share_data_dir = share;
+
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed Inner\n"),
+                      0);
+    check_mask ("<int>", "gyyyg");
+
+    mc_global.share_data_dir = saved_share;
+    unlink (installed);
+    unlink (lang);
+    rmdir (dir);
+    rmdir (share);
+    g_free (content);
+    g_free (installed);
+    g_free (lang);
+    g_free (dir);
+    g_free (share);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_embed_errors)
 {
     // the default context has no delimiters to embed between
@@ -1394,12 +1450,6 @@ START_TEST (test_embed_errors)
                                      "context default\n"
                                      "  embed Inner\n" INNER_RULES),
                       3);
-    // a rule set that is not there is blamed on the line that names it
-    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
-                                     "context default\n"
-                                     "context < > green\n"
-                                     "  embed Nowhere\n" INNER_RULES),
-                      4);
     // one type, named once
     ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
                                      "context default\n"
@@ -1546,6 +1596,8 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_embed_soft);
     tcase_add_test (tc_core, test_embed_soft_keyword);
     tcase_add_test (tc_core, test_embed_soft_nested);
+    tcase_add_test (tc_core, test_embed_unknown_type);
+    tcase_add_test (tc_core, test_embed_from_installed_syntax);
     tcase_add_test (tc_core, test_embed_errors);
     tcase_add_test (tc_core, test_embed_state_from_checkpoints);
 }

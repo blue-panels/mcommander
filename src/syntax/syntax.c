@@ -280,8 +280,8 @@ struct syntax_palette_t
 
 static void syntax_rules_free (syntax_rules_t *r);
 static void destroy_defines (GTree **defines);
-static int syntax_rules_load_embedded (const char *syntax_file, const char *type, int depth,
-                                       syntax_rules_t **rules);
+static int syntax_load_embed (const char *syntax_file, const char *type, int depth,
+                              syntax_rules_t **rules);
 
 /*** file scope variables ************************************************************************/
 
@@ -2198,8 +2198,13 @@ syntax_embed_shareable (const context_rule_t *c, const context_rule_t *other)
 /**
  * Read the rule sets the contexts of @r embed, and copy them in.
  *
+ * A type that no Syntax file names leaves the context as if it embedded
+ * nothing, in its own colors: the rules can be newer than the Syntax file the
+ * user keeps, or name a type that is not installed, and neither is a reason
+ * to fail the whole rule set.
+ *
  * @param error_file set to the file of the 'embed' line at fault
- * @return 0 on success, otherwise the line of the 'embed' that could not be kept
+ * @return 0 on success, otherwise the line of the 'embed' whose rules are at fault
  */
 static int
 syntax_resolve_embeds (syntax_rules_t *r, const char *syntax_file, int depth, char **error_file)
@@ -2212,6 +2217,7 @@ syntax_resolve_embeds (syntax_rules_t *r, const char *syntax_file, int depth, ch
         context_rule_t *c = CONTEXT_RULE (g_ptr_array_index (r->contexts, i));
         syntax_rules_t *child = NULL;
         gboolean ok;
+        int res;
 
         if (c->embed_type == NULL)
             continue;
@@ -2233,8 +2239,11 @@ syntax_resolve_embeds (syntax_rules_t *r, const char *syntax_file, int depth, ch
         if (c->embed != 0)
             continue;
 
-        ok = syntax_rules_load_embedded (syntax_file, c->embed_type, depth + 1, &child) == 0
-            && child->contexts != NULL && syntax_splice_embedded (r, i, child);
+        res = syntax_load_embed (syntax_file, c->embed_type, depth + 1, &child);
+        if (res == -1)
+            continue;
+
+        ok = res == 0 && child->contexts != NULL && syntax_splice_embedded (r, i, child);
         syntax_rules_unref (child);
 
         if (!ok)
@@ -2814,6 +2823,42 @@ syntax_rules_load_embedded (const char *syntax_file, const char *type, int depth
     *rules = r;
 
     return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Read the rule set an 'embed' names: from @syntax_file, and failing that from
+ * the Syntax file installed with the program.
+ *
+ * The copy of the Syntax file a user keeps is not updated with the program, and
+ * the rule sets installed next to it come to embed types it does not list.
+ *
+ * @return 0 on success, -1 if no Syntax file names @type, otherwise the line
+ *         the embedded rules are at fault on
+ */
+static int
+syntax_load_embed (const char *syntax_file, const char *type, int depth, syntax_rules_t **rules)
+{
+    char *installed;
+    int res;
+
+    res = syntax_rules_load_embedded (syntax_file, type, depth, rules);
+    if (res == 0 || mc_global.share_data_dir == NULL)
+        return res;
+
+    installed = g_build_filename (mc_global.share_data_dir, EDIT_SYNTAX_FILE, (char *) NULL);
+    if (strcmp (installed, syntax_file) != 0)
+    {
+        const int installed_res = syntax_rules_load_embedded (installed, type, depth, rules);
+
+        // what the installed file says is the answer, unless it knows nothing of the type
+        if (installed_res != -1 || res == -1)
+            res = installed_res;
+    }
+    g_free (installed);
+
+    return res;
 }
 
 /* --------------------------------------------------------------------------------------------- */

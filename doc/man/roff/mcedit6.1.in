@@ -514,7 +514,10 @@ another syntax, with a line right below it:
 where
 \fItype\fP
 is the name of the rules as the file line of the Syntax file gives it,
-with \es for a space.  The delimiters keep the colors of the context.  The
+with \es for a space.  It is looked up in the Syntax file the rules are
+read from, and then in the one installed with mcedit, so that a copy of the
+Syntax file older than the rules still finds it; a type found in neither
+leaves the context as if it embedded nothing, in its own colors.  The delimiters keep the colors of the context.  The
 right delimiter ends the embedded text wherever it stands, inside a string
 or a comment of the embedded rules as well.  An embedded syntax can embed
 another one in turn, a few levels deep.  For example, HTML hands scripts to
