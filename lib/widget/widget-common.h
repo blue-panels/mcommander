@@ -49,7 +49,9 @@ typedef enum
     MSG_RESIZE,          // Screen size has changed
     MSG_VALIDATE,        // Dialog is to be closed
     MSG_END,             // Shut down dialog
-    MSG_DESTROY          // Sent to widget at destruction time
+    MSG_DESTROY,         // Sent to widget at destruction time
+    MSG_PASTE,           // A bracketed paste as one block; data is the GString with its text
+    MSG_UNHANDLED_PASTE  // A paste that no widget took
 } widget_msg_t;
 
 /* Widgets are expected to answer to the following messages:

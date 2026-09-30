@@ -1015,6 +1015,28 @@ input_store_line_or_files (const char *line)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A paste for an input line: line breaks and tabs become spaces, so a paste of several lines
+   is one line and does not submit the input, and the breaks at its end are dropped. */
+static cb_ret_t
+input_paste (WInput *in, const GString *text)
+{
+    GString *line = g_string_new_len (text->str, (gssize) text->len);
+    size_t i;
+
+    while (line->len > 0 && (line->str[line->len - 1] == '\n' || line->str[line->len - 1] == '\r'))
+        g_string_truncate (line, line->len - 1);
+    for (i = 0; i < line->len; i++)
+        if ((unsigned char) line->str[i] < ' ' || line->str[i] == '\x7f')
+            line->str[i] = ' ';
+
+    if (line->len > 0)
+        input_insert (in, line->str, FALSE);
+    g_string_free (line, TRUE);
+    return MSG_HANDLED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The clipboard as one line for an input line: line breaks and other control characters become
    spaces. Over INPUT_CLIP_ASK_SIZE the user is asked first. NULL when there is nothing or the
    user declined. Caller frees. */
@@ -1144,6 +1166,9 @@ input_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         if (in->label != NULL)
             widget_set_state (WIDGET (in->label), WST_DISABLED, widget_get_state (w, WST_DISABLED));
         return MSG_HANDLED;
+
+    case MSG_PASTE:
+        return input_paste (in, (const GString *) data);
 
     case MSG_KEY:
         if (parm == XCTRL ('q'))

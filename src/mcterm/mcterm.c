@@ -62,6 +62,7 @@
 #include "src/keymap.h"
 
 #include "mcterm.h"
+#include "mcterm_far2l.h"
 #include "mcterm_filter.h"
 #include "mcterm_key.h"
 #include "mcterm_proto.h"
@@ -107,6 +108,10 @@ struct WMcTerm
     Widget base;
     mcview_vterm_t *vterm;
     int pty_master;
+    /* Far2l drag and drop passed on from the terminal mc runs in to the program in the terminal,
+       once it has asked for the extensions (the emulator answers that, mcview_vterm_far2l_active)
+     */
+    mcterm_far2l_t *far2l;
     pid_t child_pid;
     gboolean child_dead;
     int child_exit_status;
@@ -210,6 +215,7 @@ static int mcterm_pty_ready_cb (int fd, void *info);
 static gboolean mcterm_osc7_is_ours (const WMcTerm *t, const char *raw);
 static gboolean mcterm_handle_osc133_generation (WMcTerm *t);
 static gboolean mcterm_write_all (int master, const unsigned char *data, size_t len);
+static void mcterm_handle_apcs (WMcTerm *t);
 static void mcterm_busy_tick (WMcTerm *t);
 static void mcterm_busy_tick_set (WMcTerm *t, gboolean on);
 static gboolean mcterm_handle_stalled_internal_sync (WMcTerm *t);
@@ -394,6 +400,7 @@ mcterm_pty_ready_cb (int fd, void *info)
                 (void) ignored;
             }
             mcterm_handle_osc7_generation (t);
+            mcterm_handle_apcs (t);
             mcterm_handle_osc133_generation (t);
         }
 
@@ -2334,13 +2341,39 @@ mcterm_waitpid_reap (pid_t pid)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* What the program said in APCs, which is the far2l extensions: the answers go to its input. */
+
+static void
+mcterm_handle_apcs (WMcTerm *t)
+{
+    char *apc;
+
+    while ((apc = mcview_vterm_take_apc (t->vterm)) != NULL)
+    {
+        char *answer = mcterm_far2l_apc (t->far2l, apc, strlen (apc));
+
+        g_free (apc);
+        if (answer != NULL && t->pty_master >= 0)
+            (void) mcterm_write_all (t->pty_master, (const unsigned char *) answer,
+                                     strlen (answer));
+        g_free (answer);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static gboolean
 mcterm_send_encoded_key (WMcTerm *t, int key)
 {
-    unsigned char buf[64];
+    unsigned char buf[96];
     gboolean app_cursor = mcview_vterm_app_cursor_keys (t->vterm);
-    size_t n = mcterm_encode_key_xterm (key, buf, sizeof (buf), app_cursor);
+    size_t n = 0;
+
+    // a program that asked for the far2l extensions gets its keys the way they name them
+    if (mcview_vterm_far2l_active (t->vterm))
+        n = mcterm_encode_key_far2l (key, buf, sizeof (buf));
+    if (n == 0)
+        n = mcterm_encode_key_xterm (key, buf, sizeof (buf), app_cursor);
 
     if (n > 0)
         return mcterm_write_all (t->pty_master, buf, n);
@@ -2681,6 +2714,20 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
             return MSG_NOT_HANDLED;
         return mcterm_send_encoded_key (t, parm) ? MSG_HANDLED : MSG_NOT_HANDLED;
 
+    case MSG_PASTE:
+    {
+        const GString *text = (const GString *) data;
+
+        // While a search or a filter is typed, a paste is not for the shell
+        if (t->query_active)
+            return MSG_HANDLED;
+        if (t->child_dead || t->pty_master < 0)
+            return MSG_NOT_HANDLED;
+        if (!mcterm_send_paste (t, text->str, text->len))
+            message (D_ERROR, MSG_ERROR, "%s", _ ("The shell did not take the whole text"));
+        return MSG_HANDLED;
+    }
+
     case MSG_KEY:
         if (mcterm_query_key (t, parm) == MSG_HANDLED)
             return MSG_HANDLED;
@@ -2760,6 +2807,8 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         tty_painter_remove (mcterm_paint_pictures, t);
         if (t->pictures_shown)
             tty_touch_screen (); /* the pixels go with the next refresh */
+        mcterm_far2l_free (t->far2l);
+        t->far2l = NULL;
         mcview_vterm_free (t->vterm);
         t->vterm = NULL;
         t->last_osc7_gen = 0;
@@ -2865,6 +2914,7 @@ mcterm_new (const WRect *r, const char *start_dir)
     w->options |= WOP_SELECTABLE | WOP_WANT_CURSOR | WOP_WANT_HOTKEY;
 
     t->pty_master = master;
+    t->far2l = mcterm_far2l_new (NULL);
     t->child_pid = pid;
     t->osc7_token = token;
     t->shell_rc = shell_rc;
@@ -2890,6 +2940,7 @@ mcterm_new (const WRect *r, const char *start_dir)
         tty_cell_size (&cell_width, &cell_height);
         mcview_vterm_set_cell_size (t->vterm, cell_width, cell_height);
         mcview_vterm_set_sixel (t->vterm, tty_has_sixel ());
+        mcview_vterm_set_far2l (t->vterm, tty_has_far2l_input ());
     }
     tty_painter_add (mcterm_paint_pictures, t);
 
@@ -2962,6 +3013,42 @@ mcterm_free (WMcTerm *t)
         return;
     send_message (WIDGET (t), NULL, MSG_DESTROY, 0, NULL);
     g_free (t);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_far2l_wants_drop (const WMcTerm *t)
+{
+    return t != NULL && !t->child_dead && t->pty_master >= 0 && t->vterm != NULL
+        && mcview_vterm_far2l_active (t->vterm) && mcterm_far2l_bound (t->far2l);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_far2l_take_drop (WMcTerm *t, const far2l_drop_t *drop)
+{
+    const WRect *r;
+    char *event = NULL;
+    int x = -1, y = -1;
+    gboolean taken;
+
+    if (!mcterm_far2l_wants_drop (t))
+        return FALSE;
+
+    r = &CONST_WIDGET (t)->rect;
+    if (drop->x >= r->x && drop->x < r->x + r->cols && drop->y >= r->y && drop->y < r->y + r->lines)
+    {
+        x = drop->x - r->x;
+        y = drop->y - r->y;
+    }
+
+    taken = mcterm_far2l_drop (t->far2l, drop, x, y, &event);
+    if (taken && event != NULL)
+        (void) mcterm_write_all (t->pty_master, (const unsigned char *) event, strlen (event));
+    g_free (event);
+    return taken;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3163,6 +3250,79 @@ mcterm_send_text (WMcTerm *t, const char *text)
     ok = mcterm_pty_send (t->pty_master, text, len, MCTERM_PASTE_STALL_USEC, mcterm_send_text_drain,
                           t);
     // Set after the transfer: the echo read on the way resets it, and bytes went out since.
+    t->line_typed = TRUE;
+    t->line_cleared = FALSE;
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* What the program is given for a paste. The text is cleaned first: no ESC, so it cannot end
+   the paste early with ESC[201~, and no other control byte but the line break and the tab. */
+char *
+mcterm_paste_bytes (const char *text, size_t len, gboolean bracketed, size_t *out_len)
+{
+    GString *out = g_string_sized_new (len + 16);
+    size_t end = len;
+    size_t i;
+
+    if (bracketed)
+        g_string_append (out, ESC_STR "[200~");
+    else
+        while (end > 0 && (text[end - 1] == '\n' || text[end - 1] == '\r'))
+            end--;
+
+    for (i = 0; i < end; i++)
+    {
+        unsigned char c = (unsigned char) text[i];
+
+        if (c == '\r' && i + 1 < end && text[i + 1] == '\n')
+            continue;
+        if (c == '\r')
+            c = '\n';
+
+        if (bracketed)
+        {
+            // the text stays as it is, but for the bytes that could act as keys
+            if (c != '\n' && c != '\t' && (c < 0x20 || c == 0x7f))
+                continue;
+        }
+        else if (c < 0x20 || c == 0x7f)
+            c = ' ';  // the lines become one; the user presses Enter
+
+        g_string_append_c (out, (char) c);
+    }
+
+    if (bracketed)
+        g_string_append (out, ESC_STR "[201~");
+
+    *out_len = out->len;
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_send_paste (WMcTerm *t, const char *text, size_t len)
+{
+    char *bytes;
+    size_t n;
+    gboolean ok;
+
+    if (t == NULL || t->child_dead || t->pty_master < 0 || text == NULL || len == 0)
+        return FALSE;
+
+    bytes = mcterm_paste_bytes (text, len,
+                                t->vterm != NULL && mcview_vterm_bracketed_paste (t->vterm), &n);
+    // an empty paste in the marks sends nothing, and one that came out empty has nothing to say
+    if (n == 0 || (n == 12 && strncmp (bytes, ESC_STR "[200~", 6) == 0))
+    {
+        g_free (bytes);
+        return TRUE;
+    }
+    ok = mcterm_pty_send (t->pty_master, bytes, n, MCTERM_PASTE_STALL_USEC, mcterm_send_text_drain,
+                          t);
+    g_free (bytes);
     t->line_typed = TRUE;
     t->line_cleared = FALSE;
     return ok;
