@@ -1,0 +1,180 @@
+name: ci-msys2
+
+on: workflow_dispatch
+
+jobs:
+  build-msys2:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Keep LF line endings
+        shell: pwsh
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v7
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: true
+          install: >-
+            gcc
+            autotools
+            gettext-devel
+            glib2-devel
+            ncurses-devel
+            perl
+            pacman-contrib
+            mintty
+            file
+            coreutils
+            findutils
+            grep
+            sed
+            diffutils
+            tar
+            gzip
+            bzip2
+            xz
+            zstd
+            unzip
+            zip
+
+      - name: Bootstrap build system
+        run: |
+          if LC_ALL=C grep -q $'\r' configure.ac; then
+            echo '::error title=CRLF checkout::configure.ac has CRLF line endings'
+            exit 1
+          fi
+          if ! ./autogen.sh >bootstrap.log 2>&1; then
+            tail -n 60 bootstrap.log
+            detail=$(tail -n 12 bootstrap.log | tr '\r\n' '  ' | cut -c1-1400)
+            echo "::error title=autogen.sh failed::$detail"
+            exit 1
+          fi
+
+      - name: Configure
+        run: |
+          mkdir build-msys2
+          cd build-msys2
+          if ! ../configure \
+            --prefix=/usr/local \
+            --with-screen=ncurses \
+            --disable-nls \
+            --disable-tests \
+            --enable-lua-plugin=no \
+            --enable-option-checking=fatal >configure.out 2>&1; then
+            tail -n 60 configure.out
+            detail=$(tail -n 12 configure.out | tr '\r\n' '  ' | cut -c1-1400)
+            echo "::error title=configure failed::$detail"
+            exit 1
+          fi
+
+      - name: Build and smoke test
+        run: |
+          cd build-msys2
+          if ! make -j2 >build.out 2>&1; then
+            tail -n 60 build.out
+            detail=$(tail -n 12 build.out | tr '\r\n' '  ' | cut -c1-1400)
+            echo "::error title=make failed::$detail"
+            exit 1
+          fi
+          ./src/mcommander --version
+
+      - name: Package MSYS2 build
+        run: |
+          cd build-msys2
+          if ! make install DESTDIR="$PWD/package-root" >install.out 2>&1; then
+            tail -n 60 install.out
+            detail=$(tail -n 12 install.out | tr '\r\n' '  ' | cut -c1-1400)
+            echo "::error title=install failed::$detail"
+            exit 1
+          fi
+          installed_bin=$(find package-root -type f -name mcommander.exe -print -quit)
+          if test -z "$installed_bin"; then
+            echo '::error title=MSYS2 package incomplete::make install did not stage mcommander.exe'
+            find package-root -type f -name '*mcommander*' -print
+            exit 1
+          fi
+          mkdir -p package-root/usr/local/bin
+          if test "$installed_bin" != package-root/usr/local/bin/mcommander.exe; then
+            cp "$installed_bin" package-root/usr/local/bin/mcommander.exe
+          fi
+          printf '%s\r\n' \
+            '@echo off' \
+            'if not exist "%~dp0msys2_shell.cmd" (' \
+            '  echo Extract this archive into the MSYS2 root directory first.' \
+            '  pause' \
+            '  exit /b 1' \
+            ')' \
+            'call "%~dp0msys2_shell.cmd" -msys -c "exec /usr/local/bin/mcommander.exe"' \
+            >package-root/run-mcommander.cmd
+          cat >package-root/README-MSYS2.txt <<'EOF'
+          This build targets the MSYS environment of 64-bit MSYS2.
+          Extract this archive into the root of the MSYS2 installation,
+          for example C:\msys64. The executable should then be at
+          C:\msys64\usr\local\bin\mcommander.exe.
+
+          Open the MSYS2 MSYS terminal and install the runtime packages:
+            pacman -S --needed glib2 ncurses file
+
+          To launch from Windows Explorer, double-click run-mcommander.cmd
+          in the MSYS2 root. To launch from the MSYS2 MSYS terminal, run:
+            /usr/local/bin/mcommander.exe
+
+          Do not open mcommander.exe or mc6.exe directly from Explorer:
+          Windows will not find the MSYS2 DLLs in C:\msys64\usr\bin.
+          This build has the Lua plugin disabled.
+          EOF
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mcommander-msys2
+          path: build-msys2/package-root/
+          if-no-files-found: error
+
+      - name: Bundle portable MSYS2 runtime
+        run: |
+          cd build-msys2
+          if ! bash ../maint/package_msys2_portable.sh package-root portable-root >portable.out 2>&1; then
+            tail -n 60 portable.out
+            detail=$(tail -n 12 portable.out | tr '\r\n' '  ' | cut -c1-1400)
+            echo "::error title=portable package failed::$detail"
+            exit 1
+          fi
+
+      - name: Smoke test portable bundle
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          & "$PWD\build-msys2\portable-root\run-mcommander.cmd" --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$PWD\build-msys2\portable-root\usr\bin\mintty.exe" --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mcommander-msys2-portable
+          path: build-msys2/portable-root/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: msys2-build-logs
+          path: |
+            bootstrap.log
+            build-msys2/config.log
+            build-msys2/configure.out
+            build-msys2/build.out
+            build-msys2/install.out
+            build-msys2/portable.out
+            build-msys2/**/test-suite.log
