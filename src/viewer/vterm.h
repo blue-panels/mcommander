@@ -117,6 +117,10 @@ void mcview_vterm_page_up (mcview_vterm_t *vt, int keep);
 void mcview_vterm_clear_history (mcview_vterm_t *vt);
 const char *mcview_vterm_osc7_raw (const mcview_vterm_t *vt);
 guint mcview_vterm_osc7_generation (const mcview_vterm_t *vt);
+/* The next application command (ESC _ ... BEL or ST) that arrived whole, without its introducer
+   and terminator; g_free() it. NULL when none waits. */
+char *mcview_vterm_take_apc (mcview_vterm_t *vt);
+
 /* The last semantic prompt mark (OSC 133) as it arrived, and a counter of them. */
 const char *mcview_vterm_osc133_raw (const mcview_vterm_t *vt);
 guint mcview_vterm_osc133_generation (const mcview_vterm_t *vt);
@@ -131,6 +135,12 @@ void mcview_vterm_set_sixel (mcview_vterm_t *vt, gboolean sixel);
 guint mcview_vterm_images_len (const mcview_vterm_t *vt);
 const mcview_vterm_image_t *mcview_vterm_image (const mcview_vterm_t *vt, guint index);
 guint mcview_vterm_images_generation (const mcview_vterm_t *vt);
+
+/* The far2l extensions of the terminal mc runs in may go on to the program in the emulator: it
+   is answered far2lok when it asks with APC far2l1, and from then on its keys are to be given
+   in the far2l form. The program gives them up with far2l0. */
+void mcview_vterm_set_far2l (mcview_vterm_t *vt, gboolean allowed);
+gboolean mcview_vterm_far2l_active (const mcview_vterm_t *vt);
 
 /* Update terminal size; returns TRUE on change. */
 gboolean mcview_vterm_set_size (mcview_vterm_t *vt, int rows, int cols);
