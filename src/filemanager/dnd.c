@@ -39,8 +39,11 @@
 #include "lib/vfs/vfs.h"
 #include "lib/widget.h"
 
+#include "src/mcterm/mcterm.h"
+
 #include "filemanager.h"
 #include "layout.h"
+#include "mcterm_overlay.h"
 #include "panel.h"
 
 #include "dnd.h"
@@ -205,6 +208,13 @@ filemanager_dnd_drop (const far2l_drop_t *drop)
         dest = panel_at (drop->x, drop->y);
         if (dest == NULL)
         {
+            /* On mc's own terminal it is the program's: a program that has bound drop reception
+               is told, and its LIST and READ are answered from the offer of ours. */
+            WMcTerm *term = mcterm_overlay_terminal_at (drop->x, drop->y);
+
+            if (term != NULL && mcterm_far2l_take_drop (term, drop))
+                return;
+
             /* it did not land on a panel */
             far2l_dnd_close (drop->offer, FAR2L_DND_CLOSE_REJECTED);
             return;

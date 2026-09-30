@@ -1094,3 +1094,250 @@ far2l_dnd_close (const guint8 *offer, guint8 reason)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+gboolean
+far2l_request_head (const guint8 *stack, gsize len, guint8 *rid, guint8 *cmd)
+{
+    reader_t r = { stack, len, FALSE };
+
+    *rid = rd_u8 (&r);
+    *cmd = rd_u8 (&r);
+    return !r.err;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+int
+far2l_dnd_decode_request (const guint8 *stack, gsize len, far2l_dnd_request_t *q)
+{
+    reader_t r = { stack, len, FALSE };
+
+    memset (q, 0, sizeof (*q));
+    q->rid = rd_u8 (&r);
+    q->cmd = rd_u8 (&r);
+    if (r.err)
+        return FAR2L_E_BAD_REQUEST;
+    if (q->cmd != F2L_INTERACT_DND)
+        return FAR2L_E_UNSUPPORTED;
+
+    q->sub = rd_u8 (&r);
+    if (r.err)
+        return FAR2L_E_BAD_REQUEST;
+
+    switch (q->sub)
+    {
+    case F2L_SUB_BIND:
+    {
+        guint8 enable;
+
+        q->version = rd_u16 (&r);
+        if (r.err)
+            return FAR2L_E_BAD_REQUEST;
+        /* the layout of the rest belongs to that version: it is not guessed */
+        if (q->version != 1)
+            return FAR2L_E_UNSUPPORTED;
+        enable = rd_u8 (&r);
+        if (enable > 1)
+            return FAR2L_E_BAD_REQUEST;
+        q->enable = enable == 1;
+        rd_id (&r, q->binding);
+        q->max_frame = rd_u32 (&r);
+        q->max_chunk = rd_u32 (&r);
+        q->window = rd_u16 (&r);
+        q->wanted_features = rd_u32 (&r);
+        break;
+    }
+    case F2L_SUB_LIST:
+        rd_id (&r, q->offer);
+        q->parent_id = rd_u64 (&r);
+        q->cursor = rd_u64 (&r);
+        break;
+    case F2L_SUB_READ:
+        rd_id (&r, q->offer);
+        q->item_id = rd_u64 (&r);
+        q->offset = rd_u64 (&r);
+        q->length = rd_u32 (&r);
+        break;
+    case F2L_SUB_CLOSE:
+        rd_id (&r, q->offer);
+        q->reason = rd_u8 (&r);
+        break;
+    default:
+        return FAR2L_E_UNSUPPORTED;
+    }
+
+    if (r.err || r.len != 0)
+        return FAR2L_E_BAD_REQUEST;
+    return FAR2L_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+wr_str (GByteArray *a, const char *s)
+{
+    wr_u32 (a, (guint32) strlen (s));
+    wr_raw (a, (const guint8 *) s, (guint) strlen (s));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_reply_empty (guint8 rid)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    wr_u8 (a, rid);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_reply_ok (guint8 rid)
+{
+    GByteArray *a = far2l_reply_empty (rid);
+
+    wr_u8 (a, FAR2L_OK);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_reply_error (guint8 rid, int status, const char *message)
+{
+    GByteArray *a = far2l_reply_empty (rid);
+    char *msg = g_strndup (message != NULL ? message : "", 512);
+
+    /* the diagnostic is text: what is cut in the middle of a character is cut once more */
+    while (msg[0] != '\0' && !g_utf8_validate (msg, -1, NULL))
+        msg[strlen (msg) - 1] = '\0';
+    wr_u8 (a, (guint8) (gint8) status);
+    wr_str (a, msg);
+    g_free (msg);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_reply_bind (guint8 rid, const far2l_dnd_grant_t *g)
+{
+    GByteArray *a = far2l_reply_ok (rid);
+
+    wr_u16 (a, g->version);
+    wr_id (a, g->binding);
+    wr_u32 (a, g->max_frame);
+    wr_u32 (a, g->max_chunk);
+    wr_u16 (a, g->window);
+    wr_u32 (a, g->idle_seconds);
+    wr_u32 (a, g->features);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_reply_list (guint8 rid, guint64 next_cursor, GPtrArray *entries, guint from, guint count)
+{
+    GByteArray *a = far2l_reply_ok (rid);
+    guint i;
+
+    wr_u64 (a, next_cursor);
+    wr_u32 (a, count);
+    for (i = from; i < from + count; i++)
+    {
+        const far2l_dnd_entry_t *e = g_ptr_array_index (entries, i);
+        GByteArray *b = g_byte_array_new ();
+
+        wr_u64 (b, e->item_id);
+        wr_u8 (b, e->kind);
+        wr_u16 (b, e->flags);
+        wr_u64 (b, e->size);
+        wr_str (b, e->name);
+        wr_u8 (b, 0);    // native_encoding: none
+        wr_u32 (b, 0);   // native_name: empty
+        wr_str (b, "");  // reference_uri
+        wr_str (b, "");  // source_namespace
+        wr_u32 (a, b->len);
+        wr_raw (a, b->data, b->len);
+        g_byte_array_free (b, TRUE);
+    }
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_reply_read (guint8 rid, guint64 observed_size, guint8 flags, const guint8 *data, gsize len)
+{
+    GByteArray *a = far2l_reply_ok (rid);
+
+    wr_u64 (a, observed_size);
+    wr_u8 (a, flags);
+    wr_u32 (a, (guint32) len);
+    wr_raw (a, data, (guint) len);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_dnd_encode_event (const guint8 *binding, const guint8 *offer, gint16 x, gint16 y,
+                        guint32 modifiers, guint16 flags)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    wr_u8 (a, F2L_INPUT_DND);
+    wr_id (a, binding);
+    wr_id (a, offer);
+    wr_u16 (a, (guint16) x);
+    wr_u16 (a, (guint16) y);
+    wr_u32 (a, modifiers);
+    wr_u16 (a, flags);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static char *
+frame_with (const char *intro, const GByteArray *stack)
+{
+    char *b64 = g_base64_encode (stack->data, stack->len);
+    char *frame = g_strconcat (intro, b64, "\a", NULL);
+
+    g_free (b64);
+    return frame;
+}
+
+char *
+far2l_frame_reply (const GByteArray *stack)
+{
+    return frame_with (ESC_STR "_far2l", stack);
+}
+
+char *
+far2l_frame_event (const GByteArray *stack)
+{
+    return frame_with (ESC_STR "_f2l", stack);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GByteArray *
+far2l_encode_key (gboolean down, guint32 ch, guint32 control_state, guint16 scan, guint16 vk,
+                  guint16 repeat)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    wr_u8 (a, down ? 'K' : 'k');
+    wr_u32 (a, ch);
+    wr_u32 (a, control_state);
+    wr_u16 (a, scan);
+    wr_u16 (a, vk);
+    wr_u16 (a, repeat);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */

@@ -66,9 +66,9 @@ terminal of its own, the emulator, and the two sides are kept apart:
   character and the control key state, so the program tells Ctrl-Enter from Enter and
   Shift-Tab from Tab as far as M-Commander did. A byte of a character out of ASCII
   and a key without a virtual key go as before, in xterm form.
-- The other requests of the extensions (clipboard, images, drag and drop) are not
-  passed on; a program that asks gets no answer and falls back, as it does on a
-  terminal without them.
+- The other requests of the extensions (clipboard, images) are not passed on; a program
+  that asks gets no answer and falls back, as it does on a terminal without them. Drag
+  and drop is passed on, see below.
 
 ## Which input is active
 
@@ -120,6 +120,24 @@ Only plain files are taken, and only names that are plain names: a name with a s
 or a control character is refused. Every request is answered within 20 seconds or the drop
 is given up.
 
-Not there yet: directories, a bigger window than one request at a time, a progress bar
-and Esc to cancel a long copy, and dropping into the built-in terminal for the programs
-that run in it.
+Not there yet: directories, a bigger window than one request at a time, and a progress bar
+and Esc to cancel a long copy.
+
+## Dropped files for the programs in the built-in terminal
+
+A program in the built-in terminal that has the extensions on can bind drop reception
+(BIND) as it would on a far2l terminal, so that a file dropped on the outer window over
+the terminal reaches it, and mc inside mc inside a far2l terminal works too. Binding works
+only while the terminal M-Commander itself runs in has drop reception bound; otherwise the
+program is told it is not supported, as it is on any terminal without the protocol.
+
+A file dropped on the outer window over the terminal is announced to the program as a drop
+of its own, at the cell of the terminal it landed on. The program's LIST and READ are
+answered with LIST and READ of the outer offer, one chunk at a time, nothing kept in
+between; its CLOSE releases the outer offer, and so do `ESC _ far2l0 BEL`, a new binding,
+the lease running out (600 seconds) and the terminal closing. The other far2l interactions
+are answered with the empty reply, which is how a far2l says it has none.
+
+The terminal serves what the outer one has: plain files, one READ at a time, at most 8
+offers and chunks of at most 32 KiB. Mouse events of the extensions are not passed to the
+program yet.

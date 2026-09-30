@@ -959,6 +959,22 @@ mcterm_overlay_active (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+struct WMcTerm *
+mcterm_overlay_terminal_at (int x, int y)
+{
+    const Widget *w;
+
+    if (!mcterm_mode || mcterm_panel == NULL || !mcterm_is_alive (mcterm_panel))
+        return NULL;
+    w = CONST_WIDGET (mcterm_panel);
+    if (!widget_get_state (w, WST_VISIBLE) || x < w->rect.x || x >= w->rect.x + w->rect.cols
+        || y < w->rect.y || y >= w->rect.y + w->rect.lines)
+        return NULL;
+    return mcterm_panel;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 gboolean
 mcterm_overlay_terminal_alone (void)
 {
@@ -1907,6 +1923,14 @@ gboolean
 mcterm_overlay_active (void)
 {
     return FALSE;
+}
+
+struct WMcTerm *
+mcterm_overlay_terminal_at (int x, int y)
+{
+    (void) x;
+    (void) y;
+    return NULL;
 }
 
 gboolean

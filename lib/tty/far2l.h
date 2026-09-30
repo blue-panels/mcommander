@@ -182,4 +182,64 @@ int far2l_dnd_read (const guint8 *offer, guint64 item_id, guint64 offset, guint3
 void far2l_dnd_close (const guint8 *offer, guint8 reason);
 guint32 far2l_dnd_max_chunk (void);
 
+/* ----- the terminal's side of the protocol (mc's own terminal serves programs inside it) ----- */
+
+/* A request as the terminal reads it.  cmd is what the program asked for: only
+   F2L_INTERACT_DND is served; for anything else only rid and cmd are filled. */
+#define FAR2L_INTERACT_DND 'd'
+
+typedef struct
+{
+    guint8 rid;
+    guint8 cmd;
+    guint8 sub; /* 'b', 'l', 'r' or 'c' */
+    /* BIND */
+    guint16 version;
+    gboolean enable;
+    guint8 binding[FAR2L_ID_LEN];
+    guint32 max_frame, max_chunk;
+    guint16 window;
+    guint32 wanted_features;
+    /* LIST, READ, CLOSE */
+    guint8 offer[FAR2L_ID_LEN];
+    guint64 parent_id, cursor; /* LIST */
+    guint64 item_id, offset;   /* READ */
+    guint32 length;            /* READ */
+    guint8 reason;             /* CLOSE */
+} far2l_dnd_request_t;
+
+/* The first two fields of any request.  FALSE when there is not even that. */
+gboolean far2l_request_head (const guint8 *stack, gsize len, guint8 *rid, guint8 *cmd);
+/* A DND request: FAR2L_OK, or the status of the error reply it deserves (FAR2L_E_BAD_REQUEST
+   for a malformed one, FAR2L_E_UNSUPPORTED for a version or a sub-command unknown). */
+int far2l_dnd_decode_request (const guint8 *stack, gsize len, far2l_dnd_request_t *q);
+
+/* Replies, as stacks; g_byte_array_free() them. */
+GByteArray *far2l_reply_empty (guint8 rid); /* nothing after the RID: no such command here */
+GByteArray *far2l_reply_ok (guint8 rid);    /* success without a body */
+GByteArray *far2l_reply_error (guint8 rid, int status, const char *message);
+GByteArray *far2l_reply_bind (guint8 rid, const far2l_dnd_grant_t *grant);
+/* entries: far2l_dnd_entry_t *, at most 64 of them */
+GByteArray *far2l_reply_list (guint8 rid, guint64 next_cursor, GPtrArray *entries, guint from,
+                              guint count);
+GByteArray *far2l_reply_read (guint8 rid, guint64 observed_size, guint8 flags, const guint8 *data,
+                              gsize len);
+/* The event that tells a program of a drop. */
+GByteArray *far2l_dnd_encode_event (const guint8 *binding, const guint8 *offer, gint16 x, gint16 y,
+                                    guint32 modifiers, guint16 flags);
+/* A complete APC ESC _ far2l <base64> BEL (a reply) or ESC _ f2l <base64> BEL (an event). */
+char *far2l_frame_reply (const GByteArray *stack);
+char *far2l_frame_event (const GByteArray *stack);
+/* A key of the far2l extensions: 'K' (down) or 'k' (up); g_byte_array_free() it. */
+GByteArray *far2l_encode_key (gboolean down, guint32 ch, guint32 control_state, guint16 scan,
+                              guint16 vk, guint16 repeat);
+
+/* Windows control key state bits, as the extensions use them. */
+#define FAR2L_RIGHT_ALT_PRESSED  0x0001u
+#define FAR2L_LEFT_ALT_PRESSED   0x0002u
+#define FAR2L_RIGHT_CTRL_PRESSED 0x0004u
+#define FAR2L_LEFT_CTRL_PRESSED  0x0008u
+#define FAR2L_SHIFT_PRESSED      0x0010u
+#define FAR2L_ENHANCED_KEY       0x0100u
+
 #endif

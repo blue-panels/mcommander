@@ -117,6 +117,10 @@ void mcview_vterm_page_up (mcview_vterm_t *vt, int keep);
 void mcview_vterm_clear_history (mcview_vterm_t *vt);
 const char *mcview_vterm_osc7_raw (const mcview_vterm_t *vt);
 guint mcview_vterm_osc7_generation (const mcview_vterm_t *vt);
+/* The next application command (ESC _ ... BEL or ST) that arrived whole, without its introducer
+   and terminator; g_free() it. NULL when none waits. */
+char *mcview_vterm_take_apc (mcview_vterm_t *vt);
+
 /* The last semantic prompt mark (OSC 133) as it arrived, and a counter of them. */
 const char *mcview_vterm_osc133_raw (const mcview_vterm_t *vt);
 guint mcview_vterm_osc133_generation (const mcview_vterm_t *vt);

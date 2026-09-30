@@ -1582,6 +1582,7 @@ START_TEST (test_far2l_extensions_are_asked_for_and_given_up)
     ck_assert (!mcview_vterm_far2l_active (vt));
     FEED (vt, "x");
     ck_assert_uint_eq (cell_ch (vt, 0, 0), 'x');
+    ck_assert_ptr_null (mcview_vterm_take_apc (vt));
 
     mcview_vterm_set_far2l (vt, TRUE);
     ck_assert_str_eq (reply_to (vt, "\033_far2l1\033\\"), "\033_far2lok\033\\");
@@ -1596,6 +1597,22 @@ START_TEST (test_far2l_extensions_are_asked_for_and_given_up)
 
     FEED (vt, "\033_far2l0\033\\");
     ck_assert (!mcview_vterm_far2l_active (vt));
+
+    // the host is told of each one that came whole, in order, the far2l1 that was answered included
+    {
+        static const char *const told[] = { "far2l1", "far2l1", "f2l:AAAA",
+                                            "far2l1234567890123456789", "far2l0" };
+        guint i;
+
+        for (i = 0; i < G_N_ELEMENTS (told); i++)
+        {
+            char *apc = mcview_vterm_take_apc (vt);
+
+            ck_assert_str_eq (apc, told[i]);
+            g_free (apc);
+        }
+        ck_assert_ptr_null (mcview_vterm_take_apc (vt));
+    }
 
     mcview_vterm_free (vt);
 }

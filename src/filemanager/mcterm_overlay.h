@@ -25,6 +25,9 @@ void mcterm_overlay_start (void);
 gboolean mcterm_overlay_active (void);
 /* Whether the terminal has the screen to itself: it is up and no panel is over it. */
 gboolean mcterm_overlay_terminal_alone (void);
+/* The terminal that shows at the cell, if it is up and alive; the panels over it are not counted.
+ */
+struct WMcTerm *mcterm_overlay_terminal_at (int x, int y);
 void mcterm_overlay_toggle (void);
 /* Show mc's terminal full screen for the editor and viewers; FALSE when there is none to show. */
 gboolean mcterm_overlay_show_terminal (void);
