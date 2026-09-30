@@ -24,18 +24,18 @@
 /** \file mcterm_setup.c
  *  \brief Source: shell integration setup strings written into the pty
  *
- *  The strings here make bash and the POSIX shells report their working
- *  directory (OSC 7) and mark their prompts and commands (OSC 133). Every mark
- *  carries the session token, so the host can tell its own shell from any
- *  other one. They are typed into the shell at its first prompt.
+ *  The strings here make the shells report their working directory (OSC 7) and
+ *  mark their prompts and commands (OSC 133). Every mark carries the session
+ *  token, so the host can tell its own shell from any other one. The POSIX
+ *  shells get them typed in at their first prompt.
  *
- *  zsh and fish are not typed into: what is typed at the prompt can be read by
- *  the startup script of the user, and it is also saved in the shell history.
- *  zsh is started with startup files of its own; they live in mc's data
- *  directory and are the same for every session, so the token of the session
- *  reaches them in the environment, as $MC_TERM_TOKEN. fish takes the whole
- *  integration, token and all, in its -C option, which it runs after the
- *  configuration file of the user and before the first prompt.
+ *  bash, zsh and fish are not typed into: what is typed at the prompt goes
+ *  through the key bindings of the user, and it is also saved in the shell
+ *  history. bash and zsh are started with startup files of their own; they live
+ *  in mc's data directory and are the same for every session, so the token of
+ *  the session reaches them in the environment, as $MC_TERM_TOKEN. fish takes
+ *  the whole integration, token and all, in its -C option, which it runs after
+ *  the configuration file of the user and before the first prompt.
  */
 
 #include <config.h>
@@ -44,6 +44,7 @@
 #include "lib/fileloc.h"   // MC_ZDOTDIR_SUBDIR
 #include "lib/mcconfig.h"  // mc_config_get_data_path()
 #include "lib/shell.h"     // shell_type_t, SHELL_*
+#include "lib/util.h"      // exist_file()
 
 #include "mcterm.h"        // MCTERM_OSC7_TOKEN_PREFIX
 #include "mcterm_proto.h"  // MCTERM_MARK_TOKEN_KEY
@@ -103,6 +104,60 @@ mcterm_zsh_integration (void)
         "precmd_functions+=(__mc_precmd)\n"
         "__mc_preexec(){ printf '\\033]133;C;" MCTERM_MARK_TOKEN_KEY "%s\\007' \"$__mc_tok\" }\n"
         "preexec_functions+=(__mc_preexec)\n"
+        "printf '\\033]7;file://__mc_sync__/" MCTERM_OSC7_TOKEN_PREFIX "%s\\007' \"$__mc_tok\"\n";
+
+    return setup;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The integration bash reads from the startup file below. */
+static const char *
+mcterm_bash_integration (void)
+{
+    static const char setup[] =
+        // Read by hand, and not by the terminal: there is no session to report to.
+        "[[ -n ${MC_TERM_TOKEN-} ]] || return 0\n"
+        "__mc_tok=$MC_TERM_TOKEN\n"
+        "__mc_pe(){\n"
+        " local s=$1 o= i c\n"
+        " for ((i = 0; i < ${#s}; i++)); do\n"
+        "  c=${s:i:1}\n"
+        "  case $c in\n"
+        "  [a-zA-Z0-9/_~.-]) o+=$c;;\n"
+        "  *) printf -v o '%s%%%02X' \"$o\" \"'$c\";;\n"
+        "  esac\n"
+        " done\n"
+        " printf '%s' \"$o\"\n"
+        "}\n"
+        "__mc_pc(){\n"
+        " local e=$?\n"
+        " printf '\\033]133;D;%s;" MCTERM_MARK_TOKEN_KEY "%s\\007' \"$e\" \"$__mc_tok\"\n"
+        " printf '\\033]7;file://%s" MCTERM_OSC7_TOKEN_PREFIX "%s\\007'"
+        " \"$(__mc_pe \"$PWD\")\" \"$__mc_tok\"\n"
+        /* Setting PS1 is an everyday thing to do at a prompt, and it would throw the marks
+           away. Put them back whenever they are gone. */
+        " case ${PS1-} in\n"
+        " *\"133;B;" MCTERM_MARK_TOKEN_KEY "$__mc_tok\"*) ;;\n"
+        " *) PS1=\"\\[\\e]133;A;" MCTERM_MARK_TOKEN_KEY "$__mc_tok\\a\\]${PS1-}"
+        "\\[\\e]133;B;" MCTERM_MARK_TOKEN_KEY "$__mc_tok\\a\\]\";;\n"
+        " esac\n"
+        " return $e\n"
+        "}\n"
+        /* PROMPT_COMMAND can be an array from bash 5.1 on; before that only its first
+           element is run. */
+        "if (( BASH_VERSINFO[0] * 100 + BASH_VERSINFO[1] >= 501 ))"
+        " && [[ $(declare -p PROMPT_COMMAND 2>/dev/null) == 'declare -a'* ]]; then\n"
+        " PROMPT_COMMAND+=(__mc_pc)\n"
+        /* A newline and not a ';' before the hook: PROMPT_COMMAND of the user may end in a ';'
+           of its own, and '; ;' is a syntax error. */
+        "elif [[ -n ${PROMPT_COMMAND-} ]]; then\n"
+        " PROMPT_COMMAND=\"$PROMPT_COMMAND\n"
+        "__mc_pc\"\n"
+        "else\n"
+        " PROMPT_COMMAND=__mc_pc\n"
+        "fi\n"
+        "PS0=\"\\[\\e]133;C;" MCTERM_MARK_TOKEN_KEY "$__mc_tok\\a\\]${PS0-}\"\n"
         "printf '\\033]7;file://__mc_sync__/" MCTERM_OSC7_TOKEN_PREFIX "%s\\007' \"$__mc_tok\"\n";
 
     return setup;
@@ -235,6 +290,53 @@ mcterm_rc_zsh (mcterm_shell_rc_t *rc, const char *dir)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* bash reads one startup file, the one --rcfile names, and that is ours. It reads the file of
+   the user first: the bashrc in mc's data directory when there is one, as mc has always done,
+   ~/.bashrc when not. The integration goes in after it, so that a prompt or a PROMPT_COMMAND
+   set there is the one it wraps. Nothing is typed at the prompt, so nothing of ours goes
+   through readline or into the history. */
+static gboolean
+mcterm_rc_bash (mcterm_shell_rc_t *rc, const char *dir)
+{
+    char *custom = mc_config_get_full_path (MC_BASHRC_CUSTOM_PROFILE_FILE);
+    char *inputrc = mc_config_get_full_path (MC_INPUTRC_FILE);
+    char *user_rc;
+    char *bashrc;
+    gboolean ok;
+
+    if (custom != NULL && exist_file (custom))
+        user_rc = g_shell_quote (custom);
+    else
+        user_rc = g_strdup ("\"$HOME/" MC_BASHRC_DEFAULT_PROFILE_FILE "\"");
+
+    bashrc = g_strconcat ("# M-Commander: the terminal starts the shell here.\n"
+                          "if [ -r ",
+                          user_rc,
+                          " ]; then\n"
+                          " . ",
+                          user_rc,
+                          "\n"
+                          "fi\n",
+                          mcterm_bash_integration (), (char *) NULL);
+
+    ok = mcterm_rc_install (dir, MC_BASHRC_TERM_FILE, bashrc);
+    if (ok)
+    {
+        g_ptr_array_add (rc->args, g_strdup ("--rcfile"));
+        g_ptr_array_add (rc->args, g_build_filename (dir, MC_BASHRC_TERM_FILE, (char *) NULL));
+        if (inputrc != NULL && exist_file (inputrc))
+            mcterm_rc_env (rc, "INPUTRC", inputrc);
+    }
+
+    g_free (bashrc);
+    g_free (user_rc);
+    g_free (inputrc);
+    g_free (custom);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* fish reads the integration from its own command line: -C runs it after the user's config.fish
    and before the first prompt. Nothing is typed at the prompt, so nothing of ours is saved in
    the history of the user. The token goes in the argument itself, no environment needed. */
@@ -302,46 +404,8 @@ mcterm_shell_setup (shell_type_t shell_type)
     switch (shell_type)
     {
     case SHELL_BASH:
-    {
-        /* Percent-encoder for $PWD, a hook that reports the directory and the exit code
-         * after every command, and a prompt wrapped in marks that say where it ends. */
-        static const char setup[] =
-            "__mc_pe(){"
-            " local s=$1 o= i c;"
-            " for((i=0;i<${#s};i++)); do"
-            " c=${s:i:1};"
-            " case $c in"
-            " [a-zA-Z0-9/_~.-]) o+=$c;;"
-            " *) printf -v o '%s%%%02X' \"$o\" \"'$c\";;"
-            " esac; done;"
-            " printf '%s' \"$o\";"
-            " }; \\\n"
-            "__mc_pc(){"
-            " local e=$?;"
-            " printf '\\033]133;D;%s;" MC_MARK_TOK "\\007' \"$e\";"
-            " printf '\\033]7;file://%s" MC_OSC7_TOK "\\007' \"$(__mc_pe \"$PWD\")\";"
-            /* Setting PS1 is an everyday thing to do at a prompt, and it would throw the
-               marks away. Put them back whenever they are gone. */
-            " case \"$PS1\" in *'133;B;" MC_MARK_TOK "'*) ;;"
-            " *) PS1=\"\\[\\e]133;A;" MC_MARK_TOK "\\a\\]${PS1}\\[\\e]133;B;" MC_MARK_TOK
-            "\\a\\]\";;"
-            " esac;"
-            " return $e;"
-            " }; \\\n"
-            " if test $BASH_VERSINFO -ge 5"
-            " && [[ ${PROMPT_COMMAND@a} == *a* ]] 2>/dev/null; then \\\n"
-            "  PROMPT_COMMAND+=(__mc_pc); \\\n"
-            " else \\\n"
-            "  PROMPT_COMMAND=\"${PROMPT_COMMAND:+$PROMPT_COMMAND; }__mc_pc\"; \\\n"
-            " fi; \\\n"
-            " PS0=\"\\[\\e]133;C;" MC_MARK_TOK "\\a\\]${PS0}\"; \\\n"
-            " printf "
-            "'\\033]7;file://__mc_sync__/" MC_OSC7_TOK
-            /* Drop this setup itself from the shell's history: it is ours, not the user's. */
-            "\\007'; history -d $HISTCMD 2>/dev/null\r";
-
-        return setup;
-    }
+        // bash is started with a startup file of its own, see mcterm_shell_rc_new().
+        return NULL;
 
     case SHELL_ZSH:
         // zsh is started with startup files of its own, see mcterm_shell_rc_new().
@@ -397,10 +461,13 @@ mcterm_shell_rc_new (shell_type_t shell_type, const char *token)
     if (shell_type == SHELL_FISH)
         return mcterm_rc_fish (token);
 
-    if (shell_type != SHELL_ZSH)
+    if (shell_type == SHELL_BASH)
+        dir = g_strdup (mc_config_get_data_path ());
+    else if (shell_type == SHELL_ZSH)
+        dir = g_build_filename (mc_config_get_data_path (), MC_ZDOTDIR_SUBDIR, (char *) NULL);
+    else
         return NULL;
 
-    dir = g_build_filename (mc_config_get_data_path (), MC_ZDOTDIR_SUBDIR, (char *) NULL);
     if (g_mkdir_with_parents (dir, 0700) != 0)
     {
         g_free (dir);
@@ -411,7 +478,7 @@ mcterm_shell_rc_new (shell_type_t shell_type, const char *token)
     rc->env = g_ptr_array_new_with_free_func (g_free);
     rc->args = g_ptr_array_new_with_free_func (g_free);
 
-    ok = mcterm_rc_zsh (rc, dir);
+    ok = shell_type == SHELL_BASH ? mcterm_rc_bash (rc, dir) : mcterm_rc_zsh (rc, dir);
     if (ok)
         // What the startup files put in every mark they make the shell send.
         mcterm_rc_env (rc, "MC_TERM_TOKEN", token);
