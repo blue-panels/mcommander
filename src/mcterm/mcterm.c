@@ -63,6 +63,7 @@
 #include "src/keymap.h"
 
 #include "mcterm.h"
+#include "mcterm_far2l.h"
 #include "mcterm_filter.h"
 #include "mcterm_key.h"
 #include "mcterm_proto.h"
@@ -114,6 +115,10 @@ struct WMcTerm
     Widget base;
     mcview_vterm_t *vterm;
     int pty_master;
+    /* Far2l drag and drop passed on from the terminal mc runs in to the program in the terminal,
+       once it has asked for the extensions (the emulator answers that, mcview_vterm_far2l_active)
+     */
+    mcterm_far2l_t *far2l;
     pid_t child_pid;
     gboolean child_dead;
     int child_exit_status;
@@ -231,6 +236,7 @@ static gboolean mcterm_osc7_is_ours (const WMcTerm *t, const char *raw);
 static gboolean mcterm_handle_osc133_generation (WMcTerm *t);
 static void mcterm_handle_osc52_generation (WMcTerm *t);
 static gboolean mcterm_write_all (int master, const unsigned char *data, size_t len);
+static void mcterm_handle_apcs (WMcTerm *t);
 static void mcterm_busy_tick (WMcTerm *t);
 static void mcterm_busy_tick_set (WMcTerm *t, gboolean on);
 static gboolean mcterm_handle_stalled_internal_sync (WMcTerm *t);
@@ -434,6 +440,7 @@ mcterm_pty_ready_cb (int fd, void *info)
                 (void) ignored;
             }
             mcterm_handle_osc7_generation (t);
+            mcterm_handle_apcs (t);
             mcterm_handle_osc133_generation (t);
             mcterm_handle_osc52_generation (t);
         }
@@ -2428,6 +2435,26 @@ mcterm_waitpid_reap (pid_t pid)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* What the program said in APCs, which is the far2l extensions: the answers go to its input. */
+
+static void
+mcterm_handle_apcs (WMcTerm *t)
+{
+    char *apc;
+
+    while ((apc = mcview_vterm_take_apc (t->vterm)) != NULL)
+    {
+        char *answer = mcterm_far2l_apc (t->far2l, apc, strlen (apc));
+
+        g_free (apc);
+        if (answer != NULL && t->pty_master >= 0)
+            (void) mcterm_write_all (t->pty_master, (const unsigned char *) answer,
+                                     strlen (answer));
+        g_free (answer);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static gboolean
 mcterm_send_encoded_key (WMcTerm *t, int key)
@@ -2439,6 +2466,17 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
     size_t n;
 
     tty_key_event_t ev;
+
+    // a program that asked for the far2l extensions gets its keys the way they name them
+    if (mcview_vterm_far2l_active (t->vterm))
+    {
+        n = mcterm_encode_key_far2l (key, buf, sizeof (buf));
+        if (n > 0)
+        {
+            t->line_entered = (key == '\n' || key == '\r' || key == KEY_ENTER);
+            return mcterm_write_all (t->pty_master, buf, n);
+        }
+    }
 
     /* A key the outer terminal sent by the kitty protocol keeps all it said: the release, Super,
        the base layout key. With the event types (2) alone a key of the CSI u form keeps the
@@ -2907,6 +2945,8 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         tty_painter_remove (mcterm_paint_pictures, t);
         if (t->pictures_shown)
             tty_touch_screen (); /* the pixels go with the next refresh */
+        mcterm_far2l_free (t->far2l);
+        t->far2l = NULL;
         mcview_vterm_free (t->vterm);
         t->vterm = NULL;
         t->last_osc7_gen = 0;
@@ -3017,6 +3057,7 @@ mcterm_new (const WRect *r, const char *start_dir)
     w->options |= WOP_SELECTABLE | WOP_WANT_CURSOR | WOP_WANT_HOTKEY;
 
     t->pty_master = master;
+    t->far2l = mcterm_far2l_new (NULL);
     t->child_pid = pid;
     t->osc7_token = token;
     t->shell_rc = shell_rc;
@@ -3043,6 +3084,7 @@ mcterm_new (const WRect *r, const char *start_dir)
         tty_cell_size (&cell_width, &cell_height);
         mcview_vterm_set_cell_size (t->vterm, cell_width, cell_height);
         mcview_vterm_set_sixel (t->vterm, tty_has_sixel ());
+        mcview_vterm_set_far2l (t->vterm, tty_has_far2l_input ());
     }
     tty_painter_add (mcterm_paint_pictures, t);
 
@@ -3115,6 +3157,42 @@ mcterm_free (WMcTerm *t)
         return;
     send_message (WIDGET (t), NULL, MSG_DESTROY, 0, NULL);
     g_free (t);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_far2l_wants_drop (const WMcTerm *t)
+{
+    return t != NULL && !t->child_dead && t->pty_master >= 0 && t->vterm != NULL
+        && mcview_vterm_far2l_active (t->vterm) && mcterm_far2l_bound (t->far2l);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_far2l_take_drop (WMcTerm *t, const far2l_drop_t *drop)
+{
+    const WRect *r;
+    char *event = NULL;
+    int x = -1, y = -1;
+    gboolean taken;
+
+    if (!mcterm_far2l_wants_drop (t))
+        return FALSE;
+
+    r = &CONST_WIDGET (t)->rect;
+    if (drop->x >= r->x && drop->x < r->x + r->cols && drop->y >= r->y && drop->y < r->y + r->lines)
+    {
+        x = drop->x - r->x;
+        y = drop->y - r->y;
+    }
+
+    taken = mcterm_far2l_drop (t->far2l, drop, x, y, &event);
+    if (taken && event != NULL)
+        (void) mcterm_write_all (t->pty_master, (const unsigned char *) event, strlen (event));
+    g_free (event);
+    return taken;
 }
 
 /* --------------------------------------------------------------------------------------------- */

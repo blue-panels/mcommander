@@ -62,6 +62,7 @@ src/filemanager/chmod.c
 src/filemanager/chown.c
 src/filemanager/cmd.c
 src/filemanager/command.c
+src/filemanager/dnd.c
 src/filemanager/ext.c
 src/filemanager/file.c
 src/filemanager/filegui.c
