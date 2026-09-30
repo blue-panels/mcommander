@@ -1570,6 +1570,39 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_far2l_extensions_are_asked_for_and_given_up)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 5, 40);
+    mcview_vterm_reset (vt);
+
+    // the terminal mc runs in has no extensions: no answer, no mode, and no text of the APC drawn
+    ck_assert_ptr_null (reply_to (vt, "\033_far2l1\033\\"));
+    ck_assert (!mcview_vterm_far2l_active (vt));
+    FEED (vt, "x");
+    ck_assert_uint_eq (cell_ch (vt, 0, 0), 'x');
+
+    mcview_vterm_set_far2l (vt, TRUE);
+    ck_assert_str_eq (reply_to (vt, "\033_far2l1\033\\"), "\033_far2lok\033\\");
+    ck_assert (mcview_vterm_far2l_active (vt));
+    ck_assert_str_eq (reply_to (vt, "\033_far2l1\a"), "\033_far2lok\033\\");
+
+    // what else it says on the channel is not for the screen
+    FEED (vt, "\033_f2l:AAAA\033\\y\033_far2l1234567890123456789\033\\z");
+    ck_assert (mcview_vterm_far2l_active (vt));
+    ck_assert_uint_eq (cell_ch (vt, 0, 1), 'y');
+    ck_assert_uint_eq (cell_ch (vt, 0, 2), 'z');
+
+    FEED (vt, "\033_far2l0\033\\");
+    ck_assert (!mcview_vterm_far2l_active (vt));
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_cursor_position_is_reported)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -1865,6 +1898,7 @@ main (void)
     tcase_add_test (tc_core, test_erase_to_end_of_screen_takes_the_pictures_below);
     tcase_add_test (tc_core, test_oversized_sixel_is_dropped_whole);
     tcase_add_test (tc_core, test_xtgettcap_is_still_answered);
+    tcase_add_test (tc_core, test_far2l_extensions_are_asked_for_and_given_up);
     tcase_add_test (tc_core, test_sixel_terminal_says_so_when_asked);
     tcase_add_test (tc_core, test_cursor_position_is_reported);
     tcase_add_test (tc_core, test_sixel_keeps_only_what_sixel_is_made_of);
