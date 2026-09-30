@@ -63,8 +63,9 @@
 #define MC_BASHRC_CUSTOM_PROFILE_FILE   "bashrc"
 #define MC_KSHRC_CUSTOM_PROFILE_FILE    "kshrc"
 #define MC_MKSHRC_CUSTOM_PROFILE_FILE   "mkshrc"
-#define MC_ZSHRC_CUSTOM_PROFILE_FILE    ".zshrc"   // zsh only accepts whole directory (#4203)
-#define MC_ZDOTDIR_SUBDIR               "zdotdir"  // the startup files the terminal gives zsh
+#define MC_ZSHRC_CUSTOM_PROFILE_FILE    ".zshrc"         // zsh only accepts whole directory (#4203)
+#define MC_ZDOTDIR_SUBDIR               "zdotdir"        // the startup files the terminal gives zsh
+#define MC_BASHRC_TERM_FILE             "mcterm_bashrc"  // the startup file the terminal gives bash
 
 #define MC_BASHRC_DEFAULT_PROFILE_FILE  ".bashrc"
 #define MC_MKSHRC_DEFAULT_PROFILE_FILE  ".mkshrc"

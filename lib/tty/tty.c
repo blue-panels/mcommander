@@ -211,8 +211,7 @@ tty_raw_write (const char *data, size_t len)
    and CSI 6 ; <height> ; <width> t. The sequences are taken out of the
    buffer as they are found, and what is left is the user's. */
 static void
-tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen, gboolean *cell_seen,
-                          gboolean *bg_seen)
+tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
 {
     size_t i = 0;
 
@@ -260,18 +259,19 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen, gboolean
                 }
             }
 
-            // find the terminator so the reply is not left for the keyboard
-            while (q < end && *q != '\a' && !(*q == ESC_CHAR && q + 1 < end && q[1] == '\\'))
+            /* Find the terminator so the reply is not left for the keyboard. The tty can
+               take a BEL out (see the query), so an ESC that starts no ST ends it too. */
+            while (q < end && *q != '\a' && *q != ESC_CHAR)
                 q++;
-            if (q >= end)
+            if (q >= end || (*q == ESC_CHAR && q + 1 >= end))
                 break;  // still arriving
 
             if (n == 3)
-            {
                 background_rgb = (comp[0] << 16) | (comp[1] << 8) | comp[2];
-                *bg_seen = TRUE;
-            }
-            q += *q == '\a' ? 1 : 2;
+            if (*q == '\a')
+                q++;
+            else if (q[1] == '\\')
+                q += 2;
             taken = (size_t) (q - (buf + i));
             memmove (buf + i, buf + i + taken, *len - i - taken);
             *len -= taken;
@@ -337,7 +337,6 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen, gboolean
                     cell_width = w;
                     cell_height = h;
                 }
-                *cell_seen = TRUE;
                 taken = (size_t) (p + 1 - (buf + i));
             }
         }
@@ -362,8 +361,7 @@ tty_probe_graphics (void)
     const char *term = getenv ("TERM");
     char buf[512];
     size_t len = 0;
-    gboolean sixel_seen = FALSE, cell_seen = FALSE;
-    gboolean bg_seen = FALSE;
+    gboolean sixel_seen = FALSE;
     gboolean forced_off = env != NULL && env[0] == '0';
     gboolean forced_on = env != NULL && env[0] == '1';
     gboolean multiplexer =
@@ -387,7 +385,6 @@ tty_probe_graphics (void)
         {
             cell_width = ws.ws_xpixel / ws.ws_col;
             cell_height = ws.ws_ypixel / ws.ws_row;
-            cell_seen = TRUE;
         }
     }
 #endif
@@ -399,23 +396,20 @@ tty_probe_graphics (void)
 
     if (isatty (STDIN_FILENO) && isatty (STDOUT_FILENO))
     {
-        /* CSI ? u goes before DA1, so its answer is in before the DA1 one */
-        static const char query[] = ESC_STR "[?u" ESC_STR "[c" ESC_STR "[16t" ESC_STR "]11;?\a";
+        /* Every terminal answers DA1, and answers in the order it is asked: DA1 goes
+           last, so its answer comes after all the others. OSC 11 ends with ST, not BEL:
+           the answer ends the same way, and with S-Lang BEL (Ctrl-G) is the interrupt
+           character, which the tty takes out of the input. */
+        static const char query[] =
+            ESC_STR "[?u" ESC_STR "[16t" ESC_STR "]11;?" ESC_STR "\\" ESC_STR "[c";
 
         if (ask_kitty)
             tty_raw_write (query, sizeof (query) - 1);
         else
             tty_raw_write (query + 4, sizeof (query) - 5);
 
-        /* Every terminal answers DA1; not every one answers about the cell or the
-           background, so once DA1 is in, the rest gets a short while only, and the
-           background, which only a skin that keeps the terminal's own ground even asks
-           about, a shorter one still. A terminal that answers nothing costs
-           the whole wait once, at startup. */
-        while (len < sizeof (buf) - 1 && !(sixel_seen && cell_seen && bg_seen)
-               && waited_ms < (!sixel_seen      ? 300
-                                   : !cell_seen ? 100
-                                                : 50))
+        /* A terminal that answers nothing costs the whole wait once, at startup. */
+        while (len < sizeof (buf) - 1 && !sixel_seen && waited_ms < 1000)
         {
             fd_set fds;
             struct timeval tv = { 0, 50000 };
@@ -432,7 +426,7 @@ tty_probe_graphics (void)
             if (n <= 0)
                 break;
             len += (size_t) n;
-            tty_parse_graphics_reply (buf, &len, &sixel_seen, &cell_seen, &bg_seen);
+            tty_parse_graphics_reply (buf, &len, &sixel_seen);
         }
 
         /* Whatever else came in was typed: it goes back to the keyboard. */
