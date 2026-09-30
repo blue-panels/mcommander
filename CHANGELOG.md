@@ -2,6 +2,19 @@
 
 The releases of this fork, newest first.
 
+## Unreleased
+
+- Far mode, off by default, gives the panels the keys of Far Manager (Alt-F7,
+  Alt-F8, Alt-F11, Alt-F12, Ctrl-F3 to Ctrl-F6, Ctrl-F12, Ctrl-L, Ctrl-Q,
+  Ctrl-T) and, in the editor and the viewer, Ctrl-F7, Alt-F8, Alt-F11, Ctrl-Z and
+  the like; it is a check box in the Configuration dialog and the far_mode
+  setting. The mode also has Ctrl-1 to Ctrl-0 for the listing modes of Far,
+  Ctrl-A, Ctrl-F, and Ctrl-E, Ctrl-X and Ctrl-Y in the command line and the edit
+  lines of the dialogs (the previous and the next command of the history, and
+  deleting the line); the prefix of the extended commands moves to Alt-X while
+  the mode is on. Ctrl with a digit is now the digit with the modifier, where
+  it was the control character of the same code (Ctrl-1 was Ctrl-Q).
+
 ## 6.1.0 - 2026-09-26
 
 - The program is now M-Commander: the main binary is mcommander, the editor,
