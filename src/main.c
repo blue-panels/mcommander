@@ -443,6 +443,7 @@ main (int argc, char *argv[])
         /* Done after tty_enter_ca_mode (tty_init) because in VTE bracketed mode is
            separate for the normal and alternate screens */
         enable_bracketed_paste ();
+        enable_far2l_input ();
         enable_kitty_keyboard ();
         enable_win32_input ();
 
@@ -460,6 +461,7 @@ main (int argc, char *argv[])
     disable_bracketed_paste ();
     disable_win32_input ();
     disable_kitty_keyboard ();
+    disable_far2l_input ();
 
     disable_mouse ();
 

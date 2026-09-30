@@ -43,6 +43,7 @@ TESTS = \
 	usermenu_ini \
 	term_key_merge \
 	tty_enter \
+	tty_far2l_input \
 	tty_kitty_keyboard \
 	tty_win32_input \
 	usermenu__test_condition \
@@ -120,6 +121,9 @@ term_key_merge_SOURCES = \
 
 tty_enter_SOURCES = \
 	tty_enter.c
+
+tty_far2l_input_SOURCES = \
+	tty_far2l_input.c
 
 tty_kitty_keyboard_SOURCES = \
 	tty_kitty_keyboard.c

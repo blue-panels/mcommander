@@ -576,6 +576,15 @@ static gboolean kitty_keyboard_active = FALSE;
 
 static gboolean win32_input_active = FALSE;
 
+/* far2l extensions: every key comes as APC f2l <base64 of a stack of values> ST. The stack is
+   popped from its end, so the last byte is the command: 'K'/'k' is a key press/release with
+   the character (u32), control key state (u32), scan code (u16), virtual key (u16) and
+   repeat count (u16), 'C'/'c' the short form with a u16 character, a u16 control key state
+   and a u8 virtual key. The state and the virtual key are the ones of Win32 input mode. */
+#define FAR2L_MAX_PACKET 512
+
+static gboolean far2l_input_active = FALSE;
+
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
     '0',
@@ -1611,6 +1620,106 @@ win32_key_code (unsigned int vk, unsigned int uc, unsigned int kd, unsigned int 
 /* --------------------------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------------------------- */
+/* Is the pending sequence, which is ESC alone, plus @c the start of an APC? */
+
+static gboolean
+far2l_apc_started (int c)
+{
+    return c == '_' && seq_append != NULL && seq_append - seq_buffer == 1
+        && seq_buffer[0] == ESC_CHAR;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Pop @size bytes, little endian, off the end of the far2l stack */
+
+static gboolean
+far2l_pop (const guchar *data, gsize *len, unsigned int size, unsigned int *value)
+{
+    unsigned int i;
+
+    if (*len < size)
+        return FALSE;
+
+    *value = 0;
+    for (i = 0; i < size; i++)
+        *value |= (unsigned int) data[*len - 1 - i] << (8 * (size - 1 - i));
+    *len -= size;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the rest of an APC after ESC _, up to BEL or ESC \, and decode it as a far2l packet.
+   -1: no mc key (a release, a reply, a mouse or resize packet, a packet that is not ours). */
+
+static int
+far2l_read_apc (void)
+{
+    char payload[FAR2L_MAX_PACKET + 1];
+    size_t n = 0;
+    gboolean esc = FALSE, done = FALSE;
+    guchar *data;
+    gsize len = 0;
+    unsigned int cmd = 0, uc = 0, cs = 0, sc = 0, vk = 0, rep = 0;
+    const char *b64;
+    int code = -1;
+
+    while (!done)
+    {
+        const int ch = getch_with_timeout (KITTY_CSI_TIMEOUT);
+
+        if (ch == -1)
+            return -1;
+        if (ch == '\a' || (esc && ch == '\\'))
+            done = TRUE;
+        else if (ch == ESC_CHAR)
+            esc = TRUE;
+        else
+        {
+            if (esc && n < FAR2L_MAX_PACKET)
+                payload[n++] = (char) ESC_CHAR;
+            esc = FALSE;
+            if (n < FAR2L_MAX_PACKET)
+                payload[n++] = (char) ch;
+            else
+                n = FAR2L_MAX_PACKET + 1;  // too long for a key: read it out, drop it
+        }
+    }
+    if (n > FAR2L_MAX_PACKET)
+        return -1;
+    payload[n] = '\0';
+
+    if (strncmp (payload, "f2l", 3) != 0)
+        return -1;
+    b64 = payload + 3;
+    if (*b64 == ':')
+        b64++;
+
+    data = g_base64_decode (b64, &len);
+    if (data == NULL)
+        return -1;
+
+    if (far2l_pop (data, &len, 1, &cmd))
+    {
+        if (cmd == 'K' || cmd == 'k')
+        {
+            if (far2l_pop (data, &len, 4, &uc) && far2l_pop (data, &len, 4, &cs)
+                && far2l_pop (data, &len, 2, &sc) && far2l_pop (data, &len, 2, &vk)
+                && far2l_pop (data, &len, 2, &rep))
+                code = win32_key_code (vk, uc, cmd == 'K', cs);
+        }
+        else if (cmd == 'C' || cmd == 'c')
+        {
+            if (far2l_pop (data, &len, 2, &uc) && far2l_pop (data, &len, 2, &cs)
+                && far2l_pop (data, &len, 1, &vk))
+                code = win32_key_code (vk, uc, cmd == 'C', cs);
+        }
+    }
+
+    g_free (data);
+    return code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
    Returns -1 for a sequence that has no mc key. */
 
@@ -2471,6 +2580,25 @@ nodelay_try_again:
             continue;
         }
 
+        // A far2l packet: ESC _ is not Alt-_ once the terminal sends its keys that way
+        if (far2l_input_active && far2l_apc_started (c))
+        {
+            c = far2l_read_apc ();
+            pending_keys = seq_append = NULL;
+            if (c == -1)
+            {
+                this = NULL;
+                return -1;
+            }
+            if (c == WIN32_KEY_REREAD)
+            {
+                // the character is in the keyboard's input again
+                this = NULL;
+                return get_key_code (no_delay);
+            }
+            goto done;
+        }
+
         // No match found. Is it one of our ESC <key> specials?
         if ((parent != NULL) && (parent->action == MCKEY_ESCAPE))
         {
@@ -2950,7 +3078,7 @@ disable_bracketed_paste (void)
 void
 enable_kitty_keyboard (void)
 {
-    if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
+    if (kitty_keyboard_active || far2l_input_active || !tty_has_kitty_keyboard ())
         return;
 
     printf (ESC_STR "[>" KITTY_KEYBOARD_FLAGS "u");
@@ -2976,7 +3104,7 @@ disable_kitty_keyboard (void)
 void
 enable_win32_input (void)
 {
-    if (win32_input_active || !tty_has_win32_input ())
+    if (win32_input_active || far2l_input_active || !tty_has_win32_input ())
         return;
 
     printf (ESC_STR "[?9001h");
@@ -2995,6 +3123,33 @@ disable_win32_input (void)
     printf (ESC_STR "[?9001l");
     fflush (stdout);
     win32_input_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+enable_far2l_input (void)
+{
+    if (far2l_input_active || !tty_has_far2l_input ())
+        return;
+
+    printf (ESC_STR "_far2l1" ESC_STR "\\");
+    fflush (stdout);
+    far2l_input_active = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+disable_far2l_input (void)
+{
+    if (!far2l_input_active)
+        return;
+
+    // ST ends it: a terminal that takes only ST would stay in far2l mode after the exit
+    printf (ESC_STR "_far2l0" ESC_STR "\\");
+    fflush (stdout);
+    far2l_input_active = FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
