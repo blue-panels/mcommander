@@ -120,8 +120,13 @@ Only plain files are taken, and only names that are plain names: a name with a s
 or a control character is refused. Every request is answered within 20 seconds or the drop
 is given up.
 
-Not there yet: directories, a bigger window than one request at a time, and a progress bar
-and Esc to cancel a long copy.
+While files are received a dialog shows the file, its place among the dropped ones and how much
+of it is in, once the copy lasts longer than half a second. Esc or the Abort button there gives
+the drop up: the file that was coming is removed, the ones that are already in stay, and the
+offer is released as cancelled. A second drop waits for nothing: while one is being received,
+another is turned down.
+
+Not there yet: directories and a bigger window than one request at a time.
 
 ## Dropped files for the programs in the built-in terminal
 

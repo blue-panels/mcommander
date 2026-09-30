@@ -126,10 +126,44 @@ panel_at (int x, int y)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Pull the bytes of one item into the file. */
+/* What the progress dialog shows: the file, its place among the dropped ones, the bytes so far. */
+typedef struct
+{
+    simple_status_msg_t ssm; /* base class */
+    const char *name;
+    guint index, total;
+    guint64 done, size;
+    gboolean size_known;
+} dnd_status_t;
+
+/* Refresh the dialog and look at the keys. B_CANCEL: the user gave up (Esc or Abort). */
 
 static int
-receive_file (const guint8 *offer, const far2l_dnd_entry_t *entry, const vfs_path_t *target)
+dnd_status_update_cb (status_msg_t *sm)
+{
+    dnd_status_t *ds = (dnd_status_t *) sm;
+    const int width = MAX (20, COLS / 2 - 6);
+    char *text;
+
+    if (ds->size_known && ds->size > 0)
+        text = g_strdup_printf (_ ("%s (%u of %u), %d%%"), ds->name, ds->index, ds->total,
+                                (int) MIN ((guint64) 100, ds->done * 100 / ds->size));
+    else
+        text = g_strdup_printf (_ ("%s (%u of %u)"), ds->name, ds->index, ds->total);
+    label_set_text (ds->ssm.label, str_trunc (text, width));
+    g_free (text);
+
+    return status_msg_common_update (sm);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Pull the bytes of one item into the file.  The progress dialog is refreshed after every chunk,
+   and Esc there gives the file up: FAR2L_E_CANCELLED, the half of it removed. */
+
+static int
+receive_file (const guint8 *offer, const far2l_dnd_entry_t *entry, const vfs_path_t *target,
+              dnd_status_t *ds)
 {
     guint64 offset = 0;
     int fd, status = FAR2L_OK;
@@ -168,8 +202,14 @@ receive_file (const guint8 *offer, const far2l_dnd_entry_t *entry, const vfs_pat
             break;
 
         offset += len;
+        ds->done = offset;
         if (eof || len == 0)
             break;
+        if (STATUS_MSG (ds)->update (STATUS_MSG (ds)) == B_CANCEL)
+        {
+            status = FAR2L_E_CANCELLED;
+            break;
+        }
     }
 
     if (mc_close (fd) != 0 && status == FAR2L_OK)
@@ -184,8 +224,8 @@ receive_file (const guint8 *offer, const far2l_dnd_entry_t *entry, const vfs_pat
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
-void
-filemanager_dnd_drop (const far2l_drop_t *drop)
+static void
+dnd_drop (const far2l_drop_t *drop)
 {
     GPtrArray *listed, *files;
     WPanel *dest = NULL;
@@ -269,12 +309,18 @@ filemanager_dnd_drop (const far2l_drop_t *drop)
             far2l_dnd_close (drop->offer, FAR2L_DND_CLOSE_REJECTED);
         else
         {
+            dnd_status_t ds;
+
+            memset (&ds, 0, sizeof (ds));
+            ds.total = files->len;
+            status_msg_init (STATUS_MSG (&ds), _ ("Drag and drop"), 0.5, simple_status_msg_init_cb,
+                             dnd_status_update_cb, NULL);
+
             for (i = 0; i < files->len && !cancelled; i++)
             {
                 const far2l_dnd_entry_t *e = g_ptr_array_index (files, i);
                 vfs_path_t *target = vfs_path_append_new (dest->cwd_vpath, e->name, (char *) NULL);
                 struct stat sb;
-                WDialog *progress;
 
                 if (overwrite == OVERWRITE_ASK && mc_stat (target, &sb) == 0)
                 {
@@ -300,16 +346,18 @@ filemanager_dnd_drop (const far2l_drop_t *drop)
                     }
                 }
 
-                progress =
-                    create_message (D_NORMAL, _ ("Drag and drop"), _ ("Receiving %s"), e->name);
-                mc_refresh ();
-                st = receive_file (drop->offer, e, target);
-                dlg_run_done (progress);
-                widget_destroy (WIDGET (progress));
+                ds.name = e->name;
+                ds.index = i + 1;
+                ds.done = 0;
+                ds.size = e->size;
+                ds.size_known = (e->flags & FAR2L_DND_ITEM_SIZE_KNOWN) != 0;
+                st = receive_file (drop->offer, e, target, &ds);
                 vfs_path_free (target, TRUE);
 
                 if (st == FAR2L_OK)
                     received++;
+                else if (st == FAR2L_E_CANCELLED)
+                    cancelled = TRUE;  // the user's Esc, not a failure
                 else
                 {
                     failed++;
@@ -323,6 +371,8 @@ filemanager_dnd_drop (const far2l_drop_t *drop)
                 }
             }
 
+            status_msg_deinit (STATUS_MSG (&ds));
+
             far2l_dnd_close (
                 drop->offer,
                 failed != 0 ? FAR2L_DND_CLOSE_FAILED
@@ -334,6 +384,29 @@ filemanager_dnd_drop (const far2l_drop_t *drop)
 
     g_ptr_array_free (files, TRUE);
     g_ptr_array_free (listed, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------------- */
+/*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+void
+filemanager_dnd_drop (const far2l_drop_t *drop)
+{
+    static gboolean busy = FALSE;
+
+    /* The progress dialog reads the keys, and with them another drop: one at a time */
+    if (busy)
+    {
+        far2l_dnd_close (drop->offer, FAR2L_DND_CLOSE_REJECTED);
+        return;
+    }
+
+    busy = TRUE;
+    dnd_drop (drop);
+    busy = FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
