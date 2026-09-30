@@ -1340,6 +1340,43 @@ getch_with_timeout (unsigned int delay_us)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Called after ESC ]. A digit right behind it is no key: it is a late answer of the terminal to
+   an OSC query. It is read up to its BEL or ST and dropped. The digit gets a short wait, for an
+   answer that comes in two pieces. */
+
+static gboolean
+skip_osc_reply (void)
+{
+    int c;
+    int n;
+
+    c = getch_with_timeout (20 * 1000);
+    if (c == -1)
+        return FALSE;
+    if (!g_ascii_isdigit (c))
+    {
+        const unsigned char b = (unsigned char) c;
+
+        tty_unget_input (&b, 1);
+        return FALSE;
+    }
+
+    for (n = 0; n < 1024; n++)
+    {
+        c = getch_with_timeout (old_esc_mode_timeout);
+        if (c == -1 || c == '\a')
+            break;
+        if (c == ESC_CHAR)
+        {
+            (void) getch_with_timeout (old_esc_mode_timeout);
+            break;
+        }
+    }
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Is the pending sequence plus @c the start of a CSI sequence with numeric parameters? */
 
 static gboolean
@@ -2141,10 +2178,24 @@ pend_send:
              * Small, but non-zero timeout is needed to reconnect
              * escape sequence split up by e.g. a serial line.
              */
-            int paranoia = 20;
+            int last = 0;
+            const gboolean csi = seq_buffer[0] == ESC_CHAR && seq_buffer[1] == '[';
+            /* A CSI answer of the terminal can be longer than 20 bytes: DA1 of xterm is 33. */
+            int paranoia = csi ? 256 : 20;
+            const int *p;
 
-            while (getch_with_timeout (old_esc_mode_timeout) >= 0 && --paranoia != 0)
-                ;
+            for (p = seq_buffer; *p != '\0'; p++)
+                last = *p;
+
+            /* A CSI sequence ends on its final byte: what comes after it is not its tail. */
+            if (!csi || last < 0x40 || last > 0x7e || p - seq_buffer <= 2)
+            {
+                int ch;
+
+                while ((ch = getch_with_timeout (old_esc_mode_timeout)) >= 0 && --paranoia != 0)
+                    if (csi && ch >= 0x40 && ch <= 0x7e)
+                        break;
+            }
         }
         else
             goto done;
@@ -2286,6 +2337,13 @@ nodelay_try_again:
         // No match found. Is it one of our ESC <key> specials?
         if ((parent != NULL) && (parent->action == MCKEY_ESCAPE))
         {
+            if (c == ']' && skip_osc_reply ())
+            {
+                pending_keys = seq_append = NULL;
+                this = NULL;
+                return -1;
+            }
+
             // Convert escape-digits to F-keys
             if (g_ascii_isdigit (c))
                 c = KEY_F (c - '0');
