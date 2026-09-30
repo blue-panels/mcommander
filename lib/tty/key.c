@@ -1648,6 +1648,80 @@ far2l_pop (const guchar *data, gsize *len, unsigned int size, unsigned int *valu
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* A far2l mouse record as the xterm SGR reports mc asks for when it has no far2l: they go back to
+   the keyboard and are read as such. A terminal with the extensions sends its mouse only this
+   way. The state of the buttons is the one of the Windows console: 1 left, 2 right, 4 middle;
+   the wheel turn is in the upper 16 bits. -1: no mc event. */
+
+#define FAR2L_MOUSE_MOVED   0x1
+#define FAR2L_MOUSE_WHEELED 0x4
+
+static int
+far2l_mouse_key (unsigned int flags, unsigned int buttons, int x, int y)
+{
+    static unsigned int last_buttons = 0;
+    /* Windows button bits and the xterm button number of each */
+    static const struct
+    {
+        unsigned int bit;
+        int number;
+    } map[] = { { 0x1, 0 }, { 0x4, 1 }, { 0x2, 2 } };
+    char report[96];
+    size_t len = 0;
+    unsigned int now = buttons & 0x7;
+    size_t i;
+
+    if (!mouse_enabled
+        || (use_mouse_p != MOUSE_XTERM_NORMAL_TRACKING
+            && use_mouse_p != MOUSE_XTERM_BUTTON_EVENT_TRACKING))
+        return -1;
+
+    x = x < 0 ? 1 : x + 1;
+    y = y < 0 ? 1 : y + 1;
+
+    if ((flags & FAR2L_MOUSE_WHEELED) != 0)
+    {
+        const int delta = (gint16) (buttons >> 16);
+
+        if (delta != 0)
+            len = (size_t) g_snprintf (report, sizeof (report), ESC_STR "[<%d;%d;%dM",
+                                       delta > 0 ? 64 : 65, x, y);
+    }
+    else if ((flags & FAR2L_MOUSE_MOVED) != 0)
+    {
+        // a move counts while a button is held, and only when mc asked for it
+        if (use_mouse_p == MOUSE_XTERM_BUTTON_EVENT_TRACKING)
+            for (i = 0; i < G_N_ELEMENTS (map); i++)
+                if ((now & map[i].bit) != 0)
+                {
+                    len = (size_t) g_snprintf (report, sizeof (report), ESC_STR "[<%d;%d;%dM",
+                                               32 + map[i].number, x, y);
+                    break;
+                }
+    }
+    else
+    {
+        const unsigned int pressed = now & ~last_buttons, released = last_buttons & ~now;
+
+        for (i = 0; i < G_N_ELEMENTS (map) && len + 24 < sizeof (report); i++)
+            if ((pressed & map[i].bit) != 0)
+                len += (size_t) g_snprintf (report + len, sizeof (report) - len,
+                                            ESC_STR "[<%d;%d;%dM", map[i].number, x, y);
+        // which button went up does not matter to mc, one release is enough
+        if (released != 0)
+            len += (size_t) g_snprintf (report + len, sizeof (report) - len, ESC_STR "[<0;%d;%dm",
+                                        x, y);
+    }
+    last_buttons = now;
+
+    if (len == 0)
+        return -1;
+
+    tty_unget_input ((const unsigned char *) report, len);
+    return WIN32_KEY_REREAD;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Read the rest of an APC after ESC _, up to BEL or ESC \, and decode it as a far2l packet.
    -1: no mc key (a release, a reply, a mouse or resize packet, a packet that is not ours). */
 
@@ -1706,6 +1780,26 @@ far2l_read_apc (void)
                 && far2l_pop (data, &len, 2, &sc) && far2l_pop (data, &len, 2, &vk)
                 && far2l_pop (data, &len, 2, &rep))
                 code = win32_key_code (vk, uc, cmd == 'K', cs);
+        }
+        else if (cmd == 'M')
+        {
+            unsigned int flags = 0, buttons = 0, y = 0, x = 0;
+
+            if (far2l_pop (data, &len, 4, &flags) && far2l_pop (data, &len, 4, &cs)
+                && far2l_pop (data, &len, 4, &buttons) && far2l_pop (data, &len, 2, &y)
+                && far2l_pop (data, &len, 2, &x))
+                code = far2l_mouse_key (flags, buttons, (gint16) x, (gint16) y);
+        }
+        else if (cmd == 'm')
+        {
+            // the short form: the upper byte of the button state is squeezed next to the lower
+            unsigned int flags = 0, buttons = 0, y = 0, x = 0;
+
+            if (far2l_pop (data, &len, 1, &flags) && far2l_pop (data, &len, 1, &cs)
+                && far2l_pop (data, &len, 2, &buttons) && far2l_pop (data, &len, 2, &y)
+                && far2l_pop (data, &len, 2, &x))
+                code = far2l_mouse_key (flags, (buttons & 0xFF) | ((buttons & 0xFF00) << 8),
+                                        (gint16) x, (gint16) y);
         }
         else if (cmd == 'C' || cmd == 'c')
         {

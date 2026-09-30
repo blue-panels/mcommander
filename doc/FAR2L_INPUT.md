@@ -35,9 +35,19 @@ stack popped from the end, values little endian, the last byte the command:
 
 Capital is a key press, small a release. A press is turned into a key by the same
 rules as a Win32 input mode record (see the Win32 input mode change), and a release
-is no key. Replies, mouse and resize packets are read and dropped; the mouse keeps
-coming as the xterm mouse reports M-Commander asks for. A character outside ASCII
-goes back to the keyboard as UTF-8 and is read as a typed character.
+is no key. Replies and resize packets are read and dropped.
+
+## Mouse
+
+far2l's terminal sends its mouse only as `M` packets (and the compact `m`) once the
+extensions are on, never as xterm reports. M-Commander turns a packet into the SGR
+report (`ESC [ < b ; x ; y M`) it asks for from other terminals and hands it back to
+the keyboard, so the mouse code has one input: presses, releases, wheel turns and,
+in button-event tracking, moves with a button held. Moves with nothing held and
+horizontal wheel turns are not reported, and nothing is if the mouse is off.
+
+A character outside ASCII in a key packet goes back to the keyboard as UTF-8 and is
+read as a typed character.
 
 ## Plugin authors
 

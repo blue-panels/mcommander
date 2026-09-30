@@ -35,7 +35,7 @@
 #undef tty_nodelay
 #undef tty_unget_input
 
-static int test_input[160];
+static int test_input[400];
 static size_t test_input_len;
 static size_t test_input_pos;
 
@@ -77,12 +77,17 @@ setup (void)
     test_input_len = test_input_pos = 0;
     init_key ();
     far2l_input_active = TRUE;
+    use_mouse_p = MOUSE_XTERM_BUTTON_EVENT_TRACKING;
+    mouse_enabled = TRUE;
+    define_sequence (MCKEY_EXTENDED_MOUSE, "\033[<", MCKEY_NOACTION);
 }
 
 static void
 teardown (void)
 {
     far2l_input_active = FALSE;
+    mouse_enabled = FALSE;
+    use_mouse_p = MOUSE_NONE;
     done_key ();
     close (input_fd);
     input_fd = -1;
@@ -156,6 +161,50 @@ append_short_key (char cmd, unsigned int vk, unsigned int uc, unsigned int cs)
     put_le (pushed + 1, 2, cs);
     put_le (pushed + 3, 2, uc);
     append_packet ("\033\\", cmd, pushed, sizeof (pushed));
+}
+
+/* A mouse packet: 'M' with 32 bit fields, or the compact 'm' with the button state squeezed */
+static void
+append_mouse (gboolean compact, unsigned int flags, unsigned int buttons, int x, int y)
+{
+    unsigned char pushed[16];
+
+    put_le (pushed, 2, (unsigned int) x);
+    put_le (pushed + 2, 2, (unsigned int) y);
+    if (compact)
+    {
+        put_le (pushed + 4, 2, (buttons & 0xFF) | ((buttons >> 8) & 0xFF00));
+        put_le (pushed + 6, 1, 0);  // control key state
+        put_le (pushed + 7, 1, flags);
+        append_packet ("\033\\", 'm', pushed, 8);
+    }
+    else
+    {
+        put_le (pushed + 4, 4, buttons);
+        put_le (pushed + 8, 4, 0);  // control key state
+        put_le (pushed + 12, 4, flags);
+        append_packet ("\033\\", 'M', pushed, 16);
+    }
+}
+
+/* The report the keyboard got back, after the ESC [ < that made the mouse key */
+static const char *
+mouse_report (void)
+{
+    static char report[32];
+    size_t n = 0;
+    int c;
+
+    ck_assert_int_eq (get_key_code (1), MCKEY_EXTENDED_MOUSE);
+    do
+    {
+        c = test_tty_lowlevel_getch ();
+        ck_assert_int_ne (c, -1);
+        report[n++] = (char) c;
+    }
+    while (c != 'M' && c != 'm' && n < sizeof (report) - 1);
+    report[n] = '\0';
+    return report;
 }
 
 static void
@@ -287,6 +336,60 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_far2l_mouse_click)
+{
+    // left button down at column 11, row 4 (from 0), and up; the terminal counts from 0, xterm from
+    // 1
+    append_mouse (FALSE, 0, 1, 11, 4);
+    append_mouse (FALSE, 0, 0, 11, 4);
+    ck_assert_str_eq (mouse_report (), "0;12;5M");
+    ck_assert_str_eq (mouse_report (), "0;12;5m");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_far2l_mouse_buttons_drag_and_wheel)
+{
+    append_mouse (FALSE, 0, 2, 0, 0);                      // right down
+    append_mouse (TRUE, 1, 2, 3, 1);                       // moved with it held, in the short form
+    append_mouse (FALSE, 0, 0, 3, 1);                      // up
+    append_mouse (FALSE, 0, 4, 0, 0);                      // middle down
+    append_mouse (FALSE, 0, 0, 0, 0);                      // up
+    append_mouse (FALSE, 1, 0, 5, 5);                      // moved with nothing held: no event
+    append_mouse (FALSE, 4, 120u << 16, 1, 1);             // wheel up
+    append_mouse (FALSE, 4, (unsigned) -120 << 16, 1, 1);  // wheel down
+    append_mouse (FALSE, 4, 120u << 16, 1, 1);
+    ck_assert_str_eq (mouse_report (), "2;1;1M");
+    ck_assert_str_eq (mouse_report (), "34;4;2M");
+    ck_assert_str_eq (mouse_report (), "0;4;2m");
+    ck_assert_str_eq (mouse_report (), "1;1;1M");
+    ck_assert_str_eq (mouse_report (), "0;1;1m");
+    ck_assert_int_eq (get_key_code (1), -1);  // the move with nothing held
+    ck_assert_str_eq (mouse_report (), "64;2;2M");
+    ck_assert_str_eq (mouse_report (), "65;2;2M");
+    ck_assert_str_eq (mouse_report (), "64;2;2M");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_far2l_mouse_compact_wheel_and_off)
+{
+    append_mouse (TRUE, 4, 120u << 16, 1, 1);
+    ck_assert_str_eq (mouse_report (), "64;2;2M");
+
+    // mc did not ask for the mouse: nothing goes back to the keyboard, and the next key is read
+    mouse_enabled = FALSE;
+    append_mouse (FALSE, 0, 1, 1, 1);
+    append_key ("\033\\", 'K', 66, 98, 0);
+    ck_assert_int_eq (get_key_code (1), -1);
+    ck_assert_int_eq (get_key_code (1), 'b');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_far2l_inactive)
 {
     // no far2l: ESC _ stays what it was, Alt-_, and the text after it is not swallowed
@@ -311,6 +414,9 @@ main (void)
     tcase_add_test (tc_core, test_far2l_other_script_goes_back_as_utf8);
     tcase_add_test (tc_core, test_far2l_ignored_packets);
     tcase_add_test (tc_core, test_far2l_truncated_packet);
+    tcase_add_test (tc_core, test_far2l_mouse_click);
+    tcase_add_test (tc_core, test_far2l_mouse_buttons_drag_and_wheel);
+    tcase_add_test (tc_core, test_far2l_mouse_compact_wheel_and_off);
     tcase_add_test (tc_core, test_far2l_inactive);
 
     return mctest_run_all (tc_core);
