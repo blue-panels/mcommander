@@ -80,13 +80,15 @@ mcterm_zsh_integration (void)
         /* A command of the terminal's own goes in behind a leading space, and this is
            what keeps such a line out of the user's history. */
         "setopt hist_ignore_space\n"
+        /* Bytes, not characters: a path is encoded as UTF-8 bytes, %D1%82 and not %442.
+           In the C locale of musl a byte over 0x7F reads as U+DF80 plus the byte. */
         "__mc_pe(){\n"
-        " local s=$1 o='' c i\n"
+        " local LC_ALL=C s=$1 o='' c i n\n"
         " for (( i=1; i<=${#s}; i++ )); do\n"
         "  c=${s[i]}\n"
         "  case $c in\n"
         "  [a-zA-Z0-9/_~.-]) o+=$c;;\n"
-        "  *) printf -v o '%s%%%02X' \"$o\" \"'$c\";;\n"
+        "  *) printf -v n %d \"'$c\"; printf -v o '%s%%%02X' \"$o\" $((n & 255));;\n"
         "  esac\n"
         " done\n"
         " printf %s \"$o\"\n"
@@ -119,13 +121,15 @@ mcterm_bash_integration (void)
         // Read by hand, and not by the terminal: there is no session to report to.
         "[[ -n ${MC_TERM_TOKEN-} ]] || return 0\n"
         "__mc_tok=$MC_TERM_TOKEN\n"
+        /* Bytes, not characters: a path is encoded as UTF-8 bytes, %D1%82 and not %442.
+           In the C locale of musl a byte over 0x7F reads as U+DF80 plus the byte. */
         "__mc_pe(){\n"
-        " local s=$1 o= i c\n"
+        " local LC_ALL=C s=$1 o= i c n\n"
         " for ((i = 0; i < ${#s}; i++)); do\n"
         "  c=${s:i:1}\n"
         "  case $c in\n"
         "  [a-zA-Z0-9/_~.-]) o+=$c;;\n"
-        "  *) printf -v o '%s%%%02X' \"$o\" \"'$c\";;\n"
+        "  *) printf -v n %d \"'$c\"; printf -v o '%s%%%02X' \"$o\" $((n & 255));;\n"
         "  esac\n"
         " done\n"
         " printf '%s' \"$o\"\n"
