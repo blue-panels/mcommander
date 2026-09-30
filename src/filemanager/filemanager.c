@@ -1242,6 +1242,7 @@ midnight_execute_cmd (Widget *sender, long command)
             if (plugin_panel_dirsize_cmd (current_panel))
                 return MSG_HANDLED;
             break; /* real local files; native handlers can operate on them */
+        case CK_ApplyCommand:
         case CK_ChangeMode:
         case CK_ChangeOwn:
         case CK_ChangeOwnAdvanced:
@@ -1290,6 +1291,9 @@ midnight_execute_cmd (Widget *sender, long command)
         break;
     case CK_ChangeMode:
         chmod_cmd (current_panel);
+        break;
+    case CK_ApplyCommand:
+        apply_cmd (current_panel);
         break;
     case CK_ChangeOwn:
         chown_cmd (current_panel);

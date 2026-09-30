@@ -800,6 +800,24 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
     { "PutCurrentFullSelected", "ctrl-f; ctrl-shift-enter" },
     { "ChangeMode", "ctrl-a" },
     { "ExtendedKeyMap", "alt-x" },
+    // Ctrl-G: apply a command to the files; Alt-F6: hard link; Alt-F10: the tree of directories;
+    // Shift-F9: save the setup; Shift-F10: the menu item chosen last. Ctrl-\ goes to the root
+    // directory (see the panel), so the hotlist moves to Alt and the backslash
+    { "ApplyCommand", "ctrl-g" },
+    { "Link", "alt-f6" },
+    { "Tree", "alt-f10" },
+    { "SaveSetup", "f21" },
+    { "MenuLastSelected", "f22; f19" },
+    { "HotList", "alt-backslash" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+/* Dialogs: Ctrl-Enter does the default action (Far), as Enter does outside the buttons */
+static const global_keymap_ini_t far_dialog_keymap[] = {
+    { "Ok", "enter; ctrl-enter" },
     {
         NULL,
         NULL,
@@ -817,6 +835,15 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     { "SortByMTime", "ctrl-f5" },
     { "SortBySize", "ctrl-f6" },
     { "Sort", "ctrl-f12" },
+    // Ctrl-F7: unsorted; Ctrl-F8: by the time of change, for the creation time of Far; Ctrl-F9: by
+    // the time of access; Ctrl-F11: by the owner (Ctrl-F10 sorts by the descriptions of Far, which
+    // M-Commander does not have)
+    { "SortByUnsorted", "ctrl-f7" },
+    { "SortByCTime", "ctrl-f8" },
+    { "SortByATime", "ctrl-f9" },
+    { "SortByOwner", "ctrl-f11" },
+    // Ctrl-\: the root directory
+    { "CdRoot", "ctrl-backslash" },
     // Ctrl-1 .. Ctrl-0: the listing modes of Far
     { "PanelListingMode1", "ctrl-1" },
     { "PanelListingMode2", "ctrl-2" },
@@ -946,10 +973,13 @@ create_default_keymap (void)
 static void
 apply_far_mode_keymap (mc_config_t *keymap)
 {
+    check_far_keys = keymap_far_mode;
+
     if (!keymap_far_mode)
         return;
 
     create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER, far_filemanager_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_DIALOG, far_dialog_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_PANEL, far_panel_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_INPUT, far_input_keymap);
 #ifdef USE_INTERNAL_EDIT

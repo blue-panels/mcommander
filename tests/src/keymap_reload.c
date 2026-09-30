@@ -384,6 +384,72 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_keymap_far_mode_dialogs_and_workflows)
+{
+    ck_assert (!check_far_keys);
+
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+    /* dialogs: Ctrl-Enter is OK, and the check boxes take + and - */
+    ck_assert_int_eq (keybind_lookup_keymap_command (dialog_map, KEY_M_CTRL | '\n'), CK_Ok);
+    ck_assert_int_eq (keybind_lookup_keymap_command (dialog_map, '\n'), CK_Ok);
+    ck_assert (check_far_keys);
+
+    /* Ctrl-\ goes to the root directory and the hotlist moved to Alt-\ */
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, XCTRL ('\\')), CK_CdRoot);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('\\')), CK_HotList);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('\\')), CK_HotList);
+
+    /* the sort keys that Far has besides the four of the first part */
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (7)),
+                      CK_SortByUnsorted);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (8)),
+                      CK_SortByCTime);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (9)),
+                      CK_SortByATime);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (11)),
+                      CK_SortByOwner);
+
+    /* Ctrl-G, Alt-F6, Alt-F10, Shift-F9 and Shift-F10 */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
+                      CK_ApplyCommand);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (6)),
+                      CK_Link);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (10)),
+                      CK_Tree);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (21)), CK_SaveSetup);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (22)),
+                      CK_MenuLastSelected);
+
+    /* the keys of mc that the mode leaves alone */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (19)),
+                      CK_MenuLastSelected);
+
+    keymap_free ();
+
+    /* off: all of it is as it was */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+    ck_assert (!check_far_keys);
+    ck_assert_int_ne (keybind_lookup_keymap_command (dialog_map, KEY_M_CTRL | '\n'), CK_Ok);
+    ck_assert_int_eq (keybind_lookup_keymap_command (dialog_map, '\n'), CK_Ok);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, XCTRL ('\\')), CK_CdRoot);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('\\')), CK_HotList);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (7)),
+                      CK_SortByUnsorted);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
+                      CK_ApplyCommand);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (10)),
+                      CK_Tree);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (19)),
+                      CK_MenuLastSelected);
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -403,6 +469,7 @@ main (void)
     tcase_add_test (tc_core, test_keymap_far_mode_editor_viewer);
     tcase_add_test (tc_core, test_keymap_far_mode_listing_modes);
     tcase_add_test (tc_core, test_keymap_far_mode_command_line);
+    tcase_add_test (tc_core, test_keymap_far_mode_dialogs_and_workflows);
 
     return mctest_run_all (tc_core);
 }
