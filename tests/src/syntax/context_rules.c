@@ -1575,6 +1575,155 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A layer of tags over rules of a host of its own. */
+#define LAYERED_RULES                                                                              \
+    "file .\\* Tested\n"                                                                           \
+    "overlay Host\n"                                                                               \
+    "context default\n"                                                                            \
+    "context {\\* \\*} magenta\n"                                                                  \
+    "context { } yellow\n"                                                                         \
+    "file \\.none$ Host\n"                                                                         \
+    "context default\n"                                                                            \
+    "  keyword whole int red\n"                                                                    \
+    "context \" \" green\n"                                                                        \
+    "context # \\n brown\n"
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_overlay)
+{
+    ck_assert_int_eq (load_toplevel (LAYERED_RULES), 0);
+
+    // the tags of the layer stand anywhere, inside a string of the host as well,
+    // and the host reads on around them
+    check_mask ("int {x} \"a{b}c\" int", "rrr.yyy.ggyyygg.rrr");
+    // a tag over lines keeps them for the host, which sees nothing of it
+    check_mask ("int {* x\n y *} # c\nint",
+                "rrr.mmmmm"
+                "mmmmm.bbbb"
+                "rrr");
+    // where the layer has no tag, the text is all the host's
+    check_mask ("int \"s\" # c", "rrr.ggg.bbb");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The colors of every byte of text, by a scanner kept over the edits. */
+static char *
+mask_of_scanner (syntax_scanner_t *sc)
+{
+    GString *out;
+    off_t i;
+
+    out = g_string_sized_new ((gsize) text_len);
+    for (i = 0; i < text_len; i++)
+    {
+        guint color;
+        const char *fg = NULL, *bg, *attrs;
+
+        color = syntax_rules_color_of (rules, syntax_state_at (sc, i));
+        if (color != 0)
+            syntax_rules_color_spec (rules, color, &fg, &bg, &attrs);
+        g_string_append_c (out, fg == NULL || *fg == '\0' ? '.' : *fg);
+    }
+
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_overlay_after_edits)
+{
+    GString *buf;
+    syntax_scanner_t *sc;
+    char *kept, *fresh;
+    off_t i;
+
+    ck_assert_int_eq (load_toplevel (LAYERED_RULES), 0);
+
+    /* one line long enough for checkpoints inside it, the tag that matters
+       near its end: the mask of the line is kept at hand over the edit */
+    buf = g_string_new (NULL);
+    for (i = 0; i < 100; i++)
+        g_string_append (buf, "int \"s\" x ");
+    g_string_append (buf, "int x\"y} int \"z\"\n");
+    text = buf->str;
+    text_len = (off_t) buf->len;
+
+    sc = syntax_scanner_new (rules, get_byte, NULL, text_len);
+    g_free (mask_of_scanner (sc));
+
+    /* the editor tells before it changes the text: a brace that makes a tag of
+       x"y}, which hides its quote from the host, then one taken away again */
+    i = (off_t) (strstr (buf->str, "x\"y}") - buf->str);
+    syntax_notify_insert (sc, i, FALSE);
+    g_string_insert_c (buf, (gssize) i, '{');
+    text = buf->str;
+    text_len = (off_t) buf->len;
+
+    kept = mask_of_scanner (sc);
+    fresh = mask ((const char *) buf->str);
+    ck_assert_str_eq (kept, fresh);
+    // the tag, and the host reading on after it: int is a keyword again
+    ck_assert_str_eq (kept + text_len - 18, "rrr.yyyyy.rrr.ggg.");
+    g_free (kept);
+    g_free (fresh);
+
+    syntax_notify_delete (sc, i, FALSE);
+    g_string_erase (buf, (gssize) i, 1);
+    text = buf->str;
+    text_len = (off_t) buf->len;
+
+    kept = mask_of_scanner (sc);
+    fresh = mask ((const char *) buf->str);
+    ck_assert_str_eq (kept, fresh);
+    g_free (kept);
+    g_free (fresh);
+
+    syntax_scanner_free (sc);
+    g_string_free (buf, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_overlay_errors)
+{
+    // a type no Syntax file names leaves the layer over plain text
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Nowhere\n"
+                                     "context default\n"
+                                     "context { } yellow\n"),
+                      0);
+    check_mask ("int {x}", "....yyy");
+
+    // one host, named once
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay\n"),
+                      2);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Host\n"
+                                     "overlay Host\n"),
+                      3);
+    // rules that keep no state between lines are no layer, nor a host
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Host\n"
+                                     "line-local\n"),
+                      3);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Plain\n"
+                                     "context default\n"
+                                     "context { } yellow\n"
+                                     "file \\.none$ Plain\n"
+                                     "line-local\n"
+                                     "number 4 red\n"),
+                      2);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_embed_errors)
 {
     // the default context has no delimiters to embed between
@@ -1732,6 +1881,9 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_embed_from_installed_syntax);
     tcase_add_test (tc_core, test_user_syntax_inherits_installed);
     tcase_add_test (tc_core, test_user_syntax_types_listed_with_installed);
+    tcase_add_test (tc_core, test_overlay);
+    tcase_add_test (tc_core, test_overlay_after_edits);
+    tcase_add_test (tc_core, test_overlay_errors);
     tcase_add_test (tc_core, test_embed_errors);
     tcase_add_test (tc_core, test_embed_state_from_checkpoints);
 }

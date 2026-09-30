@@ -84,11 +84,18 @@ typedef struct
     const char *first_line;  // and by the first line of the text
 } syntax_select_t;
 
-/** Lexical state at a byte: where in the rule set we are. */
+/**
+ * Lexical state at a byte: where in the rule set we are.
+ *
+ * @layer is 0 for the rule set asked for.  A rule set that is a layer over
+ * another leaves the bytes outside its contexts to that one, its host: there
+ * the state is the host's, with @layer 1, and so on down the hosts.
+ */
 typedef struct
 {
     unsigned short context;
     unsigned short keyword;
+    unsigned short layer;
 } syntax_state_t;
 
 /** A stretch of bytes sharing one color. */

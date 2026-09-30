@@ -185,6 +185,16 @@ struct syntax_rules_t
     guint ll_double_quote_color;
     char *ll_symbols;
     guint ll_symbols_color;
+
+    /* A layer over the rules of another type: the contexts of this set color
+       what they hold, and the text outside them is read by the host, with the
+       bytes of the layer blanked out.  Smarty over HTML, say. */
+    syntax_rules_t *host;
+    guint *host_colors;  // a color of the host, as a color of this set
+    // what 'overlay' said, until the rule set named there is read
+    char *overlay_type;
+    char *overlay_file;
+    int overlay_line;
 };
 
 /** The running rule, wider than what callers see: borders are ours. */
@@ -267,6 +277,12 @@ struct syntax_scanner_t
     gboolean fold;  // whether the rules at hand ignore case
     off_t last;     // byte the rule above describes
     GArray *index;  // syntax_checkpoint_t, ascending by offset
+
+    /* for rules that are a layer over a host */
+    syntax_scanner_t *host;  // over the host rules, reading the text with the layer blanked
+    syntax_scanner_t *mask;  // the layer again, asked which bytes it holds
+    off_t mask_from;         // where the line mask_line describes starts
+    GByteArray *mask_line;   // a byte of that line, whether the layer holds it
 };
 
 struct syntax_palette_t
@@ -335,6 +351,20 @@ mc_defines_destroy (gpointer key, gpointer value, gpointer data)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/** Forget the rules this set is a layer over, and what 'overlay' said. */
+static void
+syntax_rules_drop_overlay (syntax_rules_t *r)
+{
+    syntax_rules_unref (r->host);
+    r->host = NULL;
+    MC_PTR_FREE (r->host_colors);
+    MC_PTR_FREE (r->overlay_type);
+    MC_PTR_FREE (r->overlay_file);
+    r->overlay_line = 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /**
  * Back to the state a fresh rule set is in.
  *
@@ -377,6 +407,7 @@ syntax_rules_clear (syntax_rules_t *r)
     r->ll_single_quote_color = SYNTAX_COLOR_NONE;
     r->ll_double_quote_color = SYNTAX_COLOR_NONE;
     r->ll_symbols_color = SYNTAX_COLOR_NONE;
+    syntax_rules_drop_overlay (r);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -517,6 +548,7 @@ syntax_rules_free (syntax_rules_t *r)
     g_array_free (r->colors, TRUE);
 
     g_free (r->ll_symbols);
+    syntax_rules_drop_overlay (r);
     g_free (r->type);
     g_free (r);
 }
@@ -1485,7 +1517,7 @@ read_whole_word_chars (syntax_parser_t *p, char ***args, const syntax_charset_t 
 static syntax_directive_result_t
 directive_line_local (syntax_parser_t *p)
 {
-    if (p->argc != 1 || p->rules->contexts->len != 0)
+    if (p->argc != 1 || p->rules->contexts->len != 0 || p->rules->overlay_type != NULL)
         return SYNTAX_DIRECTIVE_ERROR;
 
     p->rules->line_local = TRUE;
@@ -1779,6 +1811,26 @@ directive_embed (syntax_parser_t *p)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/**
+ * overlay <type>: this rule set is a layer over the rules of <type>.  Its
+ * contexts color what they hold wherever it stands, and the rest of the text
+ * is read by the rules of <type>, which do not see what the contexts hold.
+ */
+static syntax_directive_result_t
+directive_overlay (syntax_parser_t *p)
+{
+    if (p->rules->line_local || p->argc != 2 || p->rules->overlay_type != NULL)
+        return SYNTAX_DIRECTIVE_ERROR;
+
+    p->rules->overlay_type = g_strdup (p->args[1]);
+    p->rules->overlay_file = g_strdup (*p->error_file);
+    p->rules->overlay_line = p->line;
+
+    return SYNTAX_DIRECTIVE_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /** keyword [whole...] [linestart] <word> [colors] */
 static syntax_directive_result_t
 directive_keyword (syntax_parser_t *p)
@@ -1872,12 +1924,19 @@ static const struct
     const char *name;
     syntax_directive_result_t (*handler) (syntax_parser_t *p);
 } syntax_directives[] = {
-    { "line-local", directive_line_local }, { "number", directive_number },
-    { "string", directive_string },         { "symbols", directive_symbols },
-    { "include", directive_include },       { "caseinsensitive", directive_caseinsensitive },
-    { "wholechars", directive_wholechars }, { "context", directive_context },
-    { "spellcheck", directive_spellcheck }, { "embed", directive_embed },
-    { "keyword", directive_keyword },       { "file", directive_file },
+    { "line-local", directive_line_local },
+    { "number", directive_number },
+    { "string", directive_string },
+    { "symbols", directive_symbols },
+    { "include", directive_include },
+    { "caseinsensitive", directive_caseinsensitive },
+    { "wholechars", directive_wholechars },
+    { "context", directive_context },
+    { "spellcheck", directive_spellcheck },
+    { "embed", directive_embed },
+    { "overlay", directive_overlay },
+    { "keyword", directive_keyword },
+    { "file", directive_file },
     { "define", directive_define },
 };
 
@@ -2312,6 +2371,48 @@ build_context_candidates (syntax_rules_t *r)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
+ * Read the rules the set is a layer over, and take their colors in.
+ *
+ * The host keeps its own contexts and is walked by a scanner of its own; only
+ * its colors are copied into this set, so that one palette serves both.  A
+ * type no Syntax file names leaves the layer over plain text.
+ *
+ * @param error_file set to the file of the 'overlay' line at fault
+ * @return 0 on success, otherwise the line of the 'overlay' whose rules are at fault
+ */
+static int
+syntax_resolve_overlay (syntax_rules_t *r, const char *syntax_file, int depth, char **error_file)
+{
+    syntax_rules_t *host = NULL;
+    guint i;
+    int res;
+
+    if (r->overlay_type == NULL || depth >= SYNTAX_EMBED_DEPTH_MAX)
+        return 0;
+
+    res = syntax_load_embed (syntax_file, r->overlay_type, depth + 1, &host);
+    if (res == -1)
+        return 0;
+
+    if (res != 0 || host->contexts == NULL)
+    {
+        syntax_rules_unref (host);
+        g_free (*error_file);
+        *error_file = g_strdup (r->overlay_file);
+        return r->overlay_line;
+    }
+
+    r->host = host;
+    r->host_colors = g_new (guint, host->colors->len);
+    for (i = 0; i < host->colors->len; i++)
+        r->host_colors[i] = syntax_reintern_color (r, host, i);
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
  * Read the rules of one set, from the 'file' line already read up to the next
  * one, or the whole of an included file.
  *
@@ -2343,6 +2444,7 @@ edit_read_syntax_rules (syntax_rules_t *r, FILE *f, char **args, int args_size,
     args[0] = NULL;
     r->case_insensitive = FALSE;
     r->line_local = FALSE;
+    syntax_rules_drop_overlay (r);
     r->ll_number_max = 0;
     r->ll_number_color = SYNTAX_COLOR_NONE;
     r->ll_single_quote_color = SYNTAX_COLOR_NONE;
@@ -2429,6 +2531,8 @@ edit_read_syntax_rules (syntax_rules_t *r, FILE *f, char **args, int args_size,
     }
 
     result = syntax_resolve_embeds (r, syntax_file, depth, error_file);
+    if (result == 0)
+        result = syntax_resolve_overlay (r, syntax_file, depth, error_file);
     if (result != 0)
         return result;
 
@@ -2883,6 +2987,145 @@ syntax_load_embed (const char *syntax_file, const char *type, int depth, syntax_
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/*** the scanner of a layer **********************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/** Drop the line of the mask kept at hand: the text or the layer moved. */
+static void
+syntax_mask_forget (syntax_scanner_t *sc)
+{
+    if (sc != NULL && sc->mask_line != NULL)
+    {
+        g_byte_array_set_size (sc->mask_line, 0);
+        sc->mask_from = -1;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Does the layer hold the byte at @i, that is, is it in a context of the layer
+ * there rather than in its default one?
+ *
+ * The host asks for the bytes of the line it is on over and over, forward and a
+ * byte back, so the answer is worked out for a whole line at a time, by a
+ * scanner of the layer of its own that walks forward along it.
+ */
+static gboolean
+syntax_layer_holds (syntax_scanner_t *sc, off_t i)
+{
+    if (i < sc->mask_from || i >= sc->mask_from + (off_t) sc->mask_line->len)
+    {
+        off_t start = i, end = i, k;
+
+        while (start > 0 && sc->get_byte (sc->data, start - 1) != '\n')
+            start--;
+        while (end < sc->size && sc->get_byte (sc->data, end) != '\n')
+            end++;
+
+        g_byte_array_set_size (sc->mask_line, (guint) (end - start));
+        for (k = start; k < end; k++)
+            sc->mask_line->data[k - start] = syntax_state_at (sc->mask, k).context != 0;
+        sc->mask_from = start;
+    }
+
+    return sc->mask_line->data[i - sc->mask_from] != 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A byte as the host of a layer reads it: a space where the layer holds the
+ * text, the byte itself elsewhere.  Line breaks stay, for the host counts lines.
+ */
+static int
+syntax_masked_get_byte (void *data, off_t i)
+{
+    syntax_scanner_t *sc = (syntax_scanner_t *) data;
+    int c;
+
+    if (i < 0 || i >= sc->size)
+        return '\n';
+
+    c = sc->get_byte (sc->data, i);
+    if (c == '\n' || !syntax_layer_holds (sc, i))
+        return c;
+
+    return ' ';
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * The text of a layer changed at @pos.
+ *
+ * What the layer holds on the line of @pos can change left of @pos too, for the
+ * rules look ahead, so the host goes back to the start of that line.
+ */
+static void
+syntax_layer_changed (syntax_scanner_t *sc, off_t pos)
+{
+    syntax_scanner_t *host = sc->host;
+    off_t start = pos;
+
+    while (start > 0 && sc->get_byte (sc->data, start - 1) != '\n')
+        start--;
+
+    syntax_mask_forget (sc);
+    syntax_index_truncate (host, start);
+    if (host->last >= start)
+    {
+        const syntax_checkpoint_t *cp;
+
+        cp = syntax_checkpoint_find (host, start - 1);
+        if (cp != NULL)
+        {
+            host->rule = cp->rule;
+            host->last = cp->offset;
+        }
+        else
+        {
+            memset (&host->rule, 0, sizeof (host->rule));
+            host->last = -2;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A scanner over @rules; with @layered, a layer gets a scanner over its host
+ * and one to tell which bytes it holds, which themselves need neither.
+ */
+static syntax_scanner_t *
+syntax_scanner_create (syntax_rules_t *rules, syntax_get_byte_fn get_byte, void *data, off_t size,
+                       gboolean layered)
+{
+    syntax_scanner_t *sc;
+
+    if (rules == NULL || get_byte == NULL)
+        return NULL;
+
+    sc = g_new0 (syntax_scanner_t, 1);
+    sc->rules = syntax_rules_ref (rules);
+    sc->get_byte = get_byte;
+    sc->data = data;
+    sc->size = size;
+    sc->index = g_array_new (FALSE, FALSE, sizeof (syntax_checkpoint_t));
+    sc->last = -2;  // nothing walked yet; the first step is byte -1
+
+    if (layered && rules->host != NULL)
+    {
+        sc->mask = syntax_scanner_create (rules, get_byte, data, size, FALSE);
+        sc->mask_line = g_byte_array_new ();
+        sc->mask_from = -1;
+        sc->host = syntax_scanner_create (rules->host, syntax_masked_get_byte, sc, size, TRUE);
+    }
+
+    return sc;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -3057,6 +3300,20 @@ syntax_rules_color_of (const syntax_rules_t *r, syntax_state_t st)
     const context_rule_t *c;
     const syntax_keyword_t *k;
 
+    // a byte the host of a layer colors, in a color copied into the layer
+    if (st.layer > 0)
+    {
+        guint color;
+
+        if (r == NULL || r->host == NULL)
+            return SYNTAX_COLOR_NONE;
+
+        st.layer--;
+        color = syntax_rules_color_of (r->host, st);
+
+        return color < r->host->colors->len ? r->host_colors[color] : SYNTAX_COLOR_NONE;
+    }
+
     if (r == NULL || r->contexts == NULL || st.context >= r->contexts->len)
         return SYNTAX_COLOR_NONE;
 
@@ -3074,20 +3331,7 @@ syntax_rules_color_of (const syntax_rules_t *r, syntax_state_t st)
 syntax_scanner_t *
 syntax_scanner_new (syntax_rules_t *rules, syntax_get_byte_fn get_byte, void *data, off_t size)
 {
-    syntax_scanner_t *sc;
-
-    if (rules == NULL || get_byte == NULL)
-        return NULL;
-
-    sc = g_new0 (syntax_scanner_t, 1);
-    sc->rules = syntax_rules_ref (rules);
-    sc->get_byte = get_byte;
-    sc->data = data;
-    sc->size = size;
-    sc->index = g_array_new (FALSE, FALSE, sizeof (syntax_checkpoint_t));
-    sc->last = -2;  // nothing walked yet; the first step is byte -1
-
-    return sc;
+    return syntax_scanner_create (rules, get_byte, data, size, TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3098,6 +3342,10 @@ syntax_scanner_free (syntax_scanner_t *sc)
     if (sc == NULL)
         return;
 
+    syntax_scanner_free (sc->host);
+    syntax_scanner_free (sc->mask);
+    if (sc->mask_line != NULL)
+        g_byte_array_free (sc->mask_line, TRUE);
     syntax_rules_unref (sc->rules);
     g_array_free (sc->index, TRUE);
     g_free (sc);
@@ -3108,8 +3356,13 @@ syntax_scanner_free (syntax_scanner_t *sc)
 void
 syntax_scanner_set_size (syntax_scanner_t *sc, off_t size)
 {
-    if (sc != NULL)
-        sc->size = size;
+    if (sc == NULL)
+        return;
+
+    sc->size = size;
+    syntax_scanner_set_size (sc->host, size);
+    syntax_scanner_set_size (sc->mask, size);
+    syntax_mask_forget (sc);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3131,6 +3384,9 @@ syntax_scanner_reset (syntax_scanner_t *sc)
     memset (&sc->rule, 0, sizeof (sc->rule));
     sc->last = -2;
     g_array_set_size (sc->index, 0);
+    syntax_scanner_reset (sc->host);
+    syntax_scanner_reset (sc->mask);
+    syntax_mask_forget (sc);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3145,6 +3401,13 @@ syntax_notify_insert (syntax_scanner_t *sc, off_t pos, gboolean inclusive)
         sc->last++;
     syntax_index_truncate (sc, pos);
     sc->size++;
+
+    if (sc->host != NULL)
+    {
+        syntax_notify_insert (sc->mask, pos, inclusive);
+        syntax_notify_insert (sc->host, pos, inclusive);
+        syntax_layer_changed (sc, pos);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3160,6 +3423,13 @@ syntax_notify_delete (syntax_scanner_t *sc, off_t pos, gboolean inclusive)
     syntax_index_truncate (sc, pos);
     if (sc->size > 0)
         sc->size--;
+
+    if (sc->host != NULL)
+    {
+        syntax_notify_delete (sc->mask, pos, inclusive);
+        syntax_notify_delete (sc->host, pos, inclusive);
+        syntax_layer_changed (sc, pos);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3167,7 +3437,7 @@ syntax_notify_delete (syntax_scanner_t *sc, off_t pos, gboolean inclusive)
 syntax_state_t
 syntax_state_at (syntax_scanner_t *sc, off_t byte_index)
 {
-    syntax_state_t st = { 0, 0 };
+    syntax_state_t st = { 0, 0, 0 };
 
     if (sc == NULL || sc->rules->contexts == NULL || byte_index >= sc->size)
         return st;
@@ -3175,6 +3445,13 @@ syntax_state_at (syntax_scanner_t *sc, off_t byte_index)
     syntax_get_rule (sc, byte_index);
     st.context = sc->rule.context;
     st.keyword = sc->rule.keyword;
+
+    // outside the contexts of a layer, the byte is its host's
+    if (sc->host != NULL && st.context == 0)
+    {
+        st = syntax_state_at (sc->host, byte_index);
+        st.layer++;
+    }
 
     return st;
 }
@@ -3201,12 +3478,18 @@ syntax_runs_for_range (syntax_scanner_t *sc, off_t from, off_t to, GArray *runs)
 
     for (i = from; i < to; i++)
     {
-        const context_rule_t *c;
         guint color;
 
-        syntax_get_rule (sc, i);
-        c = CONTEXT_RULE (g_ptr_array_index (contexts, sc->rule.context));
-        color = SYNTAX_KEYWORD (g_ptr_array_index (c->keyword, sc->rule.keyword))->color;
+        if (sc->host != NULL)
+            color = syntax_rules_color_of (sc->rules, syntax_state_at (sc, i));
+        else
+        {
+            const context_rule_t *c;
+
+            syntax_get_rule (sc, i);
+            c = CONTEXT_RULE (g_ptr_array_index (contexts, sc->rule.context));
+            color = SYNTAX_KEYWORD (g_ptr_array_index (c->keyword, sc->rule.keyword))->color;
+        }
 
         if (color != cur && len != 0)
         {

@@ -475,6 +475,30 @@ comments and keywords of the embedded rules, so that in {{ "}}" }} of a
 Jinja2 template the first }} is part of the string, and in ${x/\\}/y} of a
 shell script the first } is part of the escape.
 
+A whole syntax can instead be a layer over another one, with a line
+
+**overlay**
+*type*
+
+anywhere among its rules.  Its contexts then color what they hold wherever it
+stands, and the rest of the text is read by the rules of
+*type*,
+which see what the contexts hold as blanks and never know it was there.  This
+is how the tags of a template language are colored in the text, inside an HTML
+tag, in a string of an attribute and in a script alike, while HTML colors the
+rest.  The default context of a layer colors nothing: a keyword there only
+keeps a context from starting.  A type found in no Syntax file leaves the
+layer over plain text.  For example, Smarty over HTML:
+
+```
+  overlay HTML\sFile
+  context default
+      keyword {\s
+  context {\* \*} brown
+  context { } brightcyan
+      embed soft Smarty\sTag
+```
+
 Each rule is a line of the form:
 
 **keyword**
