@@ -817,6 +817,39 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     },
 };
 
+#ifdef USE_INTERNAL_EDIT
+static const global_keymap_ini_t far_editor_keymap[] = {
+    // Ctrl-F7: replace (F4 quits the editor, as in Far); Shift-F7 goes on searching
+    { "Replace", "ctrl-f7" },
+    { "SearchContinue", "f17" },
+    { "Quit", "f10; esc; f4" },
+    // Alt-F8: go to line; Ctrl-F3: line numbers; Alt-F11: history of edited files
+    { "Goto", "alt-f8; alt-l; alt-shift-l" },
+    { "ShowNumbers", "ctrl-f3; alt-n" },
+    { "History", "alt-f11; alt-shift-e" },
+    // Ctrl-Z: undo; Ctrl-U: deselect the block; Ctrl-A: select all
+    { "Undo", "ctrl-z; ctrl-backspace" },
+    { "WordLeft", "ctrl-left" },
+    { "Unmark", "ctrl-u" },
+    { "MarkAll", "ctrl-a" },
+    {
+        NULL,
+        NULL,
+    },
+};
+#endif
+
+static const global_keymap_ini_t far_viewer_keymap[] = {
+    // Alt-F8: go to position; Alt-F7: search in the opposite direction; Alt-F11: history
+    { "Goto", "f5; alt-f8" },
+    { "SearchOppositeContinue", "shift-n; alt-f7" },
+    { "History", "alt-f11; alt-shift-e" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
@@ -884,6 +917,10 @@ apply_far_mode_keymap (mc_config_t *keymap)
 
     create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER, far_filemanager_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_PANEL, far_panel_keymap);
+#ifdef USE_INTERNAL_EDIT
+    create_default_keymap_section (keymap, KEYMAP_SECTION_EDITOR, far_editor_keymap);
+#endif
+    create_default_keymap_section (keymap, KEYMAP_SECTION_VIEWER, far_viewer_keymap);
 }
 
 /* --------------------------------------------------------------------------------------------- */

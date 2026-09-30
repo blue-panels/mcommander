@@ -261,6 +261,51 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_keymap_far_mode_editor_viewer)
+{
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+#ifdef USE_INTERNAL_EDIT
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_CTRL | KEY_F (7)),
+                      CK_Replace);
+    ck_assert_int_ne (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Replace);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Quit);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (10)), CK_Quit);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_CTRL | KEY_F (3)),
+                      CK_ShowNumbers);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_ALT | KEY_F (11)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('z')), CK_Undo);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('u')), CK_Unmark);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('a')), CK_MarkAll);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (7)), CK_Search);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (2)), CK_Save);
+#endif
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (7)),
+                      CK_SearchOppositeContinue);
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (11)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_F (5)), CK_Goto);
+
+    keymap_free ();
+
+    /* off again: the editor and the viewer are what they were */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+#ifdef USE_INTERNAL_EDIT
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Replace);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('u')), CK_Undo);
+#endif
+    ck_assert_int_ne (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -277,6 +322,7 @@ main (void)
     tcase_add_test (tc_core, test_keymap_far_mode);
     tcase_add_test (tc_core, test_keymap_far_mode_off_by_default);
     tcase_add_test (tc_core, test_keymap_far_mode_switch);
+    tcase_add_test (tc_core, test_keymap_far_mode_editor_viewer);
 
     return mctest_run_all (tc_core);
 }
