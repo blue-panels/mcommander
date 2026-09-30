@@ -2828,6 +2828,27 @@ syntax_rules_load_embedded (const char *syntax_file, const char *type, int depth
 /* --------------------------------------------------------------------------------------------- */
 
 /**
+ * The Syntax file installed with the program, NULL when the share directory is
+ * not known or @syntax_file is that file already.  Freed by the caller.
+ */
+static char *
+syntax_installed_file (const char *syntax_file)
+{
+    char *installed;
+
+    if (mc_global.share_data_dir == NULL)
+        return NULL;
+
+    installed = g_build_filename (mc_global.share_data_dir, EDIT_SYNTAX_FILE, (char *) NULL);
+    if (strcmp (installed, syntax_file) == 0)
+        MC_PTR_FREE (installed);
+
+    return installed;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
  * Read the rule set an 'embed' names: from @syntax_file, and failing that from
  * the Syntax file installed with the program.
  *
@@ -2844,11 +2865,11 @@ syntax_load_embed (const char *syntax_file, const char *type, int depth, syntax_
     int res;
 
     res = syntax_rules_load_embedded (syntax_file, type, depth, rules);
-    if (res == 0 || mc_global.share_data_dir == NULL)
+    if (res == 0)
         return res;
 
-    installed = g_build_filename (mc_global.share_data_dir, EDIT_SYNTAX_FILE, (char *) NULL);
-    if (strcmp (installed, syntax_file) != 0)
+    installed = syntax_installed_file (syntax_file);
+    if (installed != NULL)
     {
         const int installed_res = syntax_rules_load_embedded (installed, type, depth, rules);
 
@@ -2882,6 +2903,22 @@ syntax_rules_load (const char *syntax_file, const syntax_select_t *sel, syntax_r
                                  sel->first_line != NULL ? sel->first_line : "", sel->type, 0,
                                  &err_file);
 
+    /* the Syntax file of the user names what the user wants otherwise, the one
+       installed with the program everything else */
+    if (res == 0 && r->type == NULL)
+    {
+        char *installed;
+
+        installed = syntax_installed_file (syntax_file);
+        if (installed != NULL)
+        {
+            res = edit_read_syntax_file (r, NULL, installed, sel->filename,
+                                         sel->first_line != NULL ? sel->first_line : "", sel->type,
+                                         0, &err_file);
+            g_free (installed);
+        }
+    }
+
     if (res != 0 || (r->contexts == NULL && !r->line_local))
     {
         if (error_file != NULL)
@@ -2911,6 +2948,36 @@ syntax_rules_list_types (const char *syntax_file, GPtrArray *names)
 
     r = syntax_rules_new ();
     res = edit_read_syntax_file (r, names, syntax_file, NULL, "", NULL, 0, &err_file);
+
+    // and the types of the installed Syntax file the user's one does not name
+    if (res == 0)
+    {
+        char *installed;
+
+        installed = syntax_installed_file (syntax_file);
+        if (installed != NULL)
+        {
+            GPtrArray *more;
+            guint i;
+
+            more = g_ptr_array_new_with_free_func (g_free);
+            if (edit_read_syntax_file (r, more, installed, NULL, "", NULL, 0, &err_file) == 0)
+                for (i = 0; i < more->len; i++)
+                {
+                    const char *name = g_ptr_array_index (more, i);
+                    guint k;
+
+                    for (k = 0; k < names->len; k++)
+                        if (strcmp (g_ptr_array_index (names, k), name) == 0)
+                            break;
+                    if (k == names->len)
+                        g_ptr_array_add (names, g_strdup (name));
+                }
+            g_ptr_array_free (more, TRUE);
+            g_free (installed);
+        }
+    }
+
     syntax_rules_free (r);
     g_free (err_file);
 

@@ -1443,6 +1443,138 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/**
+ * An installed Syntax file under a share directory of the test's own:
+ * .bar files are Bar, .foo files InstalledFoo.  Gives back the directory.
+ */
+static char *
+make_installed_syntax (void)
+{
+    char *share, *dir, *path, *lang, *content;
+
+    share = g_build_filename (tmpdir, "share", (char *) NULL);
+    dir = g_build_filename (share, "syntax", (char *) NULL);
+    g_mkdir_with_parents (dir, 0700);
+
+    lang = g_build_filename (dir, "installed.syntax", (char *) NULL);
+    write_file (lang,
+                "context default\n"
+                "  keyword whole int yellow\n");
+    path = g_build_filename (dir, "Syntax", (char *) NULL);
+    content = g_strdup_printf ("file \\.bar$ Bar\ninclude %s\n"
+                               "file \\.foo$ InstalledFoo\ninclude %s\n",
+                               lang, lang);
+    write_file (path, content);
+
+    g_free (content);
+    g_free (path);
+    g_free (lang);
+    g_free (dir);
+
+    return share;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+remove_installed_syntax (char *share)
+{
+    char *dir, *path;
+
+    dir = g_build_filename (share, "syntax", (char *) NULL);
+    path = g_build_filename (dir, "Syntax", (char *) NULL);
+    unlink (path);
+    g_free (path);
+    path = g_build_filename (dir, "installed.syntax", (char *) NULL);
+    unlink (path);
+    g_free (path);
+    rmdir (dir);
+    rmdir (share);
+    g_free (dir);
+    g_free (share);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The type the Syntax file of the user and the installed one choose for @filename. */
+static const char *
+type_for (const char *filename)
+{
+    syntax_select_t sel;
+
+    sel.type = NULL;
+    sel.filename = filename;
+    sel.first_line = "";
+    syntax_rules_unref (rules);
+    rules = NULL;
+    if (syntax_rules_load (syntax_file, &sel, &rules, NULL) != 0)
+        return NULL;
+
+    return syntax_rules_type (rules);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_user_syntax_inherits_installed)
+{
+    char *saved_share = mc_global.share_data_dir;
+    char *share;
+
+    share = make_installed_syntax ();
+    mc_global.share_data_dir = share;
+
+    // the file of the user names .foo files, the installed one the rest
+    write_file (syntax_file,
+                "file \\.foo$ UserFoo\n"
+                "context default\n"
+                "  keyword whole int red\n");
+    ck_assert_str_eq (type_for ("x.foo"), "UserFoo");
+    ck_assert_str_eq (type_for ("x.bar"), "Bar");
+    ck_assert_ptr_null (type_for ("x.none"));
+
+    // a file of the user that names nothing leaves everything to the installed one
+    write_file (syntax_file, "# nothing here yet\n");
+    ck_assert_str_eq (type_for ("x.foo"), "InstalledFoo");
+    ck_assert_str_eq (type_for ("x.bar"), "Bar");
+
+    mc_global.share_data_dir = saved_share;
+    remove_installed_syntax (share);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_user_syntax_types_listed_with_installed)
+{
+    char *saved_share = mc_global.share_data_dir;
+    char *share;
+    GPtrArray *names;
+
+    share = make_installed_syntax ();
+    mc_global.share_data_dir = share;
+
+    write_file (syntax_file,
+                "file \\.foo$ UserFoo\n"
+                "context default\n"
+                "file \\.baz$ Bar\n"
+                "context default\n");
+
+    // the types of the user first, then the installed ones not named yet
+    names = g_ptr_array_new_with_free_func (g_free);
+    ck_assert_int_eq (syntax_rules_list_types (syntax_file, names), 0);
+    ck_assert_int_eq ((int) names->len, 3);
+    ck_assert_str_eq (g_ptr_array_index (names, 0), "UserFoo");
+    ck_assert_str_eq (g_ptr_array_index (names, 1), "Bar");
+    ck_assert_str_eq (g_ptr_array_index (names, 2), "InstalledFoo");
+    g_ptr_array_free (names, TRUE);
+
+    mc_global.share_data_dir = saved_share;
+    remove_installed_syntax (share);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_embed_errors)
 {
     // the default context has no delimiters to embed between
@@ -1598,6 +1730,8 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_embed_soft_nested);
     tcase_add_test (tc_core, test_embed_unknown_type);
     tcase_add_test (tc_core, test_embed_from_installed_syntax);
+    tcase_add_test (tc_core, test_user_syntax_inherits_installed);
+    tcase_add_test (tc_core, test_user_syntax_types_listed_with_installed);
     tcase_add_test (tc_core, test_embed_errors);
     tcase_add_test (tc_core, test_embed_state_from_checkpoints);
 }

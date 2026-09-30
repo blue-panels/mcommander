@@ -120,6 +120,10 @@ typedef struct syntax_palette_t syntax_palette_t;
 /**
  * Parse a Syntax file and keep the rule set it selects.
  *
+ * The Syntax file installed with the program is read after @syntax_file, for
+ * the file types @syntax_file does not name: the file of the user holds what
+ * the user added or wants otherwise, not a copy of everything.
+ *
  * Errors are returned, never shown: this layer opens no dialogs.
  *
  * @param syntax_file the Syntax file listing the rule sets
@@ -143,7 +147,7 @@ void syntax_rules_color_spec (const syntax_rules_t *r, guint color, const char *
 /** Color a state maps to; the projection that makes the scanner a highlighter. */
 guint syntax_rules_color_of (const syntax_rules_t *r, syntax_state_t st);
 
-/** Names of every type @syntax_file describes, for a chooser. */
+/** Names of every type @syntax_file and the installed Syntax file describe, for a chooser. */
 int syntax_rules_list_types (const char *syntax_file, GPtrArray *names);
 
 /* ---- scanner ---- */

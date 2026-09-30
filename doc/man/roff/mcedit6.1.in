@@ -350,9 +350,17 @@ supports syntax highlighting.  This means that keywords and contexts
 (like C comments, string constants, etc) are highlighted in different
 colors.  The following section explains the format of the file
 \fB~/.local/share/mc6/syntax/Syntax\fP\&.
-If this file is missing, system\-wide
+The system\-wide
 \fB{{pkgdatadir}}/syntax/Syntax\fP
-is used.
+is read after it, for every file type it does not name: the file of the user
+holds only what the user added or wants otherwise, and an entry of its own
+wins over an installed one for the files it matches.  The files its
+\fBinclude\fP
+lines name are looked for in
+\fI~/.local/share/mc6/syntax/\fP
+first and among the installed ones after.  A full copy of the system file, as
+older versions made, hides every file type installed after it: keep in it only
+the entries you changed.
 The file
 \fB~/.local/share/mc6/syntax/Syntax\fP
 is rescanned on opening of every new editor file.  The file contains

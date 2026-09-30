@@ -299,9 +299,17 @@ supports syntax highlighting.  This means that keywords and contexts
 (like C comments, string constants, etc) are highlighted in different
 colors.  The following section explains the format of the file
 **~/.local/share/mc6/syntax/Syntax**.
-If this file is missing, system-wide
+The system-wide
 **{{pkgdatadir}}/syntax/Syntax**
-is used.
+is read after it, for every file type it does not name: the file of the user
+holds only what the user added or wants otherwise, and an entry of its own
+wins over an installed one for the files it matches.  The files its
+**include**
+lines name are looked for in
+*~/.local/share/mc6/syntax/*
+first and among the installed ones after.  A full copy of the system file, as
+older versions made, hides every file type installed after it: keep in it only
+the entries you changed.
 The file
 **~/.local/share/mc6/syntax/Syntax**
 is rescanned on opening of every new editor file.  The file contains
