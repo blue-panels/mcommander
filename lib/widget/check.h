@@ -23,6 +23,9 @@ typedef struct WCheck
 
 /*** global variables defined in .c file *********************************************************/
 
+/* Far mode: + switches a check box on and - switches it off, as in Far Manager */
+extern gboolean check_far_keys;
+
 /*** declarations of public functions ************************************************************/
 
 WCheck *check_new (int y, int x, gboolean state, const char *text);

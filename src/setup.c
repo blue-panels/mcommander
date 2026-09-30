@@ -56,6 +56,7 @@
 
 #include "args.h"
 #include "execute.h"  // pause_after_run
+#include "keymap.h"   // keymap_far_mode
 #include "clipboard.h"
 #include "selcodepage.h"
 
@@ -68,6 +69,8 @@
 #ifdef ENABLE_MCTERM
 #include "src/mcterm/mcterm.h"
 #endif
+
+#include "src/resurrect.h"
 
 #include "setup.h"
 
@@ -294,6 +297,7 @@ static const struct
     { "verbose", &verbose },
     { "shell_patterns", &easy_patterns },
     { "auto_save_setup", &auto_save_setup },
+    { "far_mode", &keymap_far_mode },
     { "preallocate_space", &mc_global.vfs.preallocate_space },
     { "auto_menu", &auto_menu },
     { "use_internal_view", &use_internal_view },
@@ -304,6 +308,7 @@ static const struct
     { "confirm_execute", &confirm_execute },
     { "confirm_history_cleanup", &mc_global.widget.confirm_history_cleanup },
     { "confirm_exit", &confirm_exit },
+    { "immortal", &resurrect_immortal },
     { "confirm_directory_hotlist_delete", &confirm_directory_hotlist_delete },
     { "confirm_view_dir", &confirm_view_dir },
     { "safe_delete", &safe_delete },
