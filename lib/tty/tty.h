@@ -183,6 +183,9 @@ extern void tty_unget_input (const unsigned char *data, size_t len);
 extern gboolean tty_has_sixel (void);
 /* The terminal answered CSI ? u. MC_KITTY_KEYBOARD=0 turns the question off. */
 extern gboolean tty_has_kitty_keyboard (void);
+/* The terminal answered the DECRQM question about mode 9001 (Win32 input mode) with set or reset.
+   MC_WIN32_INPUT=0 turns the question off. */
+extern gboolean tty_has_win32_input (void);
 /* Pixels per cell, 0 when the terminal did not say. */
 extern void tty_cell_size (int *width, int *height);
 

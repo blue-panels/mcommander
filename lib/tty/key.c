@@ -564,6 +564,18 @@ static int *pending_keys = NULL;
 
 static gboolean kitty_keyboard_active = FALSE;
 
+/* Win32 input mode: CSI Vk ; Sc ; Uc ; Kd ; Cs ; Rc _, one record per key press and release.
+   Bits of the control key state Cs, as the Windows console has them. */
+#define WIN32_CS_RIGHT_ALT  0x0001
+#define WIN32_CS_LEFT_ALT   0x0002
+#define WIN32_CS_RIGHT_CTRL 0x0004
+#define WIN32_CS_LEFT_CTRL  0x0008
+#define WIN32_CS_SHIFT      0x0010
+/* win32_key_code() gave the character back to the keyboard as UTF-8: read again */
+#define WIN32_KEY_REREAD (-2)
+
+static gboolean win32_input_active = FALSE;
+
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
     '0',
@@ -1480,6 +1492,125 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Turn a Win32 input mode record into the code a legacy terminal would give for the same key.
+   -1: no mc key (a release, a modifier on its own, a key mc has no code for). */
+
+static int
+win32_key_code (unsigned int vk, unsigned int uc, unsigned int kd, unsigned int cs)
+{
+    gboolean shift = (cs & WIN32_CS_SHIFT) != 0;
+    gboolean alt = (cs & (WIN32_CS_RIGHT_ALT | WIN32_CS_LEFT_ALT)) != 0;
+    gboolean ctrl = (cs & (WIN32_CS_RIGHT_CTRL | WIN32_CS_LEFT_CTRL)) != 0;
+    unsigned int key;
+    int mod = 0;
+
+    if (kd == 0)
+        return -1;
+
+    // Shift, Ctrl, Alt, Caps Lock, Windows keys, Num Lock, Scroll Lock: modifiers, no key
+    if (vk == 0x10 || vk == 0x11 || vk == 0x12 || vk == 0x14 || vk == 0x5B || vk == 0x5C
+        || vk == 0x90 || vk == 0x91 || (vk >= 0xA0 && vk <= 0xA5))
+        return -1;
+
+    // AltGr is Ctrl+Alt on Windows: with a character it is that character
+    if (ctrl && alt && uc >= 32 && uc != 127)
+        ctrl = alt = FALSE;
+
+    if (shift)
+        mod |= KEY_M_SHIFT;
+    if (alt)
+        mod |= KEY_M_ALT;
+    if (ctrl)
+        mod |= KEY_M_CTRL;
+
+    switch (vk)
+    {
+    case 0x25:
+        return mod | KEY_LEFT;
+    case 0x26:
+        return mod | KEY_UP;
+    case 0x27:
+        return mod | KEY_RIGHT;
+    case 0x28:
+        return mod | KEY_DOWN;
+    case 0x21:
+        return mod | KEY_PPAGE;
+    case 0x22:
+        return mod | KEY_NPAGE;
+    case 0x23:
+        return mod | KEY_END;
+    case 0x24:
+        return mod | KEY_HOME;
+    case 0x2D:
+        return mod | KEY_IC;
+    case 0x2E:
+        return mod | KEY_DC;
+    default:
+        break;
+    }
+
+    if (vk >= 0x70 && vk <= 0x7B)
+        return mod | KEY_F ((int) (vk - 0x70 + 1));
+
+    if (uc >= 32 && uc != 127)
+    {
+        char utf8[8];
+        gint len;
+
+        if (uc < 127)
+        {
+            // the character is already the shifted one; Ctrl makes it a control key below
+            if (!ctrl)
+                return (alt ? KEY_M_ALT : 0) | (int) uc;
+        }
+        else
+        {
+            // a character of another script goes back to the keyboard as UTF-8
+            if (ctrl || alt || (uc >= 0xD800 && uc <= 0xDFFF) || uc > 0x10FFFF)
+                return -1;
+
+            len = g_unichar_to_utf8 ((gunichar) uc, utf8);
+            tty_unget_input ((const unsigned char *) utf8, (size_t) len);
+            return WIN32_KEY_REREAD;
+        }
+    }
+
+    switch (vk)
+    {
+    case 0x08:
+        key = 127;
+        break;
+    case 0x09:
+        key = 9;
+        break;
+    case 0x0D:
+        key = 13;
+        break;
+    case 0x1B:
+        key = 27;
+        break;
+    case 0x20:
+        key = 32;
+        break;
+    default:
+        if (vk >= 'A' && vk <= 'Z')
+            key = vk + ('a' - 'A');
+        else if (vk >= '0' && vk <= '9')
+            key = vk;
+        else
+            return -1;
+        break;
+    }
+
+    // the rest is what the kitty keyboard protocol would have said for it
+    return kitty_key_code ('u', key, 0, 0,
+                           1 + (shift ? KITTY_MOD_SHIFT : 0) + (alt ? KITTY_MOD_ALT : 0)
+                               + (ctrl ? KITTY_MOD_CTRL : 0));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------------- */
 /* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
    Returns -1 for a sequence that has no mc key. */
 
@@ -1487,6 +1618,7 @@ static int
 kitty_read_csi (int c)
 {
     unsigned int field[2][3] = { { 0, 0, 0 }, { 0, 0, 0 } };
+    unsigned int win[6] = { 0, 0, 0, 0, 0, 0 };
     unsigned int f = 0, sub = 0;
     const size_t pending = (size_t) (seq_append - seq_buffer);
     size_t i;
@@ -1509,6 +1641,8 @@ kitty_read_csi (int c)
         {
             if (f < 2 && sub < 3 && field[f][sub] < 0x10FFFF)
                 field[f][sub] = field[f][sub] * 10 + (unsigned int) (ch - '0');
+            if (f < 6 && sub == 0 && win[f] < 0x10FFFF)
+                win[f] = win[f] * 10 + (unsigned int) (ch - '0');
         }
         else if (ch == ':')
             sub++;
@@ -1522,6 +1656,9 @@ kitty_read_csi (int c)
         else
             return -1;
     }
+
+    if (ch == '_')
+        return win32_input_active ? win32_key_code (win[0], win[2], win[3], win[4]) : -1;
 
     return kitty_key_code (ch, field[0][0], field[0][1], field[0][2], field[1][0]);
 }
@@ -2356,7 +2493,7 @@ nodelay_try_again:
             goto done;
         }
 
-        if (kitty_keyboard_active && kitty_csi_started (c))
+        if ((kitty_keyboard_active || win32_input_active) && kitty_csi_started (c))
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
@@ -2364,6 +2501,12 @@ nodelay_try_again:
             {
                 this = NULL;
                 return -1;
+            }
+            if (c == WIN32_KEY_REREAD)
+            {
+                // the character is in the keyboard's input again
+                this = NULL;
+                return get_key_code (no_delay);
             }
             goto done;
         }
@@ -2826,6 +2969,32 @@ disable_kitty_keyboard (void)
     printf (ESC_STR "[<u");
     fflush (stdout);
     kitty_keyboard_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+enable_win32_input (void)
+{
+    if (win32_input_active || !tty_has_win32_input ())
+        return;
+
+    printf (ESC_STR "[?9001h");
+    fflush (stdout);
+    win32_input_active = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+disable_win32_input (void)
+{
+    if (!win32_input_active)
+        return;
+
+    printf (ESC_STR "[?9001l");
+    fflush (stdout);
+    win32_input_active = FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
