@@ -239,6 +239,17 @@ enum
     CK_ScrollEnd,
     CK_CycleListingFormat,
     CK_QuickFilter,
+    // Far mode: the listing modes Ctrl-1 .. Ctrl-0 of Far Manager
+    CK_PanelListingMode1,
+    CK_PanelListingMode2,
+    CK_PanelListingMode3,
+    CK_PanelListingMode4,
+    CK_PanelListingMode5,
+    CK_PanelListingMode6,
+    CK_PanelListingMode7,
+    CK_PanelListingMode8,
+    CK_PanelListingMode9,
+    CK_PanelListingMode10,
 
     // dialog
     CK_Ok = 300L,

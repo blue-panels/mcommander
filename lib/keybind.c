@@ -254,6 +254,16 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (CdParentSmart, N_ ("Smart parent directory")),
     ADD_KEYMAP_NAME_DESC_FLAGS (CycleListingFormat, N_ ("Cycle listing format"),
                                 PANEL_FILTER_NAVIGATION),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode1, N_ ("Far listing mode 1")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode2, N_ ("Far listing mode 2")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode3, N_ ("Far listing mode 3")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode4, N_ ("Far listing mode 4")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode5, N_ ("Far listing mode 5")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode6, N_ ("Far listing mode 6")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode7, N_ ("Far listing mode 7")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode8, N_ ("Far listing mode 8")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode9, N_ ("Far listing mode 9")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode10, N_ ("Far listing mode 10")),
 
     // dialog
     ADD_KEYMAP_NAME (Ok),

@@ -800,6 +800,12 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
     { "PanelInfo", "ctrl-l" },
     { "PanelQuickView", "ctrl-q" },
     { "PanelTree", "ctrl-t" },
+    // Ctrl-F: the full name of the file under the cursor goes to the command line; Ctrl-A: the
+    // attributes of the file. Ctrl-X goes to the command line history, so the prefix of the
+    // extended commands moves to Alt-X
+    { "PutCurrentFullSelected", "ctrl-f; ctrl-shift-enter" },
+    { "ChangeMode", "ctrl-a" },
+    { "ExtendedKeyMap", "alt-x" },
     {
         NULL,
         NULL,
@@ -817,6 +823,34 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     { "SortByMTime", "ctrl-f5" },
     { "SortBySize", "ctrl-f6" },
     { "Sort", "ctrl-f12" },
+    // Ctrl-1 .. Ctrl-0: the listing modes of Far
+    { "PanelListingMode1", "ctrl-1" },
+    { "PanelListingMode2", "ctrl-2" },
+    { "PanelListingMode3", "ctrl-3" },
+    { "PanelListingMode4", "ctrl-4" },
+    { "PanelListingMode5", "ctrl-5" },
+    { "PanelListingMode6", "ctrl-6" },
+    { "PanelListingMode7", "ctrl-7" },
+    { "PanelListingMode8", "ctrl-8" },
+    { "PanelListingMode9", "ctrl-9" },
+    { "PanelListingMode10", "ctrl-0" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+/* The edit lines: the command line and the ones of the dialogs. Ctrl-E and Ctrl-X are the previous
+   and the next command of the history, Ctrl-Y deletes the line; the keys of the Emacs that they
+   take go to other keys, or are given up */
+static const global_keymap_ini_t far_input_keymap[] = {
+    { "End", "alt-gt; end; c1" },
+    { "HistoryPrev", "alt-p; ctrl-down; ctrl-e" },
+    { "HistoryNext", "alt-n; ctrl-up; ctrl-x" },
+    { "Clear", "ctrl-y" },
+    { "Yank", "alt-y" },
+    { "DeleteToWordBegin", "alt-backspace; ctrl-backspace" },
+    { "DeleteToWordEnd", "alt-d; ctrl-delete" },
     {
         NULL,
         NULL,
@@ -923,6 +957,7 @@ apply_far_mode_keymap (mc_config_t *keymap)
 
     create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER, far_filemanager_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_PANEL, far_panel_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_INPUT, far_input_keymap);
 #ifdef USE_INTERNAL_EDIT
     create_default_keymap_section (keymap, KEYMAP_SECTION_EDITOR, far_editor_keymap);
 #endif
