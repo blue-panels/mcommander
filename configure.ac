@@ -333,6 +333,9 @@ AC_CHECK_FUNCS([\
     realpath
 ])
 
+dnl Bionic has no getpwent and getgrent before Android 8 (API 26)
+AC_CHECK_FUNCS([getpwent getgrent])
+
 dnl getpt is a GNU Extension (glibc 2.1.x)
 AC_CHECK_FUNCS(posix_openpt, , [AC_CHECK_FUNCS(getpt)])
 AC_CHECK_FUNCS(grantpt, , [AC_CHECK_LIB(pt, grantpt)])

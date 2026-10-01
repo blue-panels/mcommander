@@ -307,6 +307,7 @@ filename_completion_function (const char *text, int state, input_complete_t flag
 /** We assume here that text[0] == '~' , if you want to call it in another way,
    you have to change the code */
 
+#ifdef HAVE_GETPWENT
 static char *
 username_completion_function (const char *text, int state, input_complete_t flags)
 {
@@ -339,6 +340,7 @@ username_completion_function (const char *text, int state, input_complete_t flag
     endpwent ();
     return NULL;
 }
+#endif
 
 /* --------------------------------------------------------------------------------------------- */
 /** We assume text [0] == '$' and want to have a look at text [1], if it is
@@ -1329,6 +1331,7 @@ try_complete (char *text, int *lc_start, int *lc_end, input_complete_t flags)
             *lc_start += state.r - state.word;
     }
 
+#ifdef HAVE_GETPWENT
     /* Starts with '~' and there is no slash in the word, then
        try completing this word as a username. */
     if (matches == NULL && *state.word == '~' && (state.flags & INPUT_COMPLETE_USERNAMES) != 0
@@ -1337,6 +1340,7 @@ try_complete (char *text, int *lc_start, int *lc_end, input_complete_t flags)
         SHOW_C_CTX ("try_complete:user_subst");
         matches = completion_matches (state.word, username_completion_function, state.flags);
     }
+#endif
 
     /* If this word is in a command position, then
        complete over possible command names, including aliases, functions,
