@@ -14,6 +14,7 @@
 
 extern gboolean mc_args__force_xterm;
 extern gboolean mc_args__nomouse;
+extern gboolean mc_args__mortal;
 extern gboolean mc_args__force_colors;
 extern gboolean mc_args__nokeymap;
 extern gboolean mc_args__mctree;

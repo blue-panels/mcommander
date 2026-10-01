@@ -220,6 +220,8 @@ void edit_goto_cmd (WEdit *edit);
 gboolean eval_marks (WEdit *edit, off_t *start_mark, off_t *end_mark);
 void edit_status (WEdit *edit, gboolean active);
 void edit_execute_key_command (WEdit *edit, long command, int char_for_insertion);
+/* A bracketed paste: the text goes in as one step for Undo, without auto indent. */
+void edit_paste_text (WEdit *edit, const GString *text);
 void edit_update_screen (WEdit *edit);
 void edit_save_size (WEdit *edit);
 gboolean edit_handle_move_resize (WEdit *edit, long command);

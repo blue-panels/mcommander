@@ -197,6 +197,34 @@ blocker requires an explicit migration from `app-misc/mc`:
 emerge app-misc/mcommander
 ```
 
+Termux is the terminal of Android, and `pkg install` takes its packages from the
+repository of `termux-packages`, which builds them with the Android NDK against
+Bionic, the libc of Android.  `packaging/termux/build.sh` is the recipe that
+repository wants, made from `build.sh.in` by `prepare.sh` like the others, with
+the version, the release archive and its SHA-256:
+
+```sh
+packaging/prepare.sh 6.1.0 dist/mcommander-6.1.0.tar.gz
+```
+
+What it submits is that file, as `packages/mcommander/build.sh` of a pull request
+to <https://github.com/termux/termux-packages>.  `packaging/termux/build-deb.sh`
+builds the package the way that repository does, in the Docker image of its
+package builder, and makes `mcommander_VERSION_ARCH.deb` for `aarch64`, `arm`,
+`x86_64` or `i686`:
+
+```sh
+packaging/termux/build-deb.sh aarch64 dist/mcommander-6.1.0.tar.gz
+```
+
+Without an archive it makes one from the checked-out commit.  The package is
+installed in Termux with `pkg install ./mcommander_6.1.0_aarch64.deb`, and
+`packaging/termux/smoke.sh termux-out` installs and runs the x86_64 one in
+`termux/termux-docker`.  The screen library is S-Lang, as in the other
+packages; Samba and the Mongo driver are not in Termux, so their panels are not
+built.  The `release` workflow builds `aarch64`, `arm` and `x86_64` and attaches
+them to the release; the `CI` workflow builds `aarch64` and tries `x86_64`.
+
 Gentoo is the one distribution the workflow does not build: that needs a full
 stage3 with a Portage snapshot, which costs more than the ebuild is worth.  It
 stays a manual check.

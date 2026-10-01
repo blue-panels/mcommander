@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -41,8 +42,10 @@
 #include "lib/mcconfig.h"
 #include "lib/util.h"
 #include "lib/event.h"
+#include "lib/tty/tty.h"  // tty_osc52_write()
 
 #include "lib/vfs/vfs.h"
+#include "lib/tty/key.h"  // the far2l clipboard
 
 #include "src/execute.h"
 
@@ -88,6 +91,69 @@ clip_info_drop_home (void)
     g_free (fname);
 }
 
+/* Put the clipfile on the terminal's clipboard with OSC 52; a file that is too long or a terminal
+   that does not take it leaves the clipfile as the only copy. */
+static void
+clipboard_file_to_osc52 (void)
+{
+    char *tmp, *contents = NULL;
+    gsize length = 0;
+
+    tmp = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
+    if (g_file_get_contents (tmp, &contents, &length, NULL))
+        (void) tty_osc52_write (contents, length);
+
+    g_free (contents);
+    g_free (tmp);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* With no clipboard_store command, a terminal with the far2l extensions gets the clipfile as
+   the clipboard: the terminal asks its user once and keeps the answer. FALSE when the terminal
+   has no far2l clipboard and nothing was done. */
+static gboolean
+clip_file_to_far2l (void)
+{
+    char *fname, *text = NULL;
+    gsize len = 0;
+
+    if (!tty_far2l_clipboard_available ())
+        return FALSE;
+
+    fname = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
+    if (g_file_get_contents (fname, &text, &len, NULL))
+        (void) tty_far2l_clipboard_set (text, len);
+    g_free (text);
+    g_free (fname);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The other way: with no clipboard_paste command the clipboard of a far2l terminal becomes the
+   clipfile. Nothing changes when the terminal has none, refuses, or holds no text. */
+static void
+clip_file_from_far2l (void)
+{
+    char *text = NULL;
+    size_t len = 0;
+
+    if (!tty_far2l_clipboard_available () || !tty_far2l_clipboard_get (&text, &len))
+        return;
+
+    {
+        char *fname = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
+
+        if (g_file_set_contents (fname, text, (gssize) len, NULL))
+        {
+            (void) chmod (fname, clip_open_mode);
+            clip_info_drop_home ();
+        }
+        g_free (fname);
+    }
+    g_free (text);
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
@@ -104,8 +170,16 @@ clipboard_file_to_ext_clip (const gchar *event_group_name, const gchar *event_na
     (void) init_data;
     (void) data;
 
-    if (clipboard_store_path == NULL || clipboard_store_path[0] == '\0')
+    // the far2l terminal, which was asked for its clipboard, goes before the OSC 52 of the terminal
+    if ((clipboard_store_path == NULL || clipboard_store_path[0] == '\0') && clip_file_to_far2l ())
         return TRUE;
+
+    if (clipboard_store_path == NULL || clipboard_store_path[0] == '\0')
+    {
+        // no external clipboard command: the terminal's own clipboard, through OSC 52
+        clipboard_file_to_osc52 ();
+        return TRUE;
+    }
 
     tmp = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
     cmd = g_strconcat (clipboard_store_path, " ", tmp, " 2>/dev/null", (char *) NULL);
@@ -134,7 +208,10 @@ clipboard_file_from_ext_clip (const gchar *event_group_name, const gchar *event_
     (void) data;
 
     if (clipboard_paste_path == NULL || clipboard_paste_path[0] == '\0')
+    {
+        clip_file_from_far2l ();
         return TRUE;
+    }
 
     p = mc_popen (clipboard_paste_path, TRUE, TRUE, NULL);
     if (p == NULL)

@@ -69,7 +69,9 @@ src/panel-plugins/shell-link/shelldef.h
 /packaging/rpm/mcommander.spec
 /packaging/arch/PKGBUILD
 /packaging/gentoo/mcommander-*.ebuild
+/packaging/termux/build.sh
 /dist/
+/termux-out/
 
 # The sandbox subjects that carry mc's own configuration: "config" above is
 # autotools' directory, not theirs.

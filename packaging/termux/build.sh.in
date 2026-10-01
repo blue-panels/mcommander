@@ -1,0 +1,52 @@
+# Recipe for the official Termux repository (termux/termux-packages,
+# packages/mcommander/build.sh): `pkg install mcommander` on Android.
+#
+# The version and the source are filled in by packaging/prepare.sh, like the
+# other recipes; packaging/termux/build-deb.sh builds the package with the
+# package builder of termux-packages (see packaging/README.md).
+TERMUX_PKG_HOMEPAGE=https://blue-panels.github.io/mcommander/
+TERMUX_PKG_DESCRIPTION="Twin-panel text-mode file manager with loadable panel plugins"
+TERMUX_PKG_LICENSE="GPL-3.0"
+TERMUX_PKG_LICENSE_FILE="COPYING"
+TERMUX_PKG_MAINTAINER="@blue-panels"
+TERMUX_PKG_VERSION="@VERSION@"
+TERMUX_PKG_SRCURL="@SRCURL@"
+TERMUX_PKG_SHA256="@SHA256@"
+TERMUX_PKG_AUTO_UPDATE=false
+TERMUX_PKG_DEPENDS="glib, libandroid-support, libarchive, libcurl, libmagic, libsqlite, libssh2, lua54, slang, which"
+TERMUX_PKG_RECOMMENDS="chafa"
+# Samba and the Mongo driver are not in Termux: those two panels are left out.
+# There is no X server to ask for the keyboard state, and no gpm.
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+--with-screen=slang
+--without-x
+--without-gpm-mouse
+--enable-lua-plugin=yes
+--enable-mctree-magic=yes
+--enable-panel-plugin-samba=no
+--enable-panel-plugin-mongo=no
+--enable-panel-plugin-ftp=yes
+--enable-panel-plugin-arcmc=yes
+--enable-panel-plugin-s3=yes
+--enable-panel-plugin-sqlite=yes
+--enable-panel-plugin-sftp=yes
+--enable-panel-plugin-shell-link=yes
+"
+
+termux_step_pre_configure() {
+	# The release archive is bootstrapped; a snapshot of the tree is not.
+	if [ ! -x ./configure ]; then
+		./autogen.sh
+	fi
+
+	# Android has no /bin and no /tmp: what the sources name as fixed paths is
+	# in the prefix here.
+	sed -i "s|\"/bin/|\"${TERMUX_PREFIX}/bin/|g; s|#! /bin/sh|#! ${TERMUX_PREFIX}/bin/sh|g" \
+		lib/shell.c lib/utilunix.c \
+		src/usermenu.c src/mcterm/mcterm.c src/filemanager/ext.c \
+		src/panel-plugins/docker/docker-cp-stream.c \
+		src/panel-plugins/mcstruct/slv_call.c
+	sed -i "s|\"/tmp\"|\"${TERMUX_PREFIX}/tmp\"|" lib/unixcompat.h
+	sed -i "s|\"/tmp/mc-bulk-|\"${TERMUX_PREFIX}/tmp/mc-bulk-|" \
+		src/panel-plugins/arcmc/arcmc.c
+}

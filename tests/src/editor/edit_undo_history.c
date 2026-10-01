@@ -242,6 +242,47 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A paste is inserted whole, without auto indent, and Undo takes it back in one step. */
+
+START_TEST (test_paste_is_one_undo_step)
+{
+    GString *text = g_string_new ("first\n  second\tthird\nlast");
+    const off_t before = test_edit->buffer.size;
+    off_t i;
+
+    test_insert_char ('x');
+    edit_options.return_does_auto_indent = TRUE;
+    edit_paste_text (test_edit, text);
+
+    ck_assert_int_eq (test_edit->buffer.size, before + 1 + (off_t) text->len);
+    for (i = 0; i < (off_t) text->len; i++)
+        ck_assert_int_eq (edit_buffer_get_byte (&test_edit->buffer, 1 + i), text->str[i]);
+
+    edit_execute_key_command (test_edit, CK_Undo, -1);
+    ck_assert_int_eq (test_edit->buffer.size, before + 1);
+    ck_assert_int_eq (edit_buffer_get_byte (&test_edit->buffer, 0), 'x');
+
+    g_string_free (text, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Bytes that would be keys are not run: what is left of them is text or nothing. */
+
+START_TEST (test_paste_runs_no_command)
+{
+    GString *text = g_string_new ("a\001b");
+
+    edit_paste_text (test_edit, text);
+    // Ctrl-A is a command in the editor, never a character of a paste
+    ck_assert_int_eq (test_edit->buffer.size, 2);
+    g_string_free (text, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -257,6 +298,8 @@ main (void)
     tcase_add_test (tc_core, test_preview_truncation_ascii);
     tcase_add_test (tc_core, test_utf8_char_count);
     tcase_add_test (tc_core, test_utf8_preview_truncation);
+    tcase_add_test (tc_core, test_paste_is_one_undo_step);
+    tcase_add_test (tc_core, test_paste_runs_no_command);
 
     return mctest_run_all (tc_core);
 }

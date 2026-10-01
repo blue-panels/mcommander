@@ -58,6 +58,8 @@
 #include "src/setup.h"
 #include "src/history.h"  // MC_HISTORY_ESC_TIMEOUT
 #include "src/execute.h"  // pause_after_run
+#include "src/args.h"     // mc_args__nokeymap
+#include "src/keymap.h"   // keymap_far_mode, keymap_load()
 #ifdef ENABLE_BACKGROUND
 #include "src/background.h"  // task_list
 #endif
@@ -524,6 +526,7 @@ about_box (void)
 {
     char *label_cp_display;
     char *label_cp_source;
+    char *label_input;
 
     char *version = g_strdup_printf ("%s %s", PACKAGE_NAME, mc_global.mc_version);
     char *package_copyright = mc_get_package_copyright ();
@@ -535,6 +538,8 @@ about_box (void)
     label_cp_source =
         g_strdup_printf (_ ("Selected source (file I/O) codepage: %s"), name_cp_source);
 
+    label_input = g_strdup_printf (_ ("Keyboard input: %s"), tty_input_protocol ());
+
     quick_widget_t quick_widgets[] = {
         QUICK_LABEL (version, NULL),
         QUICK_SEPARATOR (TRUE),
@@ -544,6 +549,7 @@ about_box (void)
         QUICK_SEPARATOR (TRUE),
         QUICK_LABEL (label_cp_display, NULL),
         QUICK_LABEL (label_cp_source, NULL),
+        QUICK_LABEL (label_input, NULL),
         QUICK_START_BUTTONS (TRUE, TRUE),
         QUICK_BUTTON (_ ("&OK"), B_ENTER, NULL, NULL),
         QUICK_END,
@@ -570,6 +576,7 @@ about_box (void)
     g_free (package_copyright);
     g_free (label_cp_display);
     g_free (label_cp_source);
+    g_free (label_input);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -587,6 +594,7 @@ configure_box (void)
     {
         char time_out[BUF_TINY] = "";
         char *time_out_new = NULL;
+        gboolean far_mode_old;
 
         quick_widget_t quick_widgets[] = {
             // clang-format off
@@ -625,7 +633,7 @@ configure_box (void)
                     QUICK_CHECKBOX (_ ("Sa&fe delete"), &safe_delete, NULL),
                     QUICK_CHECKBOX (_ ("Safe overwrite"), &safe_overwrite, NULL),       // w/o hotkey
                     QUICK_CHECKBOX (_ ("A&uto save setup"), &auto_save_setup, NULL),
-                    QUICK_SEPARATOR (FALSE),
+                    QUICK_CHECKBOX (_ ("Far Manager keys"), &keymap_far_mode, NULL),
                     QUICK_SEPARATOR (FALSE),
                 QUICK_STOP_GROUPBOX,
             QUICK_STOP_COLUMNS,
@@ -659,6 +667,8 @@ configure_box (void)
         quick_widgets[7].state = WST_DISABLED;
 #endif
 
+        far_mode_old = keymap_far_mode;
+
         if (quick_dialog (&qdlg) == B_ENTER)
         {
             if (time_out_new[0] == '\0')
@@ -666,8 +676,20 @@ configure_box (void)
             else
                 old_esc_mode_timeout = atoi (time_out_new);
         }
+        else
+            keymap_far_mode = far_mode_old;
 
         g_free (time_out_new);
+
+        // The keys of Far mode are part of the keymap: load it again the way the key bindings
+        // dialog does, so that the mode works at once
+        if (keymap_far_mode != far_mode_old)
+        {
+            keymap_save_old_maps ();
+            keymap_free ();
+            keymap_load (!mc_args__nokeymap);
+            keymap_refresh_widgets ();
+        }
     }
 }
 

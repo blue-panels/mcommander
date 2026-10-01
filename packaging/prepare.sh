@@ -13,6 +13,7 @@
 #   packaging/rpm/mcommander.spec        from mcommander.spec.in
 #   packaging/arch/PKGBUILD             from PKGBUILD.in
 #   packaging/gentoo/mcommander-VERSION.ebuild from mcommander.ebuild.in
+#   packaging/termux/build.sh           from build.sh.in
 #
 # Both changelogs are meant for a real upload, so their entries come from the
 # annotated tag messages and their dates from the tags themselves: the same
@@ -62,8 +63,10 @@ test -n "$maintainer" || die "cannot read Maintainer from debian/control"
 if test -n "$archive"; then
     test -f "$archive" || die "no such archive: $archive"
     checksum=$(b2sum "$archive" | cut -d' ' -f1)
+    sha256=$(sha256sum "$archive" | cut -d' ' -f1)
 else
     checksum=SKIP
+    sha256=SKIP_CHECKSUM
 fi
 
 tags=$(git tag --list 'v*' --sort=-version:refname 2>/dev/null || true)
@@ -213,6 +216,12 @@ sed -e "s/@VERSION@/$version/g" packaging/rpm/mcommander.spec.in |
 sed -e "s/@VERSION@/$version/g" -e "s/@B2SUMS@/$checksum/g" \
     packaging/arch/PKGBUILD.in > packaging/arch/PKGBUILD
 
+# Termux wants a SHA-256, and the source where a user of the repository gets it.
+sed -e "s|@VERSION@|$version|g" \
+    -e "s|@SRCURL@|https://github.com/blue-panels/mcommander/releases/download/v$version/mcommander-$version.tar.gz|" \
+    -e "s|@SHA256@|$sha256|g" \
+    packaging/termux/build.sh.in > packaging/termux/build.sh
+
 rm -f packaging/gentoo/mcommander-*.ebuild
 cp packaging/gentoo/mcommander.ebuild.in "packaging/gentoo/mcommander-$version.ebuild"
 
@@ -221,3 +230,4 @@ echo "  debian/changelog ($distribution)"
 echo "  packaging/rpm/mcommander.spec"
 echo "  packaging/arch/PKGBUILD (b2sums: $checksum)"
 echo "  packaging/gentoo/mcommander-$version.ebuild"
+echo "  packaging/termux/build.sh (sha256: $sha256)"
