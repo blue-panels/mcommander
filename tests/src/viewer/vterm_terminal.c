@@ -1570,6 +1570,56 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_far2l_extensions_are_asked_for_and_given_up)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 5, 40);
+    mcview_vterm_reset (vt);
+
+    // the terminal mc runs in has no extensions: no answer, no mode, and no text of the APC drawn
+    ck_assert_ptr_null (reply_to (vt, "\033_far2l1\033\\"));
+    ck_assert (!mcview_vterm_far2l_active (vt));
+    FEED (vt, "x");
+    ck_assert_uint_eq (cell_ch (vt, 0, 0), 'x');
+    ck_assert_ptr_null (mcview_vterm_take_apc (vt));
+
+    mcview_vterm_set_far2l (vt, TRUE);
+    ck_assert_str_eq (reply_to (vt, "\033_far2l1\033\\"), "\033_far2lok\033\\");
+    ck_assert (mcview_vterm_far2l_active (vt));
+    ck_assert_str_eq (reply_to (vt, "\033_far2l1\a"), "\033_far2lok\033\\");
+
+    // what else it says on the channel is not for the screen
+    FEED (vt, "\033_f2l:AAAA\033\\y\033_far2l1234567890123456789\033\\z");
+    ck_assert (mcview_vterm_far2l_active (vt));
+    ck_assert_uint_eq (cell_ch (vt, 0, 1), 'y');
+    ck_assert_uint_eq (cell_ch (vt, 0, 2), 'z');
+
+    FEED (vt, "\033_far2l0\033\\");
+    ck_assert (!mcview_vterm_far2l_active (vt));
+
+    // the host is told of each one that came whole, in order, the far2l1 that was answered included
+    {
+        static const char *const told[] = { "far2l1", "far2l1", "f2l:AAAA",
+                                            "far2l1234567890123456789", "far2l0" };
+        guint i;
+
+        for (i = 0; i < G_N_ELEMENTS (told); i++)
+        {
+            char *apc = mcview_vterm_take_apc (vt);
+
+            ck_assert_str_eq (apc, told[i]);
+            g_free (apc);
+        }
+        ck_assert_ptr_null (mcview_vterm_take_apc (vt));
+    }
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_cursor_position_is_reported)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -1750,6 +1800,32 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_bracketed_paste_mode_is_tracked)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 5, 20);
+    mcview_vterm_reset (vt);
+
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+    FEED (vt, "\033[?2004h");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    // other private modes do not touch it
+    FEED (vt, "\033[?1h\033[?7l");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    FEED (vt, "\033[?2004l");
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+
+    FEED (vt, "\033[?2004h");
+    mcview_vterm_reset (vt);
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_fish_startup_leaves_the_prompt_plain)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -1802,6 +1878,131 @@ START_TEST (test_sgr_after_osc_and_dcs)
     ck_assert_ptr_nonnull (cell);
     ck_assert_uint_eq (cell->ch, 'b');
     ck_assert (cell->attr.bold);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_osc52_sets_the_clipboard_text)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+    gsize len = 99;
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    ck_assert_ptr_null (mcview_vterm_osc52_text (vt, &len));
+    ck_assert_uint_eq (len, 0);
+
+    FEED (vt, "\033]52;c;aGVsbG8=\007");
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
+    ck_assert_str_eq (mcview_vterm_osc52_text (vt, &len), "hello");
+    ck_assert_uint_eq (len, 5);
+
+    // the ST terminator and other targets
+    FEED (vt, "\033]52;pc;d29ybGQ=\033\\");
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 2);
+    ck_assert_str_eq (mcview_vterm_osc52_text (vt, &len), "world");
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_osc52_is_never_read_or_cleared)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+    gsize len = 0;
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "\033]52;c;eA==\007");
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
+
+    // a query is not answered and does not touch what is there; nor do an empty payload,
+    // something that is not base64, or a sequence with no payload at all
+    FEED (vt, "\033]52;c;?\007");
+    FEED (vt, "\033]52;c;\007");
+    FEED (vt, "\033]52;c;@@@@\007");
+    FEED (vt, "\033]52;c\007");
+    FEED (vt, "\033]52\007");
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
+    ck_assert_str_eq (mcview_vterm_osc52_text (vt, &len), "x");
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_osc52_payload_is_longer_than_the_osc_buffer)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+    gchar *text = g_strnfill (5000, 'a');
+    gchar *b64 = g_base64_encode ((const guchar *) text, 5000);
+    gchar *seq = g_strconcat ("\033]52;c;", b64, "\007", (char *) NULL);
+    gsize len = 0;
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    feed_bytes (vt, seq, strlen (seq));
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
+    ck_assert_str_eq (mcview_vterm_osc52_text (vt, &len), text);
+    ck_assert_uint_eq (len, 5000);
+
+    g_free (seq);
+    g_free (b64);
+    g_free (text);
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_osc52_over_the_limit_is_dropped_whole)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+    gchar *payload = g_strnfill (100004, 'A');
+    gchar *seq = g_strconcat ("\033]52;c;", payload, "\007", (char *) NULL);
+    gsize len = 0;
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    feed_bytes (vt, seq, strlen (seq));
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 0);
+    ck_assert_ptr_null (mcview_vterm_osc52_text (vt, &len));
+
+    // and what comes next is read as usual
+    FEED (vt, "\033]52;c;eA==\007");
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
+    ck_assert_str_eq (mcview_vterm_osc52_text (vt, &len), "x");
+
+    g_free (seq);
+    g_free (payload);
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_osc52_leaves_the_other_osc_alone)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "\033]7;file:///tmp\007\033]52;c;eA==\007\033]133;A\007");
+    ck_assert_uint_eq (mcview_vterm_osc7_generation (vt), 1);
+    ck_assert_str_eq (mcview_vterm_osc7_raw (vt), "7;file:///tmp");
+    ck_assert_uint_eq (mcview_vterm_osc133_generation (vt), 1);
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
 
     mcview_vterm_free (vt);
 }
@@ -1865,6 +2066,7 @@ main (void)
     tcase_add_test (tc_core, test_erase_to_end_of_screen_takes_the_pictures_below);
     tcase_add_test (tc_core, test_oversized_sixel_is_dropped_whole);
     tcase_add_test (tc_core, test_xtgettcap_is_still_answered);
+    tcase_add_test (tc_core, test_far2l_extensions_are_asked_for_and_given_up);
     tcase_add_test (tc_core, test_sixel_terminal_says_so_when_asked);
     tcase_add_test (tc_core, test_cursor_position_is_reported);
     tcase_add_test (tc_core, test_sixel_keeps_only_what_sixel_is_made_of);
@@ -1874,8 +2076,14 @@ main (void)
     tcase_add_test (tc_core, test_a_screen_made_taller_brings_the_pictures_down_with_the_rows);
     tcase_add_test (tc_core, test_dec_graphics_letters_draw_lines);
     tcase_add_test (tc_core, test_shift_out_prints_from_g1);
+    tcase_add_test (tc_core, test_bracketed_paste_mode_is_tracked);
     tcase_add_test (tc_core, test_fish_startup_leaves_the_prompt_plain);
     tcase_add_test (tc_core, test_sgr_after_osc_and_dcs);
+    tcase_add_test (tc_core, test_osc52_sets_the_clipboard_text);
+    tcase_add_test (tc_core, test_osc52_is_never_read_or_cleared);
+    tcase_add_test (tc_core, test_osc52_payload_is_longer_than_the_osc_buffer);
+    tcase_add_test (tc_core, test_osc52_over_the_limit_is_dropped_whole);
+    tcase_add_test (tc_core, test_osc52_leaves_the_other_osc_alone);
 
     return mctest_run_all (tc_core);
 }

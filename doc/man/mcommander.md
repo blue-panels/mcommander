@@ -63,6 +63,10 @@ xterm-capable terminals (tmux/screen).
 *--nokeymap*
 : Don't load key bindings from any file, use default hardcoded keys.
 
+*--mortal*
+: Exit when the terminal is lost, instead of waiting for a new one. See
+[Lost terminal](#lost-terminal).
+
 *-P file, --printwd=file*
 : Print the last working directory to the specified file.  This option is
 not meant to be used directly.  Instead, it's used from a special shell
@@ -190,6 +194,42 @@ down the Shift key.
 
 <!-- help:break -->
 
+# Lost terminal <a id="lost-terminal"></a>
+
+When the terminal M-Commander runs in is lost (the window is closed, the
+connection over SSH drops), M-Commander does not exit. It waits, with
+everything it was doing, for a new terminal.
+
+Start
+**mcommander**
+in another terminal with the same
+**TERM**
+and it lists the M-Commanders that wait, each with the directory it was in.
+The number of one of them brings it to the new terminal, where it goes on from
+the screen it had; Enter starts a new M-Commander as usual.
+The command that took the old one over stays until it finishes, passes the
+size changes of the window and the interrupt key to it, and exits with its
+exit code. The terminal is asked what it can do again, as at the start.
+
+A waiting M-Commander is an ordinary process; stop it with
+**kill**
+if it is not needed. Its files are in
+*$XDG_RUNTIME_DIR/mc-resurrect*, or, with no such variable, in
+*mc-resurrect-UID*
+of the temporary directory, and are only open to the user.
+
+The option
+**--mortal**,
+or
+*immortal=false*
+in the
+*Midnight-Commander*
+section of the ini file, turns this off: M-Commander exits with its terminal.
+It is also off on the Linux console, in the terminal of another M-Commander,
+and in the editor and the viewer started alone.
+
+<!-- help:break -->
+
 # Keys
 
 Some commands in M-Commander involve the use of the
@@ -314,6 +354,197 @@ which is read last and needs no option:
 ```
 ln -s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
 ```
+
+## Far mode <a id="far-mode"></a>
+
+M-Commander can take the panel keys of Far Manager over its own. The mode is
+for people who come from Far and want their fingers to find the same keys; it
+is off by default, and nothing changes for anybody who does not turn it on.
+
+Turn it on with the
+*Far Manager keys*
+check box of the
+[Configuration](#configuration)
+dialog in the
+**Options**
+menu, or set
+**far_mode=true**
+in the
+**[Midnight-Commander]**
+section of
+**~/.config/mc6/ini**.
+The keys change at once, and the setting is kept with the rest of the setup.
+The mode is a layer over the keymap: it goes over the built-in keys and over
+the
+**keymap.ini**
+files of the system, and under the
+**keymap.ini**
+of the user, so the user can still change any key by
+[hand](#keys_redefine).
+
+The mode covers the directory panels, the editor, the viewer, the command
+line, the edit lines of the dialogs and a few keys of the dialogs
+themselves. These are the keys that the mode gives to the panels, with what
+each of them replaces:
+
+**Alt-F7**
+: find file. Alt-? keeps working.
+
+**Alt-F8**
+: the history of the command line. Alt-h keeps working.
+
+**Alt-F11**
+: the history of the viewed and edited files. Alt-Shift-e keeps working.
+
+**Alt-F12**
+: the history of the directories. Alt-Shift-h keeps working.
+
+**Ctrl-F3, Ctrl-F4, Ctrl-F5, Ctrl-F6**
+: sort the panel by name, by extension, by modification time and by size.
+Far reverses the order when the same key is pressed twice; so does
+M-Commander.
+
+**Ctrl-F7, Ctrl-F8, Ctrl-F9, Ctrl-F11**
+: keep the files unsorted, sort them by the time of change (Far has the
+creation time there, which a Unix file system does not keep), by the time of
+access and by the owner. Ctrl-F10, the sort by descriptions, is not bound:
+M-Commander has no descriptions.
+
+**Ctrl-F12**
+: the sort order menu.
+
+**Ctrl-L, Ctrl-Q, Ctrl-T**
+: the information panel, the quick view panel and the tree panel. In the
+panels Ctrl-L stops redrawing the screen (it still does in the dialogs), and
+Ctrl-T stops tagging a file; Insert tags it, as it does in Far.
+
+**Ctrl-1 to Ctrl-9, Ctrl-0**
+: the listing modes of Far: brief (three columns of names), medium (two
+columns), full (name, size and time), wide (name and size), detailed (with the
+times of access and change and the permissions), names alone (Ctrl-6) and
+names with the modification time (Ctrl-7), which stand for the descriptions
+that M-Commander does not have, owners, links, and the long listing of
+M-Commander for Ctrl-0. The modes are fixed and do not touch the list of
+[panel modes](#panel-modes) of the user.
+
+**Ctrl-A**
+: the attributes of the file, which is the permission dialog (chmod). In the
+command line Ctrl-A no longer moves to the beginning of the line; Home does.
+
+**Ctrl-F**
+: puts the full name of the file under the cursor into the command line
+(Ctrl-Shift-Enter does it too). Ctrl-Enter puts the name alone, as it does in
+the mode off.
+
+**Ctrl-X**
+: is the next command of the history, see below. The prefix of the extended
+commands, which Ctrl-X was, moves to Alt-X.
+
+**Ctrl-\\ (control-backslash)**
+: goes to the root directory of the panel: of the file system, of the archive
+or of the remote host that the panel shows (a panel of a plugin stays where it
+is). The directory hotlist, which was Ctrl-\\, moves to Alt-\\.
+
+**Shift-gray plus, Shift-gray minus**
+: select all the files and unselect all of them (the gray keys alone ask for a
+pattern, as they do without the mode). A terminal sends them only when it
+reports modified keys, see below.
+
+**Ctrl-Shift-1 to Ctrl-Shift-0, Alt-1 to Alt-0**
+: remember the directory of the panel in one of ten folder shortcuts, and go to
+it. Far goes to a shortcut with the right Ctrl and the digit, which a terminal
+cannot tell from the left Ctrl (Ctrl and a digit is the listing mode), so the
+go keys are Alt and the digit; they can be changed in keymap.ini (actions
+SetFolderShortcut0 to 9 and GoFolderShortcut0 to 9). The shortcuts are in the
+FarFolderShortcuts group of the setup file and are saved with it. Ctrl-Shift
+with a digit is sent by a terminal of the kitty keyboard protocol only.
+
+**Ctrl-[, Ctrl-]**
+: put the path of the left and of the right panel into the command line. Ctrl-]
+works everywhere; a terminal sends Ctrl-[ as Esc, so it is told apart only in a
+terminal of the kitty keyboard protocol.
+
+**Alt with a character, Alt-Shift with a character**
+: the fast find of Far: the panel goes to the file whose name begins with the
+characters typed while Alt is held down, and Ctrl-Enter and Ctrl-Shift-Enter go
+on to the next and to the previous file that matches. The search ends with Esc
+or with a key that is not a character, as the quick search of M-Commander does.
+Every Alt key that has an action in M-Commander keeps it (Alt-h, Alt-a and so
+on), and so does every Alt key of the command line editing while there is text
+in the command line, but once the search has begun all Alt keys go to it; the
+Alt-Shift keys of the same letters are free for it when the Alt keys are
+taken. The quick search of M-Commander (Ctrl-s and Alt-s) works as before.
+
+**Ctrl-G**
+: applies a command to the files: it asks for a command and runs it for every
+tagged file, or for the file under the cursor if none is tagged. In the
+command, %f (or %p) is the name of the file, %n the name without the extension
+and %x the extension, all quoted for the shell; the other macros of the user
+menu work as they do there.
+
+**Alt-F6, Alt-F10, Shift-F9, Shift-F10**
+: create a hard link, show the tree of directories, save the setup and choose
+the menu item chosen last (Shift-F7, which was it, still does).
+
+**In the command line and in the edit lines of the dialogs** (they all share
+the keys):
+Ctrl-E is the previous command of the history and Ctrl-X the next one, as in
+Far, and Ctrl-Y deletes the whole line. Ctrl-Backspace and Ctrl-Delete delete a
+word to the left and to the right. The keys these took are given away: Ctrl-E
+no longer moves to the end of the line (End does), and Yank, which was Ctrl-Y,
+is Alt-y.
+
+**In the editor** (as the far2l help lists them):
+Ctrl-F7 replaces, and F4, which replaced text, quits the editor together with
+F10 and Esc; Alt-F8 goes to a line (Alt-l keeps working); Ctrl-F3 shows the
+line numbers; Alt-F11 shows the history of the edited files; Ctrl-Z undoes,
+Ctrl-U deselects the block (it undid before) and Ctrl-A selects all. Ctrl-F7
+no longer continues the search, Shift-F7 does, and Ctrl-Z no longer moves a
+word left, Ctrl-Left does.
+
+**In the viewer:**
+Alt-F8 goes to a position (F5 keeps working), Alt-F7 continues the search in the
+opposite direction and Alt-F11 shows the history of the viewed files.
+
+**In the dialogs:**
+Ctrl-Enter does what Enter does when no button has the focus, which is the
+default action of the dialog, and the numeric plus and minus (and the plus and
+the minus of the main keyboard) switch the check box that has the focus on and
+off, where Space switches it over. PgDn gives the focus to the default button
+(a list that has the focus keeps PgDn for itself). Shift-Enter in the edit line of a
+dialog inserts the name of the file under the cursor of the active panel,
+Ctrl-Shift-Enter the one of the passive panel (not in the command line, where
+Ctrl-Shift-Enter keeps its meaning; a terminal sends them only when it reports
+modified keys, see below). Esc, F10, Tab, the arrow keys and the
+hotkeys of the buttons are the same in Far and in M-Commander. Ctrl-Enter is
+sent by a terminal only when it reports modified keys (see below).
+
+The keys that M-Commander shares with Far are the same with or without the
+mode: F1 to F10, Shift-F4, Shift-F5, Shift-F6 and Shift-F8, Tab, Ctrl-U,
+Ctrl-R, Ctrl-O, Ctrl-F1 and Ctrl-F2, Alt-F1 and Alt-F2, Ctrl-PgUp and Ctrl-PgDn,
+Insert and the numeric plus, minus and asterisk.
+
+What differs from Far, and stays so for now: F3 in the editor still marks a
+block instead of wrapping lines, the clipboard keys Ctrl-C, Ctrl-V and Ctrl-X
+of the editor are not bound (Ctrl-Insert, Shift-Insert and Shift-Delete work),
+and the viewer keeps its own F8, F9, Space and plus and minus keys; the panels
+keep the M-Commander colors and have no descriptions of the files (Ctrl-6 and
+Ctrl-7 show other columns, see above), Ctrl-Z and Ctrl-M
+are not bound, nor is Ctrl-H for the hidden files (a terminal sends Backspace
+as Ctrl-H, and Enter as Ctrl-M, and M-Commander cannot tell the two apart;
+Alt-. shows and hides the hidden files, as it does without the mode), and Ctrl-, does
+not switch the panel layout (a terminal sends it as Ctrl-L, which shows the
+information panel in this mode); Alt-, does. Alt with a character is the fast
+find only where no action of M-Commander has the key, see above, and the fast
+find takes no characters that are not Latin-1. The dialogs keep their own keys,
+apart from the edit lines, Ctrl-Enter and the check boxes: M-Commander has no
+Far key for moving a dialog, and the mouse is not part of the mode.
+
+Some keys of the mode (Ctrl with a digit, with a comma, with Enter or with a function key) are sent by a
+terminal only when it reports modified keys, as xterm and the terminals that speak the kitty keyboard protocol do.
+In a terminal that does not, the key arrives as another one or does not arrive
+at all, and nothing is lost: every action is also in the menus, and the key it
+had before the mode is still bound where the list above says so.
 
 ## Miscellaneous Keys
 
@@ -2047,6 +2278,10 @@ This option is disabled by default.
 If this option is enabled, when you exit M-Commander, the
 configurable options of M-Commander are saved in the
 ~/.config/mc6/ini file.
+
+*Far Manager keys.*
+If this option is enabled, the panels answer to the keys of Far Manager; see
+[Far mode](#far-mode). This option is disabled by default.
 
 ### Layout
 

@@ -91,6 +91,9 @@ gboolean panel_mode_validate (const char *types, const char *widths, char **erro
  * No-op for plugin panels (they control their own columns). */
 void panel_apply_mode (WPanel *panel, const panel_mode_t *mode);
 
+/* Far mode: apply the n-th (1..10) listing mode of Far Manager, the one of Ctrl-1 .. Ctrl-0. */
+void panel_apply_far_listing (WPanel *panel, guint n);
+
 /* Switcher dialog (Left/Right menu, Alt-t): a bare list; Enter applies the
  * selected mode to the panel. */
 void panel_modes_cmd (WPanel *panel);

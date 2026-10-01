@@ -107,7 +107,9 @@ edition_post_exec (void)
     channels_up ();
     enable_mouse ();
     enable_bracketed_paste ();
+    enable_far2l_input ();
     enable_kitty_keyboard ();
+    enable_win32_input ();
     if (mc_global.tty.alternate_plus_minus)
         application_keypad_mode ();
 }
@@ -128,7 +130,9 @@ edition_pre_exec (void)
     channels_down ();
     disable_mouse ();
     disable_bracketed_paste ();
+    disable_win32_input ();
     disable_kitty_keyboard ();
+    disable_far2l_input ();
 
     tty_reset_shell_mode ();
     tty_keypad (FALSE);
@@ -480,7 +484,9 @@ toggle_terminal (void)
     channels_down ();
     disable_mouse ();
     disable_bracketed_paste ();
+    disable_win32_input ();
     disable_kitty_keyboard ();
+    disable_far2l_input ();
     if (clear_before_exec)
         tty_clear_screen ();
     if (mc_global.tty.alternate_plus_minus)
@@ -521,7 +527,9 @@ toggle_terminal (void)
 
     enable_mouse ();
     enable_bracketed_paste ();
+    enable_far2l_input ();
     enable_kitty_keyboard ();
+    enable_win32_input ();
     channels_up ();
     if (mc_global.tty.alternate_plus_minus)
         application_keypad_mode ();

@@ -811,6 +811,23 @@ input_execute_cmd (WInput *in, long command)
     case CK_Paste:
         ins_from_clip (in);
         break;
+    case CK_PutPanelFile:
+    case CK_PutOtherPanelFile:
+    {
+        // Far mode: the name of the file under the cursor of a panel goes to the edit line of a
+        // dialog; nothing happens (the key goes on to the file manager) for the command line
+        ev_panel_file_name_t ev = { .passive = (command == CK_PutOtherPanelFile), .name = NULL };
+
+        mc_event_raise (MCEVENT_GROUP_FILEMANAGER, "panel_get_current_file_name", &ev);
+        if (ev.name == NULL)
+            res = MSG_NOT_HANDLED;
+        else
+        {
+            input_insert (in, ev.name, FALSE);
+            g_free (ev.name);
+        }
+    }
+    break;
     case CK_HistoryPrev:
         hist_prev (in);
         break;
@@ -1015,6 +1032,28 @@ input_store_line_or_files (const char *line)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A paste for an input line: line breaks and tabs become spaces, so a paste of several lines
+   is one line and does not submit the input, and the breaks at its end are dropped. */
+static cb_ret_t
+input_paste (WInput *in, const GString *text)
+{
+    GString *line = g_string_new_len (text->str, (gssize) text->len);
+    size_t i;
+
+    while (line->len > 0 && (line->str[line->len - 1] == '\n' || line->str[line->len - 1] == '\r'))
+        g_string_truncate (line, line->len - 1);
+    for (i = 0; i < line->len; i++)
+        if ((unsigned char) line->str[i] < ' ' || line->str[i] == '\x7f')
+            line->str[i] = ' ';
+
+    if (line->len > 0)
+        input_insert (in, line->str, FALSE);
+    g_string_free (line, TRUE);
+    return MSG_HANDLED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The clipboard as one line for an input line: line breaks and other control characters become
    spaces. Over INPUT_CLIP_ASK_SIZE the user is asked first. NULL when there is nothing or the
    user declined. Caller frees. */
@@ -1145,6 +1184,9 @@ input_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
             widget_set_state (WIDGET (in->label), WST_DISABLED, widget_get_state (w, WST_DISABLED));
         return MSG_HANDLED;
 
+    case MSG_PASTE:
+        return input_paste (in, (const GString *) data);
+
     case MSG_KEY:
         if (parm == XCTRL ('q'))
         {
@@ -1245,8 +1287,10 @@ input_handle_char (WInput *in, int key)
 
         if (command != CK_Complete)
             input_complete_free (in);
-        input_execute_cmd (in, command);
-        v = MSG_HANDLED;
+        v = input_execute_cmd (in, command);
+        // only the commands that can have nothing to do pass the key on
+        if (command != CK_PutPanelFile && command != CK_PutOtherPanelFile)
+            v = MSG_HANDLED;
         /* if in->first == TRUE and history or completion window was cancelled,
            keep "first" state */
         keep_first = in->first && (command == CK_History || command == CK_Complete);

@@ -1,6 +1,13 @@
 SUBDIRS = ext.d
 
+# mcommander run in pseudo-terminals: a lost terminal is taken over by a new one
+TESTS = resurrect.py
+AM_TESTS_ENVIRONMENT = \
+	MC_BIN='$(abs_top_builddir)/src/mcommander'; export MC_BIN; \
+	MC_DATADIR='$(abs_top_srcdir)/misc'; export MC_DATADIR;
+
 EXTRA_DIST = \
+	resurrect.py \
 	docker/glib-api/Dockerfile \
 	docker/README.md \
 	docker/sandbox.sh \

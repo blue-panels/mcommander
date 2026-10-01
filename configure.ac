@@ -250,7 +250,7 @@ dnl ############################################################################
 AC_CHECK_HEADERS([string.h memory.h limits.h malloc.h \
     utime.h sys/statfs.h sys/vfs.h \
     sys/select.h sys/ioctl.h stropts.h arpa/inet.h \
-    sys/socket.h sys/inotify.h sys/timerfd.h])
+    sys/socket.h sys/un.h poll.h sys/inotify.h sys/timerfd.h])
 dnl This macro is redefined in m4.include/gnulib/sys_types_h.m4
 dnl   to work around a buggy version in autoconf <= 2.69.
 AC_HEADER_MAJOR
@@ -285,6 +285,10 @@ AC_CHECK_TYPE([minor_t], [unsigned int])
 AC_STRUCT_ST_BLOCKS
 AC_CHECK_MEMBERS([struct stat.st_blksize, struct stat.st_rdev, struct stat.st_mtim, struct stat.st_mtimespec, struct stat.st_mtimensec])
 gl_STAT_SIZE
+
+dnl Passing the terminal to a new mc (src/resurrect.c) needs descriptors sent over a socket.
+AC_CHECK_MEMBERS([struct msghdr.msg_control],,, [[#include <sys/types.h>
+#include <sys/socket.h>]])
 
 AC_STRUCT_DIRENT_D_TYPE
 

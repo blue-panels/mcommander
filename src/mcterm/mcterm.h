@@ -9,6 +9,7 @@
 #include "lib/widget.h"
 #include "lib/keybind.h"
 #include "lib/tty/tty.h"
+#include "lib/tty/far2l.h"
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
@@ -93,9 +94,21 @@ cb_ret_t mcterm_query_key (WMcTerm *t, int key);
 void mcterm_set_typing_elsewhere (WMcTerm *t, gboolean elsewhere);
 /* Whether some of the output is marked, for Store to take. */
 gboolean mcterm_mark_active (const WMcTerm *t);
+/* Whether a program in the terminal has drop reception bound, so that a drop on the outer terminal
+   can be passed on to it. */
+gboolean mcterm_far2l_wants_drop (const WMcTerm *t);
+/* Pass a drop on the outer terminal on to the program at the cell it landed on. TRUE: the terminal
+   has taken the offer and will close it; FALSE: it is the caller's still. */
+gboolean mcterm_far2l_take_drop (WMcTerm *t, const far2l_drop_t *drop);
+
 /* Type @text into the shell. FALSE when the shell is gone or took none of it for a second;
    what it took by then stays on its line. */
 gboolean mcterm_send_text (WMcTerm *t, const char *text);
+/* Give the program a paste. It goes as one block in ESC[200~ ... ESC[201~ when the program
+   has asked for that; otherwise the lines are joined into one, so that no line runs by itself. */
+gboolean mcterm_send_paste (WMcTerm *t, const char *text, size_t len);
+/* The bytes that @mcterm_send_paste writes for @text; the caller frees them. */
+char *mcterm_paste_bytes (const char *text, size_t len, gboolean bracketed, size_t *out_len);
 
 /* Called while the master has output to read; FALSE when the fd is gone. */
 typedef gboolean (*mcterm_pty_drain_fn) (int fd, void *data);
@@ -318,10 +331,31 @@ mcterm_mark_active (const WMcTerm *t)
     return FALSE;
 }
 static inline gboolean
+mcterm_far2l_wants_drop (const WMcTerm *t)
+{
+    (void) t;
+    return FALSE;
+}
+static inline gboolean
+mcterm_far2l_take_drop (WMcTerm *t, const far2l_drop_t *drop)
+{
+    (void) t;
+    (void) drop;
+    return FALSE;
+}
+static inline gboolean
 mcterm_send_text (WMcTerm *t, const char *text)
 {
     (void) t;
     (void) text;
+    return FALSE;
+}
+static inline gboolean
+mcterm_send_paste (WMcTerm *t, const char *text, size_t len)
+{
+    (void) t;
+    (void) text;
+    (void) len;
     return FALSE;
 }
 
