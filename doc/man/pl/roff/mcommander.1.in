@@ -4086,6 +4086,17 @@ najstarszemu wierszowi i wraca do najnowszego, tak jak szuka
 \fBless\fP
 i tak jak było wcześniej. Domyślnie "down".
 
+.TP
+\fIclipboard_write\fP
+Czy program w terminalu może umieścić tekst w schowku sekwencją OSC 52, tak
+jak robią to vim, tmux albo sesja ssh. Tekst trafia tam, gdzie kopia z
+edytora: do pliku schowka i do polecenia z
+\fIclipboard_store\fP\&.
+Program nigdy nie może w ten sposób odczytać schowka. Domyślnie "false":
+każde wyjście w terminalu, także plik wypisany przez
+\fBcat\fP,
+mogłoby zmienić schowek.
+
 
 .SH Baza danych terminali (Terminal databases)
 .PP

@@ -58,6 +58,11 @@
 #define MCVIEW_VTERM_DEFAULT_CELL_WIDTH  8
 #define MCVIEW_VTERM_DEFAULT_CELL_HEIGHT 16
 
+/* The longest OSC 52 payload (base64) kept, as in xterm; a longer one is dropped whole. */
+#define VTERM_OSC52_MAX_PAYLOAD 100000
+
+#define VTERM_BASE64_CHARS      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+
 /*** file scope type declarations ****************************************************************/
 
 struct mcview_vterm_struct
@@ -110,6 +115,11 @@ struct mcview_vterm_struct
     /* The semantic prompt marks (OSC 133), kept raw: what they mean is the host's business. */
     char *osc133_raw;
     guint osc133_generation;
+    /* OSC 52: the payload is too long for osc_buf and is collected on its own. */
+    GString *osc52_payload;
+    gboolean osc52_overflow;
+    char *osc52_text;
+    guint osc52_generation;
 
     int cursor_row;
     int cursor_col;
@@ -167,6 +177,7 @@ static void vterm_finalize_param (mcview_vterm_t *vt);
 static vterm_event_t vterm_make (mcview_vterm_t *vt, vterm_result_t type);
 static void vterm_handle_osc (mcview_vterm_t *vt);
 static void vterm_finish_osc (mcview_vterm_t *vt);
+static void vterm_finish_osc52 (mcview_vterm_t *vt);
 static void vterm_finish_sixel (mcview_vterm_t *vt);
 static void vterm_images_clear (mcview_vterm_t *vt);
 static void vterm_history_trim (mcview_vterm_t *vt);
@@ -597,10 +608,42 @@ vterm_finish_osc (mcview_vterm_t *vt)
     vt->in_osc = FALSE;
     vt->osc_buf[vt->osc_len] = '\0';
 
-    if (!vt->osc_overflow)
+    if (vt->osc52_payload != NULL)
+        vterm_finish_osc52 (vt);
+    else if (!vt->osc_overflow)
         vterm_handle_osc (vt);
 
     vt->osc_overflow = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The clipboard is only set: a query ("?") is not answered, an empty payload (clear) and one that
+   is too long or not base64 are dropped. */
+
+static void
+vterm_finish_osc52 (mcview_vterm_t *vt)
+{
+    GString *payload = vt->osc52_payload;
+    guchar *data;
+    gsize len = 0;
+
+    vt->osc52_payload = NULL;
+
+    if (!vt->osc52_overflow && payload->len > 0
+        && strspn (payload->str, VTERM_BASE64_CHARS) == payload->len)
+    {
+        data = g_base64_decode (payload->str, &len);
+        if (len > 0)
+        {
+            g_free (vt->osc52_text);
+            vt->osc52_text = g_strndup ((const char *) data, len);
+            vt->osc52_generation++;
+        }
+        g_free (data);
+    }
+
+    vt->osc52_overflow = FALSE;
+    g_string_free (payload, TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1396,6 +1439,9 @@ mcview_vterm_free (mcview_vterm_t *vt)
     mcview_terminal_buffer_free (vt->alt_frame_buf);
     g_free (vt->osc7_raw);
     g_free (vt->osc133_raw);
+    if (vt->osc52_payload != NULL)
+        g_string_free (vt->osc52_payload, TRUE);
+    g_free (vt->osc52_text);
     g_string_free (vt->sixel, TRUE);
     if (vt->images != NULL)
         g_ptr_array_unref (vt->images);
@@ -1449,6 +1495,12 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     vt->osc7_raw = NULL;
     g_free (vt->osc133_raw);
     vt->osc133_raw = NULL;
+    if (vt->osc52_payload != NULL)
+        g_string_free (vt->osc52_payload, TRUE);
+    vt->osc52_payload = NULL;
+    vt->osc52_overflow = FALSE;
+    g_free (vt->osc52_text);
+    vt->osc52_text = NULL;
     vt->osc_len = 0;
     if (vt->history != NULL)
     {
@@ -1648,9 +1700,25 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
         {
             vt->in_osc_esc = TRUE;
         }
+        else if (vt->osc52_payload != NULL)
+        {
+            // past "52;<targets>;": the payload has a buffer of its own
+            if (vt->osc52_payload->len < VTERM_OSC52_MAX_PAYLOAD)
+                g_string_append_c (vt->osc52_payload, (char) byte);
+            else
+                vt->osc52_overflow = TRUE;
+        }
         else if (vt->osc_len < (int) sizeof (vt->osc_buf) - 1)
         {
             vt->osc_buf[vt->osc_len++] = (char) byte;
+
+            // the second semicolon of "52;<targets>;" ends what osc_buf keeps
+            if (byte == ';' && vt->osc_len > 3 && strncmp (vt->osc_buf, "52;", 3) == 0
+                && memchr (vt->osc_buf + 3, ';', (size_t) vt->osc_len - 4) == NULL)
+            {
+                vt->osc52_payload = g_string_new (NULL);
+                vt->osc52_overflow = FALSE;
+            }
         }
         else
         {
@@ -1697,6 +1765,11 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
             vt->in_osc_esc = FALSE;
             vt->osc_overflow = FALSE;
             vt->osc_len = 0;
+            if (vt->osc52_payload != NULL)
+            {
+                g_string_free (vt->osc52_payload, TRUE);
+                vt->osc52_payload = NULL;
+            }
         }
         else if (byte == '(' || byte == ')' || byte == '*' || byte == '+')
         {
@@ -2364,6 +2437,22 @@ guint
 mcview_vterm_osc133_generation (const mcview_vterm_t *vt)
 {
     return (vt != NULL) ? vt->osc133_generation : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+const char *
+mcview_vterm_osc52_text (const mcview_vterm_t *vt)
+{
+    return (vt != NULL) ? vt->osc52_text : NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+guint
+mcview_vterm_osc52_generation (const mcview_vterm_t *vt)
+{
+    return (vt != NULL) ? vt->osc52_generation : 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */

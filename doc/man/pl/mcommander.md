@@ -3461,6 +3461,16 @@ najstarszemu wierszowi i wraca do najnowszego, tak jak szuka
 **less**
 i tak jak było wcześniej. Domyślnie "down".
 
+*clipboard_write*
+: Czy program w terminalu może umieścić tekst w schowku sekwencją OSC 52, tak
+jak robią to vim, tmux albo sesja ssh. Tekst trafia tam, gdzie kopia z
+edytora: do pliku schowka i do polecenia z
+*clipboard_store*.
+Program nigdy nie może w ten sposób odczytać schowka. Domyślnie "false":
+każde wyjście w terminalu, także plik wypisany przez
+**cat**,
+mogłoby zmienić schowek.
+
 # Baza danych terminali (Terminal databases) <a id="terminal-databases"></a>
 
 M-Commander pozwala ci na naprawienie bazy danych terminali bez

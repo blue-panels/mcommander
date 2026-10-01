@@ -50,6 +50,7 @@
 #endif
 
 #include "lib/global.h"
+#include "lib/event.h"
 #include "lib/mcconfig.h"
 #include "lib/strutil.h"
 #include "lib/widget.h"
@@ -72,6 +73,9 @@
 
 /* Which way Alt-S looks for what is typed, and the filter for its next row. */
 mcterm_search_dir_t mcterm_search_direction = MCTERM_SEARCH_DOWN;
+
+/* Whether a program in the terminal may set the clipboard (OSC 52). */
+gboolean mcterm_clipboard_write = FALSE;
 
 /*** file scope variables ************************************************************************/
 
@@ -120,6 +124,7 @@ struct WMcTerm
        and OSC 7 goes back to being about the directory alone. */
     gboolean osc133_capable;
     guint last_osc133_gen;
+    guint last_osc52_gen;
     /* Where the shell left its cursor when it finished drawing the prompt: the point at which
        typing begins. The line is empty while nothing is drawn from there on. */
     gint64 input_start_row;
@@ -209,6 +214,7 @@ static gboolean mcterm_handle_osc7_generation (WMcTerm *t);
 static int mcterm_pty_ready_cb (int fd, void *info);
 static gboolean mcterm_osc7_is_ours (const WMcTerm *t, const char *raw);
 static gboolean mcterm_handle_osc133_generation (WMcTerm *t);
+static void mcterm_handle_osc52_generation (WMcTerm *t);
 static gboolean mcterm_write_all (int master, const unsigned char *data, size_t len);
 static void mcterm_busy_tick (WMcTerm *t);
 static void mcterm_busy_tick_set (WMcTerm *t, gboolean on);
@@ -395,6 +401,7 @@ mcterm_pty_ready_cb (int fd, void *info)
             }
             mcterm_handle_osc7_generation (t);
             mcterm_handle_osc133_generation (t);
+            mcterm_handle_osc52_generation (t);
         }
 
         t->line_cleared = FALSE;
@@ -635,6 +642,29 @@ mcterm_busy_tick_set (WMcTerm *t, gboolean on)
     (void) t;
     (void) on;
 #endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* A program put text on the clipboard (OSC 52): it goes to the clipfile and clipboard_store, as
+   a copy of a selection does. */
+
+static void
+mcterm_handle_osc52_generation (WMcTerm *t)
+{
+    const guint gen = mcview_vterm_osc52_generation (t->vterm);
+    const char *text;
+
+    if (gen == t->last_osc52_gen)
+        return;
+
+    t->last_osc52_gen = gen;
+
+    text = mcview_vterm_osc52_text (t->vterm);
+    if (!mcterm_clipboard_write || text == NULL || *text == '\0')
+        return;
+
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_text_to_file", (gpointer) text);
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_file_to_ext_clip", NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2797,6 +2827,9 @@ mcterm_load_options (void)
     mcterm_search_direction =
         g_ascii_strcasecmp (dir, "up") == 0 ? MCTERM_SEARCH_UP : MCTERM_SEARCH_DOWN;
     g_free (dir);
+
+    mcterm_clipboard_write = mc_config_get_bool (mc_global.main_config, CONFIG_TERMINAL_SECTION,
+                                                 "clipboard_write", FALSE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2806,6 +2839,8 @@ mcterm_save_options (void)
 {
     mc_config_set_string (mc_global.main_config, CONFIG_TERMINAL_SECTION, "search_direction",
                           mcterm_search_direction == MCTERM_SEARCH_UP ? "up" : "down");
+    mc_config_set_bool (mc_global.main_config, CONFIG_TERMINAL_SECTION, "clipboard_write",
+                        mcterm_clipboard_write);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2874,6 +2909,7 @@ mcterm_new (const WRect *r, const char *start_dir)
     t->osc7_capable = FALSE;
     t->osc133_capable = FALSE;
     t->last_osc133_gen = 0;
+    t->last_osc52_gen = 0;
     t->last_exit_code = -1;
     t->awaiting_command_done = FALSE;
     t->busy_tick_fd = -1;
