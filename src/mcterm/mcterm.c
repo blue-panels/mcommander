@@ -3770,11 +3770,124 @@ mcterm_osc7_capable (const WMcTerm *t)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The cells of @row from @from up to its last non-blank one, or up to @keep at least. */
+static void
+mcterm_append_row_cells (GArray *cells, const mcview_terminal_buffer_t *buf, int row, int from,
+                         int to, int keep)
+{
+    int end = to;
+
+    while (end > from && end > keep)
+    {
+        const mcview_vterm_cell_t *cell = mcview_terminal_buffer_get (buf, row, end - 1);
+
+        if (cell != NULL && cell->ch != 0 && cell->ch != ' ')
+            break;
+        end--;
+    }
+
+    for (; from < end; from++)
+    {
+        const mcview_vterm_cell_t *cell = mcview_terminal_buffer_get (buf, row, from);
+        mcview_vterm_cell_t c = { ' ',
+                                  { MCVIEW_ANSI_COLOR_DEFAULT, MCVIEW_ANSI_COLOR_DEFAULT, FALSE,
+                                    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE } };
+
+        if (cell != NULL)
+            c = *cell;
+        g_array_append_val (cells, c);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The shell's line as one row for the host's command line, when it has line breaks (a paste of
+   several lines): a break is shown as " \ ", and the indent a shell gives the rows after it is
+   dropped. NULL when there is no break to show; @cursor gets the cursor's cell in the row and
+   @offset the first cell that fits on the screen. */
+static GArray *
+mcterm_composed_line (const WMcTerm *t, int *cursor, int *offset)
+{
+    const int cols = CONST_WIDGET (t)->rect.cols;
+    const mcview_terminal_buffer_t *buf;
+    const mcview_vterm_cell_t sep = { 0,
+                                      { MCVIEW_ANSI_COLOR_DEFAULT, MCVIEW_ANSI_COLOR_DEFAULT, FALSE,
+                                        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE } };
+    GArray *cells;
+    int start, host, cursor_row, cursor_col, row;
+    gboolean has_break = FALSE;
+
+    if (!t->input_start_valid || !mcterm_host_draws_line (t))
+        return NULL;
+
+    buf = mcview_vterm_buf (t->vterm);
+    host = mcterm_host_row (t);
+    cursor_row = mcview_vterm_cursor_row (t->vterm);
+    cursor_col = mcview_vterm_cursor_col (t->vterm);
+    start = (int) MAX (t->input_start_row - mcview_vterm_scrolled_rows (t->vterm), 0);
+
+    for (row = start; row < host && !has_break; row++)
+        has_break = !mcview_terminal_buffer_is_wrapped (buf, row);
+    if (!has_break)
+        return NULL;
+
+    cells = g_array_new (FALSE, TRUE, sizeof (mcview_vterm_cell_t));
+    *cursor = 0;
+
+    for (row = start; row <= host; row++)
+    {
+        const gboolean wraps = row < host && mcview_terminal_buffer_is_wrapped (buf, row);
+        int from = 0;
+
+        if (row > start && !mcview_terminal_buffer_is_wrapped (buf, row - 1))
+        {
+            const char *s;
+            mcview_vterm_cell_t c = sep;
+
+            for (s = " \\ "; *s != '\0'; s++)
+            {
+                c.ch = (gunichar) *s;
+                g_array_append_val (cells, c);
+            }
+            for (; from < cols; from++)
+            {
+                const mcview_vterm_cell_t *cell = mcview_terminal_buffer_get (buf, row, from);
+
+                if (cell != NULL && cell->ch != 0 && cell->ch != ' ')
+                    break;
+            }
+            if (row == cursor_row)
+                from = MIN (from, cursor_col);
+        }
+
+        if (row == cursor_row)
+            *cursor = (int) cells->len + cursor_col - from;
+        mcterm_append_row_cells (cells, buf, row, from, cols,
+                                 wraps ? cols : (row == cursor_row ? cursor_col : from));
+    }
+
+    *offset = MAX (*cursor - cols + 1, 0);
+    return cells;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 mcterm_cursor_col (const WMcTerm *t)
 {
+    GArray *line;
+    int cursor, offset;
+
     if (t == NULL || t->vterm == NULL)
         return 0;
+
+    line = mcterm_composed_line (t, &cursor, &offset);
+    if (line != NULL)
+    {
+        g_array_free (line, TRUE);
+        return cursor - offset;
+    }
+
     // The cursor on an earlier row of a wrapped line: the whole of the host's row is the shell's.
     if (mcterm_shell_cursor_in_terminal (t))
         return CONST_WIDGET (t)->rect.cols;
@@ -3854,7 +3967,8 @@ mcterm_draw_prompt_row (const WMcTerm *t, int screen_y, const char *skin_section
     const WRect *r;
     mcview_terminal_buffer_t *buf;
     mcview_canvas_colors_t colors;
-    int cursor_row;
+    GArray *line;
+    int cursor_row, cursor, offset;
 
     if (t == NULL || t->vterm == NULL || t->child_dead)
         return;
@@ -3870,6 +3984,19 @@ mcterm_draw_prompt_row (const WMcTerm *t, int screen_y, const char *skin_section
     colors.bold = -1;
     colors.underline = -1;
     colors.bold_underline = -1;
+
+    line = mcterm_composed_line (t, &cursor, &offset);
+    if (line != NULL)
+    {
+        mcview_terminal_buffer_t *row = mcview_terminal_buffer_new ();
+
+        g_array_remove_range (line, 0, (guint) offset);
+        mcview_terminal_buffer_set_row (row, 0, line);
+        mcview_render_terminal_canvas (row, 0, screen_y, r->x, 1, r->cols, &colors);
+        mcview_terminal_buffer_free (row);
+        g_array_free (line, TRUE);
+        return;
+    }
 
     mcview_render_terminal_canvas (buf, cursor_row, screen_y, r->x, 1, r->cols, &colors);
 }
