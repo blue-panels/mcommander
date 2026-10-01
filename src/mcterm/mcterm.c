@@ -125,6 +125,8 @@ struct WMcTerm
        and OSC 7 goes back to being about the directory alone. */
     gboolean osc133_capable;
     guint last_osc133_gen;
+    /* The last clipboard text (OSC 52) of the program that was passed on. */
+    guint last_osc52_gen;
     /* Where the shell left its cursor when it finished drawing the prompt: the point at which
        typing begins. The line is empty while nothing is drawn from there on. */
     gint64 input_start_row;
@@ -214,6 +216,7 @@ static gboolean mcterm_handle_osc7_generation (WMcTerm *t);
 static int mcterm_pty_ready_cb (int fd, void *info);
 static gboolean mcterm_osc7_is_ours (const WMcTerm *t, const char *raw);
 static gboolean mcterm_handle_osc133_generation (WMcTerm *t);
+static void mcterm_handle_osc52_generation (WMcTerm *t);
 static gboolean mcterm_write_all (int master, const unsigned char *data, size_t len);
 static void mcterm_handle_apcs (WMcTerm *t);
 static void mcterm_busy_tick (WMcTerm *t);
@@ -402,6 +405,7 @@ mcterm_pty_ready_cb (int fd, void *info)
             mcterm_handle_osc7_generation (t);
             mcterm_handle_apcs (t);
             mcterm_handle_osc133_generation (t);
+            mcterm_handle_osc52_generation (t);
         }
 
         t->line_cleared = FALSE;
@@ -650,6 +654,29 @@ mcterm_busy_tick_set (WMcTerm *t, gboolean on)
  *
  * @return TRUE when the shell has just come back to its prompt.
  */
+
+/* --------------------------------------------------------------------------------------------- */
+/* A program in the terminal put text on the clipboard (OSC 52): put it on the clipboard of the
+   terminal mc itself runs in. Only setting is passed on; MC_OSC52=0 keeps it in the terminal. */
+
+static void
+mcterm_handle_osc52_generation (WMcTerm *t)
+{
+    const guint gen = mcview_vterm_osc52_generation (t->vterm);
+    const char *text;
+    gsize len = 0;
+
+    if (gen == t->last_osc52_gen)
+        return;
+
+    t->last_osc52_gen = gen;
+
+    text = mcview_vterm_osc52_text (t->vterm, &len);
+    if (text != NULL)
+        (void) tty_osc52_write (text, len);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static gboolean
 mcterm_handle_osc133_generation (WMcTerm *t)
@@ -2924,6 +2951,7 @@ mcterm_new (const WRect *r, const char *start_dir)
     t->osc7_capable = FALSE;
     t->osc133_capable = FALSE;
     t->last_osc133_gen = 0;
+    t->last_osc52_gen = 0;
     t->last_exit_code = -1;
     t->awaiting_command_done = FALSE;
     t->busy_tick_fd = -1;

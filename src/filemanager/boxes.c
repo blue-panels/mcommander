@@ -58,6 +58,8 @@
 #include "src/setup.h"
 #include "src/history.h"  // MC_HISTORY_ESC_TIMEOUT
 #include "src/execute.h"  // pause_after_run
+#include "src/args.h"     // mc_args__nokeymap
+#include "src/keymap.h"   // keymap_far_mode, keymap_load()
 #ifdef ENABLE_BACKGROUND
 #include "src/background.h"  // task_list
 #endif
@@ -592,6 +594,7 @@ configure_box (void)
     {
         char time_out[BUF_TINY] = "";
         char *time_out_new = NULL;
+        gboolean far_mode_old;
 
         quick_widget_t quick_widgets[] = {
             // clang-format off
@@ -630,7 +633,7 @@ configure_box (void)
                     QUICK_CHECKBOX (_ ("Sa&fe delete"), &safe_delete, NULL),
                     QUICK_CHECKBOX (_ ("Safe overwrite"), &safe_overwrite, NULL),       // w/o hotkey
                     QUICK_CHECKBOX (_ ("A&uto save setup"), &auto_save_setup, NULL),
-                    QUICK_SEPARATOR (FALSE),
+                    QUICK_CHECKBOX (_ ("Far Manager keys"), &keymap_far_mode, NULL),
                     QUICK_SEPARATOR (FALSE),
                 QUICK_STOP_GROUPBOX,
             QUICK_STOP_COLUMNS,
@@ -664,6 +667,8 @@ configure_box (void)
         quick_widgets[7].state = WST_DISABLED;
 #endif
 
+        far_mode_old = keymap_far_mode;
+
         if (quick_dialog (&qdlg) == B_ENTER)
         {
             if (time_out_new[0] == '\0')
@@ -671,8 +676,20 @@ configure_box (void)
             else
                 old_esc_mode_timeout = atoi (time_out_new);
         }
+        else
+            keymap_far_mode = far_mode_old;
 
         g_free (time_out_new);
+
+        // The keys of Far mode are part of the keymap: load it again the way the key bindings
+        // dialog does, so that the mode works at once
+        if (keymap_far_mode != far_mode_old)
+        {
+            keymap_save_old_maps ();
+            keymap_free ();
+            keymap_load (!mc_args__nokeymap);
+            keymap_refresh_widgets ();
+        }
     }
 }
 

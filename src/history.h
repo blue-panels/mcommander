@@ -29,6 +29,7 @@
 #define MC_HISTORY_FM_PLUGIN_COPY     "mc.fm.plugin-copy"
 #define MC_HISTORY_FM_PLUGIN_MOVE     "mc.fm.plugin-move"
 #define MC_HISTORY_FM_FILTERED_VIEW   "mc.fm.filtered-view"
+#define MC_HISTORY_FM_APPLY_COMMAND   "mc.fm.apply-command"
 #define MC_HISTORY_FM_PANEL_SELECT    ":select_cmd: Select "
 #define MC_HISTORY_FM_PANEL_UNSELECT  ":select_cmd: Unselect "
 #define MC_HISTORY_FM_PANEL_FILTER    "mc.fm.panel-filter"

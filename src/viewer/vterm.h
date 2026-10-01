@@ -126,6 +126,10 @@ char *mcview_vterm_take_apc (mcview_vterm_t *vt);
 /* The last semantic prompt mark (OSC 133) as it arrived, and a counter of them. */
 const char *mcview_vterm_osc133_raw (const mcview_vterm_t *vt);
 guint mcview_vterm_osc133_generation (const mcview_vterm_t *vt);
+/* The text a program put on the clipboard with OSC 52 (decoded, not NUL-terminated by len), and how
+   many times it did; the clipboard is only ever set, never read. */
+const char *mcview_vterm_osc52_text (const mcview_vterm_t *vt, gsize *len);
+guint mcview_vterm_osc52_generation (const mcview_vterm_t *vt);
 
 /* Sixel pictures. The cell size is what turns pixels into rows and columns;
    whoever knows the terminal sets it. The generation moves whenever the list

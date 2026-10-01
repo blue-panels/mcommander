@@ -42,6 +42,7 @@
 #include "lib/mcconfig.h"
 #include "lib/util.h"
 #include "lib/event.h"
+#include "lib/tty/tty.h"  // tty_osc52_write()
 
 #include "lib/vfs/vfs.h"
 #include "lib/tty/key.h"  // the far2l clipboard
@@ -88,6 +89,22 @@ clip_info_drop_home (void)
     fname = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
     clipboard_info_drop (fname);
     g_free (fname);
+}
+
+/* Put the clipfile on the terminal's clipboard with OSC 52; a file that is too long or a terminal
+   that does not take it leaves the clipfile as the only copy. */
+static void
+clipboard_file_to_osc52 (void)
+{
+    char *tmp, *contents = NULL;
+    gsize length = 0;
+
+    tmp = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
+    if (g_file_get_contents (tmp, &contents, &length, NULL))
+        (void) tty_osc52_write (contents, length);
+
+    g_free (contents);
+    g_free (tmp);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -158,7 +175,11 @@ clipboard_file_to_ext_clip (const gchar *event_group_name, const gchar *event_na
         return TRUE;
 
     if (clipboard_store_path == NULL || clipboard_store_path[0] == '\0')
+    {
+        // no external clipboard command: the terminal's own clipboard, through OSC 52
+        clipboard_file_to_osc52 ();
         return TRUE;
+    }
 
     tmp = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
     cmd = g_strconcat (clipboard_store_path, " ", tmp, " 2>/dev/null", (char *) NULL);
