@@ -881,6 +881,9 @@ static const global_keymap_ini_t far_input_keymap[] = {
     { "HistoryNext", "alt-n; ctrl-up; ctrl-x" },
     { "Clear", "ctrl-y" },
     { "Yank", "alt-y" },
+    // Shift-Enter and Ctrl-Shift-Enter: the name of the file of the active and of the passive panel
+    { "PutPanelFile", "shift-enter" },
+    { "PutOtherPanelFile", "ctrl-shift-enter" },
     { "DeleteToWordBegin", "alt-backspace; ctrl-backspace" },
     { "DeleteToWordEnd", "alt-d; ctrl-delete" },
     {

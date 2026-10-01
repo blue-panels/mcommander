@@ -467,6 +467,12 @@ START_TEST (test_keymap_far_mode_select_all_default_button)
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_KP_SUBTRACT),
                       CK_Unselect);
 
+    /* Shift-Enter and Ctrl-Shift-Enter put the name of a file in the edit lines of dialogs */
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, KEY_M_SHIFT | '\n'),
+                      CK_PutPanelFile);
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, KEY_M_CTRL | KEY_M_SHIFT | '\n'),
+                      CK_PutOtherPanelFile);
+
     keymap_free ();
 
     /* off: none of the three is bound */
@@ -475,6 +481,8 @@ START_TEST (test_keymap_far_mode_select_all_default_button)
     ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, KEY_M_SHIFT | KEY_KP_ADD),
                       CK_SelectAll);
     ck_assert_int_ne (keybind_lookup_keymap_command (dialog_map, KEY_NPAGE), CK_DefaultButton);
+    ck_assert_int_ne (keybind_lookup_keymap_command (input_map, KEY_M_SHIFT | '\n'),
+                      CK_PutPanelFile);
     keymap_free ();
 }
 END_TEST

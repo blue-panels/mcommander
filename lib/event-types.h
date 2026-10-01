@@ -51,6 +51,13 @@ typedef struct
     gboolean ret;          // a source was chosen and its text sent to the clipfile
 } ev_panel_save_clip_t;
 
+/* MCEVENT_GROUP_FILEMANAGER:panel_get_current_file_name */
+typedef struct
+{
+    gboolean passive;  // the passive panel, not the active one
+    char *name;        // out: the name of the file under the cursor (g_free), NULL if none
+} ev_panel_file_name_t;
+
 /* MCEVENT_GROUP_CORE:help */
 typedef struct
 {
