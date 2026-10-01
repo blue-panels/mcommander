@@ -27,6 +27,9 @@ The releases of this fork, newest first.
 - Far mode, the next part: Shift-gray plus and Shift-gray minus select and
   unselect all the files (new actions SelectAll and UnselectAll), and PgDn in a
   dialog gives the focus to the default button (new action DefaultButton).
+  Shift-Enter and Ctrl-Shift-Enter in the edit line of a dialog insert the name
+  of the file under the cursor of the active and of the passive panel (new
+  actions PutPanelFile and PutOtherPanelFile).
 
 ## 6.1.0 - 2026-09-26
 

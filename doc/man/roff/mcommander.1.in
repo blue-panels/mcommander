@@ -527,7 +527,11 @@ Ctrl\-Enter does what Enter does when no button has the focus, which is the
 default action of the dialog, and the numeric plus and minus (and the plus and
 the minus of the main keyboard) switch the check box that has the focus on and
 off, where Space switches it over. PgDn gives the focus to the default button
-(a list that has the focus keeps PgDn for itself). Esc, F10, Tab, the arrow keys and the
+(a list that has the focus keeps PgDn for itself). Shift\-Enter in the edit line of a
+dialog inserts the name of the file under the cursor of the active panel,
+Ctrl\-Shift\-Enter the one of the passive panel (not in the command line, where
+Ctrl\-Shift\-Enter keeps its meaning; a terminal sends them only when it reports
+modified keys, see below). Esc, F10, Tab, the arrow keys and the
 hotkeys of the buttons are the same in Far and in M\-Commander. Ctrl\-Enter is
 sent by a terminal only when it reports modified keys (see below).
 
@@ -554,8 +558,7 @@ information panel in this mode); Alt\-, does. Alt with a character is the fast
 find only where no action of M\-Commander has the key, see above, and the fast
 find takes no characters that are not Latin\-1. The dialogs keep their own keys,
 apart from the edit lines, Ctrl\-Enter and the check boxes: M\-Commander has no
-Far key for moving a dialog or for a file name in an edit line of a dialog
-(Shift\-Enter), and the mouse is not part of the mode.
+Far key for moving a dialog, and the mouse is not part of the mode.
 
 .PP
 Some keys of the mode (Ctrl with a digit, with a comma, with Enter or with a function key) are sent by a

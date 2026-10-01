@@ -811,6 +811,23 @@ input_execute_cmd (WInput *in, long command)
     case CK_Paste:
         ins_from_clip (in);
         break;
+    case CK_PutPanelFile:
+    case CK_PutOtherPanelFile:
+    {
+        // Far mode: the name of the file under the cursor of a panel goes to the edit line of a
+        // dialog; nothing happens (the key goes on to the file manager) for the command line
+        ev_panel_file_name_t ev = { .passive = (command == CK_PutOtherPanelFile), .name = NULL };
+
+        mc_event_raise (MCEVENT_GROUP_FILEMANAGER, "panel_get_current_file_name", &ev);
+        if (ev.name == NULL)
+            res = MSG_NOT_HANDLED;
+        else
+        {
+            input_insert (in, ev.name, FALSE);
+            g_free (ev.name);
+        }
+    }
+    break;
     case CK_HistoryPrev:
         hist_prev (in);
         break;
@@ -1270,8 +1287,10 @@ input_handle_char (WInput *in, int key)
 
         if (command != CK_Complete)
             input_complete_free (in);
-        input_execute_cmd (in, command);
-        v = MSG_HANDLED;
+        v = input_execute_cmd (in, command);
+        // only the commands that can have nothing to do pass the key on
+        if (command != CK_PutPanelFile && command != CK_PutOtherPanelFile)
+            v = MSG_HANDLED;
         /* if in->first == TRUE and history or completion window was cancelled,
            keep "first" state */
         keep_first = in->first && (command == CK_History || command == CK_Complete);

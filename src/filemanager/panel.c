@@ -6089,6 +6089,43 @@ panel_save_current_file_to_clip_file (const gchar *event_group_name, const gchar
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* event callback */
+static gboolean
+panel_get_current_file_name (const gchar *event_group_name, const gchar *event_name,
+                            gpointer init_data, gpointer data)
+{
+    ev_panel_file_name_t *ev = (ev_panel_file_name_t *) data;
+    WPanel *panel;
+    const file_entry_t *fe;
+
+    (void) event_group_name;
+    (void) event_name;
+    (void) init_data;
+
+    ev->name = NULL;
+
+    // Only for the dialogs: with the file manager on top, the keys are the ones of the command line
+    if (current_panel == NULL || top_dlg == NULL || top_dlg->data == WIDGET (current_panel)->owner)
+        return TRUE;
+
+    if (ev->passive)
+    {
+        if (get_other_type () != view_listing)
+            return TRUE;
+        panel = other_panel;
+    }
+    else
+        panel = current_panel;
+
+    fe = panel_current_entry (panel);
+    if (fe != NULL && !DIR_IS_DOTDOT (fe->fname->str))
+        ev->name = g_strndup (fe->fname->str, fe->fname->len);
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static vfs_path_t *
 panel_recursive_cd_to_parent (const vfs_path_t *vpath)
 {
@@ -7088,6 +7125,8 @@ panel_init (void)
     mc_event_add (MCEVENT_GROUP_FILEMANAGER, "update_panels", event_update_panels, NULL, NULL);
     mc_event_add (MCEVENT_GROUP_FILEMANAGER, "panel_save_current_file_to_clip_file",
                   panel_save_current_file_to_clip_file, NULL, NULL);
+    mc_event_add (MCEVENT_GROUP_FILEMANAGER, "panel_get_current_file_name",
+                  panel_get_current_file_name, NULL, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -269,6 +269,8 @@ enum
 
     // input
     CK_Yank = 350L,
+    CK_PutPanelFile,
+    CK_PutOtherPanelFile,
 
     // help
     CK_Index = 400L,

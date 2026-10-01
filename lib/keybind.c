@@ -280,6 +280,8 @@ static name_keymap_t command_names[] = {
 
     // input line
     ADD_KEYMAP_NAME_DESC (Yank, N_ ("Yank (paste kill buffer)")),
+    ADD_KEYMAP_NAME_DESC (PutPanelFile, N_ ("Insert the file name from the active panel")),
+    ADD_KEYMAP_NAME_DESC (PutOtherPanelFile, N_ ("Insert the file name from the passive panel")),
 
     // help
     ADD_KEYMAP_NAME_DESC (Index, N_ ("Help index")),
