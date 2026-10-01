@@ -1702,11 +1702,12 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
         }
         else if (vt->osc52_payload != NULL)
         {
-            // past "52;<targets>;": the payload has a buffer of its own
-            if (vt->osc52_payload->len < VTERM_OSC52_MAX_PAYLOAD)
-                g_string_append_c (vt->osc52_payload, (char) byte);
-            else
+            // past "52;<targets>;": the payload has a buffer of its own; the line breaks of
+            // a wrapping base64 tool are skipped
+            if (vt->osc52_payload->len >= VTERM_OSC52_MAX_PAYLOAD)
                 vt->osc52_overflow = TRUE;
+            else if (byte >= 0x20u)
+                g_string_append_c (vt->osc52_payload, (char) byte);
         }
         else if (vt->osc_len < (int) sizeof (vt->osc_buf) - 1)
         {

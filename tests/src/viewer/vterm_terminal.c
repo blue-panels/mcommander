@@ -1860,6 +1860,24 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_osc52_payload_wrapped_in_lines)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    // base64 without -w0 breaks its output into lines
+    FEED (vt, "\033]52;c;0L/RgNC40LLQ\ntdGCCtC8\r\n0LjRgA==\n\007");
+    ck_assert_uint_eq (mcview_vterm_osc52_generation (vt), 1);
+    ck_assert_str_eq (mcview_vterm_osc52_text (vt), "привет\nмир");
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_osc52_payload_is_longer_than_the_osc_buffer)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -1997,6 +2015,7 @@ main (void)
     tcase_add_test (tc_core, test_sgr_after_osc_and_dcs);
     tcase_add_test (tc_core, test_osc52_sets_the_clipboard_text);
     tcase_add_test (tc_core, test_osc52_is_never_read_or_cleared);
+    tcase_add_test (tc_core, test_osc52_payload_wrapped_in_lines);
     tcase_add_test (tc_core, test_osc52_payload_is_longer_than_the_osc_buffer);
     tcase_add_test (tc_core, test_osc52_over_the_limit_is_dropped_whole);
     tcase_add_test (tc_core, test_osc52_leaves_the_other_osc_alone);
