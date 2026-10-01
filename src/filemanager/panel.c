@@ -3474,6 +3474,24 @@ panel_unselect_files (WPanel *panel)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/** Mark (or unmark) all the files, the way Shift-gray plus and Shift-gray minus of Far do. */
+
+static void
+panel_mark_all_files (WPanel *panel, gboolean do_select)
+{
+    int i;
+
+    panel_mark_batch_begin ();
+
+    for (i = 0; i < panel->dir.len; i++)
+        if (!DIR_IS_DOTDOT (panel->dir.list[i].fname->str))
+            do_file_mark (panel, i, do_select ? 1 : 0);
+
+    panel_mark_batch_end (panel);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 panel_select_invert_files (WPanel *panel)
 {
@@ -5231,6 +5249,12 @@ panel_execute_cmd (WPanel *panel, long command)
         break;
     case CK_SelectInvert:
         panel_select_invert_files (panel);
+        break;
+    case CK_SelectAll:
+        panel_mark_all_files (panel, TRUE);
+        break;
+    case CK_UnselectAll:
+        panel_mark_all_files (panel, FALSE);
         break;
     case CK_Select:
         panel_select_files (panel);

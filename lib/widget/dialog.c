@@ -120,6 +120,19 @@ dlg_execute_cmd (WDialog *h, long command)
         h->ret_value = B_CANCEL;
         dlg_close (h);
         break;
+    case CK_DefaultButton:
+        // Far mode (PgDn): the focus goes to the default button, if the dialog has one
+        for (GList *l = g->widgets; l != NULL; l = g_list_next (l))
+        {
+            Widget *bw = WIDGET (l->data);
+
+            if (bw->callback == button_default_callback && BUTTON (bw)->flags == DEFPUSH_BUTTON)
+            {
+                widget_select (bw);
+                break;
+            }
+        }
+        break;
 
     case CK_Up:
     case CK_Left:

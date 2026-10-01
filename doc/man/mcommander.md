@@ -405,6 +405,11 @@ commands, which Ctrl-X was, moves to Alt-X.
 or of the remote host that the panel shows (a panel of a plugin stays where it
 is). The directory hotlist, which was Ctrl-\\, moves to Alt-\\.
 
+**Shift-gray plus, Shift-gray minus**
+: select all the files and unselect all of them (the gray keys alone ask for a
+pattern, as they do without the mode). A terminal sends them only when it
+reports modified keys, see below.
+
 **Alt with a character, Alt-Shift with a character**
 : the fast find of Far: the panel goes to the file whose name begins with the
 characters typed while Alt is held down, and Ctrl-Enter and Ctrl-Shift-Enter go
@@ -451,7 +456,8 @@ opposite direction and Alt-F11 shows the history of the viewed files.
 Ctrl-Enter does what Enter does when no button has the focus, which is the
 default action of the dialog, and the numeric plus and minus (and the plus and
 the minus of the main keyboard) switch the check box that has the focus on and
-off, where Space switches it over. Esc, F10, Tab, the arrow keys and the
+off, where Space switches it over. PgDn gives the focus to the default button
+(a list that has the focus keeps PgDn for itself). Esc, F10, Tab, the arrow keys and the
 hotkeys of the buttons are the same in Far and in M-Commander. Ctrl-Enter is
 sent by a terminal only when it reports modified keys (see below).
 
@@ -476,9 +482,8 @@ information panel in this mode); Alt-, does. Alt with a character is the fast
 find only where no action of M-Commander has the key, see above, and the fast
 find takes no characters that are not Latin-1. The dialogs keep their own keys,
 apart from the edit lines, Ctrl-Enter and the check boxes: M-Commander has no
-Far key for moving a dialog, for the focus on the default button (PgDn) or for
-a file name in an edit line of a dialog (Shift-Enter), and the mouse is not
-part of the mode.
+Far key for moving a dialog or for a file name in an edit line of a dialog
+(Shift-Enter), and the mouse is not part of the mode.
 
 Some keys of the mode (Ctrl with a digit, with a comma, with Enter or with a function key) are sent by a
 terminal only when it reports modified keys, as xterm and the terminals that speak the kitty keyboard protocol do.
