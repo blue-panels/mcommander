@@ -959,6 +959,22 @@ mcterm_overlay_active (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+struct WMcTerm *
+mcterm_overlay_terminal_at (int x, int y)
+{
+    const Widget *w;
+
+    if (!mcterm_mode || mcterm_panel == NULL || !mcterm_is_alive (mcterm_panel))
+        return NULL;
+    w = CONST_WIDGET (mcterm_panel);
+    if (!widget_get_state (w, WST_VISIBLE) || x < w->rect.x || x >= w->rect.x + w->rect.cols
+        || y < w->rect.y || y >= w->rect.y + w->rect.lines)
+        return NULL;
+    return mcterm_panel;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 gboolean
 mcterm_overlay_terminal_alone (void)
 {
@@ -1613,6 +1629,33 @@ mcterm_overlay_clip_command (long command)
    editor instead. Called after mc's own keys have been dealt with, so what is left really is the
    command line's. */
 cb_ret_t
+mcterm_overlay_handle_paste (const GString *text)
+{
+    if (mcterm_panel == NULL)
+        return MSG_NOT_HANDLED;
+
+    if (mcterm_mode)
+    {
+        // The terminal is on screen: what is pasted is for the program in it
+        if (mcterm_pause_pending)
+            return MSG_NOT_HANDLED;
+    }
+    else if (!mcterm_overlay_shell_owns_cmdline ())
+        return MSG_NOT_HANDLED;
+    else
+    {
+        mcterm_overlay_focus_cmdline ();
+        mcterm_overlay_move_cmdline_to_shell ();
+    }
+
+    if (!mcterm_send_paste (mcterm_panel, text->str, text->len))
+        message (D_ERROR, MSG_ERROR, "%s", _ ("The shell did not take the whole text"));
+    return MSG_HANDLED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+cb_ret_t
 mcterm_overlay_cmdline_key (int parm)
 {
     long command;
@@ -1909,6 +1952,14 @@ mcterm_overlay_active (void)
     return FALSE;
 }
 
+struct WMcTerm *
+mcterm_overlay_terminal_at (int x, int y)
+{
+    (void) x;
+    (void) y;
+    return NULL;
+}
+
 gboolean
 mcterm_overlay_terminal_alone (void)
 {
@@ -2007,6 +2058,13 @@ cb_ret_t
 mcterm_overlay_cmdline_key (int parm)
 {
     (void) parm;
+    return MSG_NOT_HANDLED;
+}
+
+cb_ret_t
+mcterm_overlay_handle_paste (const GString *text)
+{
+    (void) text;
     return MSG_NOT_HANDLED;
 }
 

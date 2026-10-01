@@ -1242,6 +1242,7 @@ midnight_execute_cmd (Widget *sender, long command)
             if (plugin_panel_dirsize_cmd (current_panel))
                 return MSG_HANDLED;
             break; /* real local files; native handlers can operate on them */
+        case CK_ApplyCommand:
         case CK_ChangeMode:
         case CK_ChangeOwn:
         case CK_ChangeOwnAdvanced:
@@ -1290,6 +1291,9 @@ midnight_execute_cmd (Widget *sender, long command)
         break;
     case CK_ChangeMode:
         chmod_cmd (current_panel);
+        break;
+    case CK_ApplyCommand:
+        apply_cmd (current_panel);
         break;
     case CK_ChangeOwn:
         chown_cmd (current_panel);
@@ -1950,6 +1954,24 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
 
         return v;
     }
+
+    case MSG_PASTE:
+    {
+        cb_ret_t v = MSG_NOT_HANDLED;
+
+        if (!widget_get_state (WIDGET (the_menubar), WST_FOCUSED))
+            v = mcterm_overlay_handle_paste ((const GString *) data);
+        if (v != MSG_NOT_HANDLED)
+            return v;
+        return dlg_default_callback (w, sender, msg, parm, data);
+    }
+
+    case MSG_UNHANDLED_PASTE:
+        // What no widget took is the command line's, as typed keys are
+        if (command_prompt && !is_cmdline_mute ()
+            && !widget_get_state (WIDGET (the_menubar), WST_FOCUSED))
+            return send_message (cmdline, NULL, MSG_PASTE, 0, data);
+        return MSG_NOT_HANDLED;
 
     case MSG_POST_KEY:
         if (!widget_get_state (WIDGET (the_menubar), WST_FOCUSED))

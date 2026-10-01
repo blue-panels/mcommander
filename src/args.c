@@ -52,6 +52,9 @@ gboolean mc_args__force_xterm = FALSE;
 
 gboolean mc_args__nomouse = FALSE;
 
+/* Do not wait for a new terminal when the terminal is gone (src/resurrect.c) */
+gboolean mc_args__mortal = FALSE;
+
 /* Force colors, only used by Slang */
 gboolean mc_args__force_colors = FALSE;
 
@@ -263,6 +266,16 @@ static const GOptionEntry argument_terminal_table[] = {
         G_OPTION_ARG_NONE,
         &mc_args__nomouse,
         N_ ("Disable mouse support in text version"),
+        NULL,
+    },
+
+    {
+        "mortal",
+        '\0',
+        ARGS_TERM_OPTIONS,
+        G_OPTION_ARG_NONE,
+        &mc_args__mortal,
+        N_ ("Exit when the terminal is lost instead of waiting for a new one"),
         NULL,
     },
 
