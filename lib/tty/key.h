@@ -40,6 +40,9 @@
 #define MCKEY_BRACKETED_PASTING_START -4
 #define MCKEY_BRACKETED_PASTING_END   -5
 
+/* A bracketed paste read as one block: tty_paste_take() gives its text */
+#define MCKEY_PASTE -6
+
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/
@@ -65,6 +68,10 @@ extern gboolean old_esc_mode;
 extern int mou_auto_repeat;
 
 extern gboolean bracketed_pasting_in_progress;
+/* Set by a loop that takes a paste as one block (MCKEY_PASTE) */
+extern gboolean tty_paste_as_block;
+/* Set while more keys of a paste are still to be given: is_idle() is FALSE then */
+extern gboolean tty_paste_keys_pending;
 
 /*** declarations of public functions ************************************************************/
 
@@ -80,6 +87,7 @@ char *tty_keycode_to_keyname (const int keycode);
 int tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block);
 gboolean is_idle (void);
 int tty_getch (void);
+GString *tty_paste_take (void);
 
 /* While waiting for input, the program can select on more than one file */
 typedef int (*select_fn) (int fd, void *info);
