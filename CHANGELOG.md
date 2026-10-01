@@ -30,6 +30,12 @@ The releases of this fork, newest first.
   Shift-Enter and Ctrl-Shift-Enter in the edit line of a dialog insert the name
   of the file under the cursor of the active and of the passive panel (new
   actions PutPanelFile and PutOtherPanelFile).
+- Far mode, the folder shortcuts: Ctrl-Shift-1 to Ctrl-Shift-0 remember the
+  directory of the panel, Alt-1 to Alt-0 go to it (Far uses the right Ctrl for
+  that, which a terminal cannot tell from the left one); they are kept in the
+  FarFolderShortcuts group of the setup file. Ctrl-[ and Ctrl-] put the path of
+  the left and of the right panel into the command line (Ctrl-[ only in a
+  terminal of the kitty keyboard protocol; elsewhere it is Esc).
 
 ## 6.1.0 - 2026-09-26
 

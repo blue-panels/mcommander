@@ -3476,6 +3476,39 @@ panel_unselect_files (WPanel *panel)
 
 /** Mark (or unmark) all the files, the way Shift-gray plus and Shift-gray minus of Far do. */
 
+/** Far mode: the folder shortcuts, ten of them, kept in the setup file. */
+
+#define FOLDER_SHORTCUT_GROUP "FarFolderShortcuts"
+
+static void
+panel_folder_shortcut (WPanel *panel, int n, gboolean do_set)
+{
+    char key[8];
+
+    g_snprintf (key, sizeof (key), "%d", n);
+
+    if (do_set)
+        mc_config_set_string (mc_global.main_config, FOLDER_SHORTCUT_GROUP, key,
+                              vfs_path_as_str (panel->cwd_vpath));
+    else
+    {
+        char *dir;
+
+        dir = mc_config_get_string (mc_global.main_config, FOLDER_SHORTCUT_GROUP, key, "");
+        if (*dir != '\0')
+        {
+            vfs_path_t *vpath;
+
+            vpath = vfs_path_from_str (dir);
+            panel_cd (panel, vpath, cd_exact);
+            vfs_path_free (vpath, TRUE);
+        }
+        g_free (dir);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 panel_mark_all_files (WPanel *panel, gboolean do_select)
 {
@@ -5171,6 +5204,17 @@ panel_execute_cmd (WPanel *panel, long command)
     if ((panel->quick_search.filtering && (command_flags & KEYBIND_ACTION_KEEP_PANEL_FILTER) == 0)
         || (!panel->quick_search.filtering && command != CK_Search && command != CK_QuickFilter))
         stop_search (panel);
+
+    if (command >= CK_SetFolderShortcut0 && command <= CK_SetFolderShortcut9)
+    {
+        panel_folder_shortcut (panel, (int) (command - CK_SetFolderShortcut0), TRUE);
+        return MSG_HANDLED;
+    }
+    if (command >= CK_GoFolderShortcut0 && command <= CK_GoFolderShortcut9)
+    {
+        panel_folder_shortcut (panel, (int) (command - CK_GoFolderShortcut0), FALSE);
+        return MSG_HANDLED;
+    }
 
     switch (command)
     {

@@ -410,6 +410,20 @@ is). The directory hotlist, which was Ctrl-\\, moves to Alt-\\.
 pattern, as they do without the mode). A terminal sends them only when it
 reports modified keys, see below.
 
+**Ctrl-Shift-1 to Ctrl-Shift-0, Alt-1 to Alt-0**
+: remember the directory of the panel in one of ten folder shortcuts, and go to
+it. Far goes to a shortcut with the right Ctrl and the digit, which a terminal
+cannot tell from the left Ctrl (Ctrl and a digit is the listing mode), so the
+go keys are Alt and the digit; they can be changed in keymap.ini (actions
+SetFolderShortcut0 to 9 and GoFolderShortcut0 to 9). The shortcuts are in the
+FarFolderShortcuts group of the setup file and are saved with it. Ctrl-Shift
+with a digit is sent by a terminal of the kitty keyboard protocol only.
+
+**Ctrl-[, Ctrl-]**
+: put the path of the left and of the right panel into the command line. Ctrl-]
+works everywhere; a terminal sends Ctrl-[ as Esc, so it is told apart only in a
+terminal of the kitty keyboard protocol.
+
 **Alt with a character, Alt-Shift with a character**
 : the fast find of Far: the panel goes to the file whose name begins with the
 characters typed while Alt is held down, and Ctrl-Enter and Ctrl-Shift-Enter go
@@ -475,12 +489,10 @@ block instead of wrapping lines, the clipboard keys Ctrl-C, Ctrl-V and Ctrl-X
 of the editor are not bound (Ctrl-Insert, Shift-Insert and Shift-Delete work),
 and the viewer keeps its own F8, F9, Space and plus and minus keys; the panels
 keep the M-Commander colors and have no descriptions of the files (Ctrl-6 and
-Ctrl-7 show other columns, see above), Ctrl-Z, Ctrl-M and the folder shortcuts
+Ctrl-7 show other columns, see above), Ctrl-Z and Ctrl-M
 are not bound, nor is Ctrl-H for the hidden files (a terminal sends Backspace
 as Ctrl-H, and Enter as Ctrl-M, and M-Commander cannot tell the two apart;
-Alt-. shows and hides the hidden files, as it does without the mode), Ctrl with
-a square bracket does not put the path of the left or of the right panel into
-the command line (a terminal sends Ctrl-left bracket as Esc), and Ctrl-, does
+Alt-. shows and hides the hidden files, as it does without the mode), and Ctrl-, does
 not switch the panel layout (a terminal sends it as Ctrl-L, which shows the
 information panel in this mode); Alt-, does. Alt with a character is the fast
 find only where no action of M-Commander has the key, see above, and the fast

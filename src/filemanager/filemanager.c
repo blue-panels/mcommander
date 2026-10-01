@@ -1338,6 +1338,14 @@ midnight_execute_cmd (Widget *sender, long command)
         if (get_other_type () == view_listing)
             midnight_put_panel_path (other_panel);
         break;
+    case CK_PutLeftPath:
+        if (get_panel_type (0) == view_listing)
+            midnight_put_panel_path (PANEL (get_panel_widget (0)));
+        break;
+    case CK_PutRightPath:
+        if (get_panel_type (1) == view_listing)
+            midnight_put_panel_path (PANEL (get_panel_widget (1)));
+        break;
     case CK_PutOtherLink:
         put_other_link ();
         break;

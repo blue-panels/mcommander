@@ -107,6 +107,7 @@ gboolean tty_paste_as_block = FALSE;
 #define TTY_PASTE_MAX_BYTES (16 * 1024 * 1024)
 static gint64 tty_paste_gap_usec = 2 * G_USEC_PER_SEC;
 static GString *tty_paste_block = NULL;
+gboolean tty_far_ctrl_lbracket = FALSE;
 
 /* This table is a mapping between names and the constants we use
  * We use this to allow users to define alternate definitions for
@@ -1759,6 +1760,10 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
     if (key < 32 || key > 126)
         return -1;
 
+    // Ctrl-Shift-1 .. Ctrl-Shift-0 (the folder shortcuts of Far mode) keep both modifiers
+    if ((mod & KEY_M_CTRL) != 0 && (mod & KEY_M_SHIFT) != 0 && g_ascii_isdigit ((gchar) key))
+        return mod | (int) key;
+
     if ((mod & KEY_M_SHIFT) != 0)
     {
         if (shifted > 31 && shifted < 127)
@@ -1767,6 +1772,10 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
             key = (unsigned int) g_ascii_toupper ((gchar) key);
         mod &= ~KEY_M_SHIFT;
     }
+
+    // Far mode: Ctrl-[ is not Esc, which is what the control character of it is
+    if ((mod & KEY_M_CTRL) != 0 && key == '[' && tty_far_ctrl_lbracket)
+        return mod | ESC_CHAR;
 
     if ((mod & KEY_M_CTRL) != 0)
     {
@@ -2571,7 +2580,8 @@ tty_keyname_to_keycode (const char *name, char **label)
 
     if (use_shift != -1)
     {
-        if (k < 127 && k > 31)
+        // "ctrl-shift-1" is not "ctrl-1": the digit keeps both modifiers
+        if (k < 127 && k > 31 && !(use_ctrl != -1 && g_ascii_isdigit ((gchar) k)))
             k = g_ascii_toupper ((gchar) k);
         else
             k |= KEY_M_SHIFT;

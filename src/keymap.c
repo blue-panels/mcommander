@@ -36,6 +36,7 @@
 #include "lib/fileloc.h"
 #include "lib/keybind.h"
 #include "lib/mcconfig.h"  // mc_config_t
+#include "lib/tty/key.h"  // tty_far_ctrl_lbracket
 #include "lib/util.h"
 #include "lib/widget.h"  // dialog_map, input_map, listbox_map, menu_map, radio_map
 
@@ -804,6 +805,9 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
     // Shift-F9: save the setup; Shift-F10: the menu item chosen last. Ctrl-\ goes to the root
     // directory (see the panel), so the hotlist moves to Alt and the backslash
     { "ApplyCommand", "ctrl-g" },
+    // Ctrl-[ and Ctrl-]: the path of the left and of the right panel goes to the command line
+    { "PutLeftPath", "ctrl-lbracket" },
+    { "PutRightPath", "ctrl-rbracket" },
     { "Link", "alt-f6" },
     { "Tree", "alt-f10" },
     { "SaveSetup", "f21" },
@@ -849,6 +853,28 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     // Shift-gray plus and minus: select and unselect all the files
     { "SelectAll", "shift-kpplus" },
     { "UnselectAll", "shift-kpminus" },
+    // Ctrl-Shift-digit sets a folder shortcut; Far goes to it with the right Ctrl and the digit, which
+    // a terminal cannot tell from the left one (Ctrl-digit is the listing mode), so it is Alt-digit
+    { "SetFolderShortcut1", "ctrl-shift-1" },
+    { "SetFolderShortcut2", "ctrl-shift-2" },
+    { "SetFolderShortcut3", "ctrl-shift-3" },
+    { "SetFolderShortcut4", "ctrl-shift-4" },
+    { "SetFolderShortcut5", "ctrl-shift-5" },
+    { "SetFolderShortcut6", "ctrl-shift-6" },
+    { "SetFolderShortcut7", "ctrl-shift-7" },
+    { "SetFolderShortcut8", "ctrl-shift-8" },
+    { "SetFolderShortcut9", "ctrl-shift-9" },
+    { "SetFolderShortcut0", "ctrl-shift-0" },
+    { "GoFolderShortcut1", "alt-1" },
+    { "GoFolderShortcut2", "alt-2" },
+    { "GoFolderShortcut3", "alt-3" },
+    { "GoFolderShortcut4", "alt-4" },
+    { "GoFolderShortcut5", "alt-5" },
+    { "GoFolderShortcut6", "alt-6" },
+    { "GoFolderShortcut7", "alt-7" },
+    { "GoFolderShortcut8", "alt-8" },
+    { "GoFolderShortcut9", "alt-9" },
+    { "GoFolderShortcut0", "alt-0" },
     // Ctrl-1 .. Ctrl-0: the listing modes of Far
     { "PanelListingMode1", "ctrl-1" },
     { "PanelListingMode2", "ctrl-2" },
@@ -982,6 +1008,7 @@ static void
 apply_far_mode_keymap (mc_config_t *keymap)
 {
     check_far_keys = keymap_far_mode;
+    tty_far_ctrl_lbracket = keymap_far_mode;
 
     if (!keymap_far_mode)
         return;

@@ -68,6 +68,7 @@ extern int old_esc_mode_timeout;
 
 extern int double_click_speed;
 extern gboolean old_esc_mode;
+extern gboolean tty_far_ctrl_lbracket;  // Far mode: Ctrl-[ is a key of its own, not Esc
 extern int mou_auto_repeat;
 
 extern gboolean bracketed_pasting_in_progress;

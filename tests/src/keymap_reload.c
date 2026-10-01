@@ -473,6 +473,24 @@ START_TEST (test_keymap_far_mode_select_all_default_button)
     ck_assert_int_eq (keybind_lookup_keymap_command (input_map, KEY_M_CTRL | KEY_M_SHIFT | '\n'),
                       CK_PutOtherPanelFile);
 
+    /* folder shortcuts: Ctrl-Shift-digit sets, Alt-digit goes; Ctrl-digit is still the listing mode */
+    ck_assert_int_eq (
+        keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_M_SHIFT | '1'),
+        CK_SetFolderShortcut1);
+    ck_assert_int_eq (
+        keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_M_SHIFT | '0'),
+        CK_SetFolderShortcut0);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('7')), CK_GoFolderShortcut7);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | '1'),
+                      CK_PanelListingMode1);
+
+    /* Ctrl-[ and Ctrl-]: the paths of the left and of the right panel */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('[')),
+                      CK_PutLeftPath);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL (']')),
+                      CK_PutRightPath);
+    ck_assert (tty_far_ctrl_lbracket);
+
     keymap_free ();
 
     /* off: none of the three is bound */
@@ -483,6 +501,8 @@ START_TEST (test_keymap_far_mode_select_all_default_button)
     ck_assert_int_ne (keybind_lookup_keymap_command (dialog_map, KEY_NPAGE), CK_DefaultButton);
     ck_assert_int_ne (keybind_lookup_keymap_command (input_map, KEY_M_SHIFT | '\n'),
                       CK_PutPanelFile);
+    ck_assert (!tty_far_ctrl_lbracket);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, ALT ('7')), CK_GoFolderShortcut7);
     keymap_free ();
 }
 END_TEST

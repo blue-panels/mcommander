@@ -111,6 +111,7 @@ static const struct decode_ds
     { "\033[105;5u", '\t' },                       // Ctrl-I stays Tab
     { "\033[32;5u", XCTRL (' ') },                 // Ctrl-Space
     { "\033[49;5u", KEY_M_CTRL | '1' },            // Ctrl-1, not Ctrl-Q
+    { "\033[49:33;6u", KEY_M_CTRL | KEY_M_SHIFT | '1' },  // Ctrl-Shift-1, not Ctrl-!
     { "\033[97;3u", ALT ('a') },                   // Alt-A
     { "\033[97;4u", ALT ('A') },                   // Alt-Shift-A
     { "\033[49:33;4u", ALT ('!') },                // Alt-Shift-1 with the shifted key
