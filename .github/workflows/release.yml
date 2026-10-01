@@ -702,6 +702,43 @@ jobs:
           path: out/*
           overwrite: true
 
+  # Termux is Android's terminal, with a package repository of its own and the
+  # libc of Android (Bionic), so a package for it is built with the package
+  # builder of that repository: the Android NDK, and the libraries as Termux
+  # packages. aarch64 and arm are the phones; x86_64 is what the installation
+  # is tried on, in Docker.
+  termux:
+    needs: archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    name: Termux packages (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ aarch64, arm, x86_64 ]
+    env:
+      VERSION: ${{ needs.archive.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-archive
+          path: dist
+
+      - name: Build the package
+        run: packaging/termux/build-deb.sh ${{ matrix.arch }} "dist/mcommander-$VERSION.tar.gz"
+
+      - name: Install it in Termux and run it
+        if: matrix.arch == 'x86_64'
+        run: packaging/termux/smoke.sh termux-out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: termux-${{ matrix.arch }}-packages
+          path: termux-out/*.deb
+
   ppa:
     needs: archive
     runs-on: ubuntu-latest
@@ -768,7 +805,7 @@ jobs:
           overwrite: true
 
   publish:
-    needs: [debian, fedora, arch, arch-install, fedora-install, debian-install, macos-package]
+    needs: [debian, fedora, arch, arch-install, fedora-install, debian-install, macos-package, termux]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Runs even when a distribution failed: what did get built is still worth
