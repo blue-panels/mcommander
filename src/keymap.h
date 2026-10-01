@@ -64,6 +64,9 @@ extern const global_keymap_t *mcterm_map;
 
 /*** declarations of public functions ************************************************************/
 
+/* Far mode: panel keys of Far Manager; load the keymap again to see a change */
+extern gboolean keymap_far_mode;
+
 void keymap_load (gboolean load_from_file);
 void keymap_free (void);
 void keymap_save_old_maps (void);
