@@ -97,6 +97,9 @@ gboolean mcterm_mark_active (const WMcTerm *t);
 /* Type @text into the shell. FALSE when the shell is gone or took none of it for a second;
    what it took by then stays on its line. */
 gboolean mcterm_send_text (WMcTerm *t, const char *text);
+/* Give the program a paste: as one block in ESC[200~ ... ESC[201~ when it asked for that,
+   otherwise as one line, so that no line runs by itself. */
+gboolean mcterm_send_paste (WMcTerm *t, const GString *text);
 
 /* Called while the master has output to read; FALSE when the fd is gone. */
 typedef gboolean (*mcterm_pty_drain_fn) (int fd, void *data);
@@ -320,6 +323,13 @@ mcterm_mark_active (const WMcTerm *t)
 }
 static inline gboolean
 mcterm_send_text (WMcTerm *t, const char *text)
+{
+    (void) t;
+    (void) text;
+    return FALSE;
+}
+static inline gboolean
+mcterm_send_paste (WMcTerm *t, const GString *text)
 {
     (void) t;
     (void) text;

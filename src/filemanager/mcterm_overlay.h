@@ -63,6 +63,10 @@ char *mcterm_overlay_cmdline_text (void);
 /* Panel view hooks for keys that are the command line's, called after mc's own keys. */
 cb_ret_t mcterm_overlay_cmdline_key (int parm);
 cb_ret_t mcterm_overlay_cmdline_enter (void);
+/* Whether a paste is for the shell: the terminal has the focus, or the shell owns the command
+   line. MSG_NOT_HANDLED from the handler means the paste is to be typed key by key. */
+gboolean mcterm_overlay_paste_is_shells (void);
+cb_ret_t mcterm_overlay_handle_paste (const GString *text);
 
 cb_ret_t mcterm_overlay_handle_key (Widget *w, int parm,
                                     mcterm_overlay_command_cb_t execute_command,

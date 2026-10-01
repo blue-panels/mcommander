@@ -1609,6 +1609,44 @@ mcterm_overlay_clip_command (long command)
 
 /* --------------------------------------------------------------------------------------------- */
 
+gboolean
+mcterm_overlay_paste_is_shells (void)
+{
+    if (mcterm_panel == NULL)
+        return FALSE;
+
+    if (mcterm_mode)
+    {
+        WGroup *g = GROUP (filemanager);
+
+        // a panel over the terminal takes the keys, and so the paste
+        return !mcterm_overlay_panel_focused (g->current != NULL ? WIDGET (g->current->data)
+                                                                 : NULL);
+    }
+
+    return mcterm_overlay_shell_owns_cmdline ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+cb_ret_t
+mcterm_overlay_handle_paste (const GString *text)
+{
+    // the first key ends the pause, as when the paste is typed
+    if (mcterm_pause_pending)
+        return MSG_NOT_HANDLED;
+
+    if (!mcterm_mode)
+    {
+        mcterm_overlay_focus_cmdline ();
+        mcterm_overlay_move_cmdline_to_shell ();
+    }
+
+    return send_message (mcterm_overlay_widget (), NULL, MSG_PASTE, 0, (void *) text);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* With the panels up, a key that would have gone to the command line goes to the shell's line
    editor instead. Called after mc's own keys have been dealt with, so what is left really is the
    command line's. */
@@ -2007,6 +2045,19 @@ cb_ret_t
 mcterm_overlay_cmdline_key (int parm)
 {
     (void) parm;
+    return MSG_NOT_HANDLED;
+}
+
+gboolean
+mcterm_overlay_paste_is_shells (void)
+{
+    return FALSE;
+}
+
+cb_ret_t
+mcterm_overlay_handle_paste (const GString *text)
+{
+    (void) text;
     return MSG_NOT_HANDLED;
 }
 

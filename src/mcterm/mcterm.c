@@ -2711,6 +2711,14 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
             return MSG_NOT_HANDLED;
         return mcterm_send_encoded_key (t, parm) ? MSG_HANDLED : MSG_NOT_HANDLED;
 
+    case MSG_PASTE:
+        // a search or a filter being typed takes the paste as keys
+        if (t->query_active || t->child_dead || t->pty_master < 0)
+            return MSG_NOT_HANDLED;
+        if (!mcterm_send_paste (t, (const GString *) data))
+            message (D_ERROR, MSG_ERROR, "%s", _ ("The shell did not take the whole text"));
+        return MSG_HANDLED;
+
     case MSG_KEY:
         if (mcterm_query_key (t, parm) == MSG_HANDLED)
             return MSG_HANDLED;
@@ -3201,6 +3209,30 @@ mcterm_send_text (WMcTerm *t, const char *text)
     // Set after the transfer: the echo read on the way resets it, and bytes went out since.
     t->line_typed = TRUE;
     t->line_cleared = FALSE;
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_send_paste (WMcTerm *t, const GString *text)
+{
+    char *bytes;
+    gboolean ok;
+
+    if (t == NULL || t->vterm == NULL || text->len == 0)
+        return TRUE;
+
+    if (mcview_vterm_bracketed_paste (t->vterm))
+        bytes = g_strconcat (ESC_STR "[200~", text->str, ESC_STR "[201~", (char *) NULL);
+    else
+    {
+        bytes = g_strndup (text->str, text->len);
+        (void) input_text_to_line (bytes, text->len);
+    }
+
+    ok = mcterm_send_text (t, bytes);
+    g_free (bytes);
     return ok;
 }
 

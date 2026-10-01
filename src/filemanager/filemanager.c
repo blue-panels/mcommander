@@ -1951,6 +1951,24 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
         return v;
     }
 
+    case MSG_PASTE:
+    {
+        cb_ret_t v;
+
+        // the menu and quick search take the paste as keys
+        if (widget_get_state (WIDGET (the_menubar), WST_FOCUSED)
+            || (get_current_type () == view_listing && current_panel->quick_search.active))
+            return MSG_NOT_HANDLED;
+        if (mcterm_overlay_paste_is_shells ())
+            return mcterm_overlay_handle_paste ((const GString *) data);
+
+        v = dlg_default_callback (w, sender, msg, parm, data);
+        // what the panel does not take is the command line's, as typed keys are
+        if (v == MSG_NOT_HANDLED && command_prompt && !is_cmdline_mute ())
+            v = send_message (cmdline, NULL, MSG_PASTE, 0, data);
+        return v;
+    }
+
     case MSG_POST_KEY:
         if (!widget_get_state (WIDGET (the_menubar), WST_FOCUSED))
             update_dirty_panels ();
