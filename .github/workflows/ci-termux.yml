@@ -1,0 +1,41 @@
+name: ci-termux
+
+on:
+  workflow_call:
+
+jobs:
+  build-termux:
+    name: build-termux (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    permissions:
+      contents: read
+
+    # The package is built the way the Termux repository builds its own, for the
+    # 64-bit ARM phones and, to start it, for x86_64, which runs in Docker.
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ aarch64, x86_64 ]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the tools that make the source archive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+              autoconf automake libtool gettext autopoint
+
+      - name: Build the package
+        run: packaging/termux/build-deb.sh ${{ matrix.arch }}
+
+      - name: Install it in Termux and run it
+        if: matrix.arch == 'x86_64'
+        run: packaging/termux/smoke.sh termux-out
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: termux-${{ matrix.arch }}
+          path: termux-out/*.deb
