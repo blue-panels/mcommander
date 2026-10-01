@@ -1776,8 +1776,9 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
             key &= 0x1F;
             mod &= ~KEY_M_CTRL;
         }
-        else
+        else if (!g_ascii_isdigit ((gchar) key))
             key = (unsigned int) XCTRL (key);
+        // else Ctrl-1 .. Ctrl-0 stay what they are: XCTRL would make them Ctrl-Q, Ctrl-R, ...
     }
 
     return mod | (int) key;
@@ -2578,7 +2579,8 @@ tty_keyname_to_keycode (const char *name, char **label)
 
     if (use_ctrl != -1)
     {
-        if (k < 256)
+        // "ctrl-1" is the digit with the modifier: XCTRL (k) would make it Ctrl-Q
+        if (k < 256 && !g_ascii_isdigit ((gchar) k))
             k = XCTRL (k);
         else
             k |= KEY_M_CTRL;
