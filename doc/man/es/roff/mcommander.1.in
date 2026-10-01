@@ -4671,6 +4671,17 @@ más antigua y vuelve a la más reciente, como busca
 \fBless\fP
 y como se hacía antes. "down" por omisión.
 
+.TP
+\fIclipboard_write\fP
+Si un programa del terminal puede poner texto en el portapapeles con la
+secuencia OSC 52, como hacen vim, tmux o una sesión ssh. El texto va adonde
+va una copia del editor: al archivo del portapapeles y a la orden de
+\fIclipboard_store\fP\&.
+Así un programa nunca puede leer el portapapeles. "false" por omisión:
+cualquier salida en el terminal, también un archivo mostrado con
+\fBcat\fP,
+podría cambiar el portapapeles.
+
 
 .SH Parámetros para editor o visor externo
 .PP

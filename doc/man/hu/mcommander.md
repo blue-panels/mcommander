@@ -3615,6 +3615,16 @@ megy, azon túl pedig a legrégebbire fordul, az "up" a legrégebbi sor felé me
 **less**
 keres. Alapértelmezés szerint "down".
 
+*clipboard_write*
+: Tehet-e a terminálban futó program szöveget a vágólapra az OSC 52
+szekvenciával, ahogy a vim, a tmux vagy egy ssh munkamenet teszi. A szöveg
+oda kerül, ahová a szerkesztőből másolt szöveg: a vágólap fájljába és a
+*clipboard_store*
+parancsnak. A program így soha nem olvashatja a vágólapot. Alapértelmezés
+szerint "false": a terminál bármely kimenete, egy
+**cat**
+paranccsal kiírt fájl is, megváltoztathatná a vágólapot.
+
 # Terminál adatbázisok <a id="terminal-databases"></a>
 
 A M-Commander lehetőséget nyújt a terminál adatbázis root jogok

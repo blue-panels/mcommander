@@ -3601,6 +3601,16 @@ riga più vecchia e torna alla più recente, come cerca
 **less**
 e come si faceva prima. "down" in modo predefinito.
 
+*clipboard_write*
+: Se un programma nel terminale può mettere testo negli appunti con la
+sequenza OSC 52, come fanno vim, tmux o una sessione ssh. Il testo va dove va
+una copia dall'editor: nel file degli appunti e al comando di
+*clipboard_store*.
+In questo modo un programma non può mai leggere gli appunti. "false" in modo
+predefinito: qualsiasi uscita nel terminale, anche un file mostrato con
+**cat**,
+potrebbe cambiare gli appunti.
+
 # Database di terminali <a id="terminal-databases"></a>
 
 Il M-Commander fornisce una maniera per correggere il database

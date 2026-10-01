@@ -3763,6 +3763,16 @@ the oldest row and round to the newest, the way
 **less**
 searches. "down" by default.
 
+*clipboard_write*
+: Whether a program in the terminal may put text on the clipboard with the
+OSC 52 sequence, as vim, tmux or an ssh session do. The text goes where a
+copy from the editor goes: to the clipboard file and to the
+*clipboard_store*
+command. A program can never read the clipboard this way. "false" by
+default: any output in the terminal, a file shown with
+**cat**
+too, could change the clipboard.
+
 # Parameters for external editor or viewer
 
 M-Commander provides a way for specify an options for external editors

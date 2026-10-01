@@ -31,6 +31,7 @@ typedef struct WMcTerm WMcTerm;
 /*** global variables defined in .c file *********************************************************/
 
 extern mcterm_search_dir_t mcterm_search_direction;
+extern gboolean mcterm_clipboard_write;
 
 /*** declarations of public functions ************************************************************/
 

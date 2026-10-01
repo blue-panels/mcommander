@@ -3976,6 +3976,16 @@ más antigua y vuelve a la más reciente, como busca
 **less**
 y como se hacía antes. "down" por omisión.
 
+*clipboard_write*
+: Si un programa del terminal puede poner texto en el portapapeles con la
+secuencia OSC 52, como hacen vim, tmux o una sesión ssh. El texto va adonde
+va una copia del editor: al archivo del portapapeles y a la orden de
+*clipboard_store*.
+Así un programa nunca puede leer el portapapeles. "false" por omisión:
+cualquier salida en el terminal, también un archivo mostrado con
+**cat**,
+podría cambiar el portapapeles.
+
 # Parámetros para editor o visor externo <a id="parameters-for-external-editor-or-viewer"></a>
 
 M-Commander permite especificar opciones para editores y visores
