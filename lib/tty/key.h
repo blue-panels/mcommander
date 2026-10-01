@@ -36,9 +36,15 @@
 /* Return code for the extended mouse sequence */
 #define MCKEY_EXTENDED_MOUSE -3
 
+/* A bracketed paste taken as one block: tty_paste_take() gives its text */
+#define MCKEY_PASTE -7
+
 /* Return code for brackets of bracketed paste mode */
 #define MCKEY_BRACKETED_PASTING_START -4
 #define MCKEY_BRACKETED_PASTING_END   -5
+
+/* Return code for a file drop announced by a far2l terminal (see far2l.h) */
+#define MCKEY_FAR2L_DND -6
 
 /*** enums ***************************************************************************************/
 
@@ -65,6 +71,8 @@ extern gboolean old_esc_mode;
 extern int mou_auto_repeat;
 
 extern gboolean bracketed_pasting_in_progress;
+/* Set by a loop that can take a paste as one block (MCKEY_PASTE) */
+extern gboolean tty_paste_as_block;
 
 /*** declarations of public functions ************************************************************/
 
@@ -79,7 +87,13 @@ char *tty_keycode_to_keyname (const int keycode);
 /* mouse support */
 int tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block);
 gboolean is_idle (void);
+/* The clipboard of a terminal that speaks the far2l extensions */
+gboolean tty_far2l_clipboard_available (void);
+gboolean tty_far2l_clipboard_set (const char *text, size_t len);
+gboolean tty_far2l_clipboard_get (char **text, size_t *len);
 int tty_getch (void);
+GString *tty_paste_take (void);
+void tty_paste_sanitize (GString *text);
 
 /* While waiting for input, the program can select on more than one file */
 typedef int (*select_fn) (int fd, void *info);
@@ -116,6 +130,15 @@ void disable_bracketed_paste (void);
 /* Kitty keyboard protocol, if the terminal knows it */
 void enable_kitty_keyboard (void);
 void disable_kitty_keyboard (void);
+/* Win32 input mode, if the terminal knows it: every key comes as CSI Vk;Sc;Uc;Kd;Cs;Rc _ */
+void enable_win32_input (void);
+void disable_win32_input (void);
+/* far2l extensions, if the terminal knows them: every key comes as APC f2l <base64> ST.
+   Kitty and Win32 input mode stay off while they are on. */
+void enable_far2l_input (void);
+void disable_far2l_input (void);
+/* Which of them the keys come in now: "far2l", "kitty", "win32" or "legacy" */
+const char *tty_input_protocol (void);
 
 /*** inline functions ****************************************************************************/
 

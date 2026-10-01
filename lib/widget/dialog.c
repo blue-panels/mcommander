@@ -285,7 +285,9 @@ frontend_dlg_run (WDialog *h)
 
         // Clear interrupt flag
         tty_got_interrupt ();
+        tty_paste_as_block = TRUE;
         d_key = tty_get_event (&event, GROUP (h)->mouse_status == MOU_REPEAT, TRUE);
+        tty_paste_as_block = FALSE;
 
         dlg_process_event (h, d_key, &event);
 
@@ -519,6 +521,18 @@ dlg_process_event (WDialog *h, int key, Gpm_Event *event)
         Widget *w = WIDGET (h);
 
         GROUP (h)->mouse_status = w->mouse_handler (w, event);
+        break;
+    }
+
+    case MCKEY_PASTE:
+    {
+        GString *text = tty_paste_take ();
+
+        if (text != NULL)
+        {
+            (void) send_message (h, NULL, MSG_PASTE, 0, text);
+            g_string_free (text, TRUE);
+        }
         break;
     }
 

@@ -62,6 +62,7 @@
 #include "lib/vfs/vfs.h"  // vfs_init(), vfs_shut()
 
 #include "filemanager/filemanager.h"
+#include "filemanager/dnd.h"
 #include "filemanager/treestore.h"  // tree_store_save
 #include "filemanager/layout.h"
 #include "filemanager/ext.h"      // flush_extension_file()
@@ -443,7 +444,10 @@ main (int argc, char *argv[])
         /* Done after tty_enter_ca_mode (tty_init) because in VTE bracketed mode is
            separate for the normal and alternate screens */
         enable_bracketed_paste ();
+        far2l_dnd_set_handler (filemanager_dnd_drop);
+        enable_far2l_input ();
         enable_kitty_keyboard ();
+        enable_win32_input ();
 
         mc_prompt = g_strdup ((geteuid () == 0) ? "# " : "$ ");
     }
@@ -457,7 +461,9 @@ main (int argc, char *argv[])
     g_free (mc_prompt);
 
     disable_bracketed_paste ();
+    disable_win32_input ();
     disable_kitty_keyboard ();
+    disable_far2l_input ();
 
     disable_mouse ();
 
