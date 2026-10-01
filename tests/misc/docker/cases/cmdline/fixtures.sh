@@ -41,4 +41,25 @@ alpha.txt	key C-o,type $m head -c 3000 /dev/zero | tr '\\0' x > $clip/mcedit.cli
 alpha.txt	key C-o,type $w 'PASTEMARK' > $clip/mcedit.clip,key Enter,key C-o,key S-Insert,type -TAIL,key C-Insert	clipfile: PASTEMARK-TAIL	Ctrl-Insert on the shell's own line copies that line, as it is now	local
 EOF2
 
+# A paste from the terminal (Shift and the mouse, Ctrl-Shift-V) comes in
+# ESC[200~ ... ESC[201~.  The shell gets it as one block and runs nothing
+# until Enter; echo shows whether a line ran: "42AA" is only on the screen
+# when the line was run, the line itself reads "$((6*7))AA".
+mkdir -p 02-paste
+printf 'a file for the cursor to stand on\n' > 02-paste/alpha.txt
+printf 'and a second one to find\n' > 02-paste/bravo.txt
+
+two='echo $((6*7))AA\necho $((6*7))BB\n'
+
+cat > 02-paste/cases.tsv <<EOF2
+file	key	expect	why	transports
+alpha.txt	paste $two	no text: 42AA	with the panels up a paste of two lines runs neither	local
+alpha.txt	paste $two,key Enter,key C-o	text: 42BB	Enter runs both	local
+alpha.txt	key C-o,paste $two	no text: 42AA	after Ctrl-O a paste runs nothing either	local
+alpha.txt	key C-o,paste $two,key Enter	text: 42BB	and Enter runs both	local
+alpha.txt	key C-o,type bind 'set enable-bracketed-paste off' 2>/dev/null; unset zle_bracketed_paste,key Enter,paste $two,key Enter	text: 42AA echo 42BB	a shell that did not ask for bracketed paste (bash or zsh) gets the lines as one	local
+alpha.txt	key F7,paste one\\ntwo\\n,key Enter	text: one two	a dialog input takes the paste as one line and is not submitted by its line break	local
+alpha.txt	key Escape,key C-s,paste bra,F3	text: second one to find	quick search takes the paste	local
+EOF2
+
 echo "cmdline cases in $dir"
