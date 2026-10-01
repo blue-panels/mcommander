@@ -824,6 +824,8 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
 /* Dialogs: Ctrl-Enter does the default action (Far), as Enter does outside the buttons */
 static const global_keymap_ini_t far_dialog_keymap[] = {
     { "Ok", "enter; ctrl-enter" },
+    // PgDn: the focus goes to the default button
+    { "DefaultButton", "pgdn" },
     {
         NULL,
         NULL,
@@ -850,6 +852,9 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     { "SortByOwner", "ctrl-f11" },
     // Ctrl-\: the root directory
     { "CdRoot", "ctrl-backslash" },
+    // Shift-gray plus and minus: select and unselect all the files
+    { "SelectAll", "shift-kpplus" },
+    { "UnselectAll", "shift-kpminus" },
     // Ctrl-1 .. Ctrl-0: the listing modes of Far
     { "PanelListingMode1", "ctrl-1" },
     { "PanelListingMode2", "ctrl-2" },

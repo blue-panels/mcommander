@@ -270,10 +270,13 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (SortByATime, N_ ("Sort by access time")),
     ADD_KEYMAP_NAME_DESC (SortByOwner, N_ ("Sort by owner")),
     ADD_KEYMAP_NAME_DESC (CdRoot, N_ ("Go to the root directory")),
+    ADD_KEYMAP_NAME_DESC (SelectAll, N_ ("Select all files")),
+    ADD_KEYMAP_NAME_DESC (UnselectAll, N_ ("Unselect all files")),
 
     // dialog
     ADD_KEYMAP_NAME (Ok),
     ADD_KEYMAP_NAME (Cancel),
+    ADD_KEYMAP_NAME_DESC (DefaultButton, N_ ("Focus the default button")),
 
     // input line
     ADD_KEYMAP_NAME_DESC (Yank, N_ ("Yank (paste kill buffer)")),

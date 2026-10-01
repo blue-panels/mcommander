@@ -258,10 +258,14 @@ enum
     CK_SortByATime,
     CK_SortByOwner,
     CK_CdRoot,
+    // Far mode: Shift-gray plus and Shift-gray minus
+    CK_SelectAll,
+    CK_UnselectAll,
 
     // dialog
     CK_Ok = 300L,
     CK_Cancel,
+    CK_DefaultButton,
 
     // input
     CK_Yank = 350L,

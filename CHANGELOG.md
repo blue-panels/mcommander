@@ -24,6 +24,9 @@ The releases of this fork, newest first.
   ApplyCommand), and Alt-F6, Alt-F10, Shift-F9 and Shift-F10 create a hard
   link, show the tree of directories, save the setup and choose the last menu
   item. The mode stays off by default.
+- Far mode, the next part: Shift-gray plus and Shift-gray minus select and
+  unselect all the files (new actions SelectAll and UnselectAll), and PgDn in a
+  dialog gives the focus to the default button (new action DefaultButton).
 
 ## 6.1.0 - 2026-09-26
 

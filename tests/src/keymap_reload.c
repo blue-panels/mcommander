@@ -450,6 +450,37 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_keymap_far_mode_select_all_default_button)
+{
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+    /* Shift-gray plus and minus select and unselect all the files; PgDn focuses the default button */
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_SHIFT | KEY_KP_ADD),
+                      CK_SelectAll);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_SHIFT | KEY_KP_SUBTRACT),
+                      CK_UnselectAll);
+    ck_assert_int_eq (keybind_lookup_keymap_command (dialog_map, KEY_NPAGE), CK_DefaultButton);
+
+    /* the plain gray keys keep asking for a pattern */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_KP_ADD), CK_Select);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_KP_SUBTRACT),
+                      CK_Unselect);
+
+    keymap_free ();
+
+    /* off: none of the three is bound */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, KEY_M_SHIFT | KEY_KP_ADD),
+                      CK_SelectAll);
+    ck_assert_int_ne (keybind_lookup_keymap_command (dialog_map, KEY_NPAGE), CK_DefaultButton);
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -470,6 +501,7 @@ main (void)
     tcase_add_test (tc_core, test_keymap_far_mode_listing_modes);
     tcase_add_test (tc_core, test_keymap_far_mode_command_line);
     tcase_add_test (tc_core, test_keymap_far_mode_dialogs_and_workflows);
+    tcase_add_test (tc_core, test_keymap_far_mode_select_all_default_button);
 
     return mctest_run_all (tc_core);
 }
