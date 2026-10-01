@@ -85,6 +85,10 @@ void done_key (void);
 
 int tty_keyname_to_keycode (const char *name, char **label);
 char *tty_keycode_to_keyname (const int keycode);
+/* What to do when the terminal is gone (src/resurrect.c) */
+void tty_set_hangup_hook (void (*hook) (void));
+/* The descriptor mc reads its terminal from: 0 if the standard input is a terminal */
+int tty_input_fd (void);
 /* mouse support */
 int tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block);
 gboolean is_idle (void);

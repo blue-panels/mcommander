@@ -36,6 +36,14 @@ The releases of this fork, newest first.
   FarFolderShortcuts group of the setup file. Ctrl-[ and Ctrl-] put the path of
   the left and of the right panel into the command line (Ctrl-[ only in a
   terminal of the kitty keyboard protocol; elsewhere it is Esc).
+- M-Commander no longer exits when its terminal is lost (the window is closed,
+  the SSH connection drops): it waits for a new terminal, as far2l does. Start
+  M-Commander in another terminal with the same TERM and it lists the ones that
+  wait, each with its directory; the number of one brings it to the new terminal
+  with the screen it had, Enter starts a new one. It is on by default; --mortal,
+  or immortal=false in [Midnight-Commander], leaves it out. It is off on the
+  Linux console, in the terminal of another mc, in the editor, the viewer and the
+  diff viewer started alone, and where descriptors cannot be sent over a socket.
 
 ## 6.1.0 - 2026-09-26
 

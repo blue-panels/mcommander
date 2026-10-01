@@ -63,6 +63,10 @@ xterm-capable terminals (tmux/screen).
 *--nokeymap*
 : Don't load key bindings from any file, use default hardcoded keys.
 
+*--mortal*
+: Exit when the terminal is lost, instead of waiting for a new one. See
+[Lost terminal](#lost-terminal).
+
 *-P file, --printwd=file*
 : Print the last working directory to the specified file.  This option is
 not meant to be used directly.  Instead, it's used from a special shell
@@ -187,6 +191,42 @@ parameter.
 If you are running M-Commander with the mouse support, you
 can get the default mouse behavior (cutting and pasting text) by holding
 down the Shift key.
+
+<!-- help:break -->
+
+# Lost terminal <a id="lost-terminal"></a>
+
+When the terminal M-Commander runs in is lost (the window is closed, the
+connection over SSH drops), M-Commander does not exit. It waits, with
+everything it was doing, for a new terminal.
+
+Start
+**mcommander**
+in another terminal with the same
+**TERM**
+and it lists the M-Commanders that wait, each with the directory it was in.
+The number of one of them brings it to the new terminal, where it goes on from
+the screen it had; Enter starts a new M-Commander as usual.
+The command that took the old one over stays until it finishes, passes the
+size changes of the window and the interrupt key to it, and exits with its
+exit code. The terminal is asked what it can do again, as at the start.
+
+A waiting M-Commander is an ordinary process; stop it with
+**kill**
+if it is not needed. Its files are in
+*$XDG_RUNTIME_DIR/mc-resurrect*, or, with no such variable, in
+*mc-resurrect-UID*
+of the temporary directory, and are only open to the user.
+
+The option
+**--mortal**,
+or
+*immortal=false*
+in the
+*Midnight-Commander*
+section of the ini file, turns this off: M-Commander exits with its terminal.
+It is also off on the Linux console, in the terminal of another M-Commander,
+and in the editor and the viewer started alone.
 
 <!-- help:break -->
 

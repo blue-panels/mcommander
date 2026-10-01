@@ -17,6 +17,7 @@ TTY_SRC = \
 	far2l.c far2l.h \
 	key.c key.h keyxdef.c \
 	mouse.c mouse.h \
+	resurrect.c resurrect.h \
 	tty-internal.c tty-internal.h \
 	tty.c tty.h \
 	win.c win.h

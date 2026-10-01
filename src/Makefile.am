@@ -106,6 +106,7 @@ libinternal_la_SOURCES = \
 	keymap.c keymap.h \
 	key_learn.c key_learn.h \
 	manage_plugins.c manage_plugins.h \
+	resurrect.c resurrect.h \
 	runtime-host.c runtime-host.h \
 	runtime-panel-provider.c runtime-panel-provider.h \
 	runtime-screen.c runtime-screen.h \

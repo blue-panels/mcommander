@@ -87,6 +87,7 @@ TESTS = \
 	library_independ \
 	mc_build_filename \
 	name_quote \
+	resurrect \
 	serialize \
 	runtime_events \
 	terminal \
@@ -133,6 +134,9 @@ mc_realpath_SOURCES = \
 
 name_quote_SOURCES = \
 	name_quote.c
+
+resurrect_SOURCES = \
+	resurrect.c
 
 serialize_SOURCES = \
 	serialize.c

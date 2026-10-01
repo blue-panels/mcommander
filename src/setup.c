@@ -70,6 +70,8 @@
 #include "src/mcterm/mcterm.h"
 #endif
 
+#include "src/resurrect.h"
+
 #include "setup.h"
 
 /*** global variables ****************************************************************************/
@@ -306,6 +308,7 @@ static const struct
     { "confirm_execute", &confirm_execute },
     { "confirm_history_cleanup", &mc_global.widget.confirm_history_cleanup },
     { "confirm_exit", &confirm_exit },
+    { "immortal", &resurrect_immortal },
     { "confirm_directory_hotlist_delete", &confirm_directory_hotlist_delete },
     { "confirm_view_dir", &confirm_view_dir },
     { "safe_delete", &safe_delete },

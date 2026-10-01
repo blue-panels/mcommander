@@ -80,6 +80,7 @@
 #include "events_init.h"
 #include "execute.h"  // show_panels_request_init()
 #include "args.h"
+#include "resurrect.h"
 #include "runtime-host.h"
 #ifdef ENABLE_SUBSHELL
 #include "subshell/subshell.h"
@@ -392,6 +393,10 @@ main (int argc, char *argv[])
         vfs_path_free (vpath, TRUE);
     }
 
+    /* The terminal may be handed over to an mc that waits for one, or this one may have to wait
+       for another terminal: before anything else is done with this one */
+    resurrect_start ();
+
     /* NOTE: This has to be called before tty_init or whatever routine
        calls any define_sequence */
     init_key ();
@@ -560,6 +565,8 @@ main (int argc, char *argv[])
     }
 
     (void) putchar ('\n');  // Hack to make shell's prompt start at left of screen
+
+    resurrect_finish (exit_code);
 
     return exit_code;
 }

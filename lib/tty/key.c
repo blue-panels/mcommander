@@ -53,6 +53,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
 
 #include "lib/global.h"
 
@@ -562,6 +565,8 @@ static key_def *keys = NULL;
 static GHashTable *key_sequences = NULL;
 
 static int input_fd;
+/* Called when the terminal is gone: see tty_set_hangup_hook() */
+static void (*tty_hangup_hook) (void) = NULL;
 static int disabled_channels = 0;  // Disable channels checking
 
 static GSList *select_list = NULL;
@@ -2406,6 +2411,47 @@ init_key (void)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
+ * Set what mc does when its terminal is gone. The hook is called from tty_get_event() and may
+ * not return until it has a terminal again (input_fd is then another terminal, the same
+ * descriptor); with no hook, or none that takes it over, nothing is done here.
+ */
+
+void
+tty_set_hangup_hook (void (*hook) (void))
+{
+    tty_hangup_hook = hook;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+int
+tty_input_fd (void)
+{
+    return input_fd;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The terminal of the input has been hung up (the window or the connection is gone) */
+
+static gboolean
+input_hung_up (void)
+{
+#ifdef HAVE_POLL_H
+    struct pollfd pfd;
+
+    pfd.fd = input_fd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+
+    return poll (&pfd, 1, 0) > 0 && (pfd.revents & (POLLHUP | POLLERR)) != 0;
+#else
+    return FALSE;
+#endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
  * This has to be called after SLang_init_tty/slint_init
  */
 
@@ -3306,7 +3352,17 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
             gboolean ui_update = check_selects (&select_set);
 
             if (FD_ISSET (input_fd, &select_set))
+            {
+                /* A terminal that is gone is readable for good: without a hook that takes
+                   it over, mc goes on to read what is not there */
+                if (tty_hangup_hook != NULL && input_hung_up ())
+                {
+                    tty_hangup_hook ();
+                    return EV_NONE;
+                }
+
                 break; /* keyboard input takes priority */
+            }
 
             if (ui_update)
                 return EV_NONE; /* no keyboard -- return so idle hooks can run */
