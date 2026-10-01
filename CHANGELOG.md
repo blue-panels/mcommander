@@ -2,6 +2,41 @@
 
 The releases of this fork, newest first.
 
+## Unreleased
+
+- Far mode, off by default, gives the panels the keys of Far Manager (Alt-F7,
+  Alt-F8, Alt-F11, Alt-F12, Ctrl-F3 to Ctrl-F6, Ctrl-F12, Ctrl-L, Ctrl-Q,
+  Ctrl-T) and, in the editor and the viewer, Ctrl-F7, Alt-F8, Alt-F11, Ctrl-Z and
+  the like; it is a check box in the Configuration dialog and the far_mode
+  setting. The mode also has Ctrl-1 to Ctrl-0 for the listing modes of Far,
+  Ctrl-A, Ctrl-F, and Ctrl-E, Ctrl-X and Ctrl-Y in the command line and the edit
+  lines of the dialogs (the previous and the next command of the history, and
+  deleting the line); the prefix of the extended commands moves to Alt-X while
+  the mode is on. Ctrl with a digit is now the digit with the modifier, where
+  it was the control character of the same code (Ctrl-1 was Ctrl-Q).
+- Far mode goes on to the dialogs and the Windows-minded workflows: Ctrl-Enter
+  does the default action of a dialog and the plus and the minus turn a check
+  box on and off; Ctrl-\\ goes to the root directory (the hotlist moves to
+  Alt-\\), Alt with a character is the fast find, with Ctrl-Enter and
+  Ctrl-Shift-Enter for the next and the previous match; Ctrl-F7, Ctrl-F8,
+  Ctrl-F9 and Ctrl-F11 sort by nothing, by the time of change, by the time of
+  access and by the owner; Ctrl-G applies a command to the files (new action
+  ApplyCommand), and Alt-F6, Alt-F10, Shift-F9 and Shift-F10 create a hard
+  link, show the tree of directories, save the setup and choose the last menu
+  item. The mode stays off by default.
+- Far mode, the next part: Shift-gray plus and Shift-gray minus select and
+  unselect all the files (new actions SelectAll and UnselectAll), and PgDn in a
+  dialog gives the focus to the default button (new action DefaultButton).
+  Shift-Enter and Ctrl-Shift-Enter in the edit line of a dialog insert the name
+  of the file under the cursor of the active and of the passive panel (new
+  actions PutPanelFile and PutOtherPanelFile).
+- Far mode, the folder shortcuts: Ctrl-Shift-1 to Ctrl-Shift-0 remember the
+  directory of the panel, Alt-1 to Alt-0 go to it (Far uses the right Ctrl for
+  that, which a terminal cannot tell from the left one); they are kept in the
+  FarFolderShortcuts group of the setup file. Ctrl-[ and Ctrl-] put the path of
+  the left and of the right panel into the command line (Ctrl-[ only in a
+  terminal of the kitty keyboard protocol; elsewhere it is Esc).
+
 ## 6.1.0 - 2026-09-26
 
 - The program is now M-Commander: the main binary is mcommander, the editor,

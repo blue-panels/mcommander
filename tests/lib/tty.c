@@ -94,6 +94,34 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_tty_osc52_sequence)
+{
+    // when
+    char *actual = tty_osc52_sequence ("hello", 5);
+    char *empty = tty_osc52_sequence ("", 0);
+    char *none = tty_osc52_sequence (NULL, 0);
+    char *nul_and_newline = tty_osc52_sequence ("a\0\n", 3);
+    char *too_long_text = g_malloc0 (TTY_OSC52_MAX_TEXT + 1);
+    char *at_limit = tty_osc52_sequence (too_long_text, TTY_OSC52_MAX_TEXT);
+    char *over_limit = tty_osc52_sequence (too_long_text, TTY_OSC52_MAX_TEXT + 1);
+
+    // then
+    ck_assert_str_eq (actual, "\033]52;c;aGVsbG8=\a");
+    ck_assert_ptr_null (empty);
+    ck_assert_ptr_null (none);
+    ck_assert_str_eq (nul_and_newline, "\033]52;c;YQAK\a");
+    ck_assert_ptr_nonnull (at_limit);
+    ck_assert_ptr_null (over_limit);
+
+    g_free (actual);
+    g_free (nul_and_newline);
+    g_free (at_limit);
+    g_free (too_long_text);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -105,6 +133,7 @@ main (void)
     tcase_add_test (tc_core, test_tty_check_term_unset);
     tcase_add_test (tc_core, test_tty_check_term_non_xterm);
     tcase_add_test (tc_core, test_tty_check_term_xterm_like);
+    tcase_add_test (tc_core, test_tty_osc52_sequence);
     // ***********************************
 
     return mctest_run_all (tc_core);

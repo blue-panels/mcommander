@@ -120,6 +120,19 @@ dlg_execute_cmd (WDialog *h, long command)
         h->ret_value = B_CANCEL;
         dlg_close (h);
         break;
+    case CK_DefaultButton:
+        // Far mode (PgDn): the focus goes to the default button, if the dialog has one
+        for (GList *l = g->widgets; l != NULL; l = g_list_next (l))
+        {
+            Widget *bw = WIDGET (l->data);
+
+            if (bw->callback == button_default_callback && BUTTON (bw)->flags == DEFPUSH_BUTTON)
+            {
+                widget_select (bw);
+                break;
+            }
+        }
+        break;
 
     case CK_Up:
     case CK_Left:
@@ -285,7 +298,9 @@ frontend_dlg_run (WDialog *h)
 
         // Clear interrupt flag
         tty_got_interrupt ();
+        tty_paste_as_block = TRUE;
         d_key = tty_get_event (&event, GROUP (h)->mouse_status == MOU_REPEAT, TRUE);
+        tty_paste_as_block = FALSE;
 
         dlg_process_event (h, d_key, &event);
 
@@ -519,6 +534,18 @@ dlg_process_event (WDialog *h, int key, Gpm_Event *event)
         Widget *w = WIDGET (h);
 
         GROUP (h)->mouse_status = w->mouse_handler (w, event);
+        break;
+    }
+
+    case MCKEY_PASTE:
+    {
+        GString *text = tty_paste_take ();
+
+        if (text != NULL)
+        {
+            (void) send_message (h, NULL, MSG_PASTE, 0, text);
+            g_string_free (text, TRUE);
+        }
         break;
     }
 

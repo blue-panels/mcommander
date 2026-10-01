@@ -207,6 +207,8 @@ enum
     CK_PanelToggleLeft,
     CK_PanelToggleRight,
 #endif
+    // Far mode: Ctrl-G of Far Manager
+    CK_ApplyCommand,
 
     // panels
     CK_PanelOtherCd = 200L,
@@ -239,13 +241,59 @@ enum
     CK_ScrollEnd,
     CK_CycleListingFormat,
     CK_QuickFilter,
+    // Far mode: the listing modes Ctrl-1 .. Ctrl-0 of Far Manager
+    CK_PanelListingMode1,
+    CK_PanelListingMode2,
+    CK_PanelListingMode3,
+    CK_PanelListingMode4,
+    CK_PanelListingMode5,
+    CK_PanelListingMode6,
+    CK_PanelListingMode7,
+    CK_PanelListingMode8,
+    CK_PanelListingMode9,
+    CK_PanelListingMode10,
+    // Far mode: the sort keys and Ctrl-\ of Far Manager that have no name of their own
+    CK_SortByUnsorted,
+    CK_SortByCTime,
+    CK_SortByATime,
+    CK_SortByOwner,
+    CK_CdRoot,
+    // Far mode: Shift-gray plus and Shift-gray minus
+    CK_SelectAll,
+    CK_UnselectAll,
+    // Far mode: the folder shortcuts (Ctrl-Shift-digit sets, Alt-digit goes)
+    CK_SetFolderShortcut0,
+    CK_SetFolderShortcut1,
+    CK_SetFolderShortcut2,
+    CK_SetFolderShortcut3,
+    CK_SetFolderShortcut4,
+    CK_SetFolderShortcut5,
+    CK_SetFolderShortcut6,
+    CK_SetFolderShortcut7,
+    CK_SetFolderShortcut8,
+    CK_SetFolderShortcut9,
+    CK_GoFolderShortcut0,
+    CK_GoFolderShortcut1,
+    CK_GoFolderShortcut2,
+    CK_GoFolderShortcut3,
+    CK_GoFolderShortcut4,
+    CK_GoFolderShortcut5,
+    CK_GoFolderShortcut6,
+    CK_GoFolderShortcut7,
+    CK_GoFolderShortcut8,
+    CK_GoFolderShortcut9,
+    CK_PutLeftPath,
+    CK_PutRightPath,
 
     // dialog
     CK_Ok = 300L,
     CK_Cancel,
+    CK_DefaultButton,
 
     // input
     CK_Yank = 350L,
+    CK_PutPanelFile,
+    CK_PutOtherPanelFile,
 
     // help
     CK_Index = 400L,

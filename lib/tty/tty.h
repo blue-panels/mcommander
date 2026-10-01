@@ -183,8 +183,25 @@ extern void tty_unget_input (const unsigned char *data, size_t len);
 extern gboolean tty_has_sixel (void);
 /* The terminal answered CSI ? u. MC_KITTY_KEYBOARD=0 turns the question off. */
 extern gboolean tty_has_kitty_keyboard (void);
+/* OSC 52: the clipboard of the terminal itself, for when no external clipboard
+   command is set. Text over this many bytes is not sent: base64 of it must stay
+   within the 100000 bytes terminals accept. */
+#define TTY_OSC52_MAX_TEXT 74994
+/* The sequence that puts the text on the terminal's clipboard, newly allocated, or NULL when
+   the text is empty or longer than TTY_OSC52_MAX_TEXT. */
+extern char *tty_osc52_sequence (const char *data, size_t len);
+/* Send the text as such a sequence. FALSE when nothing was sent: MC_OSC52=0, the
+   output is not a terminal, or the text does not fit. A terminal that does not know
+   OSC 52 ignores it. */
+extern gboolean tty_osc52_write (const char *data, size_t len);
 /* Pixels per cell, 0 when the terminal did not say. */
 extern void tty_cell_size (int *width, int *height);
+/* The terminal answered the DECRQM question about mode 9001 (Win32 input mode) with set or reset.
+   MC_WIN32_INPUT=0 turns the question off. */
+extern gboolean tty_has_win32_input (void);
+/* The terminal answered APC far2l1 with APC far2lok: it has the far2l extensions and
+   sends every key as an APC f2l packet. MC_FAR2L=0 turns the question off. */
+extern gboolean tty_has_far2l_input (void);
 
 /* Clear screen */
 extern void tty_clear_screen (void);
