@@ -119,17 +119,6 @@
 #define get_default_editor()           "vi"
 #define OS_SORT_CASE_SENSITIVE_DEFAULT TRUE
 
-#if defined(__ANDROID__) && __ANDROID_API__ < 26
-/* Bionic can walk the user and group databases only since Android 8 (API 26); before that
-   they look empty, so the lists of names in the dialogs and the completion of ~user are short. */
-#define setpwent() ((void) 0)
-#define endpwent() ((void) 0)
-#define getpwent() ((struct passwd *) NULL)
-#define setgrent() ((void) 0)
-#define endgrent() ((void) 0)
-#define getgrent() ((struct group *) NULL)
-#endif
-
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/

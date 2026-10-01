@@ -165,18 +165,6 @@ gboolean classic_progressbar = TRUE;
 
 /*** file scope type declarations ****************************************************************/
 
-/* Prefixed: <linux/magic.h> and <sys/vfs.h> (Android) define these names as macros */
-typedef enum
-{
-    FILEGUI_MSDOS_SUPER_MAGIC = 0x4d44,
-    FILEGUI_NTFS_SB_MAGIC = 0x5346544e,
-    FILEGUI_FUSE_MAGIC = 0x65735546,
-    FILEGUI_PROC_SUPER_MAGIC = 0x9fa0,
-    FILEGUI_SMB_SUPER_MAGIC = 0x517B,
-    FILEGUI_NCP_SUPER_MAGIC = 0x564c,
-    FILEGUI_USBDEVICE_SUPER_MAGIC = 0x9fa2
-} filegui_nonattrs_fs_t;
-
 // Used for button result values
 typedef enum
 {
@@ -286,14 +274,15 @@ filegui__check_attrs_on_fs (const char *fs_path)
 
 #if (defined(USE_STATVFS) && defined(HAVE_STRUCT_STATVFS_F_TYPE))                                  \
     || (!defined(USE_STATVFS) && defined(HAVE_STRUCT_STATFS_F_TYPE))
-    switch ((filegui_nonattrs_fs_t) stfs.f_type)
+    // Linux: f_type holds the magic numbers of <linux/magic.h>
+    switch (stfs.f_type)
     {
-    case FILEGUI_MSDOS_SUPER_MAGIC:
-    case FILEGUI_NTFS_SB_MAGIC:
-    case FILEGUI_PROC_SUPER_MAGIC:
-    case FILEGUI_SMB_SUPER_MAGIC:
-    case FILEGUI_NCP_SUPER_MAGIC:
-    case FILEGUI_USBDEVICE_SUPER_MAGIC:
+    case 0x4d44:      // MSDOS_SUPER_MAGIC
+    case 0x5346544e:  // NTFS_SB_MAGIC
+    case 0x9fa0:      // PROC_SUPER_MAGIC
+    case 0x517B:      // SMB_SUPER_MAGIC
+    case 0x564c:      // NCP_SUPER_MAGIC
+    case 0x9fa2:      // USBDEVICE_SUPER_MAGIC
         return FALSE;
     default:
         break;
