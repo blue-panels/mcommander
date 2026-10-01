@@ -91,6 +91,7 @@ void input_set_default_colors (void);
 cb_ret_t input_handle_char (WInput *in, int key);
 void input_assign_text (WInput *in, const char *text);
 void input_insert (WInput *in, const char *text, gboolean insert_extra_space);
+size_t input_text_to_line (char *text, size_t len);
 char *input_clip_text (void);
 void input_store_line_or_files (const char *line);
 void input_set_point (WInput *in, int pos);

@@ -19,6 +19,7 @@ TESTS = \
 	group_init_destroy \
 	group_set_state \
 	hexstrip \
+	paste \
 	table_datasource \
 	textarea \
 	widget_find_by_id \
@@ -46,6 +47,9 @@ textarea_SOURCES = \
 
 hexstrip_SOURCES = \
 	hexstrip.c
+
+paste_SOURCES = \
+	paste.c
 
 widget_find_by_id_SOURCES = \
 	widget_find_by_id.c
