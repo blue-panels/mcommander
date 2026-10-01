@@ -1,27 +1,24 @@
 /*
-   Internal file viewer for the Midnight Commander
+   Internal file viewer for the M-Commander
    VT100 terminal sequence parser for ANSI terminal replay mode.
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   Written by:
-   Ilia Maslakov <il.smind@gmail.com>, 2026
+   This file is part of M-Commander.
 
-   This file is part of the Midnight Commander.
-
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 #include <config.h>
@@ -148,6 +145,7 @@ struct mcview_vterm_struct
     gboolean in_alt_screen;
 
     gboolean app_cursor_keys;
+    gboolean bracketed_paste;  // DECSET 2004: a paste goes in ESC[200~ ... ESC[201~
 
     gboolean insert_mode;  // IRM: a printed character pushes the rest of the line right
 
@@ -292,6 +290,9 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
                 break;
             case 7:
                 mcview_vterm_set_autowrap (vt, final_byte == 'h');
+                break;
+            case 2004:
+                vt->bracketed_paste = (final_byte == 'h');
                 break;
             case 1049:
                 if (final_byte == 'h')
@@ -1478,6 +1479,7 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     vt->utf8_len = 0;
     vt->utf8_expected = 0;
     vt->app_cursor_keys = FALSE;
+    vt->bracketed_paste = FALSE;
     vt->cursor_row = 0;
     vt->cursor_col = 0;
     vt->scroll_top = 0;
@@ -2241,6 +2243,14 @@ gboolean
 mcview_vterm_app_cursor_keys (const mcview_vterm_t *vt)
 {
     return vt->app_cursor_keys;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcview_vterm_bracketed_paste (const mcview_vterm_t *vt)
+{
+    return vt->bracketed_paste;
 }
 
 /* --------------------------------------------------------------------------------------------- */
