@@ -126,6 +126,7 @@ the remote host.
 | directory | what it is for                                                        |
 |-----------|-----------------------------------------------------------------------|
 | `01-clip` | Ctrl-Insert and Shift-Insert on the command line: marked files, the line, the file under the cursor; a paste as one line, with the panels hidden, and the question over 2 KB |
+| `02-paste` | a paste from the terminal: the shell runs nothing until Enter, with the panels up and after Ctrl-O, one line for a shell that did not ask for bracketed paste, a dialog input and quick search |
 
 ### panel
 
@@ -234,7 +235,9 @@ expectation, reason, and optionally the transports it is for. The keys go
 comma separated, in order: `Enter`, `F3`, `F5`, `C-o`, `..` (up one level),
 `on <name>` (the cursor goes there), `cd <path>` (the Quick cd box),
 `type <text>`, `key <name>` for anything tmux can send (`F4`, `M-S`, `C-M-l`,
-`C-Insert`, `Escape`), and `width <n>` for a narrower terminal. The
+`C-Insert`, `Escape`), `paste <text>` for a paste from the terminal (`\n` in
+it is a line break; tmux sends it as a bracketed paste when mc asked for one),
+and `width <n>` for a narrower terminal. The
 expectations: `archive panel`, `listing`, `error dialog`, `nothing, no error`,
 `the panel it came from`, `extfs panel`, `copy to the other panel` (the file
 is then in `/tmp`, as big as mc said), `the name as written` (the shell

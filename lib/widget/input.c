@@ -1015,28 +1015,18 @@ input_store_line_or_files (const char *line)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The clipboard as one line for an input line: line breaks and other control characters become
-   spaces. Over INPUT_CLIP_ASK_SIZE the user is asked first. NULL when there is nothing or the
-   user declined. Caller frees. */
-char *
-input_clip_text (void)
+/* Text as one line: the line breaks at its end are dropped, the other line breaks and control
+   characters become spaces. Done in place; the new length is returned. */
+size_t
+input_text_to_line (char *text, size_t len)
 {
-    char *p = NULL;
     const char *r;
     const char *end;
     char *w;
-    ev_clipboard_text_from_file_t event_data = { &p, FALSE, 0 };
 
-    // try use external clipboard utility
-    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_file_from_ext_clip", NULL);
-    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_text_from_file", &event_data);
-    if (!event_data.ret || p == NULL)
-        return NULL;
-
-    // Strip the trailing line breaks before the rest become spaces.
-    for (end = p + event_data.len; end > p && (end[-1] == '\n' || end[-1] == '\r'); end--)
+    for (end = text + len; end > text && (end[-1] == '\n' || end[-1] == '\r'); end--)
         ;
-    for (r = p, w = p; r < end; r++)
+    for (r = text, w = text; r < end; r++)
         if (*r == '\r' && r + 1 < end && r[1] == '\n')
             ;  // a DOS line break is one break
         else if ((unsigned char) *r < ' ' || *r == '\x7f')
@@ -1045,13 +1035,34 @@ input_clip_text (void)
             *w++ = *r;
     *w = '\0';
 
-    if (w == p)
+    return (size_t) (w - text);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The clipboard as one line for an input line. Over INPUT_CLIP_ASK_SIZE the user is asked first.
+   NULL when there is nothing or the user declined. Caller frees. */
+char *
+input_clip_text (void)
+{
+    char *p = NULL;
+    size_t len;
+    ev_clipboard_text_from_file_t event_data = { &p, FALSE, 0 };
+
+    // try use external clipboard utility
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_file_from_ext_clip", NULL);
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_text_from_file", &event_data);
+    if (!event_data.ret || p == NULL)
+        return NULL;
+
+    len = input_text_to_line (p, event_data.len);
+    if (len == 0)
     {
         g_free (p);
         return NULL;
     }
 
-    if (w - p > INPUT_CLIP_ASK_SIZE
+    if (len > INPUT_CLIP_ASK_SIZE
         && query_dialog (_ ("Paste"), _ ("The clipboard holds more than 2 KB of text.\nPaste it?"),
                          D_NORMAL, 2, _ ("&Yes"), _ ("&No"))
             != 0)
@@ -1144,6 +1155,17 @@ input_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         if (in->label != NULL)
             widget_set_state (WIDGET (in->label), WST_DISABLED, widget_get_state (w, WST_DISABLED));
         return MSG_HANDLED;
+
+    case MSG_PASTE:
+    {
+        const GString *paste = (const GString *) data;
+        char *line = g_strndup (paste->str, paste->len);
+
+        if (input_text_to_line (line, paste->len) > 0)
+            input_insert (in, line, FALSE);
+        g_free (line);
+        return MSG_HANDLED;
+    }
 
     case MSG_KEY:
         if (parm == XCTRL ('q'))

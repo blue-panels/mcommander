@@ -5,22 +5,22 @@
    colored erase, cursor clamping, and size-aware reset.
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   This file is part of the Midnight Commander.
+   This file is part of M-Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 #define TEST_SUITE_NAME "/src/viewer/vterm_terminal"
@@ -1946,6 +1946,44 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_bracketed_paste_mode)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 4, 20);
+    mcview_vterm_reset (vt);
+
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+    FEED (vt, "\033[?2004h");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    FEED (vt, "\033[?2004l");
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+
+    /* every mode of the sequence is set, not only the first one */
+    FEED (vt, "\033[?2004h");
+    FEED (vt, "\033[?1;2004l");
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+    FEED (vt, "\033[?1;2004h");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    ck_assert (mcview_vterm_app_cursor_keys (vt));
+
+    /* a query, a save and a restore of the modes change none of them */
+    FEED (vt, "\033[?2004$p");
+    FEED (vt, "\033[?1;2004s");
+    FEED (vt, "\033[?1;2004r");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    ck_assert (mcview_vterm_app_cursor_keys (vt));
+
+    FEED (vt, "\033[?2004h");
+    mcview_vterm_reset (vt);
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -1953,6 +1991,7 @@ main (void)
 
     tc_core = tcase_create ("Core");
 
+    tcase_add_test (tc_core, test_bracketed_paste_mode);
     tcase_add_test (tc_core, test_scroll_region_lf_at_bottom_scrolls_up);
     tcase_add_test (tc_core, test_scroll_region_lf_above_region_advances_cursor);
     tcase_add_test (tc_core, test_vpa_moves_row_only);

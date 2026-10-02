@@ -1,20 +1,24 @@
 /*
-   Widget group features module for the Midnight Commander
+   Widget group features module for the M-Commander
 
    Copyright (C) 2020-2025
    The Free Software Foundation, Inc.
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
 
    Written by:
    Andrew Borodin <aborodin@vmail.ru>, 2020-2022
+   Ilia Maslakov <il.smind@gmail.com>, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -638,6 +642,10 @@ group_default_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, v
 
     case MSG_HOTKEY:
         return group_handle_hotkey (g, parm);
+
+    case MSG_PASTE:
+        return g->current != NULL ? send_message (g->current->data, NULL, MSG_PASTE, parm, data)
+                                  : MSG_NOT_HANDLED;
 
     case MSG_CURSOR:
         return group_update_cursor (g);

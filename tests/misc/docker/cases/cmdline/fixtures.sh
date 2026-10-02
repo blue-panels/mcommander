@@ -41,4 +41,28 @@ alpha.txt	key C-o,type $m head -c 3000 /dev/zero | tr '\\0' x > $clip/mcedit.cli
 alpha.txt	key C-o,type $w 'PASTEMARK' > $clip/mcedit.clip,key Enter,key C-o,key S-Insert,type -TAIL,key C-Insert	clipfile: PASTEMARK-TAIL	Ctrl-Insert on the shell's own line copies that line, as it is now	local
 EOF2
 
+# A paste from the terminal (Shift and the mouse, Ctrl-Shift-V) comes in
+# ESC[200~ ... ESC[201~.  The shell gets it as one block and runs nothing
+# until Enter; expr shows whether a line ran: "7005" is only on the screen
+# when "expr 7001 + 4" was run.  The runner leaves quick search on, so a case
+# with the panels up starts with Escape.
+mkdir -p 02-paste
+printf 'a file for the cursor to stand on\n' > 02-paste/alpha.txt
+printf 'and a second one to find\n' > 02-paste/bravo.txt
+
+two='expr 7001 + 4\nexpr 7001 + 5\n'
+off="bind 'set enable-bracketed-paste off' 2>/dev/null; unset zle_bracketed_paste"
+
+cat > 02-paste/cases.tsv <<EOF2
+file	key	expect	why	transports	shells
+alpha.txt	key Escape,paste $two,key C-o	no text: 7005	with the panels up a paste of two lines runs neither: the terminal behind them has no output	local
+alpha.txt	key Escape,paste $two	text: + 4 \\ expr 7001	the command line over the panels shows the lines joined by a backslash	local
+alpha.txt	key Escape,paste $two,key Enter,key C-o	text: 7006	Enter runs both	local
+alpha.txt	key C-o,paste $two	no text: 7005	after Ctrl-O a paste runs nothing either	local
+alpha.txt	key C-o,paste $two,key Enter	text: 7006	and Enter runs both	local
+alpha.txt	key C-o,type $off,key Enter,paste echo \$((6*7))AA\\necho \$((6*7))BB\\n,key Enter	text: 42AA echo 42BB	a shell that did not ask for bracketed paste gets the lines as one	local	bash,zsh
+alpha.txt	key Escape,key F7,paste one\\ntwo\\n,key Enter	text: one two	a dialog input takes the paste as one line and is not submitted by its line break	local
+alpha.txt	key Escape,key C-s,paste bra,F3	text: second one to find	quick search takes the paste	local
+EOF2
+
 echo "cmdline cases in $dir"

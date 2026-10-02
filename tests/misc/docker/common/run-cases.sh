@@ -11,7 +11,8 @@
 # quick search, the keys are pressed in order and the screen is read.  A key
 # is Enter, F3, F5, F6, F8, C-o, ".." (up one level), "on <name>" (the cursor goes
 # there), "cd <path>" (through the Quick cd box), "type <text>",
-# "key <name>" for anything tmux can send (F4, M-S, C-M-l, Escape, C-F1), or
+# "key <name>" for anything tmux can send (F4, M-S, C-M-l, Escape, C-F1),
+# "paste <text>" for a paste from the terminal (\n in it is a line break), or
 # "width <n>" to make the terminal that many columns wide.
 # Rows whose keys or expectation this script does not know are reported as
 # skipped; a row with transports named runs only over those.
@@ -498,7 +499,7 @@ steps_known ()
 {
     printf '%s\n' "$1" | tr ',' '\n' | while read -r step; do
         case "$step" in
-        Enter | F3 | F5 | F6 | F8 | C-o | .. | "on "* | "cd "* | "type "* | "key "* | "width "*) ;;
+        Enter | F3 | F5 | F6 | F8 | C-o | .. | "on "* | "cd "* | "type "* | "key "* | "paste "* | "width "*) ;;
         *) exit 1 ;;
         esac
     done
@@ -547,6 +548,13 @@ press ()
         # anything tmux has a name for: F4, M-S, C-M-l, Escape, C-F1
         "key "*)
             $T send-keys -t mc "${step#key }"
+            ;;
+        # tmux sends it in ESC[200~ ... ESC[201~ when mc asked for bracketed paste;
+        # the dot keeps the line breaks at the end from $(...)
+        "paste "*)
+            buf=$(printf '%b.' "${step#paste }")
+            $T set-buffer -b case -- "${buf%.}"
+            $T paste-buffer -p -d -b case -t mc
             ;;
         # a narrower terminal, for what has to be laid out again
         "width "*)
