@@ -79,7 +79,9 @@ EXTRA_DIST = utilunix__my_system-common.c \
 	lua_markdown/table.md \
 	lua_markdown/wide.md \
 	lua_markdown/wide.md.out \
-	lua_markdown/table.md.out
+	lua_markdown/table.md.out \
+	lua_markdown/table_br.md \
+	lua_markdown/table_br.md.out
 
 TESTS = \
 	key \

@@ -55,10 +55,15 @@ local function render_table(lines, out, width_limit, doc)
     for r, row in ipairs(rows) do
         units[r] = {}
         for c = 1, maxc do
-            units[r][c] = units_of(inline(row[c] or "", { bold = r == 1 }, doc))
-            if units_width(units[r][c]) > colw[c] then
-                colw[c] = units_width(units[r][c])
+            -- a <br> in a cell starts a line of its own in it
+            local lines = {}
+            for rendered in (inline(row[c] or "", { bold = r == 1 }, doc) .. "\n"):gmatch("(.-)\n") do
+                lines[#lines + 1] = units_of(rendered)
+                if units_width(lines[#lines]) > colw[c] then
+                    colw[c] = units_width(lines[#lines])
+                end
             end
+            units[r][c] = lines
         end
     end
     local remaining = width_limit - (maxc - 1) * 3
@@ -96,8 +101,12 @@ local function render_table(lines, out, width_limit, doc)
         cells[r] = {}
         cell_sgr[r] = {}
         for c = 1, maxc do
-            local u = units[r][c]
-            cells[r][c] = units_width(u) > colw[c] and wrap_units(u, colw[c]) or { u }
+            cells[r][c] = {}
+            for _, u in ipairs(units[r][c]) do
+                for _, seg in ipairs(units_width(u) > colw[c] and wrap_units(u, colw[c]) or { u }) do
+                    cells[r][c][#cells[r][c] + 1] = seg
+                end
+            end
             cell_sgr[r][c] = {}
         end
     end
