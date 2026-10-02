@@ -1967,6 +1967,13 @@ START_TEST (test_bracketed_paste_mode)
     ck_assert (mcview_vterm_bracketed_paste (vt));
     ck_assert (mcview_vterm_app_cursor_keys (vt));
 
+    /* a query, a save and a restore of the modes change none of them */
+    FEED (vt, "\033[?2004$p");
+    FEED (vt, "\033[?1;2004s");
+    FEED (vt, "\033[?1;2004r");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    ck_assert (mcview_vterm_app_cursor_keys (vt));
+
     FEED (vt, "\033[?2004h");
     mcview_vterm_reset (vt);
     ck_assert (!mcview_vterm_bracketed_paste (vt));

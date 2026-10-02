@@ -279,11 +279,15 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
         return ev;
     }
 
-    /* CSI ? 1 ; 2004 l sets every mode it names, not only the first one. */
+    /* CSI ? 1 ; 2004 l sets every mode it names, not only the first one. Other final bytes,
+       such as CSI ? 2004 $ p (a query), leave the modes as they are. */
     if (vt->csi_private)
     {
         vterm_result_t type = VTERM_CONSUMED;
         int i;
+
+        if (final_byte != 'h' && final_byte != 'l')
+            return vterm_make (vt, type);
 
         for (i = 0; i < vt->param_count; i++)
             switch (vt->params[i])
