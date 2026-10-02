@@ -9,13 +9,14 @@
 # Мирослав Николић <miroslavnikolic@rocketmail.com>, 2014
 # Anonymous <anonymous@noreply.codeberg.org>, 2026.
 # GitHub webhook <noreply-webhook-github@weblate.org>, 2026.
+# Strahinja <strahinja@noreply.codeberg.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-09-25 22:53+0000\n"
-"Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
+"PO-Revision-Date: 2026-10-03 21:27+0000\n"
+"Last-Translator: Strahinja <strahinja@noreply.codeberg.org>\n"
 "Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/>"
 "\n"
 "Language: sr\n"
@@ -64,159 +65,119 @@ msgstr "Не може се креирати догађај „%s“!"
 msgid "Copyright (C) 1996-%zu the Free Software Foundation"
 msgstr "Copyright (C) 1996-%zu Задужбина за слободни софтвер"
 
-#, fuzzy
-#| msgid "Switch &panels on/off"
 msgid "Switch active panel"
-msgstr "Укључи/искључи &панеле"
+msgstr "Замена активног панела"
 
-#, fuzzy
-#| msgid "Page Up"
 msgid "Page left"
-msgstr "Page Up"
+msgstr "Страница лево"
 
 msgid "Page right"
-msgstr ""
+msgstr "Страница десно"
 
 msgid "Half page up"
-msgstr ""
+msgstr "Пола странице навише"
 
-#, fuzzy
-#| msgid "Page Down"
 msgid "Half page down"
-msgstr "Page Down"
+msgstr "Пола странице наниже"
 
 msgid "Go to top"
-msgstr ""
+msgstr "Прелазак на врх"
 
 msgid "Go to bottom"
-msgstr ""
+msgstr "Прелазак на дно"
 
-#, fuzzy
-#| msgid "&Toggle fullscreen"
 msgid "Top of screen"
-msgstr "Смени приказ преко &целог екрана"
+msgstr "Врх екрана"
 
 msgid "Middle of screen"
-msgstr ""
+msgstr "Средина екрана"
 
 msgid "Bottom of screen"
-msgstr ""
+msgstr "Дно екрана"
 
 msgid "Word left"
-msgstr ""
+msgstr "Реч лево"
 
 msgid "Word right"
-msgstr ""
+msgstr "Реч десно"
 
-#, fuzzy
-#| msgid "C&ompare files"
 msgid "Copy file(s)"
-msgstr "Упореди &датотеке"
+msgstr "Копирање датотеке(а)"
 
 msgid "Move/rename file(s)"
-msgstr ""
+msgstr "Премештање/преименовање датотеке(а)"
 
 msgid "Delete"
-msgstr "Delete"
+msgstr "Брисање"
 
-#, fuzzy
-#| msgid "Cache directory:"
 msgid "Create directory"
-msgstr "Директоријум кеша:"
+msgstr "Креирање директоријума"
 
 msgid "Change file mode (chmod)"
-msgstr ""
+msgstr "Промена режима датотеке (chmod)"
 
-#, fuzzy
-#| msgid "Changes to file lost"
 msgid "Change file owner"
-msgstr "Измене датотеке су изгубљене"
+msgstr "Промена власника датотеке"
 
-#, fuzzy
-#| msgid "&Advanced chown"
 msgid "Advanced chown"
-msgstr "&Напредна промена власништва"
+msgstr "Напредна промена власника"
 
-#, fuzzy
-#| msgid ""
-#| "Cannot get ext2 attributes of\n"
-#| "%s"
 msgid "Change file attributes"
-msgstr ""
-"Не могу се добавити ext2 атрибути\n"
-"%s"
+msgstr "Промена атрибута датотеке"
 
 msgid "Clear screen and scrollback"
-msgstr ""
+msgstr "Чишћење екрана и бафера за скроловање"
 
 msgid "Main menu"
-msgstr ""
+msgstr "Главни мени"
 
 msgid "Last selected menu item"
-msgstr ""
+msgstr "Последња одабрана ставка менија"
 
-#, fuzzy
-#| msgid "&User defined:"
 msgid "User-defined menu"
-msgstr "Кориснички &задат:"
+msgstr "Кориснички дефинисан мени"
 
-#, fuzzy
-#| msgid "User menu"
 msgid "Edit user menu"
-msgstr "Кориснички мени"
+msgstr "Уређивање корисничког менија"
 
-#, fuzzy
-#| msgid "Search done"
 msgid "Search next"
-msgstr "Претрага је завршена"
+msgstr "Тражење следећег"
 
-#, fuzzy
-#| msgid "Replace"
 msgid "Replace next"
-msgstr "Замени"
+msgstr "Следећа замена"
 
 msgid "Show help"
-msgstr ""
+msgstr "Приказивање помоћи"
 
-#, fuzzy
-#| msgid "Terminal options"
 msgid "Terminal"
-msgstr "Опције терминала"
+msgstr "Терминал"
 
 msgid "Edit file"
 msgstr "Уређивање датотеке"
 
-#, fuzzy
-#| msgid "Edit file"
 msgid "Edit new file"
-msgstr "Уређивање датотеке"
+msgstr "Уређивање нове датотеке"
 
-#, fuzzy
-#| msgid "&All charsets"
 msgid "Select charset"
-msgstr "&Сви скупови знакова"
+msgstr "Бирање скупа знакова"
 
 msgid "Editor/viewer history"
-msgstr ""
+msgstr "Историја уређивача/прегледача"
 
-#, fuzzy
-#| msgid "Command &history"
 msgid "Command history"
-msgstr "Историја &наредби"
+msgstr "Историја наредби"
 
 msgid "Next in history"
-msgstr ""
+msgstr "Следеће у историји"
 
 msgid "Previous in history"
-msgstr ""
+msgstr "Претходно у историји"
 
 msgid "Auto-complete"
-msgstr ""
+msgstr "Аутоматска допуна"
 
-#, fuzzy
-#| msgid "Save &as..."
 msgid "Save as..."
-msgstr "Сачувај &као..."
+msgstr "Сачувај као..."
 
 #, fuzzy
 #| msgid "Goto line"
