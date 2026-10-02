@@ -48,6 +48,13 @@ M.CODE_FRAME = true
 -- that names none, or a block written with four columns of indent
 M.CODE_PLAIN = "text"
 
+-- the languages of a fence that say the block is plain text: it is wrapped
+-- to the width of the prose, where code is given the whole screen
+M.CODE_PLAIN_NAMES = { text = true, txt = true, plain = true, plaintext = true }
+
+-- the mark in the margin of a line of code wrapped at the edge of the screen
+M.CODE_WRAP_MARK = "\\"
+
 -- the block is this share of its longest line wider than the code in it, so
 -- that a line does not end right at the frame
 M.CODE_AIR = 0.2

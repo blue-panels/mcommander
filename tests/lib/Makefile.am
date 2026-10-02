@@ -26,6 +26,8 @@ EXTRA_DIST = utilunix__my_system-common.c \
 	lua_markdown/code.md.out \
 	lua_markdown/code_syntax.md \
 	lua_markdown/code_syntax.md.out \
+	lua_markdown/code_wrap.md \
+	lua_markdown/code_wrap.md.out \
 	lua_markdown/definitions.md \
 	lua_markdown/definitions.md.out \
 	lua_markdown/footnotes.md \
