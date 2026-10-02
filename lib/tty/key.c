@@ -309,6 +309,10 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 #define TTY_PASTE_GAP_USEC  (2 * G_USEC_PER_SEC)
 
 static GString *tty_paste_block = NULL;
+/* A paste the terminal went silent in: what comes up to its end is the paste too */
+static gboolean tty_paste_unfinished = FALSE;
+/* How much of the end mark came before the silence */
+static size_t tty_paste_end_matched = 0;
 
 static key_define_t mc_default_keys[] = {
     { ESC_CHAR, ESC_STR, MCKEY_ESCAPE },
@@ -2417,15 +2421,14 @@ tty_paste_clean (GString *text)
 
 /* --------------------------------------------------------------------------------------------- */
 /* Read the paste up to ESC [ 2 0 1 ~. If the terminal goes silent before it, what came is the
-   paste and the rest comes as keys of a bracketed paste. NULL when nothing came. */
+   paste, and the rest is read as another paste when it comes. NULL when nothing came. */
 
 static GString *
 tty_paste_collect (void)
 {
     static const char end_mark[] = ESC_STR "[201~";
     const size_t end_len = sizeof (end_mark) - 1;
-    GString *text = g_string_new (NULL);
-    char tail[sizeof (end_mark)] = "";
+    GString *text = g_string_new_len (end_mark, (gssize) tty_paste_end_matched);
     gint64 deadline = g_get_monotonic_time () + TTY_PASTE_GAP_USEC;
     gboolean ended = FALSE;
 
@@ -2456,13 +2459,16 @@ tty_paste_collect (void)
         if (c > 0xff)
             continue;
 
-        memmove (tail, tail + 1, end_len - 1);
-        tail[end_len - 1] = (char) c;
         if (text->len < TTY_PASTE_MAX_BYTES)
             g_string_append_c (text, (char) c);
-        if (memcmp (tail, end_mark, end_len) == 0)
+        if (c == end_mark[tty_paste_end_matched])
+            tty_paste_end_matched++;
+        else
+            tty_paste_end_matched = (c == ESC_CHAR) ? 1 : 0;
+        if (tty_paste_end_matched == end_len)
         {
             ended = TRUE;
+            tty_paste_end_matched = 0;
             if (text->len >= end_len
                 && memcmp (text->str + text->len - end_len, end_mark, end_len) == 0)
                 g_string_truncate (text, text->len - end_len);
@@ -2470,8 +2476,14 @@ tty_paste_collect (void)
     }
     tty_nodelay (FALSE);
 
-    if (!ended)
-        bracketed_pasting_in_progress = TRUE;
+    // a part of the end mark waits for the rest of it
+    if (!ended && text->len >= tty_paste_end_matched
+        && memcmp (text->str + text->len - tty_paste_end_matched, end_mark, tty_paste_end_matched)
+            == 0)
+        g_string_truncate (text, text->len - tty_paste_end_matched);
+
+    tty_paste_unfinished = !ended;
+    bracketed_pasting_in_progress = !ended;
 
     tty_paste_clean (text);
     if (text->len == 0)
@@ -2480,6 +2492,17 @@ tty_paste_collect (void)
         return NULL;
     }
     return text;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+tty_paste_next (void)
+{
+    if (tty_paste_block != NULL)
+        g_string_free (tty_paste_block, TRUE);
+    tty_paste_block = tty_paste_collect ();
+    return (tty_paste_block != NULL) ? MCKEY_PASTE : EV_NONE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2685,6 +2708,9 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
 #endif
     }
 
+    if (tty_paste_unfinished && tty_paste_as_block && pending_keys == NULL)
+        return tty_paste_next ();
+
 #ifndef HAVE_SLANG
     flag = is_wintouched (stdscr);
     untouchwin (stdscr);
@@ -2714,12 +2740,7 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
         c = (event->type != 0) ? EV_MOUSE : EV_NONE;
     }
     else if (c == MCKEY_BRACKETED_PASTING_START && tty_paste_as_block)
-    {
-        if (tty_paste_block != NULL)
-            g_string_free (tty_paste_block, TRUE);
-        tty_paste_block = tty_paste_collect ();
-        c = (tty_paste_block != NULL) ? MCKEY_PASTE : EV_NONE;
-    }
+        c = tty_paste_next ();
     else if (c == MCKEY_BRACKETED_PASTING_START)
     {
         bracketed_pasting_in_progress = TRUE;
@@ -2728,6 +2749,8 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
     else if (c == MCKEY_BRACKETED_PASTING_END)
     {
         bracketed_pasting_in_progress = FALSE;
+        tty_paste_unfinished = FALSE;
+        tty_paste_end_matched = 0;
         c = EV_NONE;
     }
 
@@ -2922,6 +2945,8 @@ disable_bracketed_paste (void)
     printf (ESC_STR "[?2004l");
     fflush (stdout);
     bracketed_pasting_in_progress = FALSE;
+    tty_paste_unfinished = FALSE;
+    tty_paste_end_matched = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
