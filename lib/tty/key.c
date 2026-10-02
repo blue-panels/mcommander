@@ -303,16 +303,12 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 
 /*** file scope variables ************************************************************************/
 
-/* A paste read as one block: at most this much is kept, and a paste the terminal does not end
-   within this pause is given up. */
+/* A paste read as one block: limit the kept text, the gap between bytes, and the total wait. */
 #define TTY_PASTE_MAX_BYTES (16 * 1024 * 1024)
 #define TTY_PASTE_GAP_USEC  (2 * G_USEC_PER_SEC)
+#define TTY_PASTE_MAX_USEC  (30 * G_USEC_PER_SEC)
 
 static GString *tty_paste_block = NULL;
-/* A paste the terminal went silent in: what comes up to its end is the paste too */
-static gboolean tty_paste_unfinished = FALSE;
-/* How much of the end mark came before the silence */
-static size_t tty_paste_end_matched = 0;
 
 static key_define_t mc_default_keys[] = {
     { ESC_CHAR, ESC_STR, MCKEY_ESCAPE },
@@ -2420,22 +2416,29 @@ tty_paste_clean (GString *text)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* Read the paste up to ESC [ 2 0 1 ~. If the terminal goes silent before it, what came is the
-   paste, and the rest is read as another paste when it comes. NULL when nothing came. */
+/* Read the paste up to ESC [ 2 0 1 ~. Silence or the overall time limit ends an
+   unterminated paste, so the next key can be processed normally. */
 
 static GString *
 tty_paste_collect (void)
 {
     static const char end_mark[] = ESC_STR "[201~";
     const size_t end_len = sizeof (end_mark) - 1;
-    GString *text = g_string_new_len (end_mark, (gssize) tty_paste_end_matched);
+    size_t end_matched = 0;
+    GString *text = g_string_new (NULL);
     gint64 deadline = g_get_monotonic_time () + TTY_PASTE_GAP_USEC;
+    const gint64 max_deadline = g_get_monotonic_time () + TTY_PASTE_MAX_USEC;
     gboolean ended = FALSE;
 
     tty_nodelay (TRUE);
     while (!ended)
     {
-        int c = tty_lowlevel_getch ();
+        int c;
+
+        if (g_get_monotonic_time () >= max_deadline)
+            break;
+
+        c = tty_lowlevel_getch ();
 
         if (c == -1)
         {
@@ -2453,22 +2456,21 @@ tty_paste_collect (void)
             continue;
         }
 
-        deadline = g_get_monotonic_time () + TTY_PASTE_GAP_USEC;
-
         // a key code of the screen library (ncurses: KEY_RESIZE, a translated sequence)
         if (c > 0xff)
             continue;
 
+        deadline = g_get_monotonic_time () + TTY_PASTE_GAP_USEC;
         if (text->len < TTY_PASTE_MAX_BYTES)
             g_string_append_c (text, (char) c);
-        if (c == end_mark[tty_paste_end_matched])
-            tty_paste_end_matched++;
+        if (c == end_mark[end_matched])
+            end_matched++;
         else
-            tty_paste_end_matched = (c == ESC_CHAR) ? 1 : 0;
-        if (tty_paste_end_matched == end_len)
+            end_matched = (c == ESC_CHAR) ? 1 : 0;
+        if (end_matched == end_len)
         {
             ended = TRUE;
-            tty_paste_end_matched = 0;
+            end_matched = 0;
             if (text->len >= end_len
                 && memcmp (text->str + text->len - end_len, end_mark, end_len) == 0)
                 g_string_truncate (text, text->len - end_len);
@@ -2476,14 +2478,12 @@ tty_paste_collect (void)
     }
     tty_nodelay (FALSE);
 
-    // a part of the end mark waits for the rest of it
-    if (!ended && text->len >= tty_paste_end_matched
-        && memcmp (text->str + text->len - tty_paste_end_matched, end_mark, tty_paste_end_matched)
-            == 0)
-        g_string_truncate (text, text->len - tty_paste_end_matched);
+    // Discard a partial end mark when the terminal stopped sending the paste.
+    if (!ended && end_matched != 0 && text->len >= end_matched
+        && memcmp (text->str + text->len - end_matched, end_mark, end_matched) == 0)
+        g_string_truncate (text, text->len - end_matched);
 
-    tty_paste_unfinished = !ended;
-    bracketed_pasting_in_progress = !ended;
+    bracketed_pasting_in_progress = FALSE;
 
     tty_paste_clean (text);
     if (text->len == 0)
@@ -2708,9 +2708,6 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
 #endif
     }
 
-    if (tty_paste_unfinished && tty_paste_as_block && pending_keys == NULL)
-        return tty_paste_next ();
-
 #ifndef HAVE_SLANG
     flag = is_wintouched (stdscr);
     untouchwin (stdscr);
@@ -2749,8 +2746,6 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
     else if (c == MCKEY_BRACKETED_PASTING_END)
     {
         bracketed_pasting_in_progress = FALSE;
-        tty_paste_unfinished = FALSE;
-        tty_paste_end_matched = 0;
         c = EV_NONE;
     }
 
@@ -2945,8 +2940,6 @@ disable_bracketed_paste (void)
     printf (ESC_STR "[?2004l");
     fflush (stdout);
     bracketed_pasting_in_progress = FALSE;
-    tty_paste_unfinished = FALSE;
-    tty_paste_end_matched = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
