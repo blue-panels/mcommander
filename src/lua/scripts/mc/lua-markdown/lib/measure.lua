@@ -21,7 +21,7 @@ local M = {}
 -- them is flowed to the screen and never needs this.  Only the fences are
 -- rendered, and only those of the first cfg.UNWRAPPED_SCAN bytes, so that the
 -- walk stays cheap on a document the viewer renders block by block.
-function M.unwrapped_width(text, width_limit)
+function M.unwrapped_width(text, width_limit, screen)
     local lines = split_lines(#text > cfg.UNWRAPPED_SCAN and text:sub(1, cfg.UNWRAPPED_SCAN) or text)
     local most = 0
     local i = 1
@@ -39,7 +39,7 @@ function M.unwrapped_width(text, width_limit)
     local function measure(block, language)
         local out = {}
 
-        emit_code(block, out, width_limit, language)
+        emit_code(block, out, width_limit, language, screen)
         widest(out)
     end
 

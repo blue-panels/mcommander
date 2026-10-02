@@ -93,6 +93,8 @@ end
 
 local function render_document(text, opts, emit)
     local width_limit = opts and opts.width or cfg.DEFAULT_WIDTH
+    -- code is not held to the width of the prose, only to the screen
+    local screen = opts and opts.screen or width_limit
     local lines, doc = collect_definitions(join_display_math(split_lines(text)))
     local out = {}
     local i = 1
@@ -117,7 +119,7 @@ local function render_document(text, opts, emit)
             local language, code
 
             language, code, i = read_fence(lines, i, fence)
-            code_lines(table.concat(code, "\n"), language, out, width_limit)
+            code_lines(table.concat(code, "\n"), language, out, width_limit, screen)
         elseif line:find("<!--", 1, true) and not line:find("-->", 1, true) then
             while i <= #lines and not lines[i]:find("-->", 1, true) do
                 i = i + 1
@@ -130,7 +132,7 @@ local function render_document(text, opts, emit)
             local block
 
             block, i = read_indented(lines, i)
-            emit_code(block, out, width_limit)
+            emit_code(block, out, width_limit, nil, screen)
         elseif math_block_of(line, width_limit) ~= nil then
             for _, l in ipairs(math_block_of(line, width_limit)) do
                 out[#out + 1] = l

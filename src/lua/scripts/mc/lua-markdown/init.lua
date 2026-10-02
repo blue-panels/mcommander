@@ -32,7 +32,7 @@ local viewer = mc.viewer_source.define {
     resize = "rebuild",
     help = { file = "help.md", node = "[Markdown Viewer]" },
     open = function(request)
-        -- one record per width the document was rendered at
+        -- one record per width of the screen the document was rendered at
         request.cache = {}
         return request
     end,
@@ -57,14 +57,15 @@ local viewer = mc.viewer_source.define {
                 auto_scroll = "top",
             }
         end
-        local width = math.min(viewport.columns, cfg.MAX_WIDTH)
-        local opts = { width = width }
-        local cached = session.cache[width]
+        local screen = viewport.columns
+        local width = math.min(screen, cfg.MAX_WIDTH)
+        local opts = { width = width, screen = screen }
+        local cached = session.cache[screen]
         local source
 
         if cached == nil then
             cached = {}
-            session.cache[width] = cached
+            session.cache[screen] = cached
         end
         if cached.text ~= nil then
             opts.max_line = cached.widest
@@ -126,7 +127,7 @@ local viewer = mc.viewer_source.define {
         -- The widest block is looked up before the first screen is rendered,
         -- because a diagram halfway down the file counts as well.
         if cached.unwrapped == nil then
-            cached.unwrapped = measure.unwrapped_width(session.text, width)
+            cached.unwrapped = measure.unwrapped_width(session.text, width, screen)
         end
         local widest = math.max(cached.unwrapped, opts.max_line or 0)
         local wrap = nil
