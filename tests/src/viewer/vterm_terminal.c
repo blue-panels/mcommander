@@ -1959,6 +1959,14 @@ START_TEST (test_bracketed_paste_mode)
     FEED (vt, "\033[?2004l");
     ck_assert (!mcview_vterm_bracketed_paste (vt));
 
+    /* every mode of the sequence is set, not only the first one */
+    FEED (vt, "\033[?2004h");
+    FEED (vt, "\033[?1;2004l");
+    ck_assert (!mcview_vterm_bracketed_paste (vt));
+    FEED (vt, "\033[?1;2004h");
+    ck_assert (mcview_vterm_bracketed_paste (vt));
+    ck_assert (mcview_vterm_app_cursor_keys (vt));
+
     FEED (vt, "\033[?2004h");
     mcview_vterm_reset (vt);
     ck_assert (!mcview_vterm_bracketed_paste (vt));

@@ -279,11 +279,14 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
         return ev;
     }
 
+    /* CSI ? 1 ; 2004 l sets every mode it names, not only the first one. */
     if (vt->csi_private)
     {
-        if (vt->param_count > 0)
-        {
-            switch (vt->params[0])
+        vterm_result_t type = VTERM_CONSUMED;
+        int i;
+
+        for (i = 0; i < vt->param_count; i++)
+            switch (vt->params[i])
             {
             case 1:
                 vt->app_cursor_keys = (final_byte == 'h');
@@ -296,15 +299,14 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
                 break;
             case 1049:
                 if (final_byte == 'h')
-                    return vterm_make (vt, VTERM_ALT_SCREEN_ENTER);
-                if (final_byte == 'l')
-                    return vterm_make (vt, VTERM_ALT_SCREEN_EXIT);
+                    type = VTERM_ALT_SCREEN_ENTER;
+                else if (final_byte == 'l')
+                    type = VTERM_ALT_SCREEN_EXIT;
                 break;
             default:
                 break;
             }
-        }
-        return vterm_make (vt, VTERM_CONSUMED);
+        return vterm_make (vt, type);
     }
 
     p0 = (vt->param_count > 0) ? vt->params[0] : 0;
