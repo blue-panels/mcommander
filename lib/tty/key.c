@@ -218,6 +218,7 @@ const key_code_name_t key_name_conv_tab[] = {
     { KEY_M_ALT, "alt", N_ ("Alt"), "Alt" },
     { KEY_M_ALT, "ralt", N_ ("RAlt"), "RAlt" },
     { KEY_M_SHIFT, "shift", N_ ("Shift"), "Shift" },
+    { KEY_M_SUPER, "super", N_ ("Super"), "Super" },
 
     { 0, NULL, NULL, NULL },
 };
@@ -1424,8 +1425,10 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
     gboolean ctrl_digit;
 
     mods = mods > 0 ? mods - 1 : 0;
-    if ((mods & (KITTY_MOD_SUPER | KITTY_MOD_HYPER)) != 0)
+    if ((mods & KITTY_MOD_HYPER) != 0)
         return -1;
+    if ((mods & KITTY_MOD_SUPER) != 0)
+        mod |= KEY_M_SUPER;
     if ((mods & KITTY_MOD_SHIFT) != 0)
         mod |= KEY_M_SHIFT;
     if ((mods & (KITTY_MOD_ALT | KITTY_MOD_META)) != 0)
@@ -1504,34 +1507,23 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
-   Returns -1 for a sequence that is no key at all, KEY_KITTY_EVENT for a key mc has no code for. */
+/* Parse the parameters and the final byte of a CSI sequence (what follows ESC [) into @ev. */
 
-static int
-kitty_read_csi (int c)
+static gboolean
+kitty_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
 {
     unsigned int field[3][8];
     unsigned int nsub[3] = { 1, 1, 1 };
     unsigned int f = 0, sub = 0;
-    const size_t pending = (size_t) (seq_append - seq_buffer);
-    tty_key_event_t *ev = &kitty_event;
     size_t i;
-    int ch, code;
+
+    if (len == 0)
+        return FALSE;
 
     memset (field, 0, sizeof (field));
-
-    for (i = 2;; i++)
+    for (i = 0; i + 1 < len; i++)
     {
-        if (i < pending)
-            ch = seq_buffer[i];
-        else if (i == pending)
-            ch = c;
-        else
-        {
-            ch = getch_with_timeout (KITTY_CSI_TIMEOUT);
-            if (ch == -1)
-                return -1;
-        }
+        const unsigned char ch = (unsigned char) params[i];
 
         if (g_ascii_isdigit (ch))
         {
@@ -1549,14 +1541,14 @@ kitty_read_csi (int c)
             f++;
             sub = 0;
         }
-        else if (ch >= 0x40 && ch <= 0x7E)
-            break;
         else
-            return -1;
+            return FALSE;
     }
+    if ((unsigned char) params[len - 1] < 0x40 || (unsigned char) params[len - 1] > 0x7E)
+        return FALSE;
 
     memset (ev, 0, sizeof (*ev));
-    ev->final = (char) ch;
+    ev->final = params[len - 1];
     ev->key = field[0][0];
     ev->shifted = field[0][1];
     ev->base = field[0][2];
@@ -1565,23 +1557,32 @@ kitty_read_csi (int c)
     if (f >= 2)
         for (sub = 0; sub < nsub[2] && field[2][sub] != 0; sub++)
             ev->text[ev->text_len++] = (gunichar) field[2][sub];
-    kitty_event_valid = TRUE;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The mc key of a kitty event: -1 for none, KEY_KITTY_EVENT for a key mc has no code for. */
+
+static int
+kitty_event_to_code (const tty_key_event_t *ev)
+{
+    int code;
 
     if (ev->event == TTY_KITTY_RELEASE)
         return KEY_KITTY_EVENT;
 
-    if (ch == 'u' || ch == 'P' || ch == 'Q' || ch == 'S')
-        code = kitty_key_code (ch, ev->key, ev->shifted, ev->base, field[1][0]);
+    if (ev->final == 'u' || ev->final == 'P' || ev->final == 'Q' || ev->final == 'S')
+        code = kitty_key_code (ev->final, ev->key, ev->shifted, ev->base, ev->mods + 1);
     else
     {
         /* a legacy form that came with an event type: the same sequence without it */
         GString *seq = g_string_new (ESC_STR "[");
 
-        if (field[1][0] > 1)
-            g_string_append_printf (seq, "%u;%u", field[0][0], field[1][0]);
-        else if (ch == '~')
-            g_string_append_printf (seq, "%u", field[0][0]);
-        g_string_append_c (seq, (char) ch);
+        if (ev->mods != 0)
+            g_string_append_printf (seq, "%u;%u", ev->key, ev->mods + 1);
+        else if (ev->final == '~')
+            g_string_append_printf (seq, "%u", ev->key);
+        g_string_append_c (seq, ev->final);
         code = tty_match_seq_to_keycode (seq->str, (int) seq->len);
         g_string_free (seq, TRUE);
         if (code == 0)
@@ -1589,6 +1590,49 @@ kitty_read_csi (int c)
     }
 
     return code == -1 ? KEY_KITTY_EVENT : code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
+   Returns -1 for a sequence that is no key at all, KEY_KITTY_EVENT for a key mc has no code for. */
+
+static int
+kitty_read_csi (int c)
+{
+    const size_t pending = (size_t) (seq_append - seq_buffer);
+    GString *params = g_string_sized_new (32);
+    size_t i;
+    int ch, code = -1;
+
+    for (i = 2;; i++)
+    {
+        if (i < pending)
+            ch = seq_buffer[i];
+        else if (i == pending)
+            ch = c;
+        else
+        {
+            ch = getch_with_timeout (KITTY_CSI_TIMEOUT);
+            if (ch == -1)
+                break;
+        }
+
+        if (ch < 0x20 || ch > 0x7E || params->len > 256)
+            break;
+        g_string_append_c (params, (char) ch);
+        if (ch >= 0x40)
+        {
+            if (kitty_parse_csi (params->str, params->len, &kitty_event))
+            {
+                kitty_event_valid = TRUE;
+                code = kitty_event_to_code (&kitty_event);
+            }
+            break;
+        }
+    }
+
+    g_string_free (params, TRUE);
+    return code;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1923,6 +1967,7 @@ tty_keyname_to_keycode (const char *name, char **label)
     int use_meta = -1;
     int use_ctrl = -1;
     int use_shift = -1;
+    int use_super = -1;
 
     if (name == NULL)
         return 0;
@@ -1945,6 +1990,8 @@ tty_keyname_to_keycode (const char *name, char **label)
                 use_ctrl = idx;
             else if (key == KEY_M_SHIFT)
                 use_shift = idx;
+            else if (key == KEY_M_SUPER)
+                use_super = idx;
             else
             {
                 k = key;
@@ -1966,6 +2013,11 @@ tty_keyname_to_keycode (const char *name, char **label)
 
         s = g_string_new ("");
 
+        if (use_super != -1)
+        {
+            g_string_append (s, key_conv_tab_sorted[use_super]->shortcut);
+            g_string_append_c (s, '-');
+        }
         if (use_meta != -1)
         {
             g_string_append (s, key_conv_tab_sorted[use_meta]->shortcut);
@@ -2022,6 +2074,9 @@ tty_keyname_to_keycode (const char *name, char **label)
     if (use_meta != -1)
         k = ALT (k);
 
+    if (use_super != -1)
+        k |= KEY_M_SUPER;
+
     return k;
 }
 
@@ -2044,6 +2099,12 @@ tty_keycode_to_keyname (const int keycode)
 
     if (lookup_keycode (k, &key_idx) || (k > 0 && k < 256))
     {
+        if ((mod & KEY_M_SUPER) != 0 && lookup_keycode (KEY_M_SUPER, &idx))
+        {
+            g_string_append (s, key_conv_tab_sorted[idx]->shortcut);
+            g_string_append_c (s, '-');
+        }
+
         if ((mod & KEY_M_CTRL) != 0)
         {
             // non printeble chars like a CTRL-[A..Z]
@@ -2943,9 +3004,7 @@ int
 tty_decode_key_seq (const char *seq, int len)
 {
     int code;
-    unsigned int field[2][3] = { { 0, 0, 0 }, { 0, 0, 0 } };
-    unsigned int f = 0, sub = 0;
-    int i;
+    tty_key_event_t ev;
 
     if (seq == NULL || len <= 0 || memchr (seq, '\0', (size_t) len) != NULL)
         return 0;
@@ -2970,35 +3029,22 @@ tty_decode_key_seq (const char *seq, int len)
         return correct_key_code (code, FALSE);
     }
 
-    if (!kitty_keyboard_active || len < 4 || seq[0] != ESC_CHAR || seq[1] != '[')
+    if (!tty_kitty_seq_event (seq, len, &ev))
         return 0;
 
-    for (i = 2; i < len; i++)
-    {
-        const unsigned char c = (unsigned char) seq[i];
+    code = kitty_event_to_code (&ev);
+    return code > 0 && code != KEY_KITTY_EVENT ? correct_key_code (code, FALSE) : 0;
+}
 
-        if (g_ascii_isdigit (c))
-        {
-            if (f < 2 && sub < 3 && field[f][sub] < 0x10FFFF)
-                field[f][sub] = field[f][sub] * 10 + (unsigned int) (c - '0');
-        }
-        else if (c == ':')
-            sub++;
-        else if (c == ';')
-        {
-            f++;
-            sub = 0;
-        }
-        else if (i == len - 1 && c >= 0x40 && c <= 0x7e)
-        {
-            code = kitty_key_code (c, field[0][0], field[0][1], field[0][2], field[1][0]);
-            return code > 0 ? correct_key_code (code, FALSE) : 0;
-        }
-        else
-            return 0;
-    }
+/* --------------------------------------------------------------------------------------------- */
 
-    return 0;
+gboolean
+tty_kitty_seq_event (const char *seq, int len, tty_key_event_t *ev)
+{
+    if (!kitty_keyboard_active || seq == NULL || len < 3 || seq[0] != ESC_CHAR || seq[1] != '[')
+        return FALSE;
+
+    return kitty_parse_csi (seq + 2, (size_t) len - 2, ev);
 }
 
 /* --------------------------------------------------------------------------------------------- */

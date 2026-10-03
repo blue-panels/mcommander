@@ -273,7 +273,7 @@ static int
 mcterm_kitty_mods (int mods)
 {
     return 1 + ((mods & KEY_M_SHIFT) != 0 ? 1 : 0) + ((mods & KEY_M_ALT) != 0 ? 2 : 0)
-        + ((mods & KEY_M_CTRL) != 0 ? 4 : 0);
+        + ((mods & KEY_M_CTRL) != 0 ? 4 : 0) + ((mods & KEY_M_SUPER) != 0 ? 8 : 0);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -418,6 +418,9 @@ mcterm_encode_key_xterm (int key, unsigned char *buf, size_t bufsz, gboolean app
     if (bufsz == 0)
         return 0;
 
+    // the xterm keys have no Super
+    key &= ~KEY_M_SUPER;
+
     if ((key & ~0x1F) == KEY_M_CTRL)
         key &= 0x1F;
 
@@ -516,12 +519,14 @@ mcterm_encode_kitty_codepoint (gunichar cp, int mods, guint flags, unsigned char
 
     if (shifted)
         mods |= KEY_M_SHIFT;
+    const int command_mods = KEY_M_CTRL | KEY_M_ALT | KEY_M_SUPER;
+
     if ((flags & KITTY_ALL_KEYS) == 0
-        && ((flags & KITTY_DISAMBIGUATE) == 0 || (mods & (KEY_M_CTRL | KEY_M_ALT)) == 0))
+        && ((flags & KITTY_DISAMBIGUATE) == 0 || (mods & command_mods) == 0))
         return 0;
 
     return mcterm_kitty_csi_u (buf, bufsz, flags, code, shifted ? cp : 0, mods,
-                               (mods & (KEY_M_CTRL | KEY_M_ALT)) == 0 ? cp : 0);
+                               (mods & command_mods) == 0 ? cp : 0);
 }
 
 /* --------------------------------------------------------------------------------------------- */

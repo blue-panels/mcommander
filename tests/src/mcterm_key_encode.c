@@ -311,6 +311,9 @@ START_TEST (test_kitty_disambiguate)
     assert_kitty (KEY_M_CTRL | KEY_UP, 1, "\\e[1;5A");
     assert_kitty (KEY_DC, 1, "\\e[3~");
     assert_kitty (KEY_M_SHIFT | KEY_NPAGE, 1, "\\e[6;2~");
+    assert_kitty (KEY_M_SUPER | 'a', 1, "\\e[97;9u");
+    assert_kitty (KEY_M_SUPER | 'a', 0, "a");
+    assert_kitty (KEY_M_SUPER | KEY_UP, 1, "\\e[1;9A");
 }
 END_TEST
 

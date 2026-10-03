@@ -128,7 +128,9 @@ static const struct decode_ds
     { "\033[1;5S", KEY_M_CTRL | KEY_F (4) },       // Ctrl-F4
     { "\033[1;5A", KEY_M_CTRL | KEY_UP },          // Ctrl-Up, from the xterm table
     { "\033[1092;5u", KEY_KITTY_EVENT },           // Ctrl-ef without the base layout key
-    { "\033[97;9u", KEY_KITTY_EVENT },             // Super-A
+    { "\033[97;9u", KEY_M_SUPER | 'a' },           // Super-A
+    { "\033[97;13u", KEY_M_SUPER | XCTRL ('a') },  // Super-Ctrl-A
+    { "\033[97;17u", KEY_KITTY_EVENT },            // Hyper-A
     { "\033[57358u", KEY_KITTY_EVENT },            // Caps Lock
     { "\033[57376u", KEY_KITTY_EVENT },            // F13
     { "\033[97;5:2u", XCTRL ('a') },               // Ctrl-A repeated
@@ -173,18 +175,19 @@ static const struct learned_ds
     const char *seq;
     int code;
 } learned_ds[] = {
-    { "\033[49;5u", KEY_M_CTRL | '1' },  // Ctrl-1 of the kitty protocol
-    { "\033[97;5u", XCTRL ('a') },       // Ctrl-A of the kitty protocol
-    { "\001", XCTRL ('a') },             // Ctrl-A of a legacy terminal
-    { "\033a", ALT ('a') },              // Alt-A
-    { "a", 'a' },                        //
-    { "\033[13~", KEY_F (3) },           // F3, from the xterm table
-    { "\033[97;9u", 0 },                 // Super-A
-    { "\033[1;5Az", 0 },                 // more than one key
-    { "\033", ESC_CHAR },                // Esc
-    { "\033O", ALT ('O') },              // Alt-Shift-O, a head of other sequences
-    { "\177", KEY_BACKSPACE },           // Backspace
-    { "\035", XCTRL (']') },             // Ctrl-]
+    { "\033[49;5u", KEY_M_CTRL | '1' },   // Ctrl-1 of the kitty protocol
+    { "\033[97;5u", XCTRL ('a') },        // Ctrl-A of the kitty protocol
+    { "\001", XCTRL ('a') },              // Ctrl-A of a legacy terminal
+    { "\033a", ALT ('a') },               // Alt-A
+    { "a", 'a' },                         //
+    { "\033[13~", KEY_F (3) },            // F3, from the xterm table
+    { "\033[97;9u", KEY_M_SUPER | 'a' },  // Super-A
+    { "\033[97;17u", 0 },                 // Hyper-A
+    { "\033[1;5Az", 0 },                  // more than one key
+    { "\033", ESC_CHAR },                 // Esc
+    { "\033O", ALT ('O') },               // Alt-Shift-O, a head of other sequences
+    { "\177", KEY_BACKSPACE },            // Backspace
+    { "\035", XCTRL (']') },              // Ctrl-]
 };
 
 START_PARAMETRIZED_TEST (test_kitty_learned_seq, learned_ds)
@@ -268,6 +271,25 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_super_key_names)
+{
+    char *name;
+
+    ck_assert_int_eq (tty_keyname_to_keycode ("super-a", NULL), KEY_M_SUPER | 'a');
+    ck_assert_int_eq (tty_keyname_to_keycode ("super-ctrl-a", NULL), KEY_M_SUPER | XCTRL ('a'));
+    ck_assert_int_eq (tty_keyname_to_keycode ("super-f5", NULL), KEY_M_SUPER | KEY_F (5));
+
+    name = tty_keycode_to_keyname (KEY_M_SUPER | XCTRL ('a'));
+    ck_assert_int_eq (tty_keyname_to_keycode (name, NULL), KEY_M_SUPER | XCTRL ('a'));
+    g_free (name);
+    name = tty_keycode_to_keyname (KEY_M_SUPER | KEY_F (5));
+    ck_assert_int_eq (tty_keyname_to_keycode (name, NULL), KEY_M_SUPER | KEY_F (5));
+    g_free (name);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_kitty_inactive)
 {
     kitty_keyboard_active = FALSE;
@@ -291,6 +313,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_learned_preserves_live_input);
     tcase_add_test (tc_core, test_kitty_ctrl_digit_name);
     tcase_add_test (tc_core, test_kitty_event_fields);
+    tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 
     return mctest_run_all (tc_core);

@@ -21,7 +21,8 @@
 #define KEY_M_SHIFT 0x1000
 #define KEY_M_ALT   0x2000
 #define KEY_M_CTRL  0x4000
-#define KEY_M_MASK  0x7000
+#define KEY_M_SUPER 0x8000
+#define KEY_M_MASK  0xF000
 
 #define XCTRL(x)    (KEY_M_CTRL | ((x) & 0x1F))
 #define ALT(x)      (KEY_M_ALT | (unsigned int) (x))
@@ -141,6 +142,8 @@ char *tty_key_lookup_sequence (int code);
 int tty_match_seq_to_keycode (const char *seq, int len);
 /* The kitty event of @key, the key get_key_code () gave last; FALSE when it came otherwise */
 gboolean tty_key_event (int key, tty_key_event_t *ev);
+/* The kitty event in the bytes of a key that learn_key () gave; FALSE when they are none */
+gboolean tty_kitty_seq_event (const char *seq, int len, tty_key_event_t *ev);
 int tty_decode_key_seq (const char *seq, int len);
 char *tty_build_key_name (const char *base, int modifiers);
 
