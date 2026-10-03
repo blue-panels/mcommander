@@ -150,12 +150,13 @@ mcterm_load_terminal (mc_config_t *cfg)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* A cursor or editing key with Shift, Alt or Ctrl held, in the form xterm sends them:
-   CSI 1 ; m X for the arrows, Home and End, CSI n ; m ~ for the rest. */
+/* Modified cursor and editing keys use xterm CSI sequences. Ctrl with a digit has no
+   legacy control byte, so pass its distinct key code as kitty CSI u. */
 static size_t
 mcterm_encode_modified_key (int key, unsigned char *buf, size_t bufsz)
 {
     const int mods = key & KEY_M_MASK;
+    const int base = key & ~KEY_M_MASK;
     const char *num = NULL;
     char final = '\0';
     char seq[16];
@@ -164,7 +165,14 @@ mcterm_encode_modified_key (int key, unsigned char *buf, size_t bufsz)
     if (mods == 0)
         return 0;
 
-    switch (key & ~KEY_M_MASK)
+    if ((mods & KEY_M_CTRL) != 0 && base >= '0' && base <= '9')
+    {
+        m = 1 + ((mods & KEY_M_SHIFT) != 0 ? 1 : 0) + ((mods & KEY_M_ALT) != 0 ? 2 : 0) + 4;
+        g_snprintf (seq, sizeof (seq), "\x1b[%d;%du", base, m);
+        return mcterm_copy_seq (buf, bufsz, seq);
+    }
+
+    switch (base)
     {
     case KEY_UP:
         final = 'A';

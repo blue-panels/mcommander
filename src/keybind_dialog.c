@@ -979,17 +979,7 @@ keybind_dlg_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, voi
                     int keycode;
 
                     raw = convert_controls (seq);
-                    keycode = tty_match_seq_to_keycode (raw, (int) strlen (raw));
-
-                    if (keycode == 0 && strlen (raw) == 1)
-                    {
-                        unsigned char c = (unsigned char) raw[0];
-
-                        keycode = (c < 32) ? (KEY_M_CTRL | (c + 'a' - 1)) : (int) c;
-                    }
-                    if (keycode == 0 && strlen (raw) == 2 && raw[0] == '\x1b')
-                        keycode = KEY_M_ALT | (int) (unsigned char) raw[1];
-
+                    keycode = tty_decode_key_seq (raw, (int) strlen (raw));
                     g_free (raw);
 
                     if (keycode > 0)
