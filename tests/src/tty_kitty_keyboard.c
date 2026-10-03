@@ -236,7 +236,8 @@ START_TEST (test_kitty_event_fields)
     tty_key_event_t ev;
 
     ck_assert_int_eq (decode ("\033[97:65;6:2;65u"), XCTRL ('a'));
-    ck_assert (tty_key_event (&ev));
+    ck_assert (tty_key_event (XCTRL ('a'), &ev));
+    ck_assert (!tty_key_event (KEY_LEFT, &ev));
     ck_assert_int_eq (ev.final, 'u');
     ck_assert_uint_eq (ev.key, 97);
     ck_assert_uint_eq (ev.shifted, 65);
@@ -246,22 +247,22 @@ START_TEST (test_kitty_event_fields)
     ck_assert_uint_eq (ev.text[0], 65);
 
     ck_assert_int_eq (decode ("\033[1;3:3D"), KEY_KITTY_EVENT);
-    ck_assert (tty_key_event (&ev));
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
     ck_assert_int_eq (ev.final, 'D');
     ck_assert_uint_eq (ev.key, 1);
     ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_ALT);
     ck_assert_int_eq (ev.event, TTY_KITTY_RELEASE);
 
     ck_assert_int_eq (decode ("\033[57441;9u"), KEY_KITTY_EVENT);
-    ck_assert (tty_key_event (&ev));
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
     ck_assert_uint_eq (ev.key, 57441);
     ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_SUPER);
 
     /* a key that did not come as a kitty event has none */
     ck_assert_int_eq (decode ("x"), 'x');
-    ck_assert (!tty_key_event (&ev));
+    ck_assert (!tty_key_event ('x', &ev));
     ck_assert_int_eq (decode ("\033[13~"), KEY_F (3));
-    ck_assert (!tty_key_event (&ev));
+    ck_assert (!tty_key_event (KEY_F (3), &ev));
 }
 END_TEST
 

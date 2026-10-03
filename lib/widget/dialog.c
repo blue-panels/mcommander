@@ -202,10 +202,12 @@ dlg_key_event (WDialog *h, int d_key)
     if (g->current == NULL)
         g->current = g->widgets;
 
-    // a kitty key with no mc code is for the widget that reads such events, nobody else
+    /* A kitty key with no mc code is for the terminal that reads such events: the dialog and
+       the widget in focus may pass it on, the hotkeys and the keymaps never see it. */
     if (d_key == KEY_KITTY_EVENT)
     {
-        send_message (WIDGET (g->current->data), NULL, MSG_KEY, d_key, NULL);
+        if (send_message (h, NULL, MSG_KEY, d_key, NULL) == MSG_NOT_HANDLED)
+            send_message (WIDGET (g->current->data), NULL, MSG_KEY, d_key, NULL);
         return;
     }
 

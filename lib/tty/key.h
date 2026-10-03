@@ -139,8 +139,8 @@ char *learn_key (void);
 int tty_normalize_keycode (int code);
 char *tty_key_lookup_sequence (int code);
 int tty_match_seq_to_keycode (const char *seq, int len);
-/* The kitty event of the key get_key_code () gave last; FALSE when that key was no such event */
-gboolean tty_key_event (tty_key_event_t *ev);
+/* The kitty event of @key, the key get_key_code () gave last; FALSE when it came otherwise */
+gboolean tty_key_event (int key, tty_key_event_t *ev);
 int tty_decode_key_seq (const char *seq, int len);
 char *tty_build_key_name (const char *base, int modifiers);
 
@@ -158,6 +158,8 @@ void disable_bracketed_paste (void);
 /* Kitty keyboard protocol, if the terminal knows it */
 void enable_kitty_keyboard (void);
 void disable_kitty_keyboard (void);
+/* Ask the terminal for the kitty flags 2, 8 and 16 in @flags on top of mc's own, or for no more */
+void tty_kitty_keyboard_want (guint flags);
 
 /*** inline functions ****************************************************************************/
 

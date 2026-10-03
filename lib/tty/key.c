@@ -234,7 +234,9 @@ const key_code_name_t key_name_conv_tab[] = {
 #define SEQ_BUFFER_LEN 33
 
 /* Kitty keyboard protocol: disambiguate escape codes (1) and report alternate keys (4) */
-#define KITTY_KEYBOARD_FLAGS "5"
+#define KITTY_KEYBOARD_BASE 5
+/* Event types (2), every key as an escape code (8) and the text (16), for a program in mcterm */
+#define KITTY_KEYBOARD_EXTRA (2 | 8 | 16)
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
 #define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
 
@@ -575,6 +577,10 @@ static gboolean kitty_keyboard_active = FALSE;
 /* The kitty event of the key get_key_code () gave last */
 static tty_key_event_t kitty_event;
 static gboolean kitty_event_valid = FALSE;
+static int kitty_event_code;
+/* The flags asked of the terminal, and the ones a program in mcterm wants on top of them */
+static guint kitty_flags_wanted = 0;
+static guint kitty_flags_sent = 0;
 
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
@@ -2425,6 +2431,7 @@ nodelay_try_again:
             if (c == -1 || c == KEY_KITTY_EVENT)
             {
                 this = NULL;
+                kitty_event_code = c;
                 return c;
             }
             goto done;
@@ -2438,7 +2445,9 @@ nodelay_try_again:
 
 done:
     this = NULL;
-    return correct_key_code (c, from_sequence);
+    c = correct_key_code (c, from_sequence);
+    kitty_event_code = c;
+    return c;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2917,9 +2926,9 @@ tty_match_seq_to_keycode (const char *seq, int len)
 
 /* --------------------------------------------------------------------------------------------- */
 gboolean
-tty_key_event (tty_key_event_t *ev)
+tty_key_event (int key, tty_key_event_t *ev)
 {
-    if (!kitty_event_valid)
+    if (!kitty_event_valid || key != kitty_event_code)
         return FALSE;
     if (ev != NULL)
         *ev = kitty_event;
@@ -3080,9 +3089,24 @@ enable_kitty_keyboard (void)
     if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
         return;
 
-    printf (ESC_STR "[>" KITTY_KEYBOARD_FLAGS "u");
+    kitty_flags_sent = KITTY_KEYBOARD_BASE | kitty_flags_wanted;
+    printf (ESC_STR "[>%uu", kitty_flags_sent);
     fflush (stdout);
     kitty_keyboard_active = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+tty_kitty_keyboard_want (guint flags)
+{
+    kitty_flags_wanted = flags & KITTY_KEYBOARD_EXTRA;
+    if (!kitty_keyboard_active || (KITTY_KEYBOARD_BASE | kitty_flags_wanted) == kitty_flags_sent)
+        return;
+
+    kitty_flags_sent = KITTY_KEYBOARD_BASE | kitty_flags_wanted;
+    printf (ESC_STR "[=%u;1u", kitty_flags_sent);
+    fflush (stdout);
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -380,6 +380,23 @@ ret:
 
 #endif /* __linux__ */
 
+/* While the keys go to the program in the terminal - the terminal has the focus, or a command
+   or a full-screen program runs - ask the outer terminal for the kitty flags the program wants,
+   release events and every key among them; otherwise for no more than mc's own. */
+static void
+mcterm_want_host_keys (const WMcTerm *t)
+{
+    guint flags = 0;
+
+    if (t->vterm != NULL && !t->child_dead
+        && (widget_get_state (CONST_WIDGET (t), WST_FOCUSED) || !t->shell_at_prompt
+            || mcview_vterm_in_alt_screen (t->vterm)))
+        flags = mcview_vterm_kitty_flags (t->vterm);
+    tty_kitty_keyboard_want (flags);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static int
 mcterm_pty_ready_cb (int fd, void *info)
 {
@@ -421,6 +438,7 @@ mcterm_pty_ready_cb (int fd, void *info)
             mcterm_handle_osc52_generation (t);
         }
 
+        mcterm_want_host_keys (t);
         t->line_cleared = FALSE;
         t->line_typed = FALSE;
 
@@ -465,6 +483,7 @@ mcterm_pty_ready_cb (int fd, void *info)
     else if (n == 0 || (n < 0 && errno == EIO))
     {
         t->child_dead = TRUE;
+        mcterm_want_host_keys (t);
         mcterm_busy_tick_set (t, FALSE);
         delete_select_channel (t->pty_master);
         close (t->pty_master);
@@ -2418,6 +2437,19 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
     const guint flags = mcview_vterm_kitty_flags (t->vterm);
     size_t n;
 
+    tty_key_event_t ev;
+
+    /* A key the outer terminal sent by the kitty protocol keeps all it said: the release, Super,
+       the base layout key */
+    if ((flags & (0x01 | 0x08)) != 0 && tty_key_event (key, &ev))
+    {
+        t->kitty_utf8_len = 0;
+        n = mcterm_encode_kitty_event (&ev, flags, buf, sizeof (buf), app_cursor);
+        return n == 0 || mcterm_write_all (t->pty_master, buf, n);
+    }
+    if (key == KEY_KITTY_EVENT)
+        return TRUE;
+
     /* With every key as CSI u, a character goes as one code, so its UTF-8 bytes are collected */
     if ((flags & 0x08) != 0 && mc_global.utf8_display && key >= 0x80 && key <= 0xFF)
     {
@@ -2813,10 +2845,12 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         // Reading starts where the shell is typing.
         if (t->vterm != NULL)
             mcterm_cursor_reset (t);
+        mcterm_want_host_keys (t);
         widget_draw (w);
         return MSG_HANDLED;
 
     case MSG_UNFOCUS:
+        mcterm_want_host_keys (t);
         // The mark is worked on with the keys of the terminal, which are gone now.
         t->cursor_valid = FALSE;
         if (t->sel.anchored)
@@ -2827,6 +2861,7 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         return MSG_HANDLED;
 
     case MSG_DESTROY:
+        tty_kitty_keyboard_want (0);
         if (t->pty_master >= 0)
         {
             delete_select_channel (t->pty_master);

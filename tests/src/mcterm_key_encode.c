@@ -426,6 +426,87 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+static void
+assert_event (char final, unsigned int key, unsigned int shifted, unsigned int base,
+              unsigned int mods, int event, gunichar text, guint flags, const char *expected)
+{
+    tty_key_event_t ev;
+    unsigned char buf[64];
+    char *raw;
+    size_t len;
+
+    memset (&ev, 0, sizeof (ev));
+    ev.final = final;
+    ev.key = key;
+    ev.shifted = shifted;
+    ev.base = base;
+    ev.mods = mods;
+    ev.event = event;
+    if (text != 0)
+    {
+        ev.text[0] = text;
+        ev.text_len = 1;
+    }
+
+    raw = convert_controls (expected);
+    memset (buf, 0, sizeof (buf));
+    len = mcterm_encode_kitty_event (&ev, flags, buf, sizeof (buf), FALSE);
+    ck_assert_msg (len == strlen (raw) && memcmp (buf, raw, len) == 0,
+                   "key %u event %d flags %u: got %.*s, expected %s", key, event, flags, (int) len,
+                   (const char *) buf, expected);
+    g_free (raw);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_event_encoding)
+{
+    const unsigned int S = TTY_KITTY_MOD_SHIFT, A = TTY_KITTY_MOD_ALT, C = TTY_KITTY_MOD_CTRL;
+    const unsigned int SUPER = TTY_KITTY_MOD_SUPER, CAPS = TTY_KITTY_MOD_CAPS_LOCK;
+    const int P = TTY_KITTY_PRESS, R = TTY_KITTY_REPEAT, X = TTY_KITTY_RELEASE;
+
+    /* a release goes only to a program that asked for the event types */
+    assert_event ('u', 97, 0, 0, C, X, 0, 1, "");
+    assert_event ('u', 97, 0, 0, C, X, 0, 1 | 2, "\\\\e[97;5:3u");
+    assert_event ('u', 97, 0, 0, C, R, 0, 1, "\\\\e[97;5u");
+    assert_event ('u', 97, 0, 0, C, R, 0, 1 | 2, "\\\\e[97;5:2u");
+
+    /* Super goes along */
+    assert_event ('u', 97, 0, 0, SUPER, P, 0, 1, "\\\\e[97;9u");
+
+    /* with flag 1 alone a character is text, and so is its repeat; its release is not sent */
+    assert_event ('u', 1092, 1060, 0, S, P, 0, 1, "\xd0\xa4");
+    assert_event ('u', 97, 0, 0, 0, R, 0, 1 | 2, "a");
+    assert_event ('u', 97, 0, 0, 0, X, 0, 1 | 2, "");
+    assert_event ('u', 13, 0, 0, 0, P, 0, 1, "\r");
+    assert_event ('u', 13, 0, 0, S, P, 0, 1, "\\\\e[13;2u");
+    assert_event ('u', 27, 0, 0, 0, P, 0, 1, "\\\\e[27u");
+
+    /* every key as CSI u, with the alternates and the text; the lock keys count then */
+    assert_event ('u', 97, 65, 0, S | CAPS, P, 65, 8 | 4 | 16, "\\\\e[97:65;66;65u");
+    assert_event ('u', 1092, 0, 97, 0, P, 1092, 8 | 4, "\\\\e[1092::97u");
+    assert_event ('u', 97, 0, 0, CAPS, P, 0, 1, "a");
+
+    /* the modifier and lock keys themselves only with flag 8 */
+    assert_event ('u', 57441, 0, 0, S, P, 0, 1, "");
+    assert_event ('u', 57441, 0, 0, S, X, 0, 8 | 2, "\\\\e[57441;2:3u");
+
+    /* F13 and up and the media keys go with flag 1 */
+    assert_event ('u', 57376, 0, 0, 0, P, 0, 1, "\\\\e[57376u");
+    assert_event ('u', 57428, 0, 0, 0, P, 0, 1, "\\\\e[57428u");
+
+    /* the legacy forms keep their shape, with the modifiers and the event type */
+    assert_event ('A', 1, 0, 0, 0, P, 0, 1, "\\\\e[A");
+    assert_event ('A', 1, 0, 0, C, R, 0, 1 | 2, "\\\\e[1;5:2A");
+    assert_event ('A', 1, 0, 0, 0, X, 0, 1 | 2, "\\\\e[1;1:3A");
+    assert_event ('P', 1, 0, 0, 0, P, 0, 1, "\\\\eOP");
+    assert_event ('~', 3, 0, 0, A, P, 0, 1, "\\\\e[3;3~");
+    assert_event ('~', 15, 0, 0, 0, X, 0, 1 | 2, "\\\\e[15;1:3~");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -448,6 +529,7 @@ main (void)
     tcase_add_test (tc_core, test_ctrl_digits_without_kitty_are_xterm_bytes);
     tcase_add_test (tc_core, test_kitty_disambiguate);
     tcase_add_test (tc_core, test_kitty_all_keys);
+    tcase_add_test (tc_core, test_kitty_event_encoding);
     tcase_add_test (tc_core, test_small_buffer_returns_zero);
     tcase_add_test (tc_core, test_copy_self_does_not_loop);
     tcase_add_test (tc_core, test_copy_cycle_does_not_loop);
