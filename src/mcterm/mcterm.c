@@ -2207,7 +2207,9 @@ mcterm_paint_pictures (void *data)
         return;
     }
 
-    if (!t->paint_pending)
+    /* A later screen refresh can rewrite the cells under a picture without
+       drawing this widget. Paint the picture again in that case. */
+    if (!t->paint_pending && !t->pictures_shown)
         return;
     t->paint_pending = FALSE;
     t->pictures_shown = FALSE;

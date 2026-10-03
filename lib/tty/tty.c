@@ -87,6 +87,7 @@ typedef struct
 
 static GSList *painters = NULL;
 static gboolean painting = FALSE;
+static gboolean repaint_needed = FALSE;
 
 /* The terminal's own background, as OSC 11 reported it; -1 while unknown. */
 static int background_rgb = -1;
@@ -139,17 +140,26 @@ tty_run_painters (void)
 {
     GSList *l;
 
-    /* A painter that refreshes would run the painters again. */
+    /* A painter may refresh the screen, erasing pictures already painted in
+       this pass. Finish the pass, then paint again over the new screen. */
     if (painting)
+    {
+        repaint_needed = TRUE;
         return;
+    }
 
     painting = TRUE;
-    for (l = painters; l != NULL; l = g_slist_next (l))
+    do
     {
-        const tty_painter_t *p = l->data;
+        repaint_needed = FALSE;
+        for (l = painters; l != NULL; l = g_slist_next (l))
+        {
+            const tty_painter_t *p = l->data;
 
-        p->fn (p->data);
+            p->fn (p->data);
+        }
     }
+    while (repaint_needed);
     painting = FALSE;
 }
 
