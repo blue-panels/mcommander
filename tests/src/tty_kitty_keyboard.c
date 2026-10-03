@@ -127,10 +127,15 @@ static const struct decode_ds
     { "\033[1;2P", KEY_F (11) },                   // Shift-F1
     { "\033[1;5S", KEY_M_CTRL | KEY_F (4) },       // Ctrl-F4
     { "\033[1;5A", KEY_M_CTRL | KEY_UP },          // Ctrl-Up, from the xterm table
-    { "\033[1092;5u", -1 },                        // Ctrl-ef without the base layout key
-    { "\033[97;9u", -1 },                          // Super-A
-    { "\033[57358u", -1 },                         // Caps Lock
-    { "\033[57376u", -1 },                         // F13
+    { "\033[1092;5u", KEY_KITTY_EVENT },           // Ctrl-ef without the base layout key
+    { "\033[97;9u", KEY_KITTY_EVENT },             // Super-A
+    { "\033[57358u", KEY_KITTY_EVENT },            // Caps Lock
+    { "\033[57376u", KEY_KITTY_EVENT },            // F13
+    { "\033[97;5:2u", XCTRL ('a') },               // Ctrl-A repeated
+    { "\033[97;5:3u", KEY_KITTY_EVENT },           // Ctrl-A released
+    { "\033[1;5:2A", KEY_M_CTRL | KEY_UP },        // Ctrl-Up repeated
+    { "\033[1;1:3A", KEY_KITTY_EVENT },            // Up released
+    { "\033[13;1:2~", KEY_F (3) },                 // F3 repeated
 };
 
 START_PARAMETRIZED_TEST (test_kitty_decode, decode_ds)
@@ -226,6 +231,42 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_kitty_event_fields)
+{
+    tty_key_event_t ev;
+
+    ck_assert_int_eq (decode ("\033[97:65;6:2;65u"), XCTRL ('a'));
+    ck_assert (tty_key_event (&ev));
+    ck_assert_int_eq (ev.final, 'u');
+    ck_assert_uint_eq (ev.key, 97);
+    ck_assert_uint_eq (ev.shifted, 65);
+    ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_SHIFT | TTY_KITTY_MOD_CTRL);
+    ck_assert_int_eq (ev.event, TTY_KITTY_REPEAT);
+    ck_assert_int_eq (ev.text_len, 1);
+    ck_assert_uint_eq (ev.text[0], 65);
+
+    ck_assert_int_eq (decode ("\033[1;3:3D"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (&ev));
+    ck_assert_int_eq (ev.final, 'D');
+    ck_assert_uint_eq (ev.key, 1);
+    ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_ALT);
+    ck_assert_int_eq (ev.event, TTY_KITTY_RELEASE);
+
+    ck_assert_int_eq (decode ("\033[57441;9u"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (&ev));
+    ck_assert_uint_eq (ev.key, 57441);
+    ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_SUPER);
+
+    /* a key that did not come as a kitty event has none */
+    ck_assert_int_eq (decode ("x"), 'x');
+    ck_assert (!tty_key_event (&ev));
+    ck_assert_int_eq (decode ("\033[13~"), KEY_F (3));
+    ck_assert (!tty_key_event (&ev));
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_kitty_inactive)
 {
     kitty_keyboard_active = FALSE;
@@ -248,6 +289,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_learned_after_cut_sequence);
     tcase_add_test (tc_core, test_kitty_learned_preserves_live_input);
     tcase_add_test (tc_core, test_kitty_ctrl_digit_name);
+    tcase_add_test (tc_core, test_kitty_event_fields);
     tcase_add_test (tc_core, test_kitty_inactive);
 
     return mctest_run_all (tc_core);

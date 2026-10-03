@@ -43,9 +43,40 @@
 /* A bracketed paste read as one block: tty_paste_take() gives its text */
 #define MCKEY_PASTE -6
 
+/* A kitty key event mc has no key code for: a release, a media key, a key with Super. The
+   widget that wants it reads it with tty_key_event (). */
+#define KEY_KITTY_EVENT 0xFFF
+
+/* Kitty modifier bits (the modifier field minus one) */
+#define TTY_KITTY_MOD_SHIFT     0x01
+#define TTY_KITTY_MOD_ALT       0x02
+#define TTY_KITTY_MOD_CTRL      0x04
+#define TTY_KITTY_MOD_SUPER     0x08
+#define TTY_KITTY_MOD_HYPER     0x10
+#define TTY_KITTY_MOD_META      0x20
+#define TTY_KITTY_MOD_CAPS_LOCK 0x40
+#define TTY_KITTY_MOD_NUM_LOCK  0x80
+
+#define TTY_KITTY_PRESS         1
+#define TTY_KITTY_REPEAT        2
+#define TTY_KITTY_RELEASE       3
+
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/
+
+/* A key as the terminal sent it by the kitty keyboard protocol */
+typedef struct
+{
+    char final;            // 'u', '~' or the letter of a legacy form (A, P, ...)
+    unsigned int key;      // the key number, or the first parameter of a legacy form
+    unsigned int shifted;  // 0 when not sent
+    unsigned int base;     // the key in the base layout, 0 when not sent
+    unsigned int mods;     // TTY_KITTY_MOD_* bits
+    int event;             // TTY_KITTY_PRESS, TTY_KITTY_REPEAT or TTY_KITTY_RELEASE
+    gunichar text[8];
+    int text_len;
+} tty_key_event_t;
 
 typedef struct
 {
@@ -108,6 +139,8 @@ char *learn_key (void);
 int tty_normalize_keycode (int code);
 char *tty_key_lookup_sequence (int code);
 int tty_match_seq_to_keycode (const char *seq, int len);
+/* The kitty event of the key get_key_code () gave last; FALSE when that key was no such event */
+gboolean tty_key_event (tty_key_event_t *ev);
 int tty_decode_key_seq (const char *seq, int len);
 char *tty_build_key_name (const char *base, int modifiers);
 
