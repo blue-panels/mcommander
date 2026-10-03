@@ -60,6 +60,9 @@
 
 #define VTERM_BASE64_CHARS      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 
+#define VTERM_KITTY_STACK_MAX   16
+#define VTERM_KITTY_FLAGS_ALL   0x1F
+
 /*** file scope type declarations ****************************************************************/
 
 struct mcview_vterm_struct
@@ -75,6 +78,8 @@ struct mcview_vterm_struct
     gboolean in_dcs;
     gboolean in_dcs_esc;
     gboolean csi_gt;
+    gboolean csi_lt;
+    gboolean csi_eq;
     gboolean in_esc_char;
     /* Which of G0..G3 the designation being read names, -1 when it names none. */
     int esc_charset_slot;
@@ -143,6 +148,10 @@ struct mcview_vterm_struct
     gboolean new_chars_since_snapshot;
 
     gboolean in_alt_screen;
+
+    /* The kitty keyboard modes a program pushed, one stack for each screen (0: main). */
+    guint8 kitty_stack[2][VTERM_KITTY_STACK_MAX];
+    int kitty_depth[2];
 
     gboolean app_cursor_keys;
     gboolean bracketed_paste;  // DECSET 2004: a paste goes in ESC[200~ ... ESC[201~
@@ -214,10 +223,83 @@ vterm_finalize_param (mcview_vterm_t *vt)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static guint8 *
+vterm_kitty_top (mcview_vterm_t *vt)
+{
+    const int screen = vt->in_alt_screen ? 1 : 0;
+
+    if (vt->kitty_depth[screen] == 0)
+    {
+        vt->kitty_stack[screen][0] = 0;
+        vt->kitty_depth[screen] = 1;
+    }
+    return &vt->kitty_stack[screen][vt->kitty_depth[screen] - 1];
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The kitty keyboard protocol: CSI ? u asks, CSI > flags u pushes, CSI < n u pops,
+   CSI = flags ; mode u changes the flags on top. */
+
+static vterm_event_t
+vterm_dispatch_kitty_keyboard (mcview_vterm_t *vt)
+{
+    const int screen = vt->in_alt_screen ? 1 : 0;
+    const int p0 = (vt->param_count > 0) ? vt->params[0] : 0;
+    const int p1 = (vt->param_count > 1) ? vt->params[1] : 0;
+    const guint8 flags = (guint8) (p0 & VTERM_KITTY_FLAGS_ALL);
+
+    if (vt->csi_private)
+    {
+        vterm_event_t ev = vterm_make (vt, VTERM_REPLY);
+
+        g_snprintf (vt->reply_buf, sizeof (vt->reply_buf), ESC_STR "[?%uu",
+                    mcview_vterm_kitty_flags (vt));
+        ev.reply = vt->reply_buf;
+        return ev;
+    }
+
+    if (vt->csi_gt)
+    {
+        if (vt->kitty_depth[screen] == VTERM_KITTY_STACK_MAX)
+        {
+            memmove (vt->kitty_stack[screen], vt->kitty_stack[screen] + 1,
+                     VTERM_KITTY_STACK_MAX - 1);
+            vt->kitty_depth[screen]--;
+        }
+        vt->kitty_stack[screen][vt->kitty_depth[screen]++] = flags;
+    }
+    else if (vt->csi_lt)
+        vt->kitty_depth[screen] = MAX (vt->kitty_depth[screen] - MAX (p0, 1), 0);
+    else
+    {
+        guint8 *top = vterm_kitty_top (vt);
+
+        switch (p1)
+        {
+        case 2:
+            *top |= flags;
+            break;
+        case 3:
+            *top &= (guint8) ~flags;
+            break;
+        default:
+            *top = flags;
+            break;
+        }
+    }
+
+    return vterm_make (vt, VTERM_CONSUMED);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static vterm_event_t
 vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
 {
     int p0, p1;
+
+    if (final_byte == 'u' && (vt->csi_private || vt->csi_gt || vt->csi_lt || vt->csi_eq))
+        return vterm_dispatch_kitty_keyboard (vt);
 
     /* Device Attributes: CSI c and CSI 0 c ask what the terminal is, CSI > c
        asks for its version. Answer VT100 with an advanced video option. */
@@ -1475,6 +1557,9 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     g_string_truncate (vt->sixel, 0);
     vterm_images_clear (vt);
     vt->csi_gt = FALSE;
+    vt->csi_lt = FALSE;
+    vt->csi_eq = FALSE;
+    vt->kitty_depth[0] = vt->kitty_depth[1] = 0;
     vt->in_esc_char = FALSE;
     vt->esc_charset_slot = -1;
     memset (vt->charset, 'B', sizeof (vt->charset));
@@ -1764,6 +1849,8 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
             vt->in_csi = TRUE;
             vt->csi_private = FALSE;
             vt->csi_gt = FALSE;
+            vt->csi_lt = FALSE;
+            vt->csi_eq = FALSE;
             vt->param_count = 0;
             vt->current_param = 0;
             vt->has_current = FALSE;
@@ -1828,6 +1915,18 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
         if (byte == '>')
         {
             vt->csi_gt = TRUE;
+            return vterm_make (vt, VTERM_CONSUMED);
+        }
+
+        if (byte == '<')
+        {
+            vt->csi_lt = TRUE;
+            return vterm_make (vt, VTERM_CONSUMED);
+        }
+
+        if (byte == '=')
+        {
+            vt->csi_eq = TRUE;
             return vterm_make (vt, VTERM_CONSUMED);
         }
 
@@ -2249,6 +2348,17 @@ gboolean
 mcview_vterm_app_cursor_keys (const mcview_vterm_t *vt)
 {
     return vt->app_cursor_keys;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+guint
+mcview_vterm_kitty_flags (const mcview_vterm_t *vt)
+{
+    const int screen = vt->in_alt_screen ? 1 : 0;
+    const int depth = vt->kitty_depth[screen];
+
+    return depth > 0 ? vt->kitty_stack[screen][depth - 1] : 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
