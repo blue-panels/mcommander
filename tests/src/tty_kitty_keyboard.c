@@ -110,7 +110,8 @@ static const struct decode_ds
     { "\033[109;5u", '\n' },                       // Ctrl-M stays Enter
     { "\033[105;5u", '\t' },                       // Ctrl-I stays Tab
     { "\033[32;5u", XCTRL (' ') },                 // Ctrl-Space
-    { "\033[49;5u", XCTRL ('1') },                 // Ctrl-1
+    { "\033[49;5u", KEY_M_CTRL | '1' },            // Ctrl-1, not Ctrl-Q
+    { "\033[49:33;6u", KEY_M_CTRL | '1' },         // Ctrl-Shift-1 keeps the digit
     { "\033[97;3u", ALT ('a') },                   // Alt-A
     { "\033[97;4u", ALT ('A') },                   // Alt-Shift-A
     { "\033[49:33;4u", ALT ('!') },                // Alt-Shift-1 with the shifted key
@@ -151,6 +152,80 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_kitty_ctrl_digit_keyname)
+{
+    ck_assert_int_eq (tty_keyname_to_keycode ("ctrl-1", NULL), decode ("\033[49;5u"));
+    ck_assert_int_eq (tty_keyname_to_keycode ("ctrl-shift-1", NULL), decode ("\033[49:33;6u"));
+    ck_assert_int_eq (tty_keyname_to_keycode ("ctrl-0", NULL), decode ("\033[48;5u"));
+    ck_assert_int_eq (tty_keyname_to_keycode ("ctrl-q", NULL), XCTRL ('q'));
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+static const struct learned_ds
+{
+    const char *seq;
+    int code;
+} learned_ds[] = {
+    { "\033[49;5u", KEY_M_CTRL | '1' },  // Ctrl-1 of the kitty protocol
+    { "\033[97;5u", XCTRL ('a') },       // Ctrl-A of the kitty protocol
+    { "\001", XCTRL ('a') },             // Ctrl-A of a legacy terminal
+    { "\033a", ALT ('a') },              // Alt-A
+    { "a", 'a' },                        //
+    { "\033[13~", KEY_F (3) },           // F3, from the xterm table
+    { "\033[97;9u", 0 },                 // Super-A
+    { "\033[1;5Az", 0 },                 // more than one key
+    { "\033", ESC_CHAR },                // Esc
+    { "\033O", ALT ('O') },              // Alt-Shift-O, a head of other sequences
+    { "\177", KEY_BACKSPACE },           // Backspace
+    { "\035", XCTRL (']') },             // Ctrl-]
+};
+
+START_PARAMETRIZED_TEST (test_kitty_learned_seq, learned_ds)
+{
+    ck_assert_int_eq (tty_decode_key_seq (data->seq, (int) strlen (data->seq)), data->code);
+    ck_assert_uint_eq (test_input_pos, test_input_len);
+}
+END_PARAMETRIZED_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_learned_after_cut_sequence)
+{
+    // Decoding a capture must neither use nor discard the live decoder's partial sequence
+    feed ("\033[1;5");
+    ck_assert_int_eq (get_key_code (1), -1);
+    ck_assert_int_eq (tty_decode_key_seq ("\033[13~", 5), KEY_F (3));
+    feed ("A");
+    ck_assert_int_eq (get_key_code (1), KEY_M_CTRL | KEY_UP);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_learned_preserves_live_input)
+{
+    feed ("z");
+    ck_assert_int_eq (tty_decode_key_seq ("\033[49;5u", 7), KEY_M_CTRL | '1');
+    ck_assert_int_eq (get_key_code (1), 'z');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_ctrl_digit_name)
+{
+    char *name;
+
+    name = tty_keycode_to_keyname (KEY_M_CTRL | '1');
+    ck_assert_str_eq (name, "Ctrl-1");
+    g_free (name);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_kitty_inactive)
 {
     kitty_keyboard_active = FALSE;
@@ -168,6 +243,11 @@ main (void)
     tcase_add_checked_fixture (tc_core, setup, teardown);
     mctest_add_parameterized_test (tc_core, test_kitty_decode, decode_ds);
     tcase_add_test (tc_core, test_kitty_key_after_sequence);
+    tcase_add_test (tc_core, test_kitty_ctrl_digit_keyname);
+    mctest_add_parameterized_test (tc_core, test_kitty_learned_seq, learned_ds);
+    tcase_add_test (tc_core, test_kitty_learned_after_cut_sequence);
+    tcase_add_test (tc_core, test_kitty_learned_preserves_live_input);
+    tcase_add_test (tc_core, test_kitty_ctrl_digit_name);
     tcase_add_test (tc_core, test_kitty_inactive);
 
     return mctest_run_all (tc_core);

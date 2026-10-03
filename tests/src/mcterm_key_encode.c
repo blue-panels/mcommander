@@ -217,6 +217,18 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_ctrl_digits_use_kitty_csi_u)
+{
+    init_mcterm_key_table ();
+
+    assert_encoded (KEY_M_CTRL | '1', FALSE, "\\e[49;5u");
+    assert_encoded (KEY_M_CTRL | '0', FALSE, "\\e[48;5u");
+    assert_encoded (KEY_M_ALT | KEY_M_CTRL | '1', FALSE, "\\e[49;7u");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_small_buffer_returns_zero)
 {
     unsigned char buf[2];
@@ -314,6 +326,7 @@ main (void)
     tcase_add_test (tc_core, test_utf8_bytes_pass_through);
     tcase_add_test (tc_core, test_alt_ascii_uses_esc_prefix);
     tcase_add_test (tc_core, test_modified_cursor_keys_use_csi_form);
+    tcase_add_test (tc_core, test_ctrl_digits_use_kitty_csi_u);
     tcase_add_test (tc_core, test_small_buffer_returns_zero);
     tcase_add_test (tc_core, test_copy_self_does_not_loop);
     tcase_add_test (tc_core, test_copy_cycle_does_not_loop);

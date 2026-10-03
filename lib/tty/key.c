@@ -1412,6 +1412,7 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
                 unsigned int mods)
 {
     int mod = 0;
+    gboolean ctrl_digit;
 
     mods = mods > 0 ? mods - 1 : 0;
     if ((mods & (KITTY_MOD_SUPER | KITTY_MOD_HYPER)) != 0)
@@ -1464,12 +1465,17 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
     if (key < 32 || key > 126)
         return -1;
 
+    ctrl_digit = (mod & KEY_M_CTRL) != 0 && g_ascii_isdigit ((gchar) key);
     if ((mod & KEY_M_SHIFT) != 0)
     {
-        if (shifted > 31 && shifted < 127)
-            key = shifted;
-        else
-            key = (unsigned int) g_ascii_toupper ((gchar) key);
+        // Ctrl with a digit uses the base key even when kitty reports its shifted symbol
+        if (!ctrl_digit)
+        {
+            if (shifted > 31 && shifted < 127)
+                key = shifted;
+            else
+                key = (unsigned int) g_ascii_toupper ((gchar) key);
+        }
         mod &= ~KEY_M_SHIFT;
     }
 
@@ -1481,7 +1487,7 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
             key &= 0x1F;
             mod &= ~KEY_M_CTRL;
         }
-        else
+        else if (!g_ascii_isdigit ((gchar) key))
             key = (unsigned int) XCTRL (key);
     }
 
@@ -1956,7 +1962,8 @@ tty_keyname_to_keycode (const char *name, char **label)
 
     if (use_ctrl != -1)
     {
-        if (k < 256)
+        // XCTRL ('1') is Ctrl-Q: a digit keeps its code and gets the modifier
+        if (k < 256 && !g_ascii_isdigit ((gchar) k))
             k = XCTRL (k);
         else
             k |= KEY_M_CTRL;
@@ -2860,6 +2867,72 @@ tty_match_seq_to_keycode (const char *seq, int len)
         return 0;
 
     return match_seq_in_trie (keys, seq, len, 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Decode the bytes from learn_key () without reading or changing the live keyboard input.
+   Returns 0 when they are not one whole key. */
+
+int
+tty_decode_key_seq (const char *seq, int len)
+{
+    int code;
+    unsigned int field[2][3] = { { 0, 0, 0 }, { 0, 0, 0 } };
+    unsigned int f = 0, sub = 0;
+    int i;
+
+    if (seq == NULL || len <= 0 || memchr (seq, '\0', (size_t) len) != NULL)
+        return 0;
+
+    code = tty_match_seq_to_keycode (seq, len);
+    if (code > 0)
+        return correct_key_code (code, TRUE);
+
+    if (len == 1)
+        return correct_key_code ((unsigned char) seq[0], FALSE);
+
+    if (len == 2 && seq[0] == ESC_CHAR)
+    {
+        const unsigned char c = (unsigned char) seq[1];
+
+        if (g_ascii_isdigit (c))
+            code = KEY_F (c - '0');
+        else if (c == ' ')
+            code = ESC_CHAR;
+        else
+            code = ALT (c);
+        return correct_key_code (code, FALSE);
+    }
+
+    if (!kitty_keyboard_active || len < 4 || seq[0] != ESC_CHAR || seq[1] != '[')
+        return 0;
+
+    for (i = 2; i < len; i++)
+    {
+        const unsigned char c = (unsigned char) seq[i];
+
+        if (g_ascii_isdigit (c))
+        {
+            if (f < 2 && sub < 3 && field[f][sub] < 0x10FFFF)
+                field[f][sub] = field[f][sub] * 10 + (unsigned int) (c - '0');
+        }
+        else if (c == ':')
+            sub++;
+        else if (c == ';')
+        {
+            f++;
+            sub = 0;
+        }
+        else if (i == len - 1 && c >= 0x40 && c <= 0x7e)
+        {
+            code = kitty_key_code (c, field[0][0], field[0][1], field[0][2], field[1][0]);
+            return code > 0 ? correct_key_code (code, FALSE) : 0;
+        }
+        else
+            return 0;
+    }
+
+    return 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
