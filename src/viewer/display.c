@@ -487,7 +487,9 @@ mcview_paint_pictures (void *data)
         return;
     }
 
-    if (!view->paint_pending)
+    /* A later screen refresh can rewrite the cells under a picture without
+       drawing this widget. Paint the picture again in that case. */
+    if (!view->paint_pending && !view->pictures_shown)
         return;
     view->paint_pending = FALSE;
     view->pictures_shown = FALSE;
