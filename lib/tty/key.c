@@ -573,6 +573,27 @@ static int *pending_keys = NULL;
 
 static gboolean kitty_keyboard_active = FALSE;
 
+/* Win32 input mode: CSI Vk ; Sc ; Uc ; Kd ; Cs ; Rc _, one record per key press and release.
+   Bits of the control key state Cs, as the Windows console has them. */
+#define WIN32_CS_RIGHT_ALT  0x0001
+#define WIN32_CS_LEFT_ALT   0x0002
+#define WIN32_CS_RIGHT_CTRL 0x0004
+#define WIN32_CS_LEFT_CTRL  0x0008
+#define WIN32_CS_SHIFT      0x0010
+/* win32_key_code() gave the character back to the keyboard as UTF-8: read again */
+#define WIN32_KEY_REREAD (-2)
+
+static gboolean win32_input_active = FALSE;
+
+/* far2l extensions: every key comes as APC f2l <base64 of a stack of values> ST. The stack is
+   popped from its end, so the last byte is the command: 'K'/'k' is a key press/release with
+   the character (u32), control key state (u32), scan code (u16), virtual key (u16) and
+   repeat count (u16), 'C'/'c' the short form with a u16 character, a u16 control key state
+   and a u8 virtual key. The state and the virtual key are the ones of Win32 input mode. */
+#define FAR2L_MAX_PACKET 512
+
+static gboolean far2l_input_active = FALSE;
+
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
     '0',
@@ -1495,6 +1516,319 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Turn a Win32 input mode record into the code a legacy terminal would give for the same key.
+   -1: no mc key (a release, a modifier on its own, a key mc has no code for). */
+
+static int
+win32_key_code (unsigned int vk, unsigned int uc, unsigned int kd, unsigned int cs)
+{
+    gboolean shift = (cs & WIN32_CS_SHIFT) != 0;
+    gboolean alt = (cs & (WIN32_CS_RIGHT_ALT | WIN32_CS_LEFT_ALT)) != 0;
+    gboolean ctrl = (cs & (WIN32_CS_RIGHT_CTRL | WIN32_CS_LEFT_CTRL)) != 0;
+    unsigned int key;
+    int mod = 0;
+
+    if (kd == 0)
+        return -1;
+
+    // Shift, Ctrl, Alt, Caps Lock, Windows keys, Num Lock, Scroll Lock: modifiers, no key
+    if (vk == 0x10 || vk == 0x11 || vk == 0x12 || vk == 0x14 || vk == 0x5B || vk == 0x5C
+        || vk == 0x90 || vk == 0x91 || (vk >= 0xA0 && vk <= 0xA5))
+        return -1;
+
+    // AltGr is Ctrl+Alt on Windows: with a character it is that character
+    if (ctrl && alt && uc >= 32 && uc != 127)
+        ctrl = alt = FALSE;
+
+    if (shift)
+        mod |= KEY_M_SHIFT;
+    if (alt)
+        mod |= KEY_M_ALT;
+    if (ctrl)
+        mod |= KEY_M_CTRL;
+
+    switch (vk)
+    {
+    case 0x25:
+        return mod | KEY_LEFT;
+    case 0x26:
+        return mod | KEY_UP;
+    case 0x27:
+        return mod | KEY_RIGHT;
+    case 0x28:
+        return mod | KEY_DOWN;
+    case 0x21:
+        return mod | KEY_PPAGE;
+    case 0x22:
+        return mod | KEY_NPAGE;
+    case 0x23:
+        return mod | KEY_END;
+    case 0x24:
+        return mod | KEY_HOME;
+    case 0x2D:
+        return mod | KEY_IC;
+    case 0x2E:
+        return mod | KEY_DC;
+    default:
+        break;
+    }
+
+    if (vk >= 0x70 && vk <= 0x7B)
+        return mod | KEY_F ((int) (vk - 0x70 + 1));
+
+    if (uc >= 32 && uc != 127)
+    {
+        char utf8[8];
+        gint len;
+
+        if (uc < 127)
+        {
+            // the character is already the shifted one; Ctrl makes it a control key below
+            if (!ctrl)
+                return (alt ? KEY_M_ALT : 0) | (int) uc;
+        }
+        else
+        {
+            // a character of another script goes back to the keyboard as UTF-8
+            if (ctrl || alt || (uc >= 0xD800 && uc <= 0xDFFF) || uc > 0x10FFFF)
+                return -1;
+
+            len = g_unichar_to_utf8 ((gunichar) uc, utf8);
+            tty_unget_input ((const unsigned char *) utf8, (size_t) len);
+            return WIN32_KEY_REREAD;
+        }
+    }
+
+    switch (vk)
+    {
+    case 0x08:
+        key = 127;
+        break;
+    case 0x09:
+        key = 9;
+        break;
+    case 0x0D:
+        key = 13;
+        break;
+    case 0x1B:
+        key = 27;
+        break;
+    case 0x20:
+        key = 32;
+        break;
+    default:
+        if (vk >= 'A' && vk <= 'Z')
+            key = vk + ('a' - 'A');
+        else if (vk >= '0' && vk <= '9')
+            key = vk;
+        else
+            return -1;
+        break;
+    }
+
+    // the rest is what the kitty keyboard protocol would have said for it
+    return kitty_key_code ('u', key, 0, 0,
+                           1 + (shift ? KITTY_MOD_SHIFT : 0) + (alt ? KITTY_MOD_ALT : 0)
+                               + (ctrl ? KITTY_MOD_CTRL : 0));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------------- */
+/* Is the pending sequence, which is ESC alone, plus @c the start of an APC? */
+
+static gboolean
+far2l_apc_started (int c)
+{
+    return c == '_' && seq_append != NULL && seq_append - seq_buffer == 1
+        && seq_buffer[0] == ESC_CHAR;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Pop @size bytes, little endian, off the end of the far2l stack */
+
+static gboolean
+far2l_pop (const guchar *data, gsize *len, unsigned int size, unsigned int *value)
+{
+    unsigned int i;
+
+    if (*len < size)
+        return FALSE;
+
+    *value = 0;
+    for (i = 0; i < size; i++)
+        *value |= (unsigned int) data[*len - 1 - i] << (8 * (size - 1 - i));
+    *len -= size;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* A far2l mouse record as the xterm SGR reports mc asks for when it has no far2l: they go back to
+   the keyboard and are read as such. A terminal with the extensions sends its mouse only this
+   way. The state of the buttons is the one of the Windows console: 1 left, 2 right, 4 middle;
+   the wheel turn is in the upper 16 bits. -1: no mc event. */
+
+#define FAR2L_MOUSE_MOVED   0x1
+#define FAR2L_MOUSE_WHEELED 0x4
+
+static int
+far2l_mouse_key (unsigned int flags, unsigned int buttons, int x, int y)
+{
+    static unsigned int last_buttons = 0;
+    /* Windows button bits and the xterm button number of each */
+    static const struct
+    {
+        unsigned int bit;
+        int number;
+    } map[] = { { 0x1, 0 }, { 0x4, 1 }, { 0x2, 2 } };
+    char report[96];
+    size_t len = 0;
+    unsigned int now = buttons & 0x7;
+    size_t i;
+
+    if (!mouse_enabled
+        || (use_mouse_p != MOUSE_XTERM_NORMAL_TRACKING
+            && use_mouse_p != MOUSE_XTERM_BUTTON_EVENT_TRACKING))
+        return -1;
+
+    x = x < 0 ? 1 : x + 1;
+    y = y < 0 ? 1 : y + 1;
+
+    if ((flags & FAR2L_MOUSE_WHEELED) != 0)
+    {
+        const int delta = (gint16) (buttons >> 16);
+
+        if (delta != 0)
+            len = (size_t) g_snprintf (report, sizeof (report), ESC_STR "[<%d;%d;%dM",
+                                       delta > 0 ? 64 : 65, x, y);
+    }
+    else if ((flags & FAR2L_MOUSE_MOVED) != 0)
+    {
+        // a move counts while a button is held, and only when mc asked for it
+        if (use_mouse_p == MOUSE_XTERM_BUTTON_EVENT_TRACKING)
+            for (i = 0; i < G_N_ELEMENTS (map); i++)
+                if ((now & map[i].bit) != 0)
+                {
+                    len = (size_t) g_snprintf (report, sizeof (report), ESC_STR "[<%d;%d;%dM",
+                                               32 + map[i].number, x, y);
+                    break;
+                }
+    }
+    else
+    {
+        const unsigned int pressed = now & ~last_buttons, released = last_buttons & ~now;
+
+        for (i = 0; i < G_N_ELEMENTS (map) && len + 24 < sizeof (report); i++)
+            if ((pressed & map[i].bit) != 0)
+                len += (size_t) g_snprintf (report + len, sizeof (report) - len,
+                                            ESC_STR "[<%d;%d;%dM", map[i].number, x, y);
+        // which button went up does not matter to mc, one release is enough
+        if (released != 0)
+            len += (size_t) g_snprintf (report + len, sizeof (report) - len, ESC_STR "[<0;%d;%dm",
+                                        x, y);
+    }
+    last_buttons = now;
+
+    if (len == 0)
+        return -1;
+
+    tty_unget_input ((const unsigned char *) report, len);
+    return WIN32_KEY_REREAD;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the rest of an APC after ESC _, up to BEL or ESC \, and decode it as a far2l packet.
+   -1: no mc key (a release, a reply, a mouse or resize packet, a packet that is not ours). */
+
+static int
+far2l_read_apc (void)
+{
+    char payload[FAR2L_MAX_PACKET + 1];
+    size_t n = 0;
+    gboolean esc = FALSE, done = FALSE;
+    guchar *data;
+    gsize len = 0;
+    unsigned int cmd = 0, uc = 0, cs = 0, sc = 0, vk = 0, rep = 0;
+    const char *b64;
+    int code = -1;
+
+    while (!done)
+    {
+        const int ch = getch_with_timeout (KITTY_CSI_TIMEOUT);
+
+        if (ch == -1)
+            return -1;
+        if (ch == '\a' || (esc && ch == '\\'))
+            done = TRUE;
+        else if (ch == ESC_CHAR)
+            esc = TRUE;
+        else
+        {
+            if (esc && n < FAR2L_MAX_PACKET)
+                payload[n++] = (char) ESC_CHAR;
+            esc = FALSE;
+            if (n < FAR2L_MAX_PACKET)
+                payload[n++] = (char) ch;
+            else
+                n = FAR2L_MAX_PACKET + 1;  // too long for a key: read it out, drop it
+        }
+    }
+    if (n > FAR2L_MAX_PACKET)
+        return -1;
+    payload[n] = '\0';
+
+    if (strncmp (payload, "f2l", 3) != 0)
+        return -1;
+    b64 = payload + 3;
+    if (*b64 == ':')
+        b64++;
+
+    data = g_base64_decode (b64, &len);
+    if (data == NULL)
+        return -1;
+
+    if (far2l_pop (data, &len, 1, &cmd))
+    {
+        if (cmd == 'K' || cmd == 'k')
+        {
+            if (far2l_pop (data, &len, 4, &uc) && far2l_pop (data, &len, 4, &cs)
+                && far2l_pop (data, &len, 2, &sc) && far2l_pop (data, &len, 2, &vk)
+                && far2l_pop (data, &len, 2, &rep))
+                code = win32_key_code (vk, uc, cmd == 'K', cs);
+        }
+        else if (cmd == 'M')
+        {
+            unsigned int flags = 0, buttons = 0, y = 0, x = 0;
+
+            if (far2l_pop (data, &len, 4, &flags) && far2l_pop (data, &len, 4, &cs)
+                && far2l_pop (data, &len, 4, &buttons) && far2l_pop (data, &len, 2, &y)
+                && far2l_pop (data, &len, 2, &x))
+                code = far2l_mouse_key (flags, buttons, (gint16) x, (gint16) y);
+        }
+        else if (cmd == 'm')
+        {
+            // the short form: the upper byte of the button state is squeezed next to the lower
+            unsigned int flags = 0, buttons = 0, y = 0, x = 0;
+
+            if (far2l_pop (data, &len, 1, &flags) && far2l_pop (data, &len, 1, &cs)
+                && far2l_pop (data, &len, 2, &buttons) && far2l_pop (data, &len, 2, &y)
+                && far2l_pop (data, &len, 2, &x))
+                code = far2l_mouse_key (flags, (buttons & 0xFF) | ((buttons & 0xFF00) << 8),
+                                        (gint16) x, (gint16) y);
+        }
+        else if (cmd == 'C' || cmd == 'c')
+        {
+            if (far2l_pop (data, &len, 2, &uc) && far2l_pop (data, &len, 2, &cs)
+                && far2l_pop (data, &len, 1, &vk))
+                code = win32_key_code (vk, uc, cmd == 'C', cs);
+        }
+    }
+
+    g_free (data);
+    return code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
    Returns -1 for a sequence that has no mc key. */
 
@@ -1502,6 +1836,7 @@ static int
 kitty_read_csi (int c)
 {
     unsigned int field[2][3] = { { 0, 0, 0 }, { 0, 0, 0 } };
+    unsigned int win[6] = { 0, 0, 0, 0, 0, 0 };
     unsigned int f = 0, sub = 0;
     const size_t pending = (size_t) (seq_append - seq_buffer);
     size_t i;
@@ -1524,6 +1859,8 @@ kitty_read_csi (int c)
         {
             if (f < 2 && sub < 3 && field[f][sub] < 0x10FFFF)
                 field[f][sub] = field[f][sub] * 10 + (unsigned int) (ch - '0');
+            if (f < 6 && sub == 0 && win[f] < 0x10FFFF)
+                win[f] = win[f] * 10 + (unsigned int) (ch - '0');
         }
         else if (ch == ':')
             sub++;
@@ -1537,6 +1874,9 @@ kitty_read_csi (int c)
         else
             return -1;
     }
+
+    if (ch == '_')
+        return win32_input_active ? win32_key_code (win[0], win[2], win[3], win[4]) : -1;
 
     return kitty_key_code (ch, field[0][0], field[0][1], field[0][2], field[1][0]);
 }
@@ -2350,6 +2690,25 @@ nodelay_try_again:
             continue;
         }
 
+        // A far2l packet: ESC _ is not Alt-_ once the terminal sends its keys that way
+        if (far2l_input_active && far2l_apc_started (c))
+        {
+            c = far2l_read_apc ();
+            pending_keys = seq_append = NULL;
+            if (c == -1)
+            {
+                this = NULL;
+                return -1;
+            }
+            if (c == WIN32_KEY_REREAD)
+            {
+                // the character is in the keyboard's input again
+                this = NULL;
+                return get_key_code (no_delay);
+            }
+            goto done;
+        }
+
         // No match found. Is it one of our ESC <key> specials?
         if ((parent != NULL) && (parent->action == MCKEY_ESCAPE))
         {
@@ -2372,7 +2731,7 @@ nodelay_try_again:
             goto done;
         }
 
-        if (kitty_keyboard_active && kitty_csi_started (c))
+        if ((kitty_keyboard_active || win32_input_active) && kitty_csi_started (c))
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
@@ -2380,6 +2739,12 @@ nodelay_try_again:
             {
                 this = NULL;
                 return -1;
+            }
+            if (c == WIN32_KEY_REREAD)
+            {
+                // the character is in the keyboard's input again
+                this = NULL;
+                return get_key_code (no_delay);
             }
             goto done;
         }
@@ -3020,7 +3385,7 @@ disable_bracketed_paste (void)
 void
 enable_kitty_keyboard (void)
 {
-    if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
+    if (kitty_keyboard_active || far2l_input_active || !tty_has_kitty_keyboard ())
         return;
 
     printf (ESC_STR "[>" KITTY_KEYBOARD_FLAGS "u");
@@ -3039,6 +3404,73 @@ disable_kitty_keyboard (void)
     printf (ESC_STR "[<u");
     fflush (stdout);
     kitty_keyboard_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+enable_win32_input (void)
+{
+    if (win32_input_active || far2l_input_active || !tty_has_win32_input ())
+        return;
+
+    printf (ESC_STR "[?9001h");
+    fflush (stdout);
+    win32_input_active = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+disable_win32_input (void)
+{
+    if (!win32_input_active)
+        return;
+
+    printf (ESC_STR "[?9001l");
+    fflush (stdout);
+    win32_input_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+enable_far2l_input (void)
+{
+    if (far2l_input_active || !tty_has_far2l_input ())
+        return;
+
+    printf (ESC_STR "_far2l1" ESC_STR "\\");
+    fflush (stdout);
+    far2l_input_active = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+disable_far2l_input (void)
+{
+    if (!far2l_input_active)
+        return;
+
+    // ST ends it: a terminal that takes only ST would stay in far2l mode after the exit
+    printf (ESC_STR "_far2l0" ESC_STR "\\");
+    fflush (stdout);
+    far2l_input_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+const char *
+tty_input_protocol (void)
+{
+    if (far2l_input_active)
+        return "far2l";
+    if (kitty_keyboard_active)
+        return "kitty";
+    if (win32_input_active)
+        return "win32";
+    return "legacy";
 }
 
 /* --------------------------------------------------------------------------------------------- */

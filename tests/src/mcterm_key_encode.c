@@ -309,6 +309,81 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The two packets of a far2l key, a press and a release, taken apart: the virtual key, the
+   character and the control key state */
+static void
+assert_far2l (int key, unsigned int vk, unsigned int uc, unsigned int cs)
+{
+    unsigned char buf[96];
+    size_t len = mcterm_encode_key_far2l (key, buf, sizeof (buf));
+    char *text = g_strndup ((const char *) buf, len);
+    char **packets = g_strsplit (text, "\a", -1);
+    int down;
+
+    ck_assert_uint_gt (len, 0);
+    ck_assert_uint_eq (g_strv_length (packets), 3);  // two, and the empty rest
+    ck_assert (g_str_has_prefix (packets[0], "\033_f2l:"));
+    ck_assert (g_str_has_prefix (packets[1], "\033_f2l:"));
+
+    for (down = 0; down < 2; down++)
+    {
+        gsize n;
+        guchar *st = g_base64_decode (packets[down] + 6, &n);
+
+        ck_assert_uint_eq (n, 15);
+        ck_assert_int_eq (st[14], down == 0 ? 'K' : 'k');
+        ck_assert_uint_eq (st[2] | (st[3] << 8), vk);
+        ck_assert_uint_eq (st[6] | (st[7] << 8) | (st[8] << 16), cs);
+        ck_assert_uint_eq (st[10] | (st[11] << 8), uc);
+        g_free (st);
+    }
+    g_strfreev (packets);
+    g_free (text);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_far2l_keys)
+{
+    assert_far2l ('a', 'A', 'a', 0);
+    assert_far2l ('A', 'A', 'A', 0x10);
+    assert_far2l ('!', '1', '!', 0x10);
+    assert_far2l (';', 0xBA, ';', 0);
+    assert_far2l (':', 0xBA, ':', 0x10);
+    assert_far2l (' ', 0x20, ' ', 0);
+    assert_far2l ('\n', 13, 13, 0);
+    assert_far2l (KEY_M_CTRL | '\n', 13, 13, 0x08);
+    assert_far2l ('\t', 9, 9, 0);
+    assert_far2l (KEY_M_SHIFT | '\t', 9, 9, 0x10);
+    assert_far2l (27, 27, 27, 0);
+    assert_far2l (KEY_BACKSPACE, 8, 8, 0);
+    assert_far2l (1, 'A', 1, 0x08);  // Ctrl-A
+    assert_far2l (KEY_M_ALT | 'x', 'X', 'x', 0x02);
+    assert_far2l (KEY_F (1), 0x70, 0, 0);
+    assert_far2l (KEY_F (10), 0x79, 0, 0);
+    assert_far2l (KEY_F (15), 0x74, 0, 0x10);  // Shift-F5
+    assert_far2l (KEY_M_ALT | KEY_F (4), 0x73, 0, 0x02);
+    assert_far2l (KEY_M_CTRL | KEY_RIGHT, 0x27, 0, 0x108);
+    assert_far2l (KEY_HOME, 0x24, 0, 0x100);
+    assert_far2l (KEY_DC, 0x2E, 0, 0x100);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_far2l_has_no_form_for_the_rest)
+{
+    unsigned char buf[96];
+
+    // the bytes of a character out of ASCII come one by one: they go as they are
+    ck_assert_uint_eq (mcterm_encode_key_far2l (0xC3, buf, sizeof (buf)), 0);
+    ck_assert_uint_eq (mcterm_encode_key_far2l (KEY_F (30), buf, sizeof (buf)), 0);
+    ck_assert_uint_eq (mcterm_encode_key_far2l ('a', buf, 10), 0);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -328,6 +403,8 @@ main (void)
     tcase_add_test (tc_core, test_modified_cursor_keys_use_csi_form);
     tcase_add_test (tc_core, test_ctrl_digits_use_kitty_csi_u);
     tcase_add_test (tc_core, test_small_buffer_returns_zero);
+    tcase_add_test (tc_core, test_far2l_keys);
+    tcase_add_test (tc_core, test_far2l_has_no_form_for_the_rest);
     tcase_add_test (tc_core, test_copy_self_does_not_loop);
     tcase_add_test (tc_core, test_copy_cycle_does_not_loop);
     tcase_add_test (tc_core, test_copy_chain_beyond_old_depth_limit);

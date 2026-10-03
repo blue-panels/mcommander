@@ -2389,9 +2389,15 @@ mcterm_waitpid_reap (pid_t pid)
 static gboolean
 mcterm_send_encoded_key (WMcTerm *t, int key)
 {
-    unsigned char buf[64];
+    unsigned char buf[96];
     gboolean app_cursor = mcview_vterm_app_cursor_keys (t->vterm);
-    size_t n = mcterm_encode_key_xterm (key, buf, sizeof (buf), app_cursor);
+    size_t n = 0;
+
+    // a program that asked for the far2l extensions gets its keys the way they name them
+    if (mcview_vterm_far2l_active (t->vterm))
+        n = mcterm_encode_key_far2l (key, buf, sizeof (buf));
+    if (n == 0)
+        n = mcterm_encode_key_xterm (key, buf, sizeof (buf), app_cursor);
 
     if (n > 0)
         return mcterm_write_all (t->pty_master, buf, n);
@@ -2951,6 +2957,7 @@ mcterm_new (const WRect *r, const char *start_dir)
         tty_cell_size (&cell_width, &cell_height);
         mcview_vterm_set_cell_size (t->vterm, cell_width, cell_height);
         mcview_vterm_set_sixel (t->vterm, tty_has_sixel ());
+        mcview_vterm_set_far2l (t->vterm, tty_has_far2l_input ());
     }
     tty_painter_add (mcterm_paint_pictures, t);
 

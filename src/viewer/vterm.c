@@ -74,6 +74,15 @@ struct mcview_vterm_struct
     gboolean osc_overflow;
     gboolean in_dcs;
     gboolean in_dcs_esc;
+    /* APC, the string far2l's extensions are asked for with: ESC _ far2l1 ST */
+    gboolean in_apc;
+    gboolean in_apc_esc;
+    gboolean apc_overflow;
+    char apc_buf[16];
+    int apc_len;
+    gboolean
+        far2l_allowed;      // the terminal mc runs in has the extensions: the program may have them
+    gboolean far2l_active;  // ... and asked for them
     gboolean csi_gt;
     gboolean in_esc_char;
     /* Which of G0..G3 the designation being read names, -1 when it names none. */
@@ -174,6 +183,7 @@ static vterm_event_t vterm_handle_utf8 (mcview_vterm_t *vt, unsigned char byte);
 static void vterm_finalize_param (mcview_vterm_t *vt);
 static vterm_event_t vterm_make (mcview_vterm_t *vt, vterm_result_t type);
 static void vterm_handle_osc (mcview_vterm_t *vt);
+static vterm_event_t vterm_finish_apc (mcview_vterm_t *vt);
 static void vterm_finish_osc (mcview_vterm_t *vt);
 static void vterm_finish_osc52 (mcview_vterm_t *vt);
 static void vterm_finish_sixel (mcview_vterm_t *vt);
@@ -580,6 +590,35 @@ vterm_handle_utf8 (mcview_vterm_t *vt, unsigned char byte)
 
         return vterm_make (vt, VTERM_CONSUMED);
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* ESC _ ... ST ended. The far2l extensions are asked for and given up with far2l1 and far2l0; the
+   answer to the first is far2lok, and only a terminal that has them itself gives it. Every other
+   APC is swallowed whole, so that its text is not drawn. */
+
+static vterm_event_t
+vterm_finish_apc (mcview_vterm_t *vt)
+{
+    const gboolean overflow = vt->apc_overflow;
+
+    vt->in_apc = FALSE;
+    vt->in_apc_esc = FALSE;
+    vt->apc_overflow = FALSE;
+    vt->apc_buf[vt->apc_len] = '\0';
+
+    if (!overflow && vt->far2l_allowed && strcmp (vt->apc_buf, "far2l1") == 0)
+    {
+        vterm_event_t ev = vterm_make (vt, VTERM_REPLY);
+
+        vt->far2l_active = TRUE;
+        ev.reply = ESC_STR "_far2lok" ESC_STR "\\";
+        return ev;
+    }
+    if (!overflow && strcmp (vt->apc_buf, "far2l0") == 0)
+        vt->far2l_active = FALSE;
+
+    return vterm_make (vt, VTERM_CONSUMED);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1469,6 +1508,10 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     vt->osc_overflow = FALSE;
     vt->in_dcs = FALSE;
     vt->in_dcs_esc = FALSE;
+    vt->in_apc = FALSE;
+    vt->in_apc_esc = FALSE;
+    vt->apc_len = 0;
+    vt->far2l_active = FALSE;
     vt->dcs_len = 0;
     vt->in_sixel = FALSE;
     vt->sixel_overflow = FALSE;
@@ -1692,6 +1735,25 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
         return vterm_make (vt, VTERM_CONSUMED);
     }
 
+    if (vt->in_apc)
+    {
+        if (vt->in_apc_esc)
+        {
+            vt->in_apc_esc = FALSE;
+            if (byte == '\\')
+                return vterm_finish_apc (vt);
+        }
+        else if (byte == 0x07u)
+            return vterm_finish_apc (vt);
+        else if (byte == ESC_CHAR)
+            vt->in_apc_esc = TRUE;
+        else if (vt->apc_len < (int) sizeof (vt->apc_buf) - 1)
+            vt->apc_buf[vt->apc_len++] = (char) byte;
+        else
+            vt->apc_overflow = TRUE;
+        return vterm_make (vt, VTERM_CONSUMED);
+    }
+
     if (vt->in_osc)
     {
         if (vt->in_osc_esc)
@@ -1767,6 +1829,13 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
             vt->param_count = 0;
             vt->current_param = 0;
             vt->has_current = FALSE;
+        }
+        else if (byte == '_')
+        {
+            vt->in_apc = TRUE;
+            vt->in_apc_esc = FALSE;
+            vt->apc_overflow = FALSE;
+            vt->apc_len = 0;
         }
         else if (byte == ']')
         {
@@ -2478,6 +2547,24 @@ guint
 mcview_vterm_osc7_generation (const mcview_vterm_t *vt)
 {
     return (vt != NULL) ? vt->osc7_generation : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mcview_vterm_set_far2l (mcview_vterm_t *vt, gboolean allowed)
+{
+    vt->far2l_allowed = allowed;
+    if (!allowed)
+        vt->far2l_active = FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcview_vterm_far2l_active (const mcview_vterm_t *vt)
+{
+    return vt->far2l_active;
 }
 
 /* --------------------------------------------------------------------------------------------- */

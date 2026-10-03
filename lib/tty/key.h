@@ -125,6 +125,15 @@ void disable_bracketed_paste (void);
 /* Kitty keyboard protocol, if the terminal knows it */
 void enable_kitty_keyboard (void);
 void disable_kitty_keyboard (void);
+/* Win32 input mode, if the terminal knows it: every key comes as CSI Vk;Sc;Uc;Kd;Cs;Rc _ */
+void enable_win32_input (void);
+void disable_win32_input (void);
+/* far2l extensions, if the terminal knows them: every key comes as APC f2l <base64> ST.
+   Kitty and Win32 input mode stay off while they are on. */
+void enable_far2l_input (void);
+void disable_far2l_input (void);
+/* Which of them the keys come in now: "far2l", "kitty", "win32" or "legacy" */
+const char *tty_input_protocol (void);
 
 /*** inline functions ****************************************************************************/
 
