@@ -249,13 +249,98 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
-START_TEST (test_ctrl_digits_use_kitty_csi_u)
+START_TEST (test_ctrl_digits_without_kitty_are_xterm_bytes)
+{
+    unsigned char buf[8];
+
+    init_mcterm_key_table ();
+
+    assert_encoded (KEY_M_CTRL | '1', FALSE, "1");
+    assert_encoded (KEY_M_CTRL | '3', FALSE, "\\e");
+    assert_encoded (KEY_M_CTRL | '8', FALSE, "\x7f");
+    ck_assert_uint_eq (mcterm_encode_key_xterm (KEY_M_CTRL | '2', buf, sizeof (buf), FALSE), 1);
+    ck_assert_uint_eq (buf[0], 0);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+assert_kitty (int key, guint flags, const char *expected)
+{
+    unsigned char buf[32];
+    char *raw;
+    size_t len;
+
+    raw = convert_controls (expected);
+    memset (buf, 0, sizeof (buf));
+    len = mcterm_encode_key (key, flags, buf, sizeof (buf), FALSE);
+
+    ck_assert_msg (len == strlen (raw) && memcmp (buf, raw, len) == 0,
+                   "key 0x%x flags %u: got %.*s, expected %s", (unsigned) key, flags, (int) len,
+                   (const char *) buf, expected);
+    g_free (raw);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_disambiguate)
 {
     init_mcterm_key_table ();
 
-    assert_encoded (KEY_M_CTRL | '1', FALSE, "\\e[49;5u");
-    assert_encoded (KEY_M_CTRL | '0', FALSE, "\\e[48;5u");
-    assert_encoded (KEY_M_ALT | KEY_M_CTRL | '1', FALSE, "\\e[49;7u");
+    assert_kitty ('a', 1, "a");
+    assert_kitty ('A', 1, "A");
+    assert_kitty (KEY_M_CTRL | '1', 1, "\\e[49;5u");
+    assert_kitty (KEY_M_ALT | KEY_M_CTRL | '1', 1, "\\e[49;7u");
+    assert_kitty (XCTRL ('a'), 1, "\\e[97;5u");
+    assert_kitty (ALT ('a'), 1, "\\e[97;3u");
+    assert_kitty (ESC_CHAR, 1, "\\e[27u");
+    assert_kitty ('\n', 1, "\r");
+    assert_kitty (KEY_M_CTRL | '\n', 1, "\\e[13;5u");
+    assert_kitty (KEY_M_SHIFT | '\t', 1, "\\e[9;2u");
+    assert_kitty (KEY_BACKSPACE, 1, "\x7f");
+    assert_kitty (KEY_M_ALT | KEY_BACKSPACE, 1, "\\e[127;3u");
+    assert_kitty (KEY_F (1), 1, "\\eOP");
+    assert_kitty (KEY_M_CTRL | KEY_F (1), 1, "\\e[1;5P");
+    assert_kitty (KEY_F (3), 1, "\\e[13~");
+    assert_kitty (KEY_M_ALT | KEY_F (3), 1, "\\e[13;3~");
+    assert_kitty (KEY_F (5), 1, "\\e[15~");
+    assert_kitty (KEY_F (12), 1, "\\e[24~");
+    assert_kitty (KEY_F (13), 1, "\\e[57376u");
+    assert_kitty (KEY_UP, 1, "\\e[A");
+    assert_kitty (KEY_M_CTRL | KEY_UP, 1, "\\e[1;5A");
+    assert_kitty (KEY_DC, 1, "\\e[3~");
+    assert_kitty (KEY_M_SHIFT | KEY_NPAGE, 1, "\\e[6;2~");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_all_keys)
+{
+    unsigned char buf[32];
+    size_t len;
+
+    init_mcterm_key_table ();
+
+    assert_kitty ('a', 8, "\\e[97u");
+    assert_kitty ('A', 8, "\\e[97;2u");
+    assert_kitty ('A', 8 | 4, "\\e[97:65;2u");
+    assert_kitty ('a', 8 | 16, "\\e[97;1;97u");
+    assert_kitty ('A', 8 | 16 | 4, "\\e[97:65;2;65u");
+    assert_kitty ('\n', 8, "\\e[13u");
+    assert_kitty ('\t', 8, "\\e[9u");
+    assert_kitty (KEY_BACKSPACE, 8, "\\e[127u");
+    assert_kitty (XCTRL ('a'), 8 | 16, "\\e[97;5u");
+    /* flags that change nothing on their own keep the legacy keys */
+    assert_kitty (XCTRL ('a'), 4, "\x01");
+
+    len = mcterm_encode_kitty_codepoint (0x0444, 0, 8, buf, sizeof (buf));
+    ck_assert_uint_eq (len, strlen ("\x1b[1092u"));
+    ck_assert_mem_eq (buf, "\x1b[1092u", len);
+    len = mcterm_encode_kitty_codepoint (0x0424, 0, 8 | 4, buf, sizeof (buf));
+    ck_assert_mem_eq (buf, "\x1b[1092:1060;2u", len);
+    ck_assert_uint_eq (mcterm_encode_kitty_codepoint (0x0444, 0, 1, buf, sizeof (buf)), 0);
 }
 END_TEST
 
@@ -360,7 +445,9 @@ main (void)
     tcase_add_test (tc_core, test_utf8_bytes_pass_through);
     tcase_add_test (tc_core, test_alt_ascii_uses_esc_prefix);
     tcase_add_test (tc_core, test_modified_cursor_keys_use_csi_form);
-    tcase_add_test (tc_core, test_ctrl_digits_use_kitty_csi_u);
+    tcase_add_test (tc_core, test_ctrl_digits_without_kitty_are_xterm_bytes);
+    tcase_add_test (tc_core, test_kitty_disambiguate);
+    tcase_add_test (tc_core, test_kitty_all_keys);
     tcase_add_test (tc_core, test_small_buffer_returns_zero);
     tcase_add_test (tc_core, test_copy_self_does_not_loop);
     tcase_add_test (tc_core, test_copy_cycle_does_not_loop);

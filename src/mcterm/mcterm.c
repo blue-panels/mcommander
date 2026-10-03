@@ -142,6 +142,9 @@ struct WMcTerm
     gboolean line_entered;
     // bytes of a UTF-8 character still to come: the shell echoes it only when it is whole
     int utf8_left;
+    // a UTF-8 character collected for a child that asked for every key as a kitty CSI u
+    unsigned char kitty_utf8[6];
+    int kitty_utf8_len;
     int last_exit_code;
     /* Command submitted by the host, used before its process group becomes visible. */
     char *command_hint;
@@ -2411,8 +2414,32 @@ static gboolean
 mcterm_send_encoded_key (WMcTerm *t, int key)
 {
     unsigned char buf[64];
-    gboolean app_cursor = mcview_vterm_app_cursor_keys (t->vterm);
-    size_t n = mcterm_encode_key_xterm (key, buf, sizeof (buf), app_cursor);
+    const gboolean app_cursor = mcview_vterm_app_cursor_keys (t->vterm);
+    const guint flags = mcview_vterm_kitty_flags (t->vterm);
+    size_t n;
+
+    /* With every key as CSI u, a character goes as one code, so its UTF-8 bytes are collected */
+    if ((flags & 0x08) != 0 && mc_global.utf8_display && key >= 0x80 && key <= 0xFF)
+    {
+        if (key >= 0xC0 || t->kitty_utf8_len >= (int) sizeof (t->kitty_utf8))
+            t->kitty_utf8_len = 0;
+        t->kitty_utf8[t->kitty_utf8_len++] = (unsigned char) key;
+
+        const gunichar cp =
+            g_utf8_get_char_validated ((const char *) t->kitty_utf8, t->kitty_utf8_len);
+
+        if (cp == (gunichar) -2)
+            return TRUE;
+        t->kitty_utf8_len = 0;
+        if (cp == (gunichar) -1)
+            return FALSE;
+        n = mcterm_encode_kitty_codepoint (cp, 0, flags, buf, sizeof (buf));
+    }
+    else
+    {
+        t->kitty_utf8_len = 0;
+        n = mcterm_encode_key (key, flags, buf, sizeof (buf), app_cursor);
+    }
 
     t->line_entered = (key == '\n' || key == '\r' || key == KEY_ENTER);
     if (n > 0)
