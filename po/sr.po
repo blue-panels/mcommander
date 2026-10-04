@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-10-04 14:45+0000\n"
+"PO-Revision-Date: 2026-10-04 14:47+0000\n"
 "Last-Translator: Strahinja <strahinja@noreply.codeberg.org>\n"
 "Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/>"
 "\n"
@@ -179,8 +179,6 @@ msgstr "Аутоматска допуна"
 msgid "Save as..."
 msgstr "Сачувај као..."
 
-#, fuzzy
-#| msgid "Goto line"
 msgid "Go to line"
 msgstr "Иди на линију"
 
