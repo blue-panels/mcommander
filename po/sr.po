@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-10-03 21:27+0000\n"
+"PO-Revision-Date: 2026-10-04 14:45+0000\n"
 "Last-Translator: Strahinja <strahinja@noreply.codeberg.org>\n"
 "Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/>"
 "\n"
@@ -66,7 +66,7 @@ msgid "Copyright (C) 1996-%zu the Free Software Foundation"
 msgstr "Copyright (C) 1996-%zu Задужбина за слободни софтвер"
 
 msgid "Switch active panel"
-msgstr "Замена активног панела"
+msgstr "Пребаци активни панел"
 
 msgid "Page left"
 msgstr "Страница лево"
@@ -81,10 +81,10 @@ msgid "Half page down"
 msgstr "Пола странице наниже"
 
 msgid "Go to top"
-msgstr "Прелазак на врх"
+msgstr "Иди на врх"
 
 msgid "Go to bottom"
-msgstr "Прелазак на дно"
+msgstr "Иди на дно"
 
 msgid "Top of screen"
 msgstr "Врх екрана"
@@ -102,31 +102,31 @@ msgid "Word right"
 msgstr "Реч десно"
 
 msgid "Copy file(s)"
-msgstr "Копирање датотеке(а)"
+msgstr "Копирај датотеку(е)"
 
 msgid "Move/rename file(s)"
-msgstr "Премештање/преименовање датотеке(а)"
+msgstr "Премести/преименуј датотеку(е)"
 
 msgid "Delete"
-msgstr "Брисање"
+msgstr "Обриши"
 
 msgid "Create directory"
-msgstr "Креирање директоријума"
+msgstr "Креирај директоријум"
 
 msgid "Change file mode (chmod)"
-msgstr "Промена режима датотеке (chmod)"
+msgstr "Промени режим датотеке (chmod)"
 
 msgid "Change file owner"
-msgstr "Промена власника датотеке"
+msgstr "Промени власника датотеке"
 
 msgid "Advanced chown"
 msgstr "Напредна промена власника"
 
 msgid "Change file attributes"
-msgstr "Промена атрибута датотеке"
+msgstr "Промени атрибуте датотеке"
 
 msgid "Clear screen and scrollback"
-msgstr "Чишћење екрана и бафера за скроловање"
+msgstr "Очисти екран и бафер за скроловање"
 
 msgid "Main menu"
 msgstr "Главни мени"
@@ -138,28 +138,28 @@ msgid "User-defined menu"
 msgstr "Кориснички дефинисан мени"
 
 msgid "Edit user menu"
-msgstr "Уређивање корисничког менија"
+msgstr "Уреди кориснички мени"
 
 msgid "Search next"
-msgstr "Тражење следећег"
+msgstr "Тражи следеће"
 
 msgid "Replace next"
-msgstr "Следећа замена"
+msgstr "Замени следеће"
 
 msgid "Show help"
-msgstr "Приказивање помоћи"
+msgstr "Прикажи помоћ"
 
 msgid "Terminal"
 msgstr "Терминал"
 
 msgid "Edit file"
-msgstr "Уређивање датотеке"
+msgstr "Уреди датотеку"
 
 msgid "Edit new file"
-msgstr "Уређивање нове датотеке"
+msgstr "Уреди нову датотеку"
 
 msgid "Select charset"
-msgstr "Бирање скупа знакова"
+msgstr "Изабери скуп знакова"
 
 msgid "Editor/viewer history"
 msgstr "Историја уређивача/прегледача"
@@ -184,134 +184,86 @@ msgstr "Сачувај као..."
 msgid "Go to line"
 msgstr "Иди на линију"
 
-#, fuzzy
-#| msgid "Indexed directory"
 msgid "Re-read directory"
-msgstr "Индексирани директоријум"
+msgstr "Поново учитај директоријум"
 
-#, fuzzy
-#| msgid "&Refresh screen"
 msgid "Refresh screen"
-msgstr "&Освежи екран"
+msgstr "Освежи екран"
 
-#, fuzzy
-#| msgid "Setup saved to %s"
 msgid "Suspend to shell"
-msgstr "Подешавања су сачувана у %s"
+msgstr "Суспендуј у љуску"
 
-#, fuzzy
-#| msgid "S&wap panels"
 msgid "Swap panels"
-msgstr "&Размени панеле"
+msgstr "Размени панеле"
 
-#, fuzzy
-#| msgid "Hotlist Load"
 msgid "Hotlist"
-msgstr "Учитавање брзе листе"
+msgstr "Брза листа"
 
-#, fuzzy
-#| msgid "&Invert selection"
 msgid "Invert selection"
-msgstr "&Обрни избор"
+msgstr "Обрни избор"
 
 msgid "List open screens"
-msgstr ""
+msgstr "Списак отворених екрана"
 
-#, fuzzy
-#| msgid "&Refresh screen"
 msgid "Next screen"
-msgstr "&Освежи екран"
+msgstr "Следећи екран"
 
-#, fuzzy
-#| msgid "&Previous"
 msgid "Previous screen"
-msgstr "&Претходно"
+msgstr "Претходни екран"
 
-#, fuzzy
-#| msgid "Insert file"
 msgid "Next file"
-msgstr "Убаци датотеку"
+msgstr "Следећа датотека"
 
-#, fuzzy
-#| msgid "&Previous"
 msgid "Previous file"
-msgstr "&Претходно"
+msgstr "Претходна датотека"
 
-#, fuzzy
-#| msgid "&Toggle line state"
 msgid "Delete to line start"
-msgstr "&Промени стање линије"
+msgstr "Обриши до почетка линије"
 
-#, fuzzy
-#| msgid "Delete on keypad"
 msgid "Delete to line end"
-msgstr "Delete на нум. т."
+msgstr "Обриши до краја линије"
 
 msgid "Delete to word start"
-msgstr ""
+msgstr "Обриши до почетка речи"
 
-#, fuzzy
-#| msgid "Delete on keypad"
 msgid "Delete to word end"
-msgstr "Delete на нум. т."
+msgstr "Обриши до краја речи"
 
-#, fuzzy
-#| msgid "&Cut to clipfile"
 msgid "Cut to clipboard"
-msgstr "&Исеци у датотеку клипборда"
+msgstr "Исеци у клипборд"
 
-#, fuzzy
-#| msgid "Co&py to clipfile"
 msgid "Copy to clipboard"
-msgstr "Копирај у &датотеку клипборда"
+msgstr "Копирај у клипборд"
 
-#, fuzzy
-#| msgid "Pa&ste from clipfile"
 msgid "Paste from clipboard"
-msgstr "&Убаци из датотеке клипборда"
+msgstr "Убаци из клипборда"
 
-#, fuzzy
-#| msgid "In se&lection"
 msgid "Toggle selection"
-msgstr "У &избору"
+msgstr "Смени избор"
 
-#, fuzzy
-#| msgid "Select"
 msgid "Select left"
-msgstr "Бирање"
+msgstr "Изабери лево"
 
-#, fuzzy
-#| msgid "Select"
 msgid "Select right"
-msgstr "Бирање"
+msgstr "Изабери десно"
 
-#, fuzzy
-#| msgid "Select &group"
 msgid "Select up"
-msgstr "Изабери &групу"
+msgstr "Изабери горе"
 
-#, fuzzy
-#| msgid "Select"
 msgid "Select down"
-msgstr "Бирање"
+msgstr "Изабери доле"
 
 msgid "Select to word start"
-msgstr ""
+msgstr "Изабери до почетка речи"
 
-#, fuzzy
-#| msgid "Select compare method:"
 msgid "Select to word end"
-msgstr "Изаберите начин поређења:"
+msgstr "Изабери до краја речи"
 
-#, fuzzy
-#| msgid "&Toggle line state"
 msgid "Select to line start"
-msgstr "&Промени стање линије"
+msgstr "Изабери до почетка реда"
 
-#, fuzzy
-#| msgid "Select language"
 msgid "Select to line end"
-msgstr "Изабери језик"
+msgstr "Изабери до краја реда"
 
 msgid "Toggle navigate/browse mode"
 msgstr ""
