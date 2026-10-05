@@ -96,9 +96,15 @@ for my $file (@files)
             next;
         }
 
-        if (/^```/)
+        # a block is closed by a fence no shorter than the one that opened it
+        if (!$fenced && /^(`{3,})/)
         {
-            $fenced = !$fenced;
+            $fenced = length $1;
+            next;
+        }
+        if ($fenced && /^(`+)\s*$/ && length $1 >= $fenced)
+        {
+            $fenced = 0;
             next;
         }
         next if $fenced;
