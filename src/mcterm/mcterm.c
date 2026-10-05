@@ -137,6 +137,9 @@ struct WMcTerm
        told to go, or was typed on, and the screen has yet to say so. */
     gboolean line_cleared;
     gboolean line_typed;
+    /* Enter went to the shell: the cursor leaves the line before the command start mark comes,
+       and the row it moves to is no part of the line. */
+    gboolean line_entered;
     // bytes of a UTF-8 character still to come: the shell echoes it only when it is whole
     int utf8_left;
     int last_exit_code;
@@ -712,6 +715,7 @@ mcterm_handle_osc133_generation (WMcTerm *t)
             mcview_vterm_scrolled_rows (t->vterm) + mcview_vterm_cursor_row (t->vterm);
         t->input_start_col = mcview_vterm_cursor_col (t->vterm);
         t->input_start_valid = TRUE;
+        t->line_entered = FALSE;
         if (t->shell_at_prompt)
             return FALSE;
         t->shell_at_prompt = TRUE;
@@ -722,6 +726,7 @@ mcterm_handle_osc133_generation (WMcTerm *t)
     case MCTERM_MARK_COMMAND_START:
         t->shell_at_prompt = FALSE;
         t->input_start_valid = FALSE;
+        t->line_entered = FALSE;
         mcterm_busy_tick_set (t, TRUE);
         return FALSE;
 
@@ -2393,6 +2398,7 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
     gboolean app_cursor = mcview_vterm_app_cursor_keys (t->vterm);
     size_t n = mcterm_encode_key_xterm (key, buf, sizeof (buf), app_cursor);
 
+    t->line_entered = (key == '\n' || key == '\r' || key == KEY_ENTER);
     if (n > 0)
         return mcterm_write_all (t->pty_master, buf, n);
     return FALSE;
@@ -3240,6 +3246,7 @@ mcterm_send_paste (WMcTerm *t, const GString *text)
     if (t == NULL || t->vterm == NULL || text->len == 0)
         return TRUE;
 
+    t->line_entered = FALSE;
     if (mcview_vterm_bracketed_paste (t->vterm))
         bytes = g_strconcat (ESC_STR "[200~", text->str, ESC_STR "[201~", (char *) NULL);
     else
@@ -3844,7 +3851,7 @@ mcterm_line_has_break (const WMcTerm *t, int *start, int *host)
     const mcview_terminal_buffer_t *buf;
     int row;
 
-    if (!t->input_start_valid || !mcterm_host_draws_line (t))
+    if (!t->input_start_valid || t->line_entered || !mcterm_host_draws_line (t))
         return FALSE;
 
     buf = mcview_vterm_buf (t->vterm);
