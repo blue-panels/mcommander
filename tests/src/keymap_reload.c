@@ -168,6 +168,144 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_keymap_far_mode)
+{
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+    /* the keys that Far Manager gives to the panel actions */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (7)),
+                      CK_Find);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (8)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (11)),
+                      CK_EditorViewerHistory);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('l')), CK_PanelInfo);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('q')),
+                      CK_PanelQuickView);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('t')), CK_PanelTree);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (3)),
+                      CK_SortByName);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (4)),
+                      CK_SortByExt);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (5)),
+                      CK_SortByMTime);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (6)),
+                      CK_SortBySize);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (12)), CK_Sort);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_ALT | KEY_F (12)),
+                      CK_History);
+
+    /* Ctrl-T went to the tree panel; the marking keys of Far Manager stay */
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, XCTRL ('t')), CK_Mark);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_IC), CK_Mark);
+
+    /* what M-Commander has always had is still there */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (5)), CK_Copy);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('?')), CK_Find);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('h')), CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_History);
+
+    keymap_free ();
+    keymap_far_mode = FALSE;
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_keymap_far_mode_off_by_default)
+{
+    ck_assert (!keymap_far_mode);
+
+    keymap_load (FALSE);
+
+    /* none of the keys of Far mode is bound while the mode is off ... */
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (7)),
+                      CK_Find);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('l')), CK_PanelInfo);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (3)),
+                      CK_SortByName);
+
+    /* ... and Ctrl-T marks a file, as it always did */
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, XCTRL ('t')), CK_Mark);
+
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_keymap_far_mode_switch)
+{
+    /* switching the mode on and off is a reload of the keymap, as the options dialog does it */
+    keymap_load (FALSE);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, XCTRL ('t')), CK_Mark);
+
+    keymap_far_mode = TRUE;
+    keymap_free ();
+    keymap_load (FALSE);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (3)),
+                      CK_SortByName);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, XCTRL ('t')), CK_Mark);
+
+    keymap_far_mode = FALSE;
+    keymap_free ();
+    keymap_load (FALSE);
+    ck_assert_int_ne (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (3)),
+                      CK_SortByName);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, XCTRL ('t')), CK_Mark);
+
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_keymap_far_mode_editor_viewer)
+{
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+
+#ifdef USE_INTERNAL_EDIT
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_CTRL | KEY_F (7)),
+                      CK_Replace);
+    ck_assert_int_ne (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Replace);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Quit);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (10)), CK_Quit);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_CTRL | KEY_F (3)),
+                      CK_ShowNumbers);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_M_ALT | KEY_F (11)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('z')), CK_Undo);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('u')), CK_Unmark);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('a')), CK_MarkAll);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (7)), CK_Search);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (2)), CK_Save);
+#endif
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (7)),
+                      CK_SearchOppositeContinue);
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (11)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (viewer_map, KEY_F (5)), CK_Goto);
+
+    keymap_free ();
+
+    /* off again: the editor and the viewer are what they were */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+#ifdef USE_INTERNAL_EDIT
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Replace);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('u')), CK_Undo);
+#endif
+    ck_assert_int_ne (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
+    keymap_free ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -181,6 +319,10 @@ main (void)
     /* test_keymap_user_override requires mc_global init -- run manually */
     /* tcase_add_test (tc_core, test_keymap_user_override); */
     tcase_add_test (tc_core, test_widget_keymap_dangling);
+    tcase_add_test (tc_core, test_keymap_far_mode);
+    tcase_add_test (tc_core, test_keymap_far_mode_off_by_default);
+    tcase_add_test (tc_core, test_keymap_far_mode_switch);
+    tcase_add_test (tc_core, test_keymap_far_mode_editor_viewer);
 
     return mctest_run_all (tc_core);
 }

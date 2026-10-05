@@ -315,6 +315,99 @@ which is read last and needs no option:
 ln -s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
 ```
 
+## Far mode <a id="far-mode"></a>
+
+M-Commander can take the panel keys of Far Manager over its own. The mode is
+for people who come from Far and want their fingers to find the same keys; it
+is off by default, and nothing changes for anybody who does not turn it on.
+
+Turn it on with the
+*Far Manager keys*
+check box of the
+[Configuration](#configuration)
+dialog in the
+**Options**
+menu, or set
+**far_mode=true**
+in the
+**[Midnight-Commander]**
+section of
+**~/.config/mc6/ini**.
+The keys change at once, and the setting is kept with the rest of the setup.
+The mode is a layer over the keymap: it goes over the built-in keys and over
+the
+**keymap.ini**
+files of the system, and under the
+**keymap.ini**
+of the user, so the user can still change any key by
+[hand](#keys_redefine).
+
+So far the mode covers the directory panels, the editor and the viewer; the
+dialogs are the next step, and until then they keep the keys they have. These
+are the keys that the mode gives to the panels, with what each of them
+replaces:
+
+**Alt-F7**
+: find file. Alt-? keeps working.
+
+**Alt-F8**
+: the history of the command line. Alt-h keeps working.
+
+**Alt-F11**
+: the history of the viewed and edited files. Alt-Shift-e keeps working.
+
+**Alt-F12**
+: the history of the directories. Alt-Shift-h keeps working.
+
+**Ctrl-F3, Ctrl-F4, Ctrl-F5, Ctrl-F6**
+: sort the panel by name, by extension, by modification time and by size.
+Far reverses the order when the same key is pressed twice; so does
+M-Commander.
+
+**Ctrl-F12**
+: the sort order menu.
+
+**Ctrl-L, Ctrl-Q, Ctrl-T**
+: the information panel, the quick view panel and the tree panel. In the
+panels Ctrl-L stops redrawing the screen (it still does in the dialogs), and
+Ctrl-T stops tagging a file; Insert tags it, as it does in Far.
+
+**In the editor** (as the far2l help lists them):
+Ctrl-F7 replaces, and F4, which replaced text, quits the editor together with
+F10 and Esc; Alt-F8 goes to a line (Alt-l keeps working); Ctrl-F3 shows the
+line numbers; Alt-F11 shows the history of the edited files; Ctrl-Z undoes,
+Ctrl-U deselects the block (it undid before) and Ctrl-A selects all. Ctrl-F7
+no longer continues the search, Shift-F7 does, and Ctrl-Z no longer moves a
+word left, Ctrl-Left does.
+
+**In the viewer:**
+Alt-F8 goes to a position (F5 keeps working), Alt-F7 continues the search in the
+opposite direction and Alt-F11 shows the history of the viewed files.
+
+The keys that M-Commander shares with Far are the same with or without the
+mode: F1 to F10, Shift-F4, Shift-F5, Shift-F6 and Shift-F8, Tab, Ctrl-U,
+Ctrl-R, Ctrl-O, Ctrl-F1 and Ctrl-F2, Alt-F1 and Alt-F2, Ctrl-PgUp and Ctrl-PgDn,
+Insert and the numeric plus, minus and asterisk.
+
+What differs from Far, and stays so for now: F3 in the editor still marks a
+block instead of wrapping lines, the clipboard keys Ctrl-C, Ctrl-V and Ctrl-X
+of the editor are not bound (Ctrl-Insert, Shift-Insert and Shift-Delete work),
+and the viewer keeps its own F8, F9, Space and plus and minus keys; the
+panels keep the M-Commander
+listing modes and colors (the Ctrl-1 to Ctrl-0 keys for the modes are not
+bound), the command line keeps its Emacs-style editing keys, so Ctrl-A, Ctrl-E
+and the like edit the line and are not the Far commands, Ctrl-G, Ctrl-Z,
+Ctrl-M, Ctrl-H and the folder shortcuts are not bound, Ctrl-\ keeps opening the
+directory hotlist instead of the root directory, and Ctrl-, does not switch the
+panel layout (a terminal sends it as Ctrl-L, which shows the information panel
+in this mode); Alt-, does.
+
+Some keys of the mode (Ctrl with a comma or with a function key) are sent by a
+terminal only when it reports modified keys, as xterm and the terminals that speak the kitty keyboard protocol do.
+In a terminal that does not, the key arrives as another one or does not arrive
+at all, and nothing is lost: every action is also in the menus, and the key it
+had before the mode is still bound where the list above says so.
+
 ## Miscellaneous Keys
 
 Here are some keys which don't fall into any of the other categories:
@@ -2047,6 +2140,10 @@ This option is disabled by default.
 If this option is enabled, when you exit M-Commander, the
 configurable options of M-Commander are saved in the
 ~/.config/mc6/ini file.
+
+*Far Manager keys.*
+If this option is enabled, the panels answer to the keys of Far Manager; see
+[Far mode](#far-mode). This option is disabled by default.
 
 ### Layout
 
