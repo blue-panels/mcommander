@@ -1561,15 +1561,33 @@ Mayús-F4     abrir el archivo donde está la entrada
 Supr         borrar la entrada
 Ctrl-Arriba  subir la entrada
 Ctrl-Abajo   bajar la entrada
+Alt-A        mostrar también las entradas ocultas aquí
 ```
 
-Una entrada es una tecla de atajo, un rótulo y las órdenes, y el diálogo no
-pide más: no hay condiciones ni máscaras de archivo. Las órdenes admiten las
-mismas sustituciones que el menú antiguo, %f, %s, %{prompt} y las demás,
-descritas en
+Una entrada es una tecla de atajo, un rótulo, las órdenes y las condiciones
+que dicen dónde se muestra. Las órdenes admiten las mismas sustituciones que
+el menú antiguo, %f, %s, %{prompt} y las demás, descritas en
 [sustitución de macro](#macro-substitution).
 Dos casillas dicen qué hacer con la salida: si va al visor y si la orden se
 ejecuta sin el shell del panel.
+
+La línea "Show when" del diálogo muestra las condiciones de la entrada, y el
+botón Conditions abre un diálogo para ellas: máscaras de la ruta, los
+tipos de archivo a los que sirve la entrada (ninguna
+casilla marcada significa cualquier tipo), solo archivos ejecutables, solo
+cuando hay archivos marcados, los programas que necesitan las órdenes, el
+panel que miran las condiciones, y si el menú se abre en esta entrada:
+nunca, siempre, o cuando se cumplen las condiciones que abre el botón
+junto a "When". Una entrada cuyas condiciones no se cumplen no está en la
+lista. El diálogo muestra un panel cada vez; las condiciones que miran los
+dos paneles se cambian en el archivo.
+
+Con la casilla "Regular expression" marcada, el campo de la ruta acepta
+una expresión regular en lugar de máscaras; en el archivo es path~=.
+
+El título del menú dice cuántas entradas están ocultas en ese lugar.
+Alt-A las muestra también, en un color atenuado: así se pueden editar,
+mover y borrar, pero no ejecutar.
 
 El rótulo se muestra ya con esas sustituciones hechas, de modo que un rótulo
 "print %f" aparece en la lista con el nombre del archivo donde está el
@@ -1593,8 +1611,121 @@ diálogo y abre el archivo donde está la entrada, para lo que sea más cómodo
 escribir allí.
 
 Una entrada se escribe de vuelta en el archivo del que vino, y el orden de la
-lista es el del archivo. Las condiciones y las máscaras pertenecen a la forma
-antigua: lo que el diálogo no sabe decir, el archivo sí, y Mayús-F4 lo abre.
+lista es el del archivo. Solo se escribe lo que cambió: los comentarios, las
+líneas vacías y las claves que el menú no conoce quedan como están, y un
+comentario encima de una entrada se mueve con ella. Mayús-F4 abre el archivo.
+
+**El archivo del menú**
+
+El archivo está pensado también para leerlo y cambiarlo a mano. Cada
+entrada es un grupo: su rótulo entre corchetes y después una clave=valor
+en cada línea. Un valor de una línea va después de "=" tal cual, sin
+comillas ni escapes. Una orden de varias líneas va entre dos líneas de tres
+comillas invertidas, y el texto entre ellas se toma tal como está escrito:
+
+````
+# mc menu format 2
+
+[Open in vim]
+hotkey=v
+on=file
+command=vim %f
+
+[Pack the directory into tar.gz]
+hotkey=t
+on=dir
+command=```
+echo -n "Archive name [%f]: "
+read name
+name=${name:-%f}
+tar czf "$name.tar.gz" %f
+```
+````
+
+Si las órdenes contienen ellas mismas una línea de tres comillas
+invertidas, el bloque se abre y se cierra con cuatro. Las líneas que
+empiezan con '#' son comentarios. La primera línea es siempre "# mc menu
+format 2", y el menú solo lee los archivos que la tienen. Para un archivo
+sin ella, escrito por una versión anterior o a mano, el menú ofrece
+convertirlo una vez y guarda el archivo tal como era en menu.ini.old.
+
+Estas claves dicen dónde se muestra una entrada. Si hay varias claves,
+todas deben cumplirse.
+
+*path=*
+: Máscaras de la ruta de aquello sobre lo que está el cursor, leídas de
+la manera en que el archivo .gitignore de git lee sus patrones; véase
+más abajo.
+
+*path~=*
+: Una expresión regular en lugar de máscaras, buscada en cualquier parte
+de la ruta: path~=^/home/me/dev/. Sin '/' dentro, mira solo la última
+parte de la ruta: path~=^ttyS. Un '!' delante la invierte. El valor es
+una sola expresión, así que ';' y '|' forman parte de ella.
+
+*on=*
+: Sobre qué está el cursor: file, dir, link, broken, char, block, fifo,
+socket, separados por ';'; basta con uno de ellos. Un enlace a un
+directorio cuenta como directorio, un enlace a un archivo como archivo,
+y link coincide con cualquier enlace. Un '!' invierte un tipo: on=!dir
+es cualquier cosa menos un directorio.
+
+*exec=true*
+: El archivo donde está el cursor no es un directorio y es ejecutable.
+
+*marked=true*
+: El panel tiene archivos marcados; con marked=false, no tiene ninguno.
+
+*needs=*
+: Programas que deben encontrarse en PATH, o rutas completas; todos ellos.
+
+*other.path=, other.path~=, other.on=, other.exec=, other.marked=*
+: Lo mismo para el otro panel.
+
+*default=true*
+: El menú se abre en esta entrada dondequiera que se muestre.
+
+*default.path=, default.on=, default.other.path=, ...*
+: Cualquier clave de arriba con "default." delante: el menú se abre en
+esta entrada donde se cumplen estas claves, y la entrada se sigue
+mostrando donde dicen sus propias claves. default.path=ttyS\* abre el
+menú en la entrada cuando el cursor está sobre un puerto serie. Donde
+se pueden elegir varias entradas, gana la primera.
+
+Una máscara de path= se compara con la ruta de aquello sobre lo que está
+el cursor, de la manera en que .gitignore compara sus patrones:
+
+```
+*.c               un archivo .c en cualquier lugar
+~/dev/mc/*.c      un archivo .c justo en ~/dev/mc
+~/dev/mc/**/*.c   un .c ahí o en cualquier directorio debajo
+~/dev/mc/**       cualquier cosa en ese árbol
+**/src/*          cualquier cosa justo en un directorio src
+build/            un directorio llamado build
+*.c;!test_*.c     las fuentes en C menos las pruebas
+```
+
+Una máscara sin '/' se compara solo con la última parte de la ruta, en
+cualquier nivel: \*.1 se cumple en un directorio rrr.1, pero no en el
+archivo uu.2 que hay dentro. Una máscara con '/' al principio se compara
+con la ruta entera; una con '/' en medio parte del directorio
+de .mc6menu, y en menu.ini se cumple en cualquier nivel. '\*' y '?' no
+pasan por encima de una '/', '\*\*' pasa por cualquier número de
+directorios, [abc] y [a-z] son conjuntos de caracteres, una '/' al final
+pide un directorio, y '~' al principio es el directorio personal. A
+diferencia de .gitignore, una máscara que se cumple en un directorio no
+dice nada de los archivos que hay dentro.
+
+Las máscaras se leen de izquierda a derecha, y decide la última que
+coincide; una máscara con '!' delante dice que no. Donde ninguna máscara
+coincide, la entrada no se muestra: !\*.o sola no muestra nada, y
+"cualquier cosa menos archivos objeto" es \*;!\*.o. En "..", la ruta es el
+directorio del panel seguido de "/..", así que una máscara de ese
+directorio se cumple en él, y una máscara de un nombre no.
+
+Un archivo que el menú no puede leer no se muestra como un menú vacío: un
+mensaje nombra la línea que está mal y ofrece abrir el archivo, y el menú no
+escribe en el archivo hasta que se corrija.
 
 **El archivo de menú escrito a mano**
 
@@ -1612,8 +1743,19 @@ cualquier momento, para ese archivo o para otro que se nombre. Entonces
 muestra lo que el archivo contiene: Espacio marca una entrada, Ins la marca y
 baja, '\*' invierte todas las marcas, e Intro lleva las marcadas a
 ~/.config/mc6/menu.ini, donde ya se pueden editar con el diálogo. El archivo
-de origen se queda donde está, y las condiciones y las máscaras se descartan,
-porque el diálogo no tiene sitio para ellas.
+de origen se queda donde está.
+
+Las condiciones que hay encima de una entrada pasan a ser sus claves allí
+donde las claves pueden decirlas: "+ f \\.c$ | f \\.h$ & t r" pasa a ser
+path=\*.c;\*.h y on=file, y una expresión regular pasa a ser máscaras
+cuando estas coinciden con los mismos nombres. Una línea "=", que elegía
+la entrada en la que se abre el menú, pasa a ser claves default.* de la
+misma manera. Una condición que las claves no pueden decir, como una
+alternativa después de un "&", se queda como comentario encima de la
+entrada, y la importación dice cuántas había.
+
+Una expresión regular que ninguna máscara puede decir pasa tal cual a
+path~=.
 
 El formato del menú de archivo es muy simple.  Todas las líneas, salvo
 las que empiezan con espacio o tabulación, son consideradas entradas

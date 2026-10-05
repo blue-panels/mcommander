@@ -1675,17 +1675,39 @@ Maiusc\-F4    apre il file in cui sta la voce
 Canc         elimina la voce
 Ctrl\-Su      sposta la voce in su
 Ctrl\-Giù     sposta la voce in giù
+Alt\-A        mostra anche le voci nascoste qui
 
 .EE
 
 .PP
-Una voce è fatta di un tasto di scelta rapida, un'etichetta e i comandi, e la
-finestra non chiede altro: non ci sono condizioni né maschere di file. Nei
-comandi valgono le stesse sostituzioni del vecchio menu, %f, %s, %{prompt} e
-le altre, descritte in
+Una voce è fatta di un tasto di scelta rapida, un'etichetta, i comandi e le
+condizioni che dicono dove viene mostrata. Nei comandi valgono le stesse
+sostituzioni del vecchio menu, %f, %s, %{prompt} e le altre, descritte in
 sostituzione di macro\&.
 Due caselle dicono che cosa fare dell'uscita: se vada al visualizzatore e se
 il comando venga eseguito senza la shell del pannello.
+
+.PP
+La riga "Show when" della finestra mostra le condizioni della voce, e il
+pulsante Conditions apre una finestra per esse: maschere del percorso, i
+tipi di file a cui la voce è destinata (nessuna casella marcata vuol dire
+qualsiasi tipo), solo file eseguibili, solo quando ci sono
+file marcati, i programmi di cui i comandi hanno bisogno, il pannello a cui
+le condizioni guardano, e se il menu si apre su questa voce: mai, sempre,
+o quando valgono le condizioni che apre il pulsante accanto a "When". Una
+voce le cui condizioni non valgono non è nell'elenco. La finestra mostra
+un pannello alla volta; le condizioni che guardano entrambi i pannelli si
+cambiano nel file.
+
+.PP
+Con la casella "Regular expression" spuntata, il campo del percorso
+accetta un'espressione regolare al posto delle maschere; nel file è
+path~=.
+
+.PP
+Il titolo del menu dice quante voci sono nascoste in quel punto. Alt\-A
+mostra anche quelle, in un colore attenuato: lì si possono modificare,
+spostare e cancellare, ma non eseguire.
 
 .PP
 L'etichetta viene mostrata con le sostituzioni già fatte, così un'etichetta
@@ -1712,9 +1734,141 @@ e apre il file in cui sta la voce, per ciò che è più comodo scrivere lì.
 
 .PP
 Una voce viene riscritta nel file da cui è venuta, e l'ordine dell'elenco è
-quello del file. Le condizioni e le maschere appartengono alla forma
-precedente: ciò che la finestra non sa dire lo sa il file, e Maiusc\-F4 lo
-apre.
+quello del file. Viene scritto solo ciò che è cambiato: i commenti, le righe
+vuote e le chiavi che il menu non conosce restano come sono, e un commento
+sopra una voce si sposta con essa. Maiusc\-F4 apre il file.
+
+.PP
+\fBIl file del menu\fP
+
+.PP
+Il file è fatto per essere letto e cambiato anche a mano. Ogni voce è un
+gruppo: la sua etichetta tra parentesi quadre, poi una chiave=valore per
+riga. Un valore di una sola riga sta dopo "=" così com'è, senza virgolette
+né sequenze di escape. Un comando di più righe sta tra due righe di tre
+apici inversi, e il testo tra di esse viene preso esattamente come è
+scritto:
+
+.EX
+# mc menu format 2
+
+[Open in vim]
+hotkey=v
+on=file
+command=vim %f
+
+[Pack the directory into tar.gz]
+hotkey=t
+on=dir
+command=```
+echo \-n "Archive name [%f]: "
+read name
+name=${name:\-%f}
+tar czf "$name.tar.gz" %f
+```
+
+.EE
+
+.PP
+Se i comandi contengono essi stessi una riga di tre apici inversi, il
+blocco si apre e si chiude con quattro. Le righe che cominciano con '#'
+sono commenti. La prima riga è sempre "# mc menu format 2", e il menu
+legge solo i file che la contengono. Per un file senza di essa, scritto da
+una versione precedente o a mano, il menu propone di convertirlo una volta
+e conserva il file com'era in menu.ini.old.
+
+.PP
+Queste chiavi dicono dove una voce viene mostrata. Se ci sono più chiavi,
+devono valere tutte.
+
+.TP
+\fIpath=\fP
+Maschere del percorso di ciò su cui sta il cursore, lette nel modo in
+cui il file .gitignore di git legge i suoi modelli; vedere sotto.
+
+.TP
+\fIpath~=\fP
+Un'espressione regolare al posto delle maschere, cercata in qualunque
+punto del percorso: path~=^/home/me/dev/. Senza '/' guarda solo l'ultima
+parte del percorso: path~=^ttyS. Un '!' davanti la inverte. Il valore è
+una sola espressione, quindi ';' e '|' ne fanno parte.
+
+.TP
+\fIon=\fP
+Ciò su cui sta il cursore: file, dir, link, broken, char, block, fifo,
+socket, separati da ';'; ne basta uno qualsiasi. Un collegamento a una
+directory conta come directory, un collegamento a un file come file, e
+link corrisponde a qualsiasi collegamento. Un '!' rovescia un tipo:
+on=!dir è qualsiasi cosa tranne una directory.
+
+.TP
+\fIexec=true\fP
+Il file sotto il cursore non è una directory ed è eseguibile.
+
+.TP
+\fImarked=true\fP
+Il pannello ha file marcati; marked=false, non ne ha.
+
+.TP
+\fIneeds=\fP
+Programmi che devono essere trovati nel PATH, o percorsi completi; tutti
+quanti.
+
+.TP
+\fIother.path=, other.path~=, other.on=, other.exec=, other.marked=\fP
+Lo stesso per l'altro pannello.
+
+.TP
+\fIdefault=true\fP
+Il menu si apre su questa voce ovunque essa sia mostrata.
+
+.TP
+\fIdefault.path=, default.on=, default.other.path=, ...\fP
+Qualsiasi chiave qui sopra con "default." davanti: il menu si apre su
+questa voce dove queste chiavi valgono, e la voce è comunque mostrata dove
+dicono le sue chiavi. default.path=ttyS* apre il menu sulla voce quando il
+cursore sta su una porta seriale. Dove si possono scegliere più voci, vince
+la prima.
+
+.PP
+Una maschera di path= viene confrontata con il percorso di ciò su cui sta
+il cursore, nel modo in cui .gitignore confronta i suoi modelli:
+
+.EX
+*.c               un file .c in qualunque punto
+~/dev/mc/*.c      un file .c direttamente in ~/dev/mc
+~/dev/mc/**/*.c   un file .c lì o in una directory sotto
+~/dev/mc/**       qualsiasi cosa in quell'albero
+**/src/*          qualsiasi cosa direttamente in una src
+build/            una directory di nome build
+*.c;!test_*.c     i sorgenti C tranne i test
+
+.EE
+
+.PP
+Una maschera senza '/' viene confrontata solo con l'ultima parte del
+percorso, a qualsiasi livello: *\&.1 vale su una directory rrr.1, ma non sul
+file uu.2 al suo interno. Una maschera con un '/' all'inizio viene
+confrontata con il percorso intero; una con un '/' nel mezzo parte dalla
+directory di .mc6menu, e in menu.ini vale a qualsiasi livello. '*\&' e '?'
+non passano oltre un '/', '**\&' passa per qualsiasi numero di directory,
+[abc] e [a\-z] sono insiemi di caratteri, un '/' alla fine chiede una
+directory, e '~' all'inizio è la directory home. A differenza di
+quanto fa .gitignore, una maschera che vale su una directory non dice
+nulla dei file che contiene.
+
+.PP
+Le maschere vengono lette da sinistra a destra, e decide l'ultima che
+corrisponde; una maschera con '!' davanti dice no. Dove nessuna maschera
+corrisponde, la voce non viene mostrata: !*\&.o da sola non mostra nulla, e
+"qualsiasi cosa tranne i file oggetto" è *;!*\&.o. Su "..", il percorso è
+la directory del pannello seguita da "/..", quindi una maschera di quella
+directory vale su di esso, e una maschera di un nome no.
+
+.PP
+Un file che il menu non riesce a leggere non viene mostrato come un menu
+vuoto: un messaggio indica la riga sbagliata e offre di aprire il file, e il
+menu non scrive nel file finché non viene corretto.
 
 .PP
 \fBIl file di menu scritto a mano\fP
@@ -1735,8 +1889,20 @@ chiedono in qualsiasi momento, per quel file o per uno indicato a mano. Poi
 mostra che cosa il file contiene: lo spazio marca una voce, Ins la marca e
 scende, '*\&' inverte tutte le marcature, e Invio porta quelle marcate in
 ~/.config/mc6/menu.ini, dove si possono già modificare con la finestra. Il
-file di origine resta dov'è, e le condizioni e le maschere vengono scartate,
-perché nella finestra non c'è posto per esse.
+file di origine resta dov'è.
+
+.PP
+Le condizioni sopra una voce diventano le sue chiavi dove le chiavi le
+sanno dire: "+ f \e\&.c$ | f \e\&.h$ & t r" diventa path=*\&.c;*\&.h e on=file,
+e un'espressione regolare diventa maschere dove esse corrispondono agli
+stessi nomi. Una riga "=", che sceglieva la voce su cui il menu si apre,
+diventa allo stesso modo chiavi default.*. Una condizione che le chiavi
+non sanno dire, come un'alternativa dopo un "&", resta come commento sopra
+la voce, e l'importazione dice quante ce n'erano.
+
+.PP
+Un'espressione regolare che nessuna maschera può dire passa così com'è
+in path~=.
 
 .PP
 Il formato del file menu è molto semplice. Le righe che cominciano

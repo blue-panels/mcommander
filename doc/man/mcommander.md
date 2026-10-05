@@ -1601,15 +1601,32 @@ Shift-F4    open the file the entry is kept in
 Del         delete the entry
 Ctrl-Up     move the entry up
 Ctrl-Down   move the entry down
+Alt-A       show the entries hidden here as well
 ```
 
-An entry is a hotkey, a label and the commands, and the dialog asks for
-no more than that: there are no conditions and no file masks. The
-commands take the same substitutions the old menu takes, %f, %s,
-%{prompt} and the rest, described in
+An entry is a hotkey, a label, the commands, and the conditions that say
+where it is shown. The commands take the same substitutions the old menu
+takes, %f, %s, %{prompt} and the rest, described in
 [macro substitution](#macro-substitution).
 Two checkboxes say what to do with the output: whether it goes to the
 viewer, and whether the command runs without the shell of the panel.
+
+The line "Show when" of the dialog shows the conditions of the entry, and
+the Conditions button opens a dialog for them: masks of the path, the
+types of file the entry is for (no box checked means
+any type), executable files only, only when files are marked, the
+programs the commands need, the panel the conditions look at, and whether
+the menu opens on this entry: never, always, or when the conditions that
+the button next to "When" opens hold. An entry whose conditions do not
+hold is not in the list. The dialog shows one panel at a time; conditions
+that look at both panels are changed in the file.
+
+With the box "Regular expression" checked, the field of the path takes a
+regular expression instead of masks; in the file it is path~=.
+
+The title of the menu says how many entries are hidden at that place.
+Alt-A shows them too, in a dimmed color: there they can be edited, moved
+and deleted, but not run.
 
 The label is shown with those substitutions put in as well, so a label of
 "print %f" stands in the list with the name of the file under the cursor.
@@ -1633,9 +1650,117 @@ and opens the file the entry is kept in, for what is easier to write
 there.
 
 An entry is written back to the file it came from, and the order of the
-list is the order of the file. Conditions and masks belong to the older
-form: what the dialog cannot say, the file still can, and Shift-F4 opens
-it.
+list is the order of the file. Only what was changed is written: comments,
+empty lines and keys the menu does not know stay as they are, and a
+comment above an entry moves with it. Shift-F4 opens the file.
+
+**The file of the menu**
+
+The file is meant to be read and changed by hand as well. Each entry is a
+group: its label in brackets, then one key=value on each line. A value of
+one line stands after "=" as it is, without quotes or escapes. A command
+of several lines stands between two lines of three backticks, and the
+text between them is taken exactly as written:
+
+````
+# mc menu format 2
+
+[Open in vim]
+hotkey=v
+on=file
+command=vim %f
+
+[Pack the directory into tar.gz]
+hotkey=t
+on=dir
+command=```
+echo -n "Archive name [%f]: "
+read name
+name=${name:-%f}
+tar czf "$name.tar.gz" %f
+```
+````
+
+If the commands hold a line of three backticks themselves, the block is
+opened and closed with four. Lines that start with '#' are comments. The
+first line is always "# mc menu format 2", and the menu reads only files
+that have it. For a file without it, written by an older version or by
+hand, the menu offers to convert it once and keeps the file as it was in
+menu.ini.old.
+
+These keys say where an entry is shown. Several keys must all hold.
+
+*path=*
+: Masks of the path of what the cursor stands on, read the way the
+file .gitignore of git reads its patterns; see below.
+
+*path~=*
+: A regular expression instead of masks, found anywhere in the path:
+path~=^/home/me/dev/. With no '/' in it, it looks at the last part of
+the path only: path~=^ttyS. A '!' in front turns it over. The value is
+one expression, so ';' and '|' are part of it.
+
+*on=*
+: What the cursor stands on: file, dir, link, broken, char, block, fifo,
+socket, separated by ';'; any of them is enough. A link to a directory
+counts as a directory, a link to a file as a file, and link matches any
+link. A '!' turns a type over: on=!dir is anything but a directory.
+
+*exec=true*
+: The file under the cursor is not a directory and is executable.
+
+*marked=true*
+: The panel has marked files; marked=false, it has none.
+
+*needs=*
+: Programs that must be found in PATH, or full paths; all of them.
+
+*other.path=, other.path~=, other.on=, other.exec=, other.marked=*
+: The same for the other panel.
+
+*default=true*
+: The menu opens on this entry wherever it is shown.
+
+*default.path=, default.on=, default.other.path=, ...*
+: Any key above with "default." in front: the menu opens on this entry
+where these keys hold, and the entry is still shown where its own keys
+say. default.path=ttyS\* opens the menu on the entry when the cursor is
+on a serial port. Where several entries can be chosen, the first one
+wins.
+
+A mask of path= is compared with the path of what the cursor stands on,
+the way .gitignore compares its patterns:
+
+```
+*.c               a .c file anywhere
+~/dev/mc/*.c      a .c file right in ~/dev/mc
+~/dev/mc/**/*.c   a .c file there or in any directory below
+~/dev/mc/**       anything in that tree
+**/src/*          anything right in a directory src
+build/            a directory called build
+*.c;!test_*.c     the C sources but the tests
+```
+
+A mask with no '/' is compared with the last part of the path only, at
+any level: \*.1 holds on a directory rrr.1, but not on the file uu.2 in
+it. A mask with a '/' at the start is compared with the whole path; one
+with a '/' in the middle starts from the directory of .mc6menu, and in
+menu.ini holds at any level. '\*' and '?' do not go over a '/', '\*\*'
+goes over any number of directories, [abc] and [a-z] are sets of
+characters, a '/' at the end asks for a directory, and '~' at the start
+is the home directory. Unlike .gitignore, a mask that holds on a
+directory says nothing about the files in it.
+
+The masks are read from left to right, and the last one that matches
+decides; a mask with '!' in front says no. Where no mask matches, the
+entry is not shown: !\*.o alone shows nothing, and "anything but object
+files" is \*;!\*.o. On "..", the path is the directory of the panel
+followed by "/..", so a mask of that directory holds on it, and a mask
+of a name does not.
+
+A file the menu cannot read is not shown as an empty menu: a message
+names the line that is wrong and offers to open the file, and the menu
+does not write into the file until it is fixed.
 
 **The menu file written by hand**
 
@@ -1652,9 +1777,17 @@ it; F5 in the menu, and the Import button of the empty menu, ask for it
 at any time, for that file or one named by hand. It then lists what the file holds: Space
 marks an entry, Ins marks it and steps down, '\*' turns every mark over,
 and Enter takes the marked ones into ~/.config/mc6/menu.ini, where the
-dialog can edit them. The file they came from is left where it is, and
-conditions and masks are dropped, because the dialog has no place for
-them.
+dialog can edit them. The file they came from is left where it is.
+
+The conditions above an entry become its keys where the keys can say them:
+"+ f \\.c$ | f \\.h$ & t r" becomes path=\*.c;\*.h and on=file, and a
+regular expression becomes masks where they match the same names. A "="
+line, which chose the entry the menu opens on, becomes default.* keys the
+same way. A condition the keys cannot say, such as an alternative after an
+"&", stays as a comment above the entry, and the import says how many
+there were.
+
+A regular expression that no mask can say goes to path~= as it is.
 
 The format of the menu file is very simple. Lines that start with
 anything but space or tab are considered entries for the menu (in

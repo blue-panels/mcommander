@@ -1350,15 +1350,32 @@ Shift-F4     otwiera plik, w którym stoi pozycja
 Del          kasuje pozycję
 Ctrl-Up      przesuwa pozycję wyżej
 Ctrl-Down    przesuwa pozycję niżej
+Alt-A        pokazuje też pozycje ukryte w tym miejscu
 ```
 
-Pozycja to klawisz skrótu, napis i polecenia, i o nic więcej okno nie pyta:
-nie ma w nim warunków ani masek plików. W poleceniach działają te same
-podstawienia co w starym menu, %f, %s, %{prompt} i pozostałe, opisane w
-rozdziale
+Pozycja to klawisz skrótu, napis, polecenia oraz warunki, które mówią,
+gdzie jest pokazywana. W poleceniach działają te same podstawienia co w
+starym menu, %f, %s, %{prompt} i pozostałe, opisane w rozdziale
 [obsługa makr](#macro-substitution).
 Dwa pola wyboru mówią, co zrobić z wyjściem: czy ma iść do podglądu i czy
 polecenie ma działać bez powłoki panelu.
+
+Wiersz "Show when" okna pokazuje warunki pozycji, a przycisk Conditions
+otwiera dla nich osobne okno: maski ścieżki, typy plików, dla których
+jest pozycja (żadne zaznaczone pole oznacza dowolny typ), tylko
+pliki wykonywalne, tylko gdy są zaznaczone pliki, programy potrzebne
+poleceniom, panel, na który patrzą warunki, oraz to, czy menu otwiera się
+na tej pozycji: nigdy, zawsze albo wtedy, gdy są spełnione warunki, które
+otwiera przycisk obok "When". Pozycji, której warunki nie są spełnione,
+nie ma na liście. Okno pokazuje jeden panel naraz; warunki, które patrzą
+na oba panele, zmienia się w pliku.
+
+Gdy pole "Regular expression" jest zaznaczone, pole ścieżki przyjmuje
+wyrażenie regularne zamiast masek; w pliku jest to klucz path~=.
+
+Tytuł menu mówi, ile pozycji jest ukrytych w tym miejscu. Alt-A pokazuje
+także je, przygaszonym kolorem: można je wtedy edytować, przesuwać i
+usuwać, ale nie uruchamiać.
 
 Napis pokazywany jest już z wykonanymi podstawieniami, więc napis "print %f"
 stoi na liście z nazwą pliku pod kursorem. To, co zawiera plik, przy tym się
@@ -1380,8 +1397,120 @@ Przycisk Edytor wychodzi z okna i otwiera plik, w którym stoi pozycja, do
 tego, co łatwiej napisać tam.
 
 Pozycja zapisywana jest z powrotem do pliku, z którego przyszła, a kolejność
-listy to kolejność pliku. Warunki i maski należą do starszej postaci: to,
-czego okno nie umie powiedzieć, umie plik, a Shift-F4 go otwiera.
+listy to kolejność pliku. Zapisywane jest tylko to, co zmieniono:
+komentarze, puste wiersze i klucze, których menu nie zna, zostają tak, jak
+były, a komentarz nad pozycją przesuwa się razem z nią. Shift-F4 otwiera
+plik.
+
+**Plik menu**
+
+Plik jest pomyślany także do czytania i zmieniania ręcznie. Każda pozycja
+to grupa: jej napis w nawiasach kwadratowych, a potem po jednym
+klucz=wartość w każdym wierszu. Wartość z jednego wiersza stoi po "=" tak,
+jak jest, bez cudzysłowów i znaków ucieczki. Polecenie z wielu wierszy
+stoi między dwoma wierszami z trzema odwrotnymi apostrofami, a tekst
+między nimi brany jest dokładnie tak, jak zapisano:
+
+````
+# mc menu format 2
+
+[Open in vim]
+hotkey=v
+on=file
+command=vim %f
+
+[Pack the directory into tar.gz]
+hotkey=t
+on=dir
+command=```
+echo -n "Archive name [%f]: "
+read name
+name=${name:-%f}
+tar czf "$name.tar.gz" %f
+```
+````
+
+Jeśli same polecenia zawierają wiersz z trzema odwrotnymi apostrofami,
+blok otwiera się i zamyka czterema. Wiersze zaczynające się od '#' to
+komentarze. Pierwszy wiersz to zawsze "# mc menu format 2", a menu czyta
+tylko pliki, które go mają. Dla pliku bez niego, zapisanego przez starszą
+wersję lub ręcznie, menu raz proponuje przekształcenie i zachowuje plik w
+dawnej postaci jako menu.ini.old.
+
+Te klucze mówią, gdzie pozycja jest pokazywana. Kilka kluczy musi być
+spełnionych naraz.
+
+*path=*
+: Maski ścieżki tego, na czym stoi kursor, czytane tak, jak git czyta
+wzorce z pliku .gitignore; patrz niżej.
+
+*path~=*
+: Wyrażenie regularne zamiast masek, szukane w dowolnym miejscu ścieżki:
+path~=^/home/me/dev/. Jeśli nie ma w nim '/', patrzy tylko na ostatnią
+część ścieżki: path~=^ttyS. '!' na początku je odwraca. Wartość to jedno
+wyrażenie, więc ';' i '|' są jego częścią.
+
+*on=*
+: To, na czym stoi kursor: file, dir, link, broken, char, block, fifo,
+socket, rozdzielone ';'; wystarczy dowolne z nich. Dowiązanie do katalogu
+liczy się jako katalog, dowiązanie do pliku jako plik, a link pasuje do
+każdego dowiązania. '!' odwraca typ: on=!dir to wszystko oprócz katalogu.
+
+*exec=true*
+: Plik pod kursorem nie jest katalogiem i jest wykonywalny.
+
+*marked=true*
+: Panel ma zaznaczone pliki; marked=false, nie ma żadnych.
+
+*needs=*
+: Programy, które muszą się znaleźć w PATH, albo pełne ścieżki; wszystkie.
+
+*other.path=, other.path~=, other.on=, other.exec=, other.marked=*
+: To samo dla drugiego panelu.
+
+*default=true*
+: Menu otwiera się na tej pozycji wszędzie tam, gdzie jest ona pokazana.
+
+*default.path=, default.on=, default.other.path=, ...*
+: Dowolny klucz z powyższych z "default." na początku: menu otwiera się na
+tej pozycji tam, gdzie te klucze są spełnione, a pozycja jest nadal
+pokazana tam, gdzie mówią jej własne klucze. default.path=ttyS\* otwiera
+menu na tej pozycji, gdy kursor stoi na porcie szeregowym. Gdy można
+wybrać kilka pozycji, wygrywa pierwsza.
+
+Maska z path= porównywana jest ze ścieżką tego, na czym stoi kursor, tak,
+jak .gitignore porównuje swoje wzorce:
+
+```
+*.c               plik .c w dowolnym miejscu
+~/dev/mc/*.c      plik .c wprost w ~/dev/mc
+~/dev/mc/**/*.c   plik .c tam lub w dowolnym katalogu niżej
+~/dev/mc/**       cokolwiek w tym drzewie
+**/src/*          cokolwiek wprost w katalogu src
+build/            katalog o nazwie build
+*.c;!test_*.c     źródła C oprócz testów
+```
+
+Maska bez '/' porównywana jest tylko z ostatnią częścią ścieżki, na
+dowolnym poziomie: \*.1 jest spełniona na katalogu rrr.1, ale nie na
+pliku uu.2 w nim. Maska z '/' na początku porównywana jest z całą
+ścieżką; maska z '/' w środku zaczyna od katalogu pliku .mc6menu, a w
+menu.ini jest spełniona na dowolnym poziomie. '\*' i '?' nie przechodzą
+przez '/', '\*\*' przechodzi przez dowolną liczbę katalogów, [abc] i
+[a-z] to zbiory znaków, '/' na końcu wymaga katalogu, a '~' na początku
+to katalog domowy. Inaczej niż w .gitignore, maska spełniona na katalogu
+nic nie mówi o plikach w nim.
+
+Maski czytane są od lewej do prawej, a rozstrzyga ostatnia pasująca;
+maska z '!' na początku mówi nie. Gdy żadna maska nie pasuje, pozycja
+nie jest pokazywana: samo !\*.o nie pokazuje niczego, a "wszystko oprócz
+plików obiektowych" to \*;!\*.o. Na ".." ścieżką jest katalog panelu z
+dopisanym "/..", więc maska tego katalogu jest na nim spełniona, a maska
+nazwy nie.
+
+Pliku, którego menu nie umie przeczytać, nie pokazuje się jako pustego
+menu: komunikat nazywa błędny wiersz i proponuje otwarcie pliku, a menu
+nie pisze do pliku, dopóki nie zostanie poprawiony.
 
 **Plik menu pisany ręcznie**
 
@@ -1398,8 +1527,18 @@ w menu i przycisk Wnieś w pustym menu proszą o to w dowolnej chwili, dla tego
 pliku albo dla wskazanego ręcznie. Potem pokazuje, co plik zawiera: spacja
 zaznacza pozycję, Ins zaznacza ją i schodzi niżej, '\*' odwraca wszystkie
 zaznaczenia, a Enter przenosi zaznaczone do ~/.config/mc6/menu.ini, gdzie
-można je już edytować oknem. Plik źródłowy zostaje na miejscu, a warunki i
-maski są odrzucane, bo w oknie nie ma na nie miejsca.
+można je już edytować oknem. Plik źródłowy zostaje na miejscu.
+
+Warunki nad pozycją stają się jej kluczami tam, gdzie klucze umieją je
+powiedzieć: "+ f \\.c$ | f \\.h$ & t r" staje się path=\*.c;\*.h i
+on=file, a wyrażenie regularne staje się maskami tam, gdzie pasują do tych
+samych nazw. Wiersz "=", który wybierał pozycję, na której otwiera się
+menu, staje się tak samo kluczami default.*. Warunek, którego klucze nie
+umieją powiedzieć, na przykład alternatywa po "&", zostaje jako komentarz
+nad pozycją, a wnoszenie mówi, ile ich było.
+
+Wyrażenie regularne, którego żadna maska nie wyrazi, trafia bez zmian do
+path~=.
 
 Format pliku z menu użytkownika jest bardzo prosty. Linie zaczynające się
 od czegokolwiek innego niż spacja lub tabulacja, są traktowane jako
