@@ -252,23 +252,24 @@ user_menu_ini_unescape (const char *text)
 
 /**
  * Read one file.  The groups are taken in the order the file has them, which is
- * the order of the list.
+ * the order of the list.  A file that is not there is an empty menu; a file
+ * that cannot be read gives no entries and FALSE.
  */
-void
-user_menu_ini_load_file (GPtrArray *entries, const char *file, int level)
+gboolean
+user_menu_ini_load_file (GPtrArray *entries, const char *file, int level, GError **error)
 {
     GKeyFile *keys;
     gchar **groups;
     gsize i, count = 0;
 
     if (!exist_file (file))
-        return;
+        return TRUE;
 
     keys = g_key_file_new ();
-    if (!g_key_file_load_from_file (keys, file, G_KEY_FILE_KEEP_COMMENTS, NULL))
+    if (!g_key_file_load_from_file (keys, file, G_KEY_FILE_KEEP_COMMENTS, error))
     {
         g_key_file_free (keys);
-        return;
+        return FALSE;
     }
 
     groups = g_key_file_get_groups (keys, &count);
@@ -301,20 +302,65 @@ user_menu_ini_load_file (GPtrArray *entries, const char *file, int level)
 
     g_strfreev (groups);
     g_key_file_free (keys);
+
+    return TRUE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
+/** Open the file of a level in the editor. */
+static void
+um_level_edit_file (menu_level_t level)
+{
+    char *file;
+    vfs_path_t *vpath;
+
+    file = um_level_file (level);
+    vpath = vfs_path_from_str (file);
+    edit_file_at_line (vpath, TRUE, 1);
+    vfs_path_free (vpath, TRUE);
+    g_free (file);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A file that cannot be read is not an empty menu: say what is wrong with it
+ * and offer to fix it, until it is read or the user goes on without it.
+ */
 static void
 um_level_load (GPtrArray *entries, menu_level_t level)
 {
     char *file;
+    GError *error = NULL;
 
     file = um_level_file (level);
 
     // a file of the directory is anybody's; the one of the user is his own
-    if (level != MENU_LEVEL_LOCAL || um_file_is_safe (file))
-        user_menu_ini_load_file (entries, file, level);
+    if (level == MENU_LEVEL_LOCAL && !um_file_is_safe (file))
+    {
+        g_free (file);
+        return;
+    }
+
+    while (!user_menu_ini_load_file (entries, file, level, &error))
+    {
+        char *text;
+        int answer;
+
+        text = g_strdup_printf (_ ("Cannot read the menu file\n%s\n\n%s\n\n"
+                                   "Its entries are not shown, and the menu does not "
+                                   "write into it\nuntil it is fixed."),
+                                file, error->message);
+        g_clear_error (&error);
+        answer = query_dialog (MSG_ERROR, text, D_ERROR, 2, _ ("&Edit the file"), _ ("&Skip"));
+        g_free (text);
+
+        if (answer != 0)
+            break;
+
+        um_level_edit_file (level);
+    }
 
     g_free (file);
 }
@@ -341,17 +387,26 @@ um_entries_load (void)
  * Write the entries of one level into a file.  The file is built anew, in the
  * order of the list, and the keys of a group that is still there are carried
  * over: what a later version writes into a group is not lost by an older one
- * that edits it.
+ * that edits it.  A file that is there but cannot be read is not written over:
+ * the entries in it were never read, and would be lost.
  */
 gboolean
-user_menu_ini_save_file (const char *file, GPtrArray *entries, int level)
+user_menu_ini_save_file (const char *file, GPtrArray *entries, int level, GError **error)
 {
     GKeyFile *old, *keys;
     guint i;
     gboolean ok;
+    GError *load_error = NULL;
 
     old = g_key_file_new ();
-    (void) g_key_file_load_from_file (old, file, G_KEY_FILE_KEEP_COMMENTS, NULL);
+    if (!g_key_file_load_from_file (old, file, G_KEY_FILE_KEEP_COMMENTS, &load_error)
+        && !g_error_matches (load_error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+    {
+        g_propagate_error (error, load_error);
+        g_key_file_free (old);
+        return FALSE;
+    }
+    g_clear_error (&load_error);
 
     keys = g_key_file_new ();
 
@@ -402,7 +457,7 @@ user_menu_ini_save_file (const char *file, GPtrArray *entries, int level)
         }
     }
 
-    ok = g_key_file_save_to_file (keys, file, NULL);
+    ok = g_key_file_save_to_file (keys, file, error);
 
     g_key_file_free (keys);
     g_key_file_free (old);
@@ -470,14 +525,33 @@ um_level_save (GPtrArray *entries, menu_level_t level)
 {
     char *file;
     gboolean ok;
+    GError *error = NULL;
 
     file = um_level_file (level);
-    ok = user_menu_ini_save_file (file, entries, level);
+    ok = user_menu_ini_save_file (file, entries, level, &error);
     if (!ok)
-        file_error_message (_ ("Cannot write file\n%s"), file);
+    {
+        message (D_ERROR, MSG_ERROR, _ ("Cannot write file\n%s\n\n%s"), file, error->message);
+        g_error_free (error);
+    }
     g_free (file);
 
     return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** On a failed write the list is read again: it shows what the file holds. */
+static gboolean
+um_entries_save (GPtrArray **entries, menu_level_t level)
+{
+    if (um_level_save (*entries, level))
+        return TRUE;
+
+    g_ptr_array_free (*entries, TRUE);
+    *entries = um_entries_load ();
+
+    return FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -495,22 +569,6 @@ um_dialog_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void 
         return send_message (um_command_area, NULL, MSG_KEY, parm, NULL);
 
     return dlg_default_callback (w, sender, msg, parm, data);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/** Open the file of a level in the editor. */
-static void
-um_level_edit_file (menu_level_t level)
-{
-    char *file;
-    vfs_path_t *vpath;
-
-    file = um_level_file (level);
-    vpath = vfs_path_from_str (file);
-    edit_file_at_line (vpath, TRUE, 1);
-    vfs_path_free (vpath, TRUE);
-    g_free (file);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1269,7 +1327,8 @@ um_import (const char *old_menu)
            does not become the menu. */
         all = g_ptr_array_new_with_free_func ((GDestroyNotify) user_menu_entry_free);
         file = um_level_file (MENU_LEVEL_USER);
-        user_menu_ini_load_file (all, file, MENU_LEVEL_USER);
+        // a file that cannot be read stays as it is: um_level_save() refuses it
+        (void) user_menu_ini_load_file (all, file, MENU_LEVEL_USER, NULL);
         g_free (file);
 
         for (i = 0; i < entries->len; i++)
@@ -1615,7 +1674,7 @@ user_menu_ini_cmd (void)
             case UM_EDIT_OK:
                 um_label_fix (entries, new_entry);
                 g_ptr_array_add (entries, new_entry);
-                um_level_save (entries, MENU_LEVEL_USER);
+                um_entries_save (&entries, MENU_LEVEL_USER);
                 break;
 
             case UM_EDIT_FILE:
@@ -1744,8 +1803,7 @@ user_menu_ini_cmd (void)
                 um_label_fix (entries, new_entry);
                 at = entry != NULL ? um_index_of (entries, entry) + 1 : (int) entries->len;
                 g_ptr_array_insert (entries, at, new_entry);
-                um_level_save (entries, new_entry->level);
-                if (entry != NULL)
+                if (um_entries_save (&entries, new_entry->level) && entry != NULL)
                     current++;
                 break;
             }
@@ -1774,7 +1832,7 @@ user_menu_ini_cmd (void)
                 {
                 case UM_EDIT_OK:
                     um_label_fix (entries, entry);
-                    um_level_save (entries, entry->level);
+                    um_entries_save (&entries, entry->level);
                     break;
 
                 case UM_EDIT_FILE:
@@ -1799,7 +1857,7 @@ user_menu_ini_cmd (void)
                 menu_level_t level = entry->level;
 
                 um_remove_subtree (entries, entry);
-                um_level_save (entries, level);
+                um_entries_save (&entries, level);
             }
             break;
 
@@ -1821,8 +1879,8 @@ user_menu_ini_cmd (void)
 
                     g_ptr_array_index (entries, a) = neighbour;
                     g_ptr_array_index (entries, b) = entry;
-                    um_level_save (entries, entry->level);
-                    current = other;
+                    if (um_entries_save (&entries, entry->level))
+                        current = other;
                 }
             }
             break;

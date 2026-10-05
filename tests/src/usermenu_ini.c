@@ -133,7 +133,7 @@ START_TEST (test_entries_are_read_in_the_order_of_the_file)
     ck_assert_ptr_ne (file, NULL);
 
     entries = entries_new ();
-    user_menu_ini_load_file (entries, file, 1);
+    ck_assert (user_menu_ini_load_file (entries, file, 1, NULL));
 
     ck_assert_uint_eq (entries->len, 2);
 
@@ -171,11 +171,11 @@ START_TEST (test_what_is_written_is_read_back)
     g_ptr_array_add (entries, entry_new ("Pack it", 'p', "tar caf %{Name} %s"));
     g_ptr_array_add (entries, entry_new ("Two lines", 'l', "echo one\necho two"));
 
-    ck_assert (user_menu_ini_save_file (file, entries, 0));
+    ck_assert (user_menu_ini_save_file (file, entries, 0, NULL));
     g_ptr_array_free (entries, TRUE);
 
     entries = entries_new ();
-    user_menu_ini_load_file (entries, file, 0);
+    ck_assert (user_menu_ini_load_file (entries, file, 0, NULL));
 
     ck_assert_uint_eq (entries->len, 2);
 
@@ -209,11 +209,11 @@ START_TEST (test_only_the_level_of_the_file_is_written)
     g_ptr_array_add (entries, entry_new ("Theirs", 't', "echo theirs"));
     ((user_menu_entry_t *) g_ptr_array_index (entries, 1))->level = 2;
 
-    ck_assert (user_menu_ini_save_file (file, entries, 0));
+    ck_assert (user_menu_ini_save_file (file, entries, 0, NULL));
     g_ptr_array_free (entries, TRUE);
 
     entries = entries_new ();
-    user_menu_ini_load_file (entries, file, 0);
+    ck_assert (user_menu_ini_load_file (entries, file, 0, NULL));
 
     ck_assert_uint_eq (entries->len, 1);
     ck_assert_str_eq (((user_menu_entry_t *) g_ptr_array_index (entries, 0))->label, "Mine");
@@ -240,13 +240,13 @@ START_TEST (test_a_key_of_a_later_version_is_kept)
     ck_assert_ptr_ne (file, NULL);
 
     entries = entries_new ();
-    user_menu_ini_load_file (entries, file, 0);
+    ck_assert (user_menu_ini_load_file (entries, file, 0, NULL));
     ck_assert_uint_eq (entries->len, 1);
 
     g_free (((user_menu_entry_t *) g_ptr_array_index (entries, 0))->command);
     ((user_menu_entry_t *) g_ptr_array_index (entries, 0))->command = g_strdup ("echo new");
 
-    ck_assert (user_menu_ini_save_file (file, entries, 0));
+    ck_assert (user_menu_ini_save_file (file, entries, 0, NULL));
     g_ptr_array_free (entries, TRUE);
 
     keys = g_key_file_new ();
@@ -275,9 +275,47 @@ START_TEST (test_a_file_that_is_not_there_gives_no_entries)
     GPtrArray *entries;
 
     entries = entries_new ();
-    user_menu_ini_load_file (entries, "/nonexistent/mc6/menu.ini", 0);
+    ck_assert (user_menu_ini_load_file (entries, "/nonexistent/mc6/menu.ini", 0, NULL));
     ck_assert_uint_eq (entries->len, 0);
     g_ptr_array_free (entries, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_a_file_that_cannot_be_read_is_not_written_over)
+{
+    static const char *const broken = "[Diff]\n"
+                                      "hotkey=d\n"
+                                      "command=diff %f %D/%F\n"
+                                      "  | less\n";
+    char *file;
+    char *content = NULL;
+    GPtrArray *entries;
+    GError *error = NULL;
+
+    file = write_temp_file (broken);
+    ck_assert_ptr_ne (file, NULL);
+
+    entries = entries_new ();
+    ck_assert (!user_menu_ini_load_file (entries, file, 0, &error));
+    ck_assert_ptr_ne (error, NULL);
+    g_clear_error (&error);
+    ck_assert_uint_eq (entries->len, 0);
+
+    g_ptr_array_add (entries, entry_new ("New", 'n', "echo new"));
+
+    ck_assert (!user_menu_ini_save_file (file, entries, 0, &error));
+    ck_assert_ptr_ne (error, NULL);
+    g_clear_error (&error);
+
+    ck_assert (g_file_get_contents (file, &content, NULL, NULL));
+    ck_assert_str_eq (content, broken);
+
+    g_free (content);
+    g_ptr_array_free (entries, TRUE);
+    unlink (file);
+    g_free (file);
 }
 END_TEST
 
@@ -335,11 +373,11 @@ START_TEST (test_a_menu_written_by_hand_is_imported)
         char *out;
 
         out = write_temp_file (NULL);
-        ck_assert (user_menu_ini_save_file (out, entries, 1));
+        ck_assert (user_menu_ini_save_file (out, entries, 1, NULL));
         g_ptr_array_free (entries, TRUE);
 
         entries = entries_new ();
-        user_menu_ini_load_file (entries, out, 1);
+        ck_assert (user_menu_ini_load_file (entries, out, 1, NULL));
         ck_assert_uint_eq (entries->len, 4);
 
         unlink (out);
@@ -376,7 +414,7 @@ START_TEST (test_a_submenu_and_its_entries_are_written_and_read_back)
 
     g_ptr_array_add (entries, entry_new ("Top one", '1', "echo one"));
 
-    ck_assert (user_menu_ini_save_file (file, entries, 0));
+    ck_assert (user_menu_ini_save_file (file, entries, 0, NULL));
     g_ptr_array_free (entries, TRUE);
 
     // a submenu holds no command; an entry at the top has no parent
@@ -388,7 +426,7 @@ START_TEST (test_a_submenu_and_its_entries_are_written_and_read_back)
     g_key_file_free (keys);
 
     entries = entries_new ();
-    user_menu_ini_load_file (entries, file, 0);
+    ck_assert (user_menu_ini_load_file (entries, file, 0, NULL));
     ck_assert_uint_eq (entries->len, 3);
 
     box = g_ptr_array_index (entries, 0);
@@ -424,6 +462,7 @@ main (void)
     tcase_add_test (tc_core, test_only_the_level_of_the_file_is_written);
     tcase_add_test (tc_core, test_a_key_of_a_later_version_is_kept);
     tcase_add_test (tc_core, test_a_file_that_is_not_there_gives_no_entries);
+    tcase_add_test (tc_core, test_a_file_that_cannot_be_read_is_not_written_over);
     tcase_add_test (tc_core, test_a_menu_written_by_hand_is_imported);
     tcase_add_test (tc_core, test_a_submenu_and_its_entries_are_written_and_read_back);
 

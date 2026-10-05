@@ -45,7 +45,7 @@ char *user_menu_ini_unescape (const char *text);
 guint user_menu_ini_import_file (GPtrArray *entries, const char *file, int level);
 
 /* One file: the paths of the three levels are decided elsewhere. */
-void user_menu_ini_load_file (GPtrArray *entries, const char *file, int level);
-gboolean user_menu_ini_save_file (const char *file, GPtrArray *entries, int level);
+gboolean user_menu_ini_load_file (GPtrArray *entries, const char *file, int level, GError **error);
+gboolean user_menu_ini_save_file (const char *file, GPtrArray *entries, int level, GError **error);
 
 #endif
