@@ -1,26 +1,24 @@
 /*
-   The user menu that edits itself.
+   User menu for the M-Commander
+   The menu that edits itself: the list, the dialogs, the files of a level
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   Written by:
-   Ilia Maslakov <il.smind@gmail.com>, 2026
+   This file is part of M-Commander.
 
-   This file is part of the Midnight Commander.
-
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 /** \file usermenu_ini.c
@@ -64,23 +62,9 @@
 
 // the field of commands, and the dialog around it
 #define UM_COMMAND_LINES 8
-#define UM_DIALOG_LINES  (UM_COMMAND_LINES + 14)
-
-#define UM_KEY_HOTKEY    "hotkey"
-#define UM_KEY_COMMAND   "command"
-#define UM_KEY_VIEW      "view"
-#define UM_KEY_SILENT    "silent"
-#define UM_KEY_SUBMENU   "submenu"
-#define UM_KEY_PARENT    "parent"
+#define UM_DIALOG_LINES  (UM_COMMAND_LINES + 15)
 
 /*** file scope type declarations ****************************************************************/
-
-typedef enum
-{
-    MENU_LEVEL_LOCAL = 0,
-    MENU_LEVEL_USER,
-    MENU_LEVEL_COUNT
-} menu_level_t;
 
 typedef enum
 {
@@ -99,7 +83,8 @@ typedef enum
     UM_ACTION_UP,
     UM_ACTION_DOWN,
     UM_ACTION_FILE,
-    UM_ACTION_IMPORT
+    UM_ACTION_IMPORT,
+    UM_ACTION_SHOW_ALL
 } um_action_t;
 
 /*** file scope variables ************************************************************************/
@@ -167,154 +152,113 @@ um_level_file (menu_level_t level)
 
 /* --------------------------------------------------------------------------------------------- */
 
-void
-user_menu_entry_free (user_menu_entry_t *entry)
+/** Open the file of a level in the editor. */
+static void
+um_level_edit_file (menu_level_t level)
 {
-    if (entry == NULL)
-        return;
+    char *file;
+    vfs_path_t *vpath;
 
-    g_free (entry->label);
-    g_free (entry->command);
-    g_free (entry->parent);
-    g_free (entry);
+    file = um_level_file (level);
+    vpath = vfs_path_from_str (file);
+    edit_file_at_line (vpath, TRUE, 1);
+    vfs_path_free (vpath, TRUE);
+    g_free (file);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+// the files the user did not want converted, not to be asked about again
+static GHashTable *um_not_converted = NULL;
+
+/**
+ * A menu file without the format line: written by an older version, or by
+ * hand.  The menu reads only its own format, so it offers to convert the file
+ * first; declined, the file is left alone and its entries are not shown.
+ */
+static gboolean
+um_level_convert (const char *file)
+{
+    GError *error = NULL;
+    char *text;
+    int answer;
+
+    if (um_not_converted == NULL)
+        um_not_converted = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    else if (g_hash_table_contains (um_not_converted, file))
+        return FALSE;
+
+    text = g_strdup_printf (_ ("The menu file\n%s\nhas no first line \"# mc menu format 2\": "
+                               "an older version\nof mc wrote it, or it was written by hand.\n\n"
+                               "Convert it to the format? The file as it is now\n"
+                               "is kept as %s.old."),
+                            file, file);
+    answer = query_dialog (_ ("User menu"), text, D_NORMAL, 2, _ ("&Convert"), _ ("&Skip"));
+    g_free (text);
+
+    if (answer != 0)
+    {
+        g_hash_table_add (um_not_converted, g_strdup (file));
+        return FALSE;
+    }
+
+    if (!user_menu_ini_convert_file (file, &error))
+    {
+        message (D_ERROR, MSG_ERROR, _ ("Cannot convert the menu file\n%s\n\n%s"), file,
+                 error->message);
+        g_error_free (error);
+        g_hash_table_add (um_not_converted, g_strdup (file));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * A command of several lines goes into a single line of input, so the newlines
- * are written the way a shell writes them.  A backslash stands for itself only
- * when it is doubled, or the two directions would not meet.
+ * A file that cannot be read is not an empty menu: say what is wrong with it
+ * and offer to fix it, until it is read or the user goes on without it.
  */
-char *
-user_menu_ini_escape (const char *command)
-{
-    GString *out;
-    const char *p;
-
-    out = g_string_sized_new (strlen (command) + 8);
-
-    for (p = command; *p != '\0'; p++)
-        switch (*p)
-        {
-        case '\n':
-            g_string_append (out, "\\n");
-            break;
-        case '\\':
-            g_string_append (out, "\\\\");
-            break;
-        default:
-            g_string_append_c (out, *p);
-            break;
-        }
-
-    return g_string_free (out, FALSE);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-char *
-user_menu_ini_unescape (const char *text)
-{
-    GString *out;
-    const char *p;
-
-    out = g_string_sized_new (strlen (text) + 1);
-
-    for (p = text; *p != '\0'; p++)
-    {
-        if (*p != '\\')
-        {
-            g_string_append_c (out, *p);
-            continue;
-        }
-
-        switch (*(p + 1))
-        {
-        case 'n':
-            g_string_append_c (out, '\n');
-            p++;
-            break;
-        case '\\':
-            g_string_append_c (out, '\\');
-            p++;
-            break;
-        default:
-            g_string_append_c (out, *p);
-            break;
-        }
-    }
-
-    return g_string_free (out, FALSE);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
- * Read one file.  The groups are taken in the order the file has them, which is
- * the order of the list.
- */
-void
-user_menu_ini_load_file (GPtrArray *entries, const char *file, int level)
-{
-    GKeyFile *keys;
-    gchar **groups;
-    gsize i, count = 0;
-
-    if (!exist_file (file))
-        return;
-
-    keys = g_key_file_new ();
-    if (!g_key_file_load_from_file (keys, file, G_KEY_FILE_KEEP_COMMENTS, NULL))
-    {
-        g_key_file_free (keys);
-        return;
-    }
-
-    groups = g_key_file_get_groups (keys, &count);
-
-    for (i = 0; i < count; i++)
-    {
-        user_menu_entry_t *entry;
-        char *hotkey;
-
-        entry = g_new0 (user_menu_entry_t, 1);
-        entry->label = g_strdup (groups[i]);
-        entry->command = g_key_file_get_string (keys, groups[i], UM_KEY_COMMAND, NULL);
-        if (entry->command == NULL)
-            entry->command = g_strdup ("");
-        entry->view = g_key_file_get_boolean (keys, groups[i], UM_KEY_VIEW, NULL);
-        entry->silent = g_key_file_get_boolean (keys, groups[i], UM_KEY_SILENT, NULL);
-        entry->is_submenu = g_key_file_get_boolean (keys, groups[i], UM_KEY_SUBMENU, NULL);
-        entry->parent = g_key_file_get_string (keys, groups[i], UM_KEY_PARENT, NULL);
-        entry->level = level;
-
-        hotkey = g_key_file_get_string (keys, groups[i], UM_KEY_HOTKEY, NULL);
-        if (hotkey != NULL)
-        {
-            entry->hotkey = hotkey[0];
-            g_free (hotkey);
-        }
-
-        g_ptr_array_add (entries, entry);
-    }
-
-    g_strfreev (groups);
-    g_key_file_free (keys);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 static void
 um_level_load (GPtrArray *entries, menu_level_t level)
 {
     char *file;
+    GError *error = NULL;
 
     file = um_level_file (level);
 
     // a file of the directory is anybody's; the one of the user is his own
-    if (level != MENU_LEVEL_LOCAL || um_file_is_safe (file))
-        user_menu_ini_load_file (entries, file, level);
+    if (level == MENU_LEVEL_LOCAL && !um_file_is_safe (file))
+    {
+        g_free (file);
+        return;
+    }
+
+    if (user_menu_ini_needs_conversion (file) && !um_level_convert (file))
+    {
+        g_free (file);
+        return;
+    }
+
+    while (!user_menu_ini_load_file (entries, file, level, &error))
+    {
+        char *text;
+        int answer;
+
+        text = g_strdup_printf (_ ("Cannot read the menu file\n%s\n\n%s\n\n"
+                                   "Its entries are not shown, and the menu does not "
+                                   "write into it\nuntil it is fixed."),
+                                file, error->message);
+        g_clear_error (&error);
+        answer = query_dialog (MSG_ERROR, text, D_ERROR, 2, _ ("&Edit the file"), _ ("&Skip"));
+        g_free (text);
+
+        if (answer != 0)
+            break;
+
+        um_level_edit_file (level);
+    }
 
     g_free (file);
 }
@@ -336,79 +280,6 @@ um_entries_load (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-
-/**
- * Write the entries of one level into a file.  The file is built anew, in the
- * order of the list, and the keys of a group that is still there are carried
- * over: what a later version writes into a group is not lost by an older one
- * that edits it.
- */
-gboolean
-user_menu_ini_save_file (const char *file, GPtrArray *entries, int level)
-{
-    GKeyFile *old, *keys;
-    guint i;
-    gboolean ok;
-
-    old = g_key_file_new ();
-    (void) g_key_file_load_from_file (old, file, G_KEY_FILE_KEEP_COMMENTS, NULL);
-
-    keys = g_key_file_new ();
-
-    for (i = 0; i < entries->len; i++)
-    {
-        user_menu_entry_t *entry = g_ptr_array_index (entries, i);
-        gchar **old_keys;
-        gsize k, count = 0;
-        char hotkey[2] = { '\0', '\0' };
-
-        if (entry->level != level)
-            continue;
-
-        old_keys = g_key_file_get_keys (old, entry->label, &count, NULL);
-        for (k = 0; k < count; k++)
-        {
-            char *value;
-
-            value = g_key_file_get_value (old, entry->label, old_keys[k], NULL);
-            if (value != NULL)
-            {
-                g_key_file_set_value (keys, entry->label, old_keys[k], value);
-                g_free (value);
-            }
-        }
-        g_strfreev (old_keys);
-
-        hotkey[0] = entry->hotkey;
-        g_key_file_set_string (keys, entry->label, UM_KEY_HOTKEY, hotkey);
-
-        if (entry->parent != NULL && *entry->parent != '\0')
-            g_key_file_set_string (keys, entry->label, UM_KEY_PARENT, entry->parent);
-        else
-            g_key_file_remove_key (keys, entry->label, UM_KEY_PARENT, NULL);
-
-        if (entry->is_submenu)
-        {
-            g_key_file_set_boolean (keys, entry->label, UM_KEY_SUBMENU, TRUE);
-            g_key_file_remove_key (keys, entry->label, UM_KEY_COMMAND, NULL);
-            g_key_file_remove_key (keys, entry->label, UM_KEY_VIEW, NULL);
-            g_key_file_remove_key (keys, entry->label, UM_KEY_SILENT, NULL);
-        }
-        else
-        {
-            g_key_file_set_string (keys, entry->label, UM_KEY_COMMAND, entry->command);
-            g_key_file_set_boolean (keys, entry->label, UM_KEY_VIEW, entry->view);
-            g_key_file_set_boolean (keys, entry->label, UM_KEY_SILENT, entry->silent);
-        }
-    }
-
-    ok = g_key_file_save_to_file (keys, file, NULL);
-
-    g_key_file_free (keys);
-    g_key_file_free (old);
-
-    return ok;
-}
 
 /**
  * Whether the file of a level can be written.  A menu.ini put there by an
@@ -470,14 +341,33 @@ um_level_save (GPtrArray *entries, menu_level_t level)
 {
     char *file;
     gboolean ok;
+    GError *error = NULL;
 
     file = um_level_file (level);
-    ok = user_menu_ini_save_file (file, entries, level);
+    ok = user_menu_ini_save_file (file, entries, level, &error);
     if (!ok)
-        file_error_message (_ ("Cannot write file\n%s"), file);
+    {
+        message (D_ERROR, MSG_ERROR, _ ("Cannot write file\n%s\n\n%s"), file, error->message);
+        g_error_free (error);
+    }
     g_free (file);
 
     return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** On a failed write the list is read again: it shows what the file holds. */
+static gboolean
+um_entries_save (GPtrArray **entries, menu_level_t level)
+{
+    if (um_level_save (*entries, level))
+        return TRUE;
+
+    g_ptr_array_free (*entries, TRUE);
+    *entries = um_entries_load ();
+
+    return FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -499,22 +389,6 @@ um_dialog_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void 
 
 /* --------------------------------------------------------------------------------------------- */
 
-/** Open the file of a level in the editor. */
-static void
-um_level_edit_file (menu_level_t level)
-{
-    char *file;
-    vfs_path_t *vpath;
-
-    file = um_level_file (level);
-    vpath = vfs_path_from_str (file);
-    edit_file_at_line (vpath, TRUE, 1);
-    vfs_path_free (vpath, TRUE);
-    g_free (file);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 /** What the dialog of an entry edits: a copy of the entry, given back only on OK. */
 typedef struct
 {
@@ -523,6 +397,9 @@ typedef struct
     char hotkey;
     gboolean view;
     gboolean silent;
+    char *cond[UM_COND_COUNT];
+    char *dcond[UM_COND_COUNT];
+    gboolean is_default;
 } um_draft_t;
 
 /** The widgets of that dialog, to read them back once it is closed. */
@@ -535,6 +412,470 @@ typedef struct
     WCheck *view;
     WCheck *silent;
 } um_form_t;
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void um_form_buttons (WGroup *group, int y, int width, gboolean with_editor);
+
+// the types of on=, in the order of the boxes of the Conditions dialog
+static const char *const um_on_names[] = {
+    "file", "dir", "link", "fifo", "socket", "broken", "char", "block",
+};
+#define UM_ON_COUNT G_N_ELEMENTS (um_on_names)
+
+// what the Conditions button edits, and where it shows the result
+static um_draft_t *um_cond_draft = NULL;
+static WLabel *um_cond_summary = NULL;
+static int um_cond_summary_width = 0;
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+um_str_eq (const char *a, const char *b)
+{
+    if (a == NULL || b == NULL)
+        return a == b;
+    return strcmp (a, b) == 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The conditions the way the file has them, one key after another. */
+static char *
+um_cond_text (char *const *cond, char *const *dcond, gboolean is_default)
+{
+    GString *out;
+    int k;
+
+    out = g_string_new ("");
+
+    for (k = 0; k < UM_COND_COUNT; k++)
+        if (cond[k] != NULL)
+        {
+            if (out->len != 0)
+                g_string_append (out, ", ");
+            g_string_append_printf (out, "%s=%s", user_menu_ini_cond_keys[k], cond[k]);
+        }
+
+    if (is_default)
+        g_string_append (out, out->len != 0 ? ", default" : "default");
+
+    for (k = 0; k < UM_COND_COUNT; k++)
+        if (dcond[k] != NULL)
+        {
+            if (out->len != 0)
+                g_string_append (out, ", ");
+            g_string_append_printf (out, "%s=%s", user_menu_ini_default_keys[k], dcond[k]);
+        }
+
+    if (out->len == 0)
+        g_string_append (out, _ ("always"));
+
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+um_cond_any (char *const *cond)
+{
+    int k;
+
+    for (k = UM_COND_PATH; k <= UM_COND_PANEL_LAST; k++)
+        if (cond[k] != NULL)
+            return TRUE;
+
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The boxes of the types: "!dir" checks every box but the directory. */
+static void
+um_on_to_boxes (const char *on, gboolean *boxes)
+{
+    gboolean listed[UM_ON_COUNT] = { FALSE };
+    gboolean negated[UM_ON_COUNT] = { FALSE };
+    gboolean any_negated = FALSE;
+    gchar **items;
+    guint i, t;
+
+    for (t = 0; t < UM_ON_COUNT; t++)
+        boxes[t] = FALSE;
+
+    if (on == NULL)
+        return;
+
+    items = g_strsplit (on, ";", -1);
+    for (i = 0; items[i] != NULL; i++)
+    {
+        const char *item = g_strstrip (items[i]);
+        const gboolean negate = *item == '!';
+
+        if (negate)
+            item++;
+
+        for (t = 0; t < UM_ON_COUNT; t++)
+            if (strcmp (item, um_on_names[t]) == 0)
+            {
+                if (negate)
+                {
+                    negated[t] = TRUE;
+                    any_negated = TRUE;
+                }
+                else
+                    listed[t] = TRUE;
+            }
+    }
+    g_strfreev (items);
+
+    for (t = 0; t < UM_ON_COUNT; t++)
+        boxes[t] = listed[t] || (any_negated && !negated[t]);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** No box checked, or all of them, is any type: no key. */
+static char *
+um_boxes_to_on (const gboolean *boxes)
+{
+    GString *out;
+    guint t, checked = 0;
+
+    out = g_string_new ("");
+
+    for (t = 0; t < UM_ON_COUNT; t++)
+        if (boxes[t])
+        {
+            if (out->len != 0)
+                g_string_append_c (out, ';');
+            g_string_append (out, um_on_names[t]);
+            checked++;
+        }
+
+    if (checked == 0 || checked == UM_ON_COUNT)
+    {
+        g_string_free (out, TRUE);
+        return NULL;
+    }
+
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The text of an input, NULL where it is empty. */
+static char *
+um_input_value (WInput *in)
+{
+    char *text;
+
+    text = input_get_text (in);
+    g_strstrip (text);
+    if (*text == '\0')
+    {
+        g_free (text);
+        return NULL;
+    }
+
+    return text;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** A value goes back only where the user changed it: what the dialog cannot say stays. */
+static void
+um_cond_take (char **value, char *was, char *now)
+{
+    if (um_str_eq (was, now))
+        g_free (now);
+    else
+    {
+        g_free (*value);
+        *value = now;
+    }
+    g_free (was);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean um_conditions_edit (um_draft_t *draft, gboolean for_default);
+
+// the choice of the entry the menu opens on, while the Conditions dialog is up
+static WRadio *um_default_radio = NULL;
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The conditions of default.*: once they are set, "When" is the choice. */
+static int
+um_default_conditions_button (WButton *button, int action)
+{
+    (void) button;
+    (void) action;
+
+    if (um_cond_draft != NULL && um_conditions_edit (um_cond_draft, TRUE))
+    {
+        um_default_radio->sel = um_default_radio->pos = 2;
+        widget_draw (WIDGET (um_default_radio));
+    }
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Where the entry is shown, or, for_default, where the menu opens on it.  The
+ * dialog looks at one panel; conditions that look at both are left to the
+ * file.
+ */
+static gboolean
+um_conditions_edit (um_draft_t *draft, gboolean for_default)
+{
+    static const char *panel_names[2];
+    static const char *default_names[3];
+    const int width = 64;
+    const int col = 19;
+    char **set = for_default ? draft->dcond : draft->cond;
+    char **own = set, **other = set + UM_COND_OTHER;
+    char *dcond_was[UM_COND_COUNT];
+    WRadio *dflt = NULL;
+    char **cond;
+    gboolean boxes[UM_ON_COUNT], boxes_now[UM_ON_COUNT];
+    WCheck *checks[UM_ON_COUNT];
+    WDialog *dlg;
+    WGroup *g;
+    WInput *path, *needs;
+    WCheck *exec, *marked, *regex;
+    WRadio *panel;
+    gboolean was_exec, was_marked, was_regex;
+    int was_panel;
+    int path_k;
+    int y = 2;
+    guint t;
+    gboolean ok;
+
+    if (um_cond_any (own) && um_cond_any (other))
+    {
+        message (D_NORMAL, _ ("Conditions"),
+                 _ ("These conditions look at both panels, and the dialog shows one.\n"
+                    "Change them in the file: the Editor button opens it."));
+        return FALSE;
+    }
+
+    was_panel = um_cond_any (other) ? 1 : 0;
+    cond = was_panel == 1 ? other : own;
+
+    // the field holds either masks or a regular expression
+    was_regex = cond[UM_COND_PATH_RE] != NULL;
+    if (was_regex && cond[UM_COND_PATH] != NULL)
+    {
+        message (D_NORMAL, _ ("Conditions"),
+                 _ ("These conditions have masks and a regular expression together,\n"
+                    "and the dialog shows one of them. Change them in the file: the\n"
+                    "Editor button opens it."));
+        return FALSE;
+    }
+    path_k = was_regex ? UM_COND_PATH_RE : UM_COND_PATH;
+
+    um_on_to_boxes (cond[UM_COND_ON], boxes);
+    was_exec = um_str_eq (cond[UM_COND_EXEC], "true");
+    was_marked = um_str_eq (cond[UM_COND_MARKED], "true");
+
+    panel_names[0] = _ ("C&urrent panel");
+    panel_names[1] = _ ("Ot&her panel");
+    default_names[0] = _ ("N&ever");
+    default_names[1] = _ ("&Always");
+    default_names[2] = _ ("&When:");
+
+    dlg = dlg_create (TRUE, 0, 0, for_default ? 18 : 22, width, WPOS_CENTER, FALSE, dialog_colors,
+                      NULL, NULL, "[Edit Menu File]",
+                      for_default ? _ ("Where the menu opens on it") : _ ("Conditions"));
+    g = GROUP (dlg);
+
+    group_add_widget (g, label_new (y, 3, _ ("Path mask:")));
+    path = input_new (y++, col, input_colors, width - col - 3,
+                      cond[path_k] != NULL ? cond[path_k] : "", "usermenu-path",
+                      INPUT_COMPLETE_FILENAMES | INPUT_COMPLETE_CD);
+    group_add_widget (g, path);
+
+    regex = check_new (y++, col, was_regex, _ ("Re&gular expression"));
+    group_add_widget (g, regex);
+    y++;
+    group_add_widget (g, label_new (y++, 3, _ ("Show on (none checked = any):")));
+    {
+        const char *labels[UM_ON_COUNT] = {
+            _ ("File"),   _ ("Directory"),   _ ("Link"),        _ ("Fifo"),
+            _ ("Socket"), _ ("Broken link"), _ ("Char device"), _ ("Block device"),
+        };
+
+        for (t = 0; t < UM_ON_COUNT; t++)
+        {
+            checks[t] = check_new (y + (int) t / 3, 5 + ((int) t % 3) * 19, boxes[t], labels[t]);
+            group_add_widget (g, checks[t]);
+        }
+        y += (UM_ON_COUNT + 2) / 3;
+    }
+
+    y++;
+    exec = check_new (y++, 3, was_exec, _ ("E&xecutable only"));
+    group_add_widget (g, exec);
+    marked = check_new (y++, 3, was_marked, _ ("Only when files are &marked"));
+    group_add_widget (g, marked);
+
+    group_add_widget (g, label_new (y, 3, _ ("Needs program:")));
+    needs = input_new (y++, col, input_colors, width - col - 3,
+                       set[UM_COND_NEEDS] != NULL ? set[UM_COND_NEEDS] : "", "usermenu-needs",
+                       INPUT_COMPLETE_COMMANDS);
+    group_add_widget (g, needs);
+
+    y++;
+    panel = radio_new (y, 3, 2, panel_names);
+    panel->sel = panel->pos = was_panel;
+    group_add_widget (g, panel);
+
+    if (!for_default)
+    {
+        int k;
+        WButton *when;
+
+        // kept to put back on Cancel: the button below edits them in place
+        for (k = 0; k < UM_COND_COUNT; k++)
+            dcond_was[k] = g_strdup (draft->dcond[k]);
+
+        group_add_widget (g, label_new (y, 26, _ ("The menu opens on it:")));
+        dflt = radio_new (y + 1, 28, 3, default_names);
+        dflt->sel = dflt->pos = draft->is_default ? 1
+            : um_cond_any (draft->dcond) || um_cond_any (draft->dcond + UM_COND_OTHER)
+                || draft->dcond[UM_COND_NEEDS] != NULL
+            ? 2
+            : 0;
+        group_add_widget (g, dflt);
+        um_default_radio = dflt;
+        when = button_new (y + 3, 40, B_USER + 2, NORMAL_BUTTON, _ ("Con&ditions"),
+                           um_default_conditions_button);
+        group_add_widget (g, when);
+        y += 2;
+    }
+    y += 2;
+
+    group_add_widget (g, hline_new (y++, -1, -1));
+    um_form_buttons (g, y, width, FALSE);
+
+    widget_select (WIDGET (path));
+
+    ok = dlg_run (dlg) == B_ENTER;
+
+    if (ok)
+    {
+        char *value[UM_COND_PANEL_LAST + 1] = { NULL };
+        const int now_panel = panel->sel;
+        char **to = now_panel == 1 ? other : own;
+        int k;
+
+        for (k = UM_COND_PATH; k <= UM_COND_PANEL_LAST; k++)
+            value[k] = g_strdup (cond[k]);
+
+        um_cond_take (&value[path_k], g_strdup (cond[path_k]), um_input_value (path));
+
+        // the same text, now under the key of the other kind
+        if (regex->state != was_regex)
+        {
+            const int kind = regex->state ? UM_COND_PATH_RE : UM_COND_PATH;
+
+            value[kind] = value[path_k];
+            value[path_k] = NULL;
+        }
+
+        for (t = 0; t < UM_ON_COUNT; t++)
+            boxes_now[t] = checks[t]->state;
+        if (memcmp (boxes, boxes_now, sizeof (boxes)) != 0)
+        {
+            g_free (value[UM_COND_ON]);
+            value[UM_COND_ON] = um_boxes_to_on (boxes_now);
+        }
+
+        if (exec->state != was_exec)
+        {
+            g_free (value[UM_COND_EXEC]);
+            value[UM_COND_EXEC] = exec->state ? g_strdup ("true") : NULL;
+        }
+        if (marked->state != was_marked)
+        {
+            g_free (value[UM_COND_MARKED]);
+            value[UM_COND_MARKED] = marked->state ? g_strdup ("true") : NULL;
+        }
+
+        um_cond_take (&set[UM_COND_NEEDS], g_strdup (set[UM_COND_NEEDS]), um_input_value (needs));
+
+        if (dflt != NULL)
+        {
+            // Never and Always leave no conditions of their own behind
+            draft->is_default = dflt->sel == 1;
+            if (dflt->sel != 2)
+                for (k = 0; k < UM_COND_COUNT; k++)
+                {
+                    g_free (draft->dcond[k]);
+                    draft->dcond[k] = NULL;
+                }
+        }
+
+        // the values go to the keys of the panel chosen, whichever they came from
+        for (k = UM_COND_PATH; k <= UM_COND_PANEL_LAST; k++)
+        {
+            g_free (own[k]);
+            own[k] = NULL;
+            g_free (other[k]);
+            other[k] = NULL;
+            to[k] = value[k];
+        }
+    }
+
+    if (dflt != NULL)
+    {
+        int k;
+
+        for (k = 0; k < UM_COND_COUNT; k++)
+            if (ok)
+                g_free (dcond_was[k]);
+            else
+            {
+                g_free (draft->dcond[k]);
+                draft->dcond[k] = dcond_was[k];
+            }
+        um_default_radio = NULL;
+    }
+
+    widget_destroy (WIDGET (dlg));
+
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+um_cond_summary_update (void)
+{
+    char *text;
+
+    text = um_cond_text (um_cond_draft->cond, um_cond_draft->dcond, um_cond_draft->is_default);
+    label_set_text (um_cond_summary, str_fit_to_term (text, um_cond_summary_width, J_LEFT_FIT));
+    g_free (text);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+um_conditions_button (WButton *button, int action)
+{
+    (void) button;
+    (void) action;
+
+    if (um_cond_draft != NULL && um_conditions_edit (um_cond_draft, FALSE))
+        um_cond_summary_update ();
+
+    return 0;  // the entry dialog stays
+}
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -572,17 +913,17 @@ um_form_buttons (WGroup *group, int y, int width, gboolean with_editor)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * The dialog of one entry: a hotkey, a label and the commands, and what to do
- * with the output.  No masks and no conditions: what the dialog cannot say,
- * the file still can, and the Editor button opens it.  A submenu has only the
- * hotkey and the label.
+ * The dialog of one entry: a hotkey, a label and the commands, what to do with
+ * the output, and where the entry is shown.  A submenu has no commands.
  */
 static void
-um_form_build (um_form_t *form, const um_draft_t *draft, gboolean is_submenu, gboolean is_new)
+um_form_build (um_form_t *form, um_draft_t *draft, gboolean is_submenu, gboolean is_new)
 {
     const int width = 64;
     const int inner = width - 6;
-    const int lines = is_submenu ? 10 : UM_DIALOG_LINES;
+    const int lines = is_submenu ? 11 : UM_DIALOG_LINES;
+    WButton *conditions;
+    int x;
     const char *title;
     WGroup *group;
     char hotkey_text[2] = { draft->hotkey, '\0' };
@@ -626,6 +967,19 @@ um_form_build (um_form_t *form, const um_draft_t *draft, gboolean is_submenu, gb
         group_add_widget (group, form->silent);
     }
 
+    group_add_widget (group, label_new (y, 3, _ ("Show when:")));
+    conditions =
+        button_new (y, 0, B_USER + 1, NORMAL_BUTTON, _ ("Con&ditions"), um_conditions_button);
+    x = width - 3 - button_get_width (conditions);
+    WIDGET (conditions)->rect.x = x;
+    um_cond_draft = draft;
+    um_cond_summary_width = x - 15;
+    um_cond_summary = label_new (y, 14, "");
+    group_add_widget (group, um_cond_summary);
+    um_cond_summary_update ();
+    group_add_widget (group, conditions);
+    y++;
+
     group_add_widget (group, hline_new (y++, -1, -1));
     um_form_buttons (group, y, width, !is_submenu);
 
@@ -663,12 +1017,19 @@ um_entry_edit (user_menu_entry_t *entry, gboolean is_new)
 {
     um_draft_t draft;
     um_edit_t result_kind = UM_EDIT_CANCEL;
+    int k;
 
     draft.label = g_strdup (entry->label);
     draft.command = g_strdup (entry->command);
     draft.hotkey = entry->hotkey;
     draft.view = entry->view;
     draft.silent = entry->silent;
+    for (k = 0; k < UM_COND_COUNT; k++)
+    {
+        draft.cond[k] = g_strdup (entry->cond[k]);
+        draft.dcond[k] = g_strdup (entry->dcond[k]);
+    }
+    draft.is_default = entry->is_default;
 
     while (TRUE)
     {
@@ -680,6 +1041,8 @@ um_entry_edit (user_menu_entry_t *entry, gboolean is_new)
         um_form_read (&form, &draft);
         widget_destroy (WIDGET (form.dlg));
         um_command_area = NULL;
+        um_cond_draft = NULL;
+        um_cond_summary = NULL;
 
         if (result == B_CANCEL)
             break;
@@ -710,11 +1073,24 @@ um_entry_edit (user_menu_entry_t *entry, gboolean is_new)
         entry->hotkey = draft.hotkey;
         entry->view = draft.view;
         entry->silent = draft.silent;
+        for (k = 0; k < UM_COND_COUNT; k++)
+        {
+            g_free (entry->cond[k]);
+            entry->cond[k] = draft.cond[k];
+            g_free (entry->dcond[k]);
+            entry->dcond[k] = draft.dcond[k];
+        }
+        entry->is_default = draft.is_default;
     }
     else
     {
         g_free (draft.label);
         g_free (draft.command);
+        for (k = 0; k < UM_COND_COUNT; k++)
+        {
+            g_free (draft.cond[k]);
+            g_free (draft.dcond[k]);
+        }
     }
 
     return result_kind;
@@ -844,6 +1220,9 @@ um_list_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *d
         case KEY_M_CTRL | KEY_DOWN:
             action = UM_ACTION_DOWN;
             break;
+        case ALT ('a'):
+            action = UM_ACTION_SHOW_ALL;
+            break;
         default:
             break;
         }
@@ -907,6 +1286,9 @@ um_list_run (GPtrArray *entries, int current, const char *title)
         text = g_strdup_printf ("%c  %s%s", entry->hotkey != '\0' ? entry->hotkey : ' ', label,
                                 entry->is_submenu ? "/" : "");
         LISTBOX_APPEND_TEXT (listbox, (unsigned char) entry->hotkey, text, entry, FALSE);
+        // shown only because Alt-A asked for all of them
+        if (!user_menu_ini_entry_visible (entry))
+            listbox_set_dimmed (listbox->list, (int) i, TRUE);
         g_free (text);
         g_free (label);
     }
@@ -918,162 +1300,6 @@ um_list_run (GPtrArray *entries, int current, const char *title)
     selected = listbox_run (listbox);
 
     return selected;
-}
-
-/**
- * The label is the name of the group the entry is kept in, and that decides
- * what a label may hold: no brackets, which end a group name, and nothing that
- * breaks a line.  Two entries cannot share a label either, or the second would
- * take the place of the first, so a repeat is numbered.
- */
-static void
-um_label_fix (GPtrArray *entries, user_menu_entry_t *entry)
-{
-    char *base;
-    char *p;
-    guint n = 1;
-
-    if (entry->label == NULL)
-        entry->label = g_strdup ("");
-
-    for (p = entry->label; *p != '\0'; p++)
-        switch (*p)
-        {
-        case '[':
-            *p = '(';
-            break;
-        case ']':
-            *p = ')';
-            break;
-        case '\n':
-        case '\r':
-        case '\t':
-            *p = ' ';
-            break;
-        default:
-            break;
-        }
-
-    base = g_strdup (entry->label);
-
-    while (TRUE)
-    {
-        guint i;
-        gboolean taken = FALSE;
-
-        for (i = 0; i < entries->len && !taken; i++)
-        {
-            user_menu_entry_t *other = g_ptr_array_index (entries, i);
-
-            taken = other != entry && strcmp (other->label, entry->label) == 0;
-        }
-
-        if (!taken)
-            break;
-
-        g_free (entry->label);
-        entry->label = g_strdup_printf ("%s (%u)", base, ++n);
-    }
-
-    g_free (base);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
- * Read a menu file written by hand into entries.  A line that does not start
- * with a space is the title of an entry, its first character the hotkey; the
- * lines under it, indented, are the commands.  Conditions and comments are
- * dropped: the dialog has no place for them, and the file they came from stays
- * where it is.
- */
-guint
-user_menu_ini_import_file (GPtrArray *entries, const char *file, int level)
-{
-    char *data = NULL;
-    gchar **lines;
-    guint i, added = 0;
-    user_menu_entry_t *entry = NULL;
-    GString *command = NULL;
-
-    if (!g_file_get_contents (file, &data, NULL, NULL))
-        return 0;
-
-    lines = g_strsplit (data, "\n", -1);
-
-    for (i = 0; lines[i] != NULL; i++)
-    {
-        const char *line = lines[i];
-
-        if (*line == ' ' || *line == '\t')
-        {
-            // a command of the entry above, with its indentation dropped
-            if (entry != NULL)
-            {
-                while (*line == ' ' || *line == '\t')
-                    line++;
-                if (command->len != 0)
-                    g_string_append_c (command, '\n');
-                g_string_append (command, line);
-            }
-            continue;
-        }
-
-        // whatever was collected belongs to the entry that is ending here
-        if (entry != NULL)
-        {
-            entry->command = g_string_free (command, FALSE);
-            command = NULL;
-
-            // An entry with no commands is a line that only looked like one.
-            if (*entry->command == '\0')
-                user_menu_entry_free (entry);
-            else
-            {
-                um_label_fix (entries, entry);
-                g_ptr_array_add (entries, entry);
-                added++;
-            }
-
-            entry = NULL;
-        }
-
-        // a comment, a condition, or the directive at the top of the file
-        if (*line == '\0' || *line == '#' || *line == '+' || *line == '='
-            || strncmp (line, "shell_patterns", 14) == 0)
-            continue;
-
-        entry = g_new0 (user_menu_entry_t, 1);
-        entry->hotkey = *line;
-        entry->level = level;
-
-        line++;
-        while (*line == ' ' || *line == '\t')
-            line++;
-        entry->label = g_strchomp (g_strdup (*line != '\0' ? line : lines[i]));
-        command = g_string_new ("");
-    }
-
-    if (entry != NULL)
-    {
-        entry->command = g_string_free (command, FALSE);
-
-        if (*entry->command == '\0')
-            user_menu_entry_free (entry);
-        else
-        {
-            um_label_fix (entries, entry);
-            g_ptr_array_add (entries, entry);
-            added++;
-        }
-    }
-    else if (command != NULL)
-        g_string_free (command, TRUE);
-
-    g_strfreev (lines);
-    g_free (data);
-
-    return added;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1237,10 +1463,11 @@ um_import (const char *old_menu)
 {
     GPtrArray *entries;
     guint added;
+    guint not_converted = 0;
     gboolean ok = FALSE;
 
     entries = g_ptr_array_new_with_free_func ((GDestroyNotify) user_menu_entry_free);
-    added = user_menu_ini_import_file (entries, old_menu, MENU_LEVEL_USER);
+    added = user_menu_ini_import_file (entries, old_menu, MENU_LEVEL_USER, NULL);
 
     if (added != 0)
     {
@@ -1269,14 +1496,20 @@ um_import (const char *old_menu)
            does not become the menu. */
         all = g_ptr_array_new_with_free_func ((GDestroyNotify) user_menu_entry_free);
         file = um_level_file (MENU_LEVEL_USER);
-        user_menu_ini_load_file (all, file, MENU_LEVEL_USER);
+        // a file that cannot be read stays as it is: um_level_save() refuses it
+        (void) user_menu_ini_load_file (all, file, MENU_LEVEL_USER, NULL);
         g_free (file);
 
         for (i = 0; i < entries->len; i++)
         {
             user_menu_entry_t *entry = g_ptr_array_index (entries, i);
+            const char *c;
 
-            um_label_fix (all, entry);
+            // one comment line for each condition that did not become keys
+            for (c = entry->comment; c != NULL && (c = strchr (c, '\n')) != NULL; c++)
+                not_converted++;
+
+            user_menu_ini_label_fix (all, entry);
             g_ptr_array_add (all, entry);
         }
 
@@ -1293,10 +1526,17 @@ um_import (const char *old_menu)
         char *ini;
 
         ini = um_level_file (MENU_LEVEL_USER);
-        message (D_NORMAL, _ ("User menu"),
-                 _ ("Taken into\n%s\n\nEntries: %u. The file they came from is left where it "
-                    "is,\nand conditions and masks were dropped."),
-                 ini, added);
+        if (not_converted == 0)
+            message (D_NORMAL, _ ("User menu"),
+                     _ ("Taken into\n%s\n\nEntries: %u. The file they came from is left where "
+                        "it is."),
+                     ini, added);
+        else
+            message (D_NORMAL, _ ("User menu"),
+                     _ ("Taken into\n%s\n\nEntries: %u. The file they came from is left where "
+                        "it is.\nConditions not converted: %u, kept as comments above their "
+                        "entries."),
+                     ini, added, not_converted);
         g_free (ini);
         ok = TRUE;
     }
@@ -1324,21 +1564,34 @@ um_parent_eq (const user_menu_entry_t *entry, const char *parent)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/** The entries shown at one level, in the order of the file. Borrowed pointers. */
+/**
+ * The entries shown at one level, in the order of the file, where their
+ * conditions hold.  Borrowed pointers.
+ */
 static GPtrArray *
-um_view (GPtrArray *entries, const char *parent)
+um_view (GPtrArray *entries, const char *parent, gboolean show_all, guint *hidden)
 {
     GPtrArray *view;
     guint i;
 
     view = g_ptr_array_new ();
+    *hidden = 0;
 
     for (i = 0; i < entries->len; i++)
     {
         user_menu_entry_t *entry = g_ptr_array_index (entries, i);
 
-        if (um_parent_eq (entry, parent))
+        if (!um_parent_eq (entry, parent))
+            continue;
+
+        if (user_menu_ini_entry_visible (entry))
             g_ptr_array_add (view, entry);
+        else
+        {
+            (*hidden)++;
+            if (show_all)
+                g_ptr_array_add (view, entry);
+        }
     }
 
     return view;
@@ -1563,6 +1816,10 @@ user_menu_ini_cmd (void)
     GPtrArray *path;  // the labels of the submenus we are inside
     GArray *saved;    // the row each of those was left on
     int current = 0;
+    gboolean pick_default = TRUE;          // a menu just opened starts on its default entry
+    gboolean show_all = FALSE;             // Alt-A: the entries whose conditions do not hold, too
+    const user_menu_entry_t *keep = NULL;  // the entry the cursor stays on after Alt-A
+    guint hidden;
     gboolean done = FALSE;
     gboolean res = FALSE;
 
@@ -1613,9 +1870,9 @@ user_menu_ini_cmd (void)
             switch (um_entry_edit (new_entry, TRUE))
             {
             case UM_EDIT_OK:
-                um_label_fix (entries, new_entry);
+                user_menu_ini_label_fix (entries, new_entry);
                 g_ptr_array_add (entries, new_entry);
-                um_level_save (entries, MENU_LEVEL_USER);
+                um_entries_save (&entries, MENU_LEVEL_USER);
                 break;
 
             case UM_EDIT_FILE:
@@ -1634,12 +1891,32 @@ user_menu_ini_cmd (void)
             continue;
         }
 
-        view = um_view (entries, parent);
+        view = um_view (entries, parent, show_all, &hidden);
 
-        // the title names the submenus we are inside
-        if (parent == NULL)
-            title = g_strdup (_ ("User menu"));
-        else
+        if (keep != NULL)
+        {
+            guint i;
+
+            for (i = 0; i < view->len; i++)
+                if (g_ptr_array_index (view, i) == keep)
+                    current = (int) i;
+            keep = NULL;
+        }
+
+        if (pick_default)
+        {
+            guint i;
+
+            pick_default = FALSE;
+            for (i = 0; i < view->len; i++)
+                if (user_menu_ini_entry_default (g_ptr_array_index (view, i)))
+                {
+                    current = (int) i;
+                    break;
+                }
+        }
+
+        // the title names the submenus we are inside, and what is hidden here
         {
             GString *t;
             guint i;
@@ -1649,6 +1926,13 @@ user_menu_ini_cmd (void)
             {
                 g_string_append (t, " / ");
                 g_string_append (t, (const char *) g_ptr_array_index (path, i));
+            }
+            if (show_all)
+                g_string_append_printf (t, " %s", _ ("(all entries)"));
+            else if (hidden != 0)
+            {
+                g_string_append_c (t, ' ');
+                g_string_append_printf (t, _ ("(%u hidden, Alt-A)"), hidden);
             }
             title = g_string_free (t, FALSE);
         }
@@ -1668,7 +1952,8 @@ user_menu_ini_cmd (void)
         }
 
         // Esc, or nothing to choose from: up a level, or out of the menu at the top
-        if (entry == NULL && um_action != UM_ACTION_ADD && um_action != UM_ACTION_IMPORT)
+        if (entry == NULL && um_action != UM_ACTION_ADD && um_action != UM_ACTION_IMPORT
+            && um_action != UM_ACTION_SHOW_ALL)
         {
             g_ptr_array_free (view, TRUE);
 
@@ -1690,7 +1975,12 @@ user_menu_ini_cmd (void)
                 g_array_append_val (saved, current);
                 g_ptr_array_add (path, g_strdup (entry->label));
                 current = 0;
+                pick_default = TRUE;
             }
+            else if (!user_menu_ini_entry_visible (entry))
+                message (D_ERROR, _ ("User menu"), "%s",
+                         _ ("The conditions of this entry do not hold here,\n"
+                            "so it is not run. F4 edits them."));
             else
             {
                 char *script;
@@ -1741,11 +2031,10 @@ user_menu_ini_cmd (void)
             {
                 int at;
 
-                um_label_fix (entries, new_entry);
+                user_menu_ini_label_fix (entries, new_entry);
                 at = entry != NULL ? um_index_of (entries, entry) + 1 : (int) entries->len;
                 g_ptr_array_insert (entries, at, new_entry);
-                um_level_save (entries, new_entry->level);
-                if (entry != NULL)
+                if (um_entries_save (&entries, new_entry->level) && entry != NULL)
                     current++;
                 break;
             }
@@ -1773,8 +2062,8 @@ user_menu_ini_cmd (void)
                 switch (um_entry_edit (entry, FALSE))
                 {
                 case UM_EDIT_OK:
-                    um_label_fix (entries, entry);
-                    um_level_save (entries, entry->level);
+                    user_menu_ini_label_fix (entries, entry);
+                    um_entries_save (&entries, entry->level);
                     break;
 
                 case UM_EDIT_FILE:
@@ -1799,7 +2088,7 @@ user_menu_ini_cmd (void)
                 menu_level_t level = entry->level;
 
                 um_remove_subtree (entries, entry);
-                um_level_save (entries, level);
+                um_entries_save (&entries, level);
             }
             break;
 
@@ -1821,12 +2110,17 @@ user_menu_ini_cmd (void)
 
                     g_ptr_array_index (entries, a) = neighbour;
                     g_ptr_array_index (entries, b) = entry;
-                    um_level_save (entries, entry->level);
-                    current = other;
+                    if (um_entries_save (&entries, entry->level))
+                        current = other;
                 }
             }
             break;
         }
+
+        case UM_ACTION_SHOW_ALL:
+            show_all = !show_all;
+            keep = entry;
+            break;
 
         case UM_ACTION_IMPORT:
             if (um_import_dialog ())

@@ -1438,15 +1438,34 @@ Shift-F4     a tételt tartalmazó fájl megnyitása
 Del          a tétel törlése
 Ctrl-Up      a tétel feljebb vitele
 Ctrl-Down    a tétel lejjebb vitele
+Alt-A        az itt elrejtett tételek is látszanak
 ```
 
-A tétel egy gyorsbillentyűből, egy feliratból és a parancsokból áll, és a
-párbeszédablak ennél többet nem kérdez: nincsenek benne feltételek és
-fájlmaszkok. A parancsokban ugyanazok a helyettesítések működnek, mint a régi
-menüben, a %f, a %s, a %{prompt} és a többi, amelyeket a
+A tétel egy gyorsbillentyűből, egy feliratból, a parancsokból és azokból a
+feltételekből áll, amelyek megmondják, hol látszik. A parancsokban ugyanazok
+a helyettesítések működnek, mint a régi menüben, a %f, a %s, a %{prompt} és a
+többi, amelyeket a
 [makróhelyettesítés](#macro-substitution)
 ír le. Két jelölőnégyzet mondja meg, mi legyen a kimenettel: a fájlnézőbe
 kerüljön-e, és a parancs a panel shellje nélkül fusson-e.
+
+A párbeszédablak "Show when" sora a tétel feltételeit mutatja, a Conditions
+gomb pedig egy párbeszédablakot nyit hozzájuk: az útvonal maszkjai, a
+fájltípusok, amelyekre a tétel vonatkozik (ha egy négyzet sincs
+bejelölve, bármelyik típus), csak futtatható fájlok, csak ha vannak kijelölt
+fájlok, a programok, amelyekre a parancsoknak szükségük van, a panel, amelyet
+a feltételek néznek, és hogy a menü ezen a tételen nyíljon-e meg: soha,
+mindig, vagy ha teljesülnek azok a feltételek, amelyeket a "When" melletti
+gomb nyit meg. Az a tétel, amelynek a feltételei nem teljesülnek, nincs a
+listában. A párbeszédablak egyszerre egy panelt mutat; a mindkét panelt
+néző feltételeket a fájlban lehet módosítani.
+
+Ha a "Regular expression" jelölőnégyzet be van jelölve, az útvonal mezője
+maszkok helyett reguláris kifejezést fogad; a fájlban ez a path~= kulcs.
+
+A menü címe megmondja, hány tétel van elrejtve az adott helyen. Az Alt-A
+ezeket is megmutatja, halványabb színnel: így szerkeszthetők,
+mozgathatók és törölhetők, de nem futtathatók.
 
 A felirat a helyettesítésekkel együtt látszik, így a "print %f" felirat a
 listában a kurzor alatti fájl nevével áll. Maga a fájl ettől nem változik, a
@@ -1469,8 +1488,121 @@ Szerkesztő gomb kilép a párbeszédablakból, és megnyitja a tételt tartalma
 fájlt, arra, amit ott könnyebb megírni.
 
 A tétel abba a fájlba íródik vissza, amelyikből jött, a lista sorrendje pedig
-a fájl sorrendje. A feltételek és a maszkok a régebbi alakhoz tartoznak: amit
-a párbeszédablak nem tud megmondani, azt a fájl igen, és a Shift-F4 megnyitja.
+a fájl sorrendje. Csak az íródik ki, ami megváltozott: a megjegyzések, az
+üres sorok és a menü által nem ismert kulcsok úgy maradnak, ahogy vannak, a
+tétel fölötti megjegyzés pedig együtt mozog a tétellel. A Shift-F4 megnyitja
+a fájlt.
+
+**A menü fájlja**
+
+A fájlt kézzel is lehet olvasni és módosítani. Minden tétel egy csoport:
+a felirata szögletes zárójelben, utána soronként egy kulcs=érték. Az egysoros
+érték úgy áll az "=" után, ahogy van, idézőjelek és escape-ek nélkül. A több
+sorból álló parancs két, három backtickből álló sor között áll, és a köztük
+levő szöveg pontosan úgy kerül be, ahogy le van írva:
+
+````
+# mc menu format 2
+
+[Open in vim]
+hotkey=v
+on=file
+command=vim %f
+
+[Pack the directory into tar.gz]
+hotkey=t
+on=dir
+command=```
+echo -n "Archive name [%f]: "
+read name
+name=${name:-%f}
+tar czf "$name.tar.gz" %f
+```
+````
+
+Ha maguk a parancsok is tartalmaznak három backtickből álló sort, a
+blokkot néggyel kell nyitni és zárni. A '#' jellel kezdődő sorok
+megjegyzések. Az első sor mindig "# mc menu format 2", és a menü csak az
+ilyen fájlokat olvassa be. Az ilyen sor nélküli fájlt, amelyet egy régebbi
+változat vagy valaki kézzel írt, a menü egyszer felajánlja átalakítani, a
+fájl korábbi alakját pedig menu.ini.old néven megtartja.
+
+Ezek a kulcsok mondják meg, hol látszik a tétel. Ha több kulcs van,
+mindegyiknek teljesülnie kell.
+
+*path=*
+: Annak az útvonalára vonatkozó maszkok, amin a kurzor áll, úgy olvasva,
+ahogy a git .gitignore fájlja olvassa a mintáit; lásd lent.
+
+*path~=*
+: Reguláris kifejezés maszkok helyett, az útvonal bármely részén keresve:
+path~=^/home/me/dev/. Ha nincs benne '/', csak az útvonal utolsó részét
+nézi: path~=^ttyS. Az elé írt '!' megfordítja. Az érték egyetlen
+kifejezés, így a ';' és a '|' is a része.
+
+*on=*
+: Amin a kurzor áll: file, dir, link, broken, char, block, fifo, socket,
+';' jellel elválasztva; ezek közül bármelyik elég. A könyvtárra mutató
+link könyvtárnak számít, a fájlra mutató link fájlnak, a link pedig
+bármelyik linkre illeszkedik. A '!' megfordítja a típust: az on=!dir
+bármi, ami nem könyvtár.
+
+*exec=true*
+: A kurzor alatti fájl nem könyvtár, és futtatható.
+
+*marked=true*
+: A panelen vannak kijelölt fájlok; marked=false esetén nincsenek.
+
+*needs=*
+: Programok, amelyeknek meg kell lenniük a PATH-ban, vagy teljes elérési
+utak; mindegyiknek.
+
+*other.path=, other.path~=, other.on=, other.exec=, other.marked=*
+: Ugyanez a másik panelre.
+
+*default=true*
+: A menü ezen a tételen nyílik meg, bárhol látszik is.
+
+*default.path=, default.on=, default.other.path=, ...*
+: A fenti kulcsok bármelyike "default." előtaggal: a menü ott nyílik meg
+ezen a tételen, ahol ezek a kulcsok teljesülnek, a tétel pedig továbbra is
+ott látszik, ahol a saját kulcsai mondják. A default.path=ttyS\* akkor
+nyitja meg a menüt ezen a tételen, ha a kurzor egy soros porton áll. Ahol
+több tétel is szóba jöhet, az első nyer.
+
+A path= maszkját a program annak az útvonalával veti össze, amin a kurzor
+áll, úgy, ahogy a .gitignore veti össze a mintáit:
+
+```
+*.c               .c fájl bárhol
+~/dev/mc/*.c      .c fájl közvetlenül a ~/dev/mc alatt
+~/dev/mc/**/*.c   .c fájl ott vagy bármely alkönyvtárban
+~/dev/mc/**       bármi ebben a fában
+**/src/*          bármi közvetlenül egy src könyvtárban
+build/            build nevű könyvtár
+*.c;!test_*.c     a C források, a tesztek nélkül
+```
+
+A '/' nélküli maszk csak az útvonal utolsó részével van összevetve,
+bármely szinten: a \*.1 teljesül egy rrr.1 könyvtáron, de a benne levő
+uu.2 fájlon nem. Az elején '/' jellel kezdődő maszk a teljes útvonallal
+van összevetve; a közepén '/' jelet tartalmazó a .mc6menu könyvtárától
+indul, a menu.ini fájlban pedig bármely szinten teljesül. A '\*' és a '?'
+nem lép át '/' jelen, a '\*\*' akárhány könyvtáron átlép, az [abc] és az
+[a-z] karakterhalmazok, a végén álló '/' könyvtárat kér, az elején álló
+'~' pedig a saját könyvtár. A .gitignore fájltól eltérően a könyvtáron
+teljesülő maszk semmit sem mond a benne levő fájlokról.
+
+A maszkok balról jobbra olvasódnak, és az utolsó illeszkedő dönt; az elé
+írt '!' jellel kezdődő maszk nemet mond. Ahol egy maszk sem illeszkedik,
+a tétel nem látszik: a !\*.o egymagában semmit sem mutat, a "bármi, csak
+tárgykódfájl nem" pedig \*;!\*.o. A ".." bejegyzésen az útvonal a panel
+könyvtára, utána "/..", így az adott könyvtár maszkja teljesül rajta, egy
+név maszkja pedig nem.
+
+Az olyan fájl, amelyet a menü nem tud beolvasni, nem üres menüként látszik:
+egy üzenet megnevezi a hibás sort, és felajánlja a fájl megnyitását, a menü
+pedig addig nem ír a fájlba, amíg a hibát ki nem javítják.
 
 **A kézzel írt menüfájl**
 
@@ -1488,8 +1620,19 @@ gomb bármikor kéri, arra a fájlra vagy egy kézzel megnevezettre. Ezután
 megmutatja, mi van a fájlban: a szóköz kijelöl egy tételt, az Ins kijelöli és
 lelép, a '\*' megfordítja az összes kijelölést, az Enter pedig a
 kijelölteket a ~/.config/mc6/menu.ini fájlba viszi, ahol már a
-párbeszédablakkal szerkeszthetők. A forrásfájl a helyén marad, a feltételek
-és a maszkok pedig elvesznek, mert a párbeszédablakban nincs helyük.
+párbeszédablakkal szerkeszthetők. A forrásfájl a helyén marad.
+
+A tétel fölötti feltételek a tétel kulcsai lesznek, ahol a kulcsok ki
+tudják fejezni őket: a "+ f \\.c$ | f \\.h$ & t r" feltételből
+path=\*.c;\*.h és on=file lesz, a reguláris kifejezésből pedig maszkok,
+ahol ugyanazokra a nevekre illeszkednek. Az "=" sorból, amely azt a tételt
+választotta ki, amelyen a menü megnyílik, ugyanígy default.\* kulcsok
+lesznek. Az a feltétel, amelyet a kulcsok nem tudnak kifejezni, például
+egy "&" utáni alternatíva, megjegyzésként marad a tétel fölött, és a
+behozatal megmondja, hány ilyen volt.
+
+Az a reguláris kifejezés, amelyet egyetlen maszk sem tud kifejezni,
+változatlanul a path~= kulcsba kerül.
 
 A menüfájl formátuma nagyon egyszerű. A sorok, amelyek bármivel
 kezdődhetnek, de a space, vagy a tab megkülönböztetett menübejegyzések

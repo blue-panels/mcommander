@@ -65,7 +65,7 @@ typedef struct
     char *anchor;      // the id the next heading is to get
     gboolean skip;     // the next section stays out of the help
     gboolean skipping;
-    gboolean code;     // inside a fenced block
+    size_t code;       // the length of the fence of the block we are in; 0 outside
     gboolean front;    // inside the front matter of a page
     gboolean term;     // the paragraph is the term of a definition
     gboolean notitle;  // the next heading is not to be printed
@@ -492,12 +492,15 @@ md_parse (md_ctx_t *ctx, const char *text)
         char *line = lines[i];
         int level;
 
-        if (ctx->code)
+        if (ctx->code != 0)
         {
-            if (strncmp (line, "```", 3) == 0)
+            // a fence no shorter than the one that opened the block closes it
+            const size_t n = strspn (line, "`");
+
+            if (n >= ctx->code && line[n + strspn (line + n, " \t")] == '\0')
             {
                 g_string_append_c (ctx->body, '\n');
-                ctx->code = FALSE;
+                ctx->code = 0;
             }
             else if (!ctx->skipping)
             {
@@ -573,7 +576,7 @@ md_parse (md_ctx_t *ctx, const char *text)
         if (strncmp (line, "```", 3) == 0)
         {
             md_flush (ctx);
-            ctx->code = TRUE;
+            ctx->code = strspn (line, "`");
             continue;
         }
 

@@ -181,6 +181,7 @@ listbox_draw (WListbox *l, gboolean focused)
         const char *text = "";
         gboolean is_sel;
         gboolean emphasis = FALSE;
+        gboolean dimmed = FALSE;
 
         is_sel = (pos == l->current && sel_line == -1);
         if (is_sel)
@@ -192,11 +193,12 @@ listbox_draw (WListbox *l, gboolean focused)
 
             text = e->text;
             emphasis = e->emphasis;
+            dimmed = e->dimmed;
             le = g_list_next (le);
             pos++;
         }
 
-        if (disabled)
+        if (disabled || (dimmed && !is_sel))
             tty_setcolor (CORE_DISABLED_COLOR);
         else if (emphasis)
             tty_setcolor (colors[is_sel ? DLG_COLOR_HOT_FOCUS : DLG_COLOR_HOT_NORMAL]);
@@ -789,6 +791,18 @@ listbox_set_emphasis (WListbox *l, int pos, gboolean emphasis)
 /* --------------------------------------------------------------------------------------------- */
 
 void
+listbox_set_dimmed (WListbox *l, int pos, gboolean dimmed)
+{
+    WLEntry *e;
+
+    e = listbox_get_nth_entry (l, pos);
+    if (e != NULL)
+        e->dimmed = dimmed;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
 listbox_search_stop (WListbox *l)
 {
     if (l->search == NULL)
@@ -1087,6 +1101,7 @@ listbox_add_item_take (WListbox *l, listbox_append_t pos, int hotkey, char *text
     entry->free_data = free_data;
     entry->hotkey = hotkey;
     entry->emphasis = FALSE;
+    entry->dimmed = FALSE;
 
     listbox_add_entry (l, entry, pos);
 

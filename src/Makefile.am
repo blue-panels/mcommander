@@ -114,6 +114,9 @@ libinternal_la_SOURCES = \
 	setup.c setup.h \
 	textconf.c textconf.h \
 	usermenu.c usermenu.h \
+	usermenu_cond.c \
+	usermenu_file.c \
+	usermenu_import.c \
 	usermenu_ini.c usermenu_ini.h \
 	util.c util.h
 
