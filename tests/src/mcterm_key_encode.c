@@ -110,7 +110,7 @@ START_TEST (test_unknown_function_key_has_no_builtin_fallback)
     init_mcterm_key_table ();
 
     memset (buf, 0, sizeof (buf));
-    len = mcterm_encode_key_xterm (KEY_F (7), buf, sizeof (buf), FALSE);
+    len = mcterm_encode_key_xterm (KEY_F (17), buf, sizeof (buf), FALSE);
     ck_assert_uint_eq (len, 0);
 }
 END_TEST
@@ -125,6 +125,33 @@ START_TEST (test_application_cursor_plain_arrows)
     assert_encoded (KEY_DOWN, TRUE, "\\eOB");
     assert_encoded (KEY_RIGHT, TRUE, "\\eOC");
     assert_encoded (KEY_LEFT, TRUE, "\\eOD");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_xterm_keys_ignore_encoding_map)
+{
+    mc_config_t *cfg;
+
+    cfg = mc_config_init (NULL, FALSE);
+    mc_config_set_string (cfg, "terminal:xterm", "home", "\\e[1~");
+    mc_config_set_string (cfg, "terminal:xterm", "end", "\\e[4~");
+    mc_config_set_string (cfg, "terminal:xterm", "up", "\\eOA");
+    mc_config_set_string (cfg, "terminal:xterm", "f1", "\\e[11~");
+    mc_config_set_string (cfg, "terminal:xterm", "f7", "\\e[99~");
+    mcterm_key_table_init (NULL, cfg);
+    mc_config_deinit (cfg);
+
+    assert_encoded (KEY_HOME, FALSE, "\\e[H");
+    assert_encoded (KEY_END, FALSE, "\\e[F");
+    assert_encoded (KEY_UP, FALSE, "\\e[A");
+    assert_encoded (KEY_HOME, TRUE, "\\eOH");
+    assert_encoded (KEY_END, TRUE, "\\eOF");
+    assert_encoded (KEY_DC, TRUE, "\\e[3~");
+    assert_encoded (KEY_F (1), FALSE, "\\eOP");
+    assert_encoded (KEY_F (7), FALSE, "\\e[18~");
+    assert_encoded (KEY_F (0), FALSE, "\\e[21~");
 }
 END_TEST
 
@@ -321,6 +348,7 @@ main (void)
     tcase_add_test (tc_core, test_alt_function_key_uses_encoding_map);
     tcase_add_test (tc_core, test_unknown_function_key_has_no_builtin_fallback);
     tcase_add_test (tc_core, test_application_cursor_plain_arrows);
+    tcase_add_test (tc_core, test_xterm_keys_ignore_encoding_map);
     tcase_add_test (tc_core, test_enter_maps_to_cr);
     tcase_add_test (tc_core, test_backspace_maps_to_del);
     tcase_add_test (tc_core, test_utf8_bytes_pass_through);

@@ -45,6 +45,27 @@
 
 static GHashTable *mcterm_enc_map = NULL;
 
+/* What xterm sends for the keys it has one sequence for. The [terminal:xterm] lists are what
+   outer terminals may send, and the user's own ini adds learned keys to them. */
+static const struct
+{
+    int key;
+    const char *normal;
+    const char *app;  // with the cursor keys in application mode
+} xterm_keys[] = {
+    { KEY_UP, "\x1b[A", "\x1bOA" },    { KEY_DOWN, "\x1b[B", "\x1bOB" },
+    { KEY_RIGHT, "\x1b[C", "\x1bOC" }, { KEY_LEFT, "\x1b[D", "\x1bOD" },
+    { KEY_HOME, "\x1b[H", "\x1bOH" },  { KEY_END, "\x1b[F", "\x1bOF" },
+    { KEY_IC, "\x1b[2~", NULL },       { KEY_DC, "\x1b[3~", NULL },
+    { KEY_PPAGE, "\x1b[5~", NULL },    { KEY_NPAGE, "\x1b[6~", NULL },
+    { KEY_F (1), "\x1bOP", NULL },     { KEY_F (2), "\x1bOQ", NULL },
+    { KEY_F (3), "\x1bOR", NULL },     { KEY_F (4), "\x1bOS", NULL },
+    { KEY_F (5), "\x1b[15~", NULL },   { KEY_F (6), "\x1b[17~", NULL },
+    { KEY_F (7), "\x1b[18~", NULL },   { KEY_F (8), "\x1b[19~", NULL },
+    { KEY_F (9), "\x1b[20~", NULL },   { KEY_F (10), "\x1b[21~", NULL },
+    { KEY_F (11), "\x1b[23~", NULL },  { KEY_F (12), "\x1b[24~", NULL },
+};
+
 /*** file scope functions ************************************************************************/
 
 static void
@@ -305,24 +326,17 @@ mcterm_encode_key_xterm (int key, unsigned char *buf, size_t bufsz, gboolean app
         return 1;
     }
 
-    if ((key & KEY_M_MASK) == 0 && app_cursor)
-        switch (key)
-        {
-        case KEY_END:
-            return mcterm_copy_seq (buf, bufsz, "\x1bOF");
-        case KEY_UP:
-            return mcterm_copy_seq (buf, bufsz, "\x1bOA");
-        case KEY_DOWN:
-            return mcterm_copy_seq (buf, bufsz, "\x1bOB");
-        case KEY_LEFT:
-            return mcterm_copy_seq (buf, bufsz, "\x1bOD");
-        case KEY_RIGHT:
-            return mcterm_copy_seq (buf, bufsz, "\x1bOC");
-        case KEY_HOME:
-            return mcterm_copy_seq (buf, bufsz, "\x1bOH");
-        default:
-            break;
-        }
+    {
+        const int plain = tty_normalize_keycode (key);
+        size_t i;
+
+        for (i = 0; i < G_N_ELEMENTS (xterm_keys); i++)
+            if (xterm_keys[i].key == plain)
+                return mcterm_copy_seq (buf, bufsz,
+                                        app_cursor && xterm_keys[i].app != NULL
+                                            ? xterm_keys[i].app
+                                            : xterm_keys[i].normal);
+    }
 
     {
         size_t n = mcterm_copy_enc_seq (key, buf, bufsz);
