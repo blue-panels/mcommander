@@ -416,6 +416,21 @@ panel.
 : to tag files you may use the Insert key (the kich1 terminfo sequence).
 To untag files, just retag a tagged file.
 
+**Shift-Up, Shift-Down**
+: tag the file under the selection bar, or untag a tagged one, and move the
+bar to the next file up or down.
+
+**Shift-PgUp, Shift-PgDn, Shift-Home, Shift-End**
+: move the selection bar the way the key does without Shift and tag the
+files it passes over.  When the file a run of these keys starts on is
+tagged, they untag them instead.
+
+**Shift-Left, Shift-Right**
+: do the same for a column of files up or down.
+
+While the command line holds text, Shift-Left, Shift-Right, Shift-Home and
+Shift-End are the command line's and do not tag files.
+
 **Alt-e**
 : to change charset of panel you may use Alt-e (M-e).
 Recoding is made from selected codepage into system codepage. To

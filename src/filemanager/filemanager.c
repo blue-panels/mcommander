@@ -1785,6 +1785,25 @@ exec_cmdline_enter (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+midnight_cmdline_marks_with (int key)
+{
+    switch (widget_lookup_key (WIDGET (cmdline), key))
+    {
+    case CK_MarkLeft:
+    case CK_MarkRight:
+    case CK_MarkToWordBegin:
+    case CK_MarkToWordEnd:
+    case CK_MarkToHome:
+    case CK_MarkToEnd:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static cb_ret_t
 midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data)
 {
@@ -1845,6 +1864,15 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
         if (mcterm_res != MSG_NOT_HANDLED)
             return mcterm_res;
     }
+
+        // With text on the command line, the keys it marks text with stay its own, not the panel's.
+        if (!w->ext_mode && command_prompt && !is_cmdline_mute ()
+            && !mcterm_overlay_cmdline_is_empty () && midnight_cmdline_marks_with (parm))
+        {
+            cb_ret_t v = mcterm_overlay_cmdline_key (parm);
+
+            return v != MSG_NOT_HANDLED ? v : send_message (cmdline, NULL, MSG_KEY, parm, NULL);
+        }
 
         if (w->ext_mode)
         {

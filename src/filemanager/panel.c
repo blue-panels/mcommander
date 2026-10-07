@@ -3306,6 +3306,32 @@ mark_file_left (WPanel *panel)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Move the cursor and mark, the way the file under it went, every file it passed over. */
+static void
+mark_file_moving (WPanel *panel, void (*step) (WPanel *panel))
+{
+    const file_entry_t *fe;
+    int from, i;
+
+    fe = panel_current_entry (panel);
+    if (fe == NULL)
+        return;
+
+    if (state_mark < 0)
+        state_mark = fe->f.marked ? 0 : 1;
+
+    from = panel->current;
+    step (panel);
+
+    for (i = MIN (from, panel->current); i <= MAX (from, panel->current); i++)
+        do_file_mark (panel, i, state_mark);
+
+    paint_dir (panel);
+    select_item (panel);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mc_search_t *
 panel_select_unselect_files_dialog (select_flags_t *flags, const char *title,
                                     const char *history_name, const char *help_section, char **str)
@@ -5054,18 +5080,16 @@ panel_execute_cmd (WPanel *panel, long command)
 
     switch (command)
     {
-    case CK_Up:
-    case CK_Down:
-    case CK_Left:
-    case CK_Right:
-    case CK_Bottom:
-    case CK_Top:
-    case CK_PageDown:
-    case CK_PageUp:
-        // reset state of marks flag
-        state_mark = -1;
+    // A run of these keys tags or untags the way the file it started on went.
+    case CK_MarkLeft:
+    case CK_MarkRight:
+    case CK_MarkPageUp:
+    case CK_MarkPageDown:
+    case CK_MarkToHome:
+    case CK_MarkToEnd:
         break;
     default:
+        state_mark = -1;
         break;
     }
 
@@ -5174,6 +5198,18 @@ panel_execute_cmd (WPanel *panel, long command)
         break;
     case CK_MarkRight:
         mark_file_right (panel);
+        break;
+    case CK_MarkPageUp:
+        mark_file_moving (panel, prev_page);
+        break;
+    case CK_MarkPageDown:
+        mark_file_moving (panel, next_page);
+        break;
+    case CK_MarkToHome:
+        mark_file_moving (panel, move_home);
+        break;
+    case CK_MarkToEnd:
+        mark_file_moving (panel, move_end);
         break;
     case CK_CdParentSmart:
         res = force_maybe_cd (panel);
