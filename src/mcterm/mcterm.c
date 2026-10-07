@@ -3387,6 +3387,14 @@ mcterm_key_command (const WMcTerm *t, int key)
          * the command line owns text input. */
         return command;
 
+    case CK_MarkUp:
+    case CK_MarkDown:
+        // Typed at the command line, they move the view a row, the way they do in xterm.
+        if (t->typing_elsewhere && t->scroll_allowed
+            && !widget_get_state (CONST_WIDGET (t), WST_FOCUSED))
+            return command == CK_MarkUp ? CK_ScrollUp : CK_ScrollDown;
+        return widget_get_state (CONST_WIDGET (t), WST_FOCUSED) ? command : CK_IgnoreKey;
+
     case CK_Store:
     case CK_MarkAll:
     case CK_FilterWord:

@@ -416,6 +416,21 @@ panel.
 : to tag files you may use the Insert key (the kich1 terminfo sequence).
 To untag files, just retag a tagged file.
 
+**Shift-Up, Shift-Down**
+: tag the file under the selection bar, or untag a tagged one, and move the
+bar to the next file up or down.
+
+**Shift-PgUp, Shift-PgDn, Shift-Home, Shift-End**
+: move the selection bar the way the key does without Shift and tag the
+files it passes over.  When the file a run of these keys starts on is
+tagged, they untag them instead.
+
+**Shift-Left, Shift-Right**
+: do the same for a column of files up or down.
+
+While the command line holds text, Shift-Left, Shift-Right, Shift-Home and
+Shift-End are the command line's and do not tag files.
+
 **Alt-e**
 : to change charset of panel you may use Alt-e (M-e).
 Recoding is made from selected codepage into system codepage. To
@@ -2716,10 +2731,17 @@ Behind the panels the terminal keeps a scrollback of everything the shell
 has printed, and while no panel is on screen it can be read, marked and
 cleared.  The cursor keys walk the output and the shifted cursor keys mark
 it, both while the terminal itself holds the focus; the keys that only move
-the view work whoever is typing.  Every key not named below is typed into
-the shell.
+the view work whoever is typing.  At the command line Shift-Up and
+Shift-Down move the view a row, Ctrl-Up and Ctrl-Down recall the history
+there, and the other shifted keys of the command line do nothing: the shell
+has no mark.  Every key not named below is typed into the shell.
 
 ```
+PgUp, PgDn     move the view a page
+Ctrl-Up        move the view a row up
+Ctrl-Down      move the view a row down
+Ctrl-Home      go to the oldest row
+Ctrl-End       go back to the newest row
 Ctrl-Insert    copy the marked output to the clipboard
 Ctrl-Shift-u   take the mark back
 Alt-s          search the output for what is typed next

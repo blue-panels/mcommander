@@ -147,8 +147,8 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC_FLAGS (MarkDown, N_ ("Select down"), PANEL_FILTER_SELECTION),
     ADD_KEYMAP_NAME_DESC (MarkToWordBegin, N_ ("Select to word start")),
     ADD_KEYMAP_NAME_DESC (MarkToWordEnd, N_ ("Select to word end")),
-    ADD_KEYMAP_NAME_DESC (MarkToHome, N_ ("Select to line start")),
-    ADD_KEYMAP_NAME_DESC (MarkToEnd, N_ ("Select to line end")),
+    ADD_KEYMAP_NAME_DESC_FLAGS (MarkToHome, N_ ("Select to line start"), PANEL_FILTER_SELECTION),
+    ADD_KEYMAP_NAME_DESC_FLAGS (MarkToEnd, N_ ("Select to line end"), PANEL_FILTER_SELECTION),
     ADD_KEYMAP_NAME_DESC (ToggleNavigation, N_ ("Toggle navigate/browse mode")),
     ADD_KEYMAP_NAME_DESC (Sort, N_ ("Sort order...")),
     ADD_KEYMAP_NAME_DESC (Options, N_ ("General options")),
@@ -284,8 +284,8 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (ScrollUp, N_ ("Scroll up")),
     ADD_KEYMAP_NAME_DESC (ScrollDown, N_ ("Scroll down")),
     ADD_KEYMAP_NAME_DESC (Unmark, N_ ("Deselect all")),
-    ADD_KEYMAP_NAME_DESC (MarkPageUp, N_ ("Select page up")),
-    ADD_KEYMAP_NAME_DESC (MarkPageDown, N_ ("Select page down")),
+    ADD_KEYMAP_NAME_DESC_FLAGS (MarkPageUp, N_ ("Select page up"), PANEL_FILTER_SELECTION),
+    ADD_KEYMAP_NAME_DESC_FLAGS (MarkPageDown, N_ ("Select page down"), PANEL_FILTER_SELECTION),
 
 #ifdef USE_INTERNAL_EDIT
     ADD_KEYMAP_NAME_DESC (Close, N_ ("Close editor")),

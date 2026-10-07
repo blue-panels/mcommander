@@ -135,6 +135,7 @@ the remote host.
 | `01-filter`     | the quick filter, Ctrl-G, quick cd in the panel, the find dialog |
 | `02-permissions`| files for a person to look at with Permission colors on: a captured screen carries no colour |
 | `03-plugin-connect` | an ftp or sftp connection that does not come up: a refused login, a host that is not there |
+| `04-mark`       | tagging files: Insert, Ctrl-T, Shift with the arrows, PgUp, PgDn, Home and End, a run of them, under the quick filter, with text on the command line |
 
 ### fileops
 
