@@ -2716,10 +2716,17 @@ Behind the panels the terminal keeps a scrollback of everything the shell
 has printed, and while no panel is on screen it can be read, marked and
 cleared.  The cursor keys walk the output and the shifted cursor keys mark
 it, both while the terminal itself holds the focus; the keys that only move
-the view work whoever is typing.  Every key not named below is typed into
-the shell.
+the view work whoever is typing.  At the command line Shift-Up and
+Shift-Down move the view a row, Ctrl-Up and Ctrl-Down recall the history
+there, and the other shifted keys of the command line do nothing: the shell
+has no mark.  Every key not named below is typed into the shell.
 
 ```
+PgUp, PgDn     move the view a page
+Ctrl-Up        move the view a row up
+Ctrl-Down      move the view a row down
+Ctrl-Home      go to the oldest row
+Ctrl-End       go back to the newest row
 Ctrl-Insert    copy the marked output to the clipboard
 Ctrl-Shift-u   take the mark back
 Alt-s          search the output for what is typed next

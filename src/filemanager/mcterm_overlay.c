@@ -268,14 +268,19 @@ mcterm_overlay_terminal_focused (void)
 /* What the command line's own keymap makes of the key, as the key the shell's line editor takes
    for the same thing. With the panels up the plain arrows are theirs, so mc's [input] map spells
    "one left" as Alt-Left, say - and the shell must be told "left", not "Alt-Left". A key the map
-   has no editing meaning for goes as it is. */
+   has no editing meaning for goes as it is. 0: the map has a meaning for a cursor or editing key
+   the shell has none for, marking say, and the shell would only print it. */
 static int
 mcterm_overlay_cmdline_shell_key (int parm)
 {
+    long command;
+
     if (cmdline == NULL)
         return parm;
 
-    switch (widget_lookup_key (WIDGET (cmdline), parm))
+    command = widget_lookup_key (WIDGET (cmdline), parm);
+
+    switch (command)
     {
     case CK_Left:
         return KEY_LEFT;
@@ -307,7 +312,7 @@ mcterm_overlay_cmdline_shell_key (int parm)
     case CK_Complete:
         return '\t';
     default:
-        return parm;
+        return (command != CK_IgnoreKey && (parm & ~KEY_M_MASK) > 0xFF) ? 0 : parm;
     }
 }
 
@@ -341,6 +346,9 @@ static void
 mcterm_overlay_send_cmdline_key (int parm)
 {
     const int key = mcterm_overlay_cmdline_shell_key (parm);
+
+    if (key == 0)
+        return;
 
     if (!mcterm_overlay_shell_edits_line () && key > 0xFF && (key & ~0x1F) != KEY_M_CTRL
         && key != KEY_BACKSPACE)
@@ -753,12 +761,22 @@ mcterm_overlay_command_needs_panel_cursor (long command)
 /* --------------------------------------------------------------------------------------------- */
 
 /* What the terminal does to its own output, and what it hands out of it. None of it depends on
-   who holds the focus - the mark and the filter belong to the view, not to the typing. */
+   who holds the focus - the view, the mark and the filter are not the typing's. A key that moves
+   the view stays the command line's when its keymap has a meaning for it: Ctrl-Up recalls the
+   history there. */
 static gboolean
-mcterm_overlay_terminal_owns (long command)
+mcterm_overlay_terminal_owns (long command, int key)
 {
     switch (command)
     {
+    case CK_ScrollUp:
+    case CK_ScrollDown:
+    case CK_PageUp:
+    case CK_PageDown:
+    case CK_Top:
+    case CK_Bottom:
+        return (cmdline == NULL || mcterm_overlay_terminal_focused ()
+                || widget_lookup_key (WIDGET (cmdline), key) == CK_IgnoreKey);
     case CK_Store:
     case CK_MarkAll:
     case CK_FilterWord:
@@ -1835,10 +1853,11 @@ mcterm_overlay_handle_key (Widget *w, int parm, mcterm_overlay_command_cb_t exec
                 return mcterm_overlay_clip_command (clip_cmd);
         }
 
-        /* Clearing the output, marking it and cutting it down are the terminal's whoever is
-           typing: the line stays put, and the view is not dragged back to the end first. */
+        /* Moving the view, clearing the output, marking it and cutting it down are the terminal's
+           whoever is typing: the line stays put, and the view is not dragged back to the end
+           first. */
         if (!in_alt && !mcterm_overlay_any_panel_visible ()
-            && mcterm_overlay_terminal_owns (term_cmd))
+            && mcterm_overlay_terminal_owns (term_cmd, parm))
             return mcterm_overlay_key_to_terminal (w, parm);
 
         if (!in_alt && !mcterm_overlay_any_panel_visible () && term_cmd != CK_IgnoreKey
