@@ -65,4 +65,37 @@ cases.tsv	..,..,..,..,..,..,on wrong-password,Enter,type stillwrong,Enter	text: 
 cases.tsv	..,..,..,..,..,..,on wrong-password,Enter,type stillwrong,Enter	text: Authenticating with password...	under the steps that led to it	sftp
 EOF
 
+# Tagging files: every key that tags, one file or a run of them, on an empty
+# file each, so the panel says "0 B in N files" for exactly the files tagged.
+# They sit in a directory of their own: the cases.tsv beside them would be
+# tagged too, with a size of its own.
+mkdir -p 04-mark/files
+for n in $(seq -w 1 60); do
+    : > "04-mark/files/a$n"
+done
+
+cat > 04-mark/cases.tsv <<'EOF'
+file	key	expect	why	transports
+files	Enter,on a05,key IC	text: 0 B in 1 file	Insert tags the file under the bar	local
+files	Enter,on a05,key IC,key Up,key IC	no text: 0 B in	Insert on a tagged file untags it	local
+files	Enter,on a05,key C-t	text: 0 B in 1 file	Ctrl-T does what Insert does	local
+files	Enter,on a05,key S-Down,key S-Down,key S-Down	text: 0 B in 3 files	Shift-Down tags a file and moves on	local
+files	Enter,on a10,key S-Up,key S-Up,key S-Up	text: 0 B in 3 files	Shift-Up does it upwards	local
+files	Enter,on a05,key S-End	text: 0 B in 56 files	Shift-End tags down to the last file	local
+files	Enter,on a10,key S-Home	text: 0 B in 10 files	Shift-Home tags up to the first one	local
+files	Enter,on a01,key S-NPage	text: 0 B in 31 files	Shift-PgDn tags as far as PgDn goes	local
+files	Enter,on a60,key S-PPage	text: 0 B in 31 files	Shift-PgUp tags as far as PgUp goes	local
+files	Enter,on a01,key S-Right	text: 0 B in 32 files	Shift-Right tags a column down	local
+files	Enter,on a60,key S-Left	text: 0 B in 32 files	Shift-Left tags a column up	local
+files	Enter,on a30,key S-End,key S-Home	text: 0 B in 60 files	a run of these keys goes on tagging, the way its first file went	local
+files	Enter,on a01,key S-End,key Up,key S-Home	text: 0 B in 1 file	a run that starts on a tagged file untags	local
+files	Enter,on a60,key S-Home,key IC,key S-End	no text: 0 B in	Insert ends a run: the next one starts on a tagged file and untags	local
+files	Enter,on a05,key Escape,key M-S,type a1,key S-End	text: 0 B in 10 files	under the quick filter only the files it shows are tagged	local
+files	Enter,on a05,key Escape,key M-S,type a1,key S-End	text: Filter: a1	and the filter stays on	local
+files	Enter,on a05,key Escape,key M-S,type a1,key End,key S-Home	text: 0 B in 10 files	the same upwards, from the last file it shows	local
+files	Enter,on a05,key Escape,type abc,key S-End,key S-Home,key S-Left,key S-Right	no text: 0 B in	with text on the command line these keys are the line's	local
+files	Enter,on a05,key Escape,type abc,key S-End	no text: [1;2F	and the shell does not print them	local
+files	Enter,on a05,key Escape,type abc,key S-Down	text: 0 B in 1 file	Shift-Down still tags, the line has no use for it	local
+EOF
+
 echo "panel cases in $dir"
