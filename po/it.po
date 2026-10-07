@@ -13,13 +13,14 @@
 # Yury V. Zaytsev <yury@shurup.com>, 2025
 # Anonymous <anonymous@noreply.codeberg.org>, 2026.
 # GitHub webhook <noreply-webhook-github@weblate.org>, 2026.
+# lapo <lapo@noreply.codeberg.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-09-25 22:53+0000\n"
-"Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
+"PO-Revision-Date: 2026-10-08 06:27+0000\n"
+"Last-Translator: lapo <lapo@noreply.codeberg.org>\n"
 "Language-Team: Italian <https://translate.codeberg.org/projects/mc6/mc6/it/>"
 "\n"
 "Language: it\n"
@@ -38,7 +39,7 @@ msgid "Warning: cannot load codepages list"
 msgstr "Attenzione: impossibile caricare l'elenco delle codepage"
 
 msgid "7-bit ASCII"
-msgstr "7-bit ASCII"
+msgstr "ASCII 7-bit"
 
 #, c-format
 msgid "Cannot translate from %s to %s"
@@ -73,27 +74,23 @@ msgstr ""
 msgid "Switch active panel"
 msgstr "Commuta &pannelli"
 
-#, fuzzy
-#| msgid "Page Up"
 msgid "Page left"
-msgstr "Pagina su"
+msgstr "Pagina sinistra"
 
 msgid "Page right"
-msgstr ""
+msgstr "Pagina destra"
 
 msgid "Half page up"
-msgstr ""
+msgstr "Sali di mezza pagina"
 
-#, fuzzy
-#| msgid "Page Down"
 msgid "Half page down"
-msgstr "Pagina giù"
+msgstr "Scendi di mezza pagina"
 
 msgid "Go to top"
-msgstr ""
+msgstr "Vai all'inizio"
 
 msgid "Go to bottom"
-msgstr ""
+msgstr "Vai alla fine"
 
 #, fuzzy
 #| msgid "&Toggle fullscreen"
@@ -118,7 +115,7 @@ msgid "Copy file(s)"
 msgstr "C&onfronta file"
 
 msgid "Move/rename file(s)"
-msgstr ""
+msgstr "Sposta/rinomina file"
 
 msgid "Delete"
 msgstr "Elimina"
@@ -3299,16 +3296,12 @@ msgstr "Errore nel file %s alla riga %d"
 msgid "Cannot fetch a local copy of %s"
 msgstr "Non posso ricevere una copia locale di %s"
 
-#, fuzzy
-#| msgid ""
-#| "Not an xterm or Linux console;\n"
-#| "the subshell cannot be toggled."
 msgid ""
 "Not an xterm or Linux console;\n"
 "the terminal cannot be shown."
 msgstr ""
-"Non è un xterm né una console Linux; \n"
-"la subshell non può essere commutata."
+"Non è xterm né una console Linux; \n"
+"il terminale non può essere mostrato."
 
 #, c-format
 msgid "Type 'exit' to return to the %s"
