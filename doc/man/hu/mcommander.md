@@ -2603,6 +2603,16 @@ vesz, ezeket is. Mindegyikük a billentyűkiosztás fájl
 **[mcterm]**
 szakaszában szerepel, és ott át is állítható.
 
+Ha a panelek mögötti shell kilép, az
+**exit**
+paranccsal vagy egy Ctrl-D-vel, amelyet maga olvas be, az M-Commander is
+kilép vele együtt. A parancssorban a Ctrl-D egy karaktert töröl, ahogy a
+látható paneleknél is; egy parancs, amely a bemenetét olvassa, például a
+**cat**,
+a bemenet végének veszi. Az mksh és a tcsh alatt, amelyeknek nincs
+M-Commander-féle parancssora, a Ctrl-D üres sorban kilépteti a shellt, és
+vele az M-Commandert is.
+
 Ha a shell promptjánál, a félretett panelek mögött, argumentumok nélkül azt
 gépeled, hogy
 **mcommander**,

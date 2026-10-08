@@ -46,6 +46,7 @@
 #include "src/keymap.h"
 #include "src/mcterm/mcterm.h"
 #include "src/mcterm/mcterm_cwd.h"
+#include "src/setup.h"  // quit
 
 #include "command.h"
 #include "wprompt.h"
@@ -656,6 +657,18 @@ mcterm_overlay_prompt_ready_cb (void *data)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The shell has gone, by exit or Ctrl-D: mc goes with it, as mc always went after its subshell. */
+static void
+mcterm_overlay_shell_exit_cb (void *data)
+{
+    (void) data;
+
+    if (quit == 0)
+        quiet_quit_cmd (FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 mcterm_overlay_after_redraw_cb (void *data)
 {
@@ -832,6 +845,7 @@ mcterm_overlay_create_terminal (void)
     mcterm_set_prompt_callback (mcterm_panel, mcterm_overlay_prompt_ready_cb, NULL);
     mcterm_set_busy_tick_callback (mcterm_panel, mcterm_overlay_busy_tick_cb, NULL);
     mcterm_set_after_redraw_callback (mcterm_panel, mcterm_overlay_after_redraw_cb, NULL);
+    mcterm_set_shell_exit_callback (mcterm_panel, mcterm_overlay_shell_exit_cb, NULL);
     mcterm_overlay_widget ()->mouse_handler = mcterm_overlay_mouse_handler;
     group_add_widget (GROUP (filemanager), mcterm_overlay_widget ());
     /* Stays hidden until the overlay is switched on, so a terminal created

@@ -2882,6 +2882,17 @@ klawisze, także te. Wszystkie są wymienione w sekcji
 pliku przypisań klawiszy i tam można je zmienić.
 
 .PP
+Gdy powłoka za panelami kończy pracę, przez
+\fBexit\fP
+albo przez Ctrl\-D, które sama odczytuje, M\-Commander kończy pracę razem z
+nią. W wierszu poleceń Ctrl\-D usuwa znak, tak jak przy widocznych panelach;
+polecenie, które czyta swoje wejście, na przykład
+\fBcat\fP,
+dostaje je jako koniec wejścia. W mksh i tcsh, które nie mają wiersza
+poleceń M\-Commandera, Ctrl\-D w pustym wierszu kończy powłokę, a z nią
+M\-Commander.
+
+.PP
 Jeśli przy zachęcie powłoki, za schowanymi panelami, wpiszesz
 \fBmcommander\fP
 bez argumentów, działający program pokaże swoje panele z powrotem, zamiast
