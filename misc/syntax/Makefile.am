@@ -38,6 +38,7 @@ SYNTAXFILES =			\
 	f90.syntax		\
 	filehighlight.syntax	\
 	fortran.syntax		\
+	gitcommit.syntax	\
 	glsl.syntax		\
 	go.syntax		\
 	haskell.syntax		\

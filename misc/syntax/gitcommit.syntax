@@ -1,0 +1,26 @@
+# The message of a git commit: COMMIT_EDITMSG, MERGE_MSG and TAG_EDITMSG.
+# The lines git leaves out are dimmed, the trailers stand out.
+
+context default
+    keyword linestart Signed-off-by: brightgreen
+    keyword linestart Co-authored-by: brightgreen
+    keyword linestart Co-Authored-By: brightgreen
+    keyword linestart Reviewed-by: brightgreen
+    keyword linestart Acked-by: brightgreen
+    keyword linestart Reported-by: brightgreen
+    keyword linestart Suggested-by: brightgreen
+    keyword linestart Tested-by: brightgreen
+    keyword linestart Fixes: brightgreen
+    keyword linestart Closes: brightgreen
+    keyword linestart Refs: brightgreen
+    keyword linestart Change-Id: brightgreen
+    keyword #\{0123456789\}\[0123456789\] brightcyan
+
+# what git leaves out of the message
+context linestart # \n brown
+    keyword modified: yellow
+    keyword new\sfile: brightgreen
+    keyword deleted: brightred
+    keyword renamed: yellow
+    keyword typechange: yellow
+    keyword both\smodified: brightred
