@@ -3048,6 +3048,17 @@ vesz, ezeket is. Mindegyikük a billentyűkiosztás fájl
 szakaszában szerepel, és ott át is állítható.
 
 .PP
+Ha a panelek mögötti shell kilép, az
+\fBexit\fP
+paranccsal vagy egy Ctrl\-D\-vel, amelyet maga olvas be, az M\-Commander is
+kilép vele együtt. A parancssorban a Ctrl\-D egy karaktert töröl, ahogy a
+látható paneleknél is; egy parancs, amely a bemenetét olvassa, például a
+\fBcat\fP,
+a bemenet végének veszi. Az mksh és a tcsh alatt, amelyeknek nincs
+M\-Commander\-féle parancssora, a Ctrl\-D üres sorban kilépteti a shellt, és
+vele az M\-Commandert is.
+
+.PP
 Ha a shell promptjánál, a félretett panelek mögött, argumentumok nélkül azt
 gépeled, hogy
 \fBmcommander\fP,

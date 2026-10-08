@@ -2694,6 +2694,16 @@ en la sección
 **[mcterm]**
 del archivo de asignación de teclas y allí se pueden redefinir.
 
+Cuando el shell que hay tras los paneles termina, con
+**exit**
+o con un Ctrl-D que lee el propio shell, M-Commander termina con él. En la
+línea de órdenes Ctrl-D borra un carácter, igual que con los paneles a la
+vista; una orden que lee su entrada, como
+**cat**,
+lo recibe como el final de la entrada. Con mksh y tcsh, que no tienen línea
+de órdenes de M-Commander, Ctrl-D en una línea vacía termina el shell, y
+M-Commander con él.
+
 Si en el indicador del shell, con los paneles ocultos, tecleamos
 **mcommander**
 sin argumentos, el M-Commander en marcha vuelve a mostrar sus paneles en vez

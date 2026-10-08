@@ -2435,6 +2435,16 @@ klawisze, także te. Wszystkie są wymienione w sekcji
 **[mcterm]**
 pliku przypisań klawiszy i tam można je zmienić.
 
+Gdy powłoka za panelami kończy pracę, przez
+**exit**
+albo przez Ctrl-D, które sama odczytuje, M-Commander kończy pracę razem z
+nią. W wierszu poleceń Ctrl-D usuwa znak, tak jak przy widocznych panelach;
+polecenie, które czyta swoje wejście, na przykład
+**cat**,
+dostaje je jako koniec wejścia. W mksh i tcsh, które nie mają wiersza
+poleceń M-Commandera, Ctrl-D w pustym wierszu kończy powłokę, a z nią
+M-Commander.
+
 Jeśli przy zachęcie powłoki, za schowanymi panelami, wpiszesz
 **mcommander**
 bez argumentów, działający program pokaże swoje panele z powrotem, zamiast

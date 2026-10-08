@@ -2579,6 +2579,16 @@ tutti i tasti, anche questi. Tutti sono elencati nella sezione
 **[mcterm]**
 del file delle associazioni e lì si possono ridefinire.
 
+Quando la shell dietro ai pannelli termina, con
+**exit**
+o con un Ctrl-D che legge essa stessa, M-Commander termina con lei. Nella
+riga di comando Ctrl-D cancella un carattere, come con i pannelli visibili;
+un comando che legge il suo input, come
+**cat**,
+lo riceve come fine dell'input. Con mksh e tcsh, che non hanno una riga di
+comando di M-Commander, Ctrl-D su una riga vuota termina la shell, e
+M-Commander con lei.
+
 Se al prompt della shell, dietro ai pannelli nascosti, si scrive
 **mcommander**
 senza argomenti, il programma già in esecuzione rimostra i suoi pannelli
