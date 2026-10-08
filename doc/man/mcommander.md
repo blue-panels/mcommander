@@ -2243,6 +2243,8 @@ terminal window title to the current working directory and updates it
 when necessary.  If your terminal emulator is broken and you see some
 incorrect output on startup and directory change, turn off this option.
 Enabled by default.
+While a command runs in the terminal behind the panels, the title starts
+with its name.
 
 *Show free space.*
 If enabled, free space and total space of current file system is shown

@@ -2083,6 +2083,8 @@ aktuális könyvtárra állítja, és szükség szerint frissíti. Ha a
 terminálemulátorod hibás, és induláskor vagy könyvtárváltáskor zavaros
 kimenetet látsz, kapcsold ki ezt a beállítást. Alapértelmezés szerint be van
 kapcsolva.
+Amíg a panelek mögötti terminálban egy parancs fut, a cím a nevével
+kezdődik.
 
 *Szabad hely mutatása.*
 Bekapcsolva az aktuális fájlrendszer szabad és teljes területe látszik a

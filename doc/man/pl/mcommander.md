@@ -1946,6 +1946,8 @@ W emulatorze terminala dla X11 program ustawia tytuł okna na bieżący katalog
 i uaktualnia go, kiedy trzeba. Jeśli twój emulator terminala jest zepsuty i
 przy starcie albo zmianie katalogu widać dziwne wyjście, wyłącz tę opcję.
 Domyślnie włączona.
+Dopóki w terminalu za panelami działa polecenie, tytuł zaczyna się od jego
+nazwy.
 
 *Pokaż wolne miejsce.*
 Przy włączonej opcji wolne i całkowite miejsce bieżącego systemu plików widać

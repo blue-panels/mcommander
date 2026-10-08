@@ -60,6 +60,9 @@ gboolean mcterm_overlay_exec_command (const char *cmd);
 gboolean mcterm_overlay_cmdline_is_empty (void);
 /* What is on it, wherever it is held; NULL when nothing. Caller frees. */
 char *mcterm_overlay_cmdline_text (void);
+/* The name of what runs in the terminal, for the window title; NULL at the prompt.
+   Caller frees. */
+char *mcterm_overlay_title_command (void);
 /* Panel view hooks for keys that are the command line's, called after mc's own keys. */
 cb_ret_t mcterm_overlay_cmdline_key (int parm);
 cb_ret_t mcterm_overlay_cmdline_enter (void);
