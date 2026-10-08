@@ -2569,6 +2569,8 @@ Podemos desactivar la opción de
 \fITitular las ventanas Xterm\fP
 si el emulador de terminal empleado falla y no se muestran o actualizan
 correctamente estos textos.
+Mientras una orden se ejecuta en el terminal tras los paneles, el título
+empieza por su nombre.
 
 .SS Paneles
 .PP

@@ -85,6 +85,8 @@ void use_dash (gboolean flag);  // Disable/Enable rotate_dash routines
 void rotate_dash (gboolean show);
 
 void update_xterm_title_path (void);
+/* The command in the terminal may have changed: write the title only when it reads differently. */
+void update_xterm_title_command (void);
 void update_terminal_cwd (void);
 
 void title_path_prepare (char **path, char **login);

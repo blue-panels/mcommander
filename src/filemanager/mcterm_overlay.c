@@ -183,6 +183,18 @@ mcterm_overlay_prompt_text (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+char *
+mcterm_overlay_title_command (void)
+{
+    if (!mcterm_overlay_live () || !mcterm_osc7_capable (mcterm_panel)
+        || mcterm_shell_at_prompt (mcterm_panel) || mcterm_initial_sync_pending)
+        return NULL;
+
+    return mcterm_running_command (mcterm_panel, MCTERM_COMMAND_LABEL_WIDTH);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 gboolean
 mcterm_overlay_pause_pending (void)
 {
@@ -551,7 +563,13 @@ mcterm_overlay_busy_tick_cb (void *data)
 {
     (void) data;
 
-    if (!command_prompt || mcterm_panel == NULL)
+    if (mcterm_panel == NULL)
+        return;
+
+    // What runs may change while it runs: a pipeline goes on, a job comes to the foreground.
+    update_xterm_title_command ();
+
+    if (!command_prompt)
         return;
 
     /* A full-screen program on screen paints its own display and drives its own redraws; the
@@ -596,6 +614,8 @@ mcterm_overlay_prompt_ready_cb (void *data)
 
     if (mcterm_panel == NULL)
         return;
+
+    update_xterm_title_command ();
 
     if (mcterm_exec_needs_panel_reload)
     {
@@ -2083,6 +2103,12 @@ char *
 mcterm_overlay_cmdline_text (void)
 {
     return input_is_empty (cmdline) ? NULL : g_strdup (input_get_ctext (cmdline));
+}
+
+char *
+mcterm_overlay_title_command (void)
+{
+    return NULL;
 }
 
 cb_ret_t

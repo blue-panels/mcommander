@@ -2062,6 +2062,8 @@ finestra alla directory corrente e lo aggiorna quando serve. Se l'emulatore
 di terminale è difettoso e all'avvio o al cambio di directory si vede
 un'uscita strana, disattivare questa opzione. Attiva come impostazione
 predefinita.
+Mentre un comando è in esecuzione nel terminale dietro ai pannelli, il
+titolo comincia con il suo nome.
 
 *Mostra lo spazio libero.*
 Se attiva, lo spazio libero e quello totale del filesystem corrente si vedono

@@ -2190,6 +2190,8 @@ Podemos desactivar la opción de
 *Titular las ventanas Xterm*
 si el emulador de terminal empleado falla y no se muestran o actualizan
 correctamente estos textos.
+Mientras una orden se ejecuta en el terminal tras los paneles, el título
+empieza por su nombre.
 
 ### Paneles <a id="panel-options"></a>
 

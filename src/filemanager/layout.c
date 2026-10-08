@@ -1479,29 +1479,67 @@ title_path_prepare (char **path, char **login)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/** Show current directory in the xterm title */
-void
-update_xterm_title_path (void)
+/* The title with the command that runs in front of it. With @changed_only, nothing is written
+   when it reads as it did: the busy tick asks for it many times a second. */
+static void
+xterm_title_write (gboolean changed_only)
 {
+    static char *last = NULL;
+
     if (mc_global.tty.xterm_flag && xterm_title)
     {
         char *p;
         char *path;
         char *login;
+        char *command;
 
         title_path_prepare (&path, &login);
 
-        p = g_strdup_printf ("mc [%s]:%s", login, path);
+        p = g_strdup_printf ("%s [%s]:%s", PACKAGE, login, path);
         g_free (login);
         g_free (path);
 
+        command = mcterm_overlay_title_command ();
+        if (command != NULL)
+        {
+            char *with_command = g_strdup_printf ("%s - %s", command, p);
+
+            g_free (command);
+            g_free (p);
+            p = with_command;
+        }
+
+        if (changed_only && last != NULL && strcmp (last, p) == 0)
+        {
+            g_free (p);
+            return;
+        }
+
         fprintf (stdout, ESC_STR "]0;%s" ESC_STR "\\", str_term_form (p));
-        g_free (p);
+        g_free (last);
+        last = p;
 
         if (!mc_global.tty.alternate_plus_minus)
             numeric_keypad_mode ();
         (void) fflush (stdout);
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** Show current directory in the xterm title */
+void
+update_xterm_title_path (void)
+{
+    xterm_title_write (FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+update_xterm_title_command (void)
+{
+    xterm_title_write (TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
