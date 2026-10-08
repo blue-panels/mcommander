@@ -373,3 +373,191 @@ mcterm_encode_key_xterm (int key, unsigned char *buf, size_t bufsz, gboolean app
 
     return 0;
 }
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Virtual key and shift state of a printable ASCII character on a US keyboard */
+static gboolean
+mcterm_far2l_ascii (int c, unsigned int *vk, gboolean *shift)
+{
+    static const char plain[] = "`-=[]\\;',./";
+    static const unsigned int plain_vk[] = { 0xC0, 0xBD, 0xBB, 0xDB, 0xDD, 0xDC,
+                                             0xBA, 0xDE, 0xBC, 0xBE, 0xBF };
+    static const char shifted[] = "~_+{}|:\"<>?";
+    static const char digits_shifted[] = ")!@#$%^&*(";
+    const char *p;
+
+    *shift = FALSE;
+    if (c >= 'a' && c <= 'z')
+        *vk = (unsigned int) (c - 'a' + 'A');
+    else if (c >= 'A' && c <= 'Z')
+    {
+        *vk = (unsigned int) c;
+        *shift = TRUE;
+    }
+    else if (c >= '0' && c <= '9')
+        *vk = (unsigned int) c;
+    else if (c == ' ')
+        *vk = 0x20;
+    else if (c > 0 && (p = strchr (digits_shifted, c)) != NULL)
+    {
+        *vk = (unsigned int) ('0' + (p - digits_shifted));
+        *shift = TRUE;
+    }
+    else if (c > 0 && (p = strchr (plain, c)) != NULL)
+        *vk = plain_vk[p - plain];
+    else if (c > 0 && (p = strchr (shifted, c)) != NULL)
+    {
+        *vk = plain_vk[p - shifted];
+        *shift = TRUE;
+    }
+    else
+        return FALSE;
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mcterm_far2l_put (unsigned char *out, unsigned int size, unsigned int value)
+{
+    unsigned int i;
+
+    for (i = 0; i < size; i++)
+        out[i] = (unsigned char) (value >> (8 * i));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+size_t
+mcterm_encode_key_far2l (int key, unsigned char *buf, size_t bufsz)
+{
+    /* Windows console key state bits */
+    enum
+    {
+        CS_LEFT_ALT = 0x02,
+        CS_LEFT_CTRL = 0x08,
+        CS_SHIFT = 0x10,
+        CS_ENHANCED = 0x100
+    };
+    const int base = key & ~KEY_M_MASK;
+    unsigned int vk = 0, uc = 0, cs = 0;
+    gboolean shift = FALSE;
+    size_t n = 0;
+    int down;
+
+    if ((key & KEY_M_SHIFT) != 0)
+        cs |= CS_SHIFT;
+    if ((key & KEY_M_ALT) != 0)
+        cs |= CS_LEFT_ALT;
+    if ((key & KEY_M_CTRL) != 0)
+        cs |= CS_LEFT_CTRL;
+
+    if (base == '\n' || base == '\r' || base == KEY_ENTER)
+        vk = uc = 13;
+    else if (base == '\t')
+        vk = uc = 9;
+    else if (base == 27)
+        vk = uc = 27;
+    else if (base == KEY_BACKSPACE || base == 8 || base == 127)
+        vk = uc = 8;
+    else if (base >= 1 && base <= 26)
+    {
+        // Ctrl-A to Ctrl-Z, which mc keeps as the control characters
+        vk = (unsigned int) (base - 1 + 'A');
+        uc = (unsigned int) base;
+        cs |= CS_LEFT_CTRL;
+    }
+    else if (base >= 28 && base <= 31)
+    {
+        static const unsigned int ctrl_vk[] = { 0xDC, 0xDD, '6', 0xBD };
+
+        vk = ctrl_vk[base - 28];
+        uc = (unsigned int) base;
+        cs |= CS_LEFT_CTRL;
+    }
+    else if (base >= 32 && base < 127 && mcterm_far2l_ascii (base, &vk, &shift))
+    {
+        uc = (unsigned int) base;
+        if (shift)
+            cs |= CS_SHIFT;
+    }
+    else if (base >= KEY_F (1) && base <= KEY_F (20))
+    {
+        /* F13 to F20 are Shift-F3 to Shift-F10 for mc; F11 and F12 are taken for the keys of
+           that name, though Shift-F1 and Shift-F2 come as the same codes */
+        const int f = base - KEY_F (1);
+
+        if (f < 12)
+            vk = 0x70 + (unsigned int) f;
+        else
+        {
+            vk = 0x70 + (unsigned int) (f - 10);
+            cs |= CS_SHIFT;
+        }
+    }
+    else
+    {
+        switch (base)
+        {
+        case KEY_LEFT:
+            vk = 0x25;
+            break;
+        case KEY_UP:
+            vk = 0x26;
+            break;
+        case KEY_RIGHT:
+            vk = 0x27;
+            break;
+        case KEY_DOWN:
+            vk = 0x28;
+            break;
+        case KEY_PPAGE:
+            vk = 0x21;
+            break;
+        case KEY_NPAGE:
+            vk = 0x22;
+            break;
+        case KEY_END:
+            vk = 0x23;
+            break;
+        case KEY_HOME:
+            vk = 0x24;
+            break;
+        case KEY_IC:
+            vk = 0x2D;
+            break;
+        case KEY_DC:
+            vk = 0x2E;
+            break;
+        default:
+            return 0;
+        }
+        cs |= CS_ENHANCED;
+    }
+
+    if (bufsz < 2 * 32)
+        return 0;
+
+    for (down = 1; down >= 0; down--)
+    {
+        unsigned char stack[16];
+        gchar *b64;
+
+        mcterm_far2l_put (stack, 2, 1);  // repeat count
+        mcterm_far2l_put (stack + 2, 2, vk);
+        mcterm_far2l_put (stack + 4, 2, 0);  // scan code
+        mcterm_far2l_put (stack + 6, 4, cs);
+        mcterm_far2l_put (stack + 10, 4, uc);
+        stack[14] = down != 0 ? 'K' : 'k';
+
+        b64 = g_base64_encode (stack, 15);
+        n += (size_t) g_snprintf ((char *) buf + n, bufsz - n, ESC_STR "_f2l:%s\a", b64);
+        g_free (b64);
+    }
+
+    return n;
+}
+
+/* --------------------------------------------------------------------------------------------- */
