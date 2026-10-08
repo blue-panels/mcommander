@@ -466,6 +466,25 @@ to tag files you may use the Insert key (the kich1 terminfo sequence).
 To untag files, just retag a tagged file.
 
 .TP
+\fBMaiusc\-Su, Maiusc\-Giù\fP
+marca il file sotto la barra di selezione, o smarca uno già marcato, e
+porta la barra al file successivo in su o in giù.
+
+.TP
+\fBMaiusc\-PagSu, Maiusc\-PagGiù, Maiusc\-Inizio, Maiusc\-Fine\fP
+spostano la barra di selezione come il tasto senza Maiusc e marcano i file
+su cui passa. Se il file da cui parte una serie di questi tasti è marcato,
+li smarcano.
+
+.TP
+\fBMaiusc\-Sinistra, Maiusc\-Destra\fP
+fanno lo stesso per una colonna di file in su o in giù.
+
+.PP
+Finché la riga di comando contiene testo, Maiusc\-Sinistra, Maiusc\-Destra,
+Maiusc\-Inizio e Maiusc\-Fine sono della riga di comando e non marcano file.
+
+.TP
 \fBM\-e\fP
 to change charset of panel you may use M\-e (Alt\-e).
 Recoding is made from selected codepage into system codepage. To
@@ -2953,9 +2972,17 @@ scritto, e finché i pannelli sono via lo si può leggere, selezionare e
 cancellare. I tasti freccia percorrono l'uscita e, con Maiusc, la
 selezionano, entrambe le cose finché è il terminale stesso a ricevere i
 tasti; i tasti che spostano soltanto la vista funzionano comunque, chiunque
-stia scrivendo. Ogni tasto non elencato qui sotto va alla shell.
+stia scrivendo. Nella riga di comando Maiusc\-Su e Maiusc\-Giù spostano la
+vista di una riga, Ctrl\-Su e Ctrl\-Giù vi scorrono la cronologia, e gli altri
+tasti con Maiusc della riga di comando non fanno nulla: la shell non ha
+selezione. Ogni tasto non elencato qui sotto va alla shell.
 
 .EX
+PagSu, PagGiù  sposta la vista di una pagina
+Ctrl\-Su        sposta la vista di una riga in su
+Ctrl\-Giù       sposta la vista di una riga in giù
+Ctrl\-Inizio    va alla riga più vecchia
+Ctrl\-Fine      torna alla riga più recente
 Ctrl\-Ins       copia la selezione negli appunti
 Ctrl\-Maiusc\-u  toglie la selezione
 Alt\-s          cerca nell'uscita ciò che si scrive dopo
