@@ -479,6 +479,25 @@ to tag files you may use the Insert key (the kich1 terminfo sequence).
 To untag files, just retag a tagged file.
 
 .TP
+\fBShift\-Up, Shift\-Down\fP
+kijelöli a kiválasztósáv alatti fájlt, vagy megszünteti egy kijelölt fájl
+kijelölését, és a sávot a következő fájlra viszi felfelé vagy lefelé.
+
+.TP
+\fBShift\-PgUp, Shift\-PgDn, Shift\-Home, Shift\-End\fP
+úgy mozgatják a kiválasztósávot, mint a Shift nélküli billentyű, és
+kijelölik a fájlokat, amelyeken áthalad. Ha a fájl, amelyen e billentyűk
+sorozata kezdődik, ki van jelölve, megszüntetik a kijelölésüket.
+
+.TP
+\fBShift\-Left, Shift\-Right\fP
+ugyanezt teszik egy oszlopnyi fájllal felfelé vagy lefelé.
+
+.PP
+Amíg a parancssorban szöveg van, a Shift\-Left, a Shift\-Right, a Shift\-Home
+és a Shift\-End a parancssoré, és nem jelöl ki fájlokat.
+
+.TP
 \fBM\-e\fP
 to change charset of panel you may use M\-e (Alt\-e).
 Recoding is made from selected codepage into system codepage. To
@@ -2978,11 +2997,19 @@ félbeszakított alkalmazás be nem fejeződik.
 A panelek mögött a terminál megőrzi mindazt, amit a shell kiírt, és amíg a
 panelek félre vannak téve, ez olvasható, kijelölhető és törölhető. A
 kurzorbillentyűk a kimenetben járnak, Shifttel pedig kijelölik, mindkettő
-addig, amíg maga a terminál kapja a billentyűket; azok a billentyűk,
-amelyek csak a képet mozgatják, attól függetlenül működnek, hogy ki gépel.
+addig, amíg maga a terminál kapja a billentyűket; azok a billentyűk, amelyek
+csak a képet mozgatják, attól függetlenül működnek, hogy ki gépel. A
+parancssorban a Shift\-Up és a Shift\-Down egy sorral mozgatja a képet, a
+Ctrl\-Up és a Ctrl\-Down ott az előzményeket lapozza, a parancssor többi
+Shiftes billentyűje pedig nem csinál semmit: a shellnek nincs kijelölése.
 Minden billentyű, amely nincs alább felsorolva, a shellhez jut.
 
 .EX
+PgUp, PgDn     a kép mozgatása egy oldallal
+Ctrl\-Up        a kép mozgatása egy sorral feljebb
+Ctrl\-Down      a kép mozgatása egy sorral lejjebb
+Ctrl\-Home      ugrás a legrégebbi sorra
+Ctrl\-End       vissza a legújabb sorra
 Ctrl\-Insert    a kijelölés másolása a vágólapra
 Ctrl\-Shift\-u   a kijelölés megszüntetése
 Alt\-s          keresés a kimenetben a most begépeltre

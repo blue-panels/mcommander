@@ -559,6 +559,25 @@ basta repetir la operación sobre los archivos y/o directorios antes
 marcados.
 
 .TP
+\fBMayús\-Arriba, Mayús\-Abajo\fP
+marca el archivo bajo la barra de selección, o desmarca uno marcado, y
+lleva la barra al archivo siguiente hacia arriba o hacia abajo.
+
+.TP
+\fBMayús\-RePág, Mayús\-AvPág, Mayús\-Inicio, Mayús\-Fin\fP
+mueven la barra de selección como la tecla sin Mayús y marcan los archivos
+por los que pasa. Si el archivo en que empieza una serie de estas teclas
+está marcado, los desmarcan.
+
+.TP
+\fBMayús\-Izquierda, Mayús\-Derecha\fP
+hacen lo mismo con una columna de archivos hacia arriba o hacia abajo.
+
+.PP
+Mientras la línea de órdenes tiene texto, Mayús\-Izquierda, Mayús\-Derecha,
+Mayús\-Inicio y Mayús\-Fin son de la línea de órdenes y no marcan archivos.
+
+.TP
 \fBAlt\-e\fP
 permite mostrar nombres en el panel con otra codificación de caracteres.
 Los nombres se convierten a la codificación del sistema para mostrarlos.
@@ -3080,10 +3099,18 @@ Detrás de los paneles, el terminal guarda todo lo que el shell ha escrito, y
 mientras los paneles están ocultos se puede leer, seleccionar y borrar. Las
 teclas del cursor recorren la salida y con Mayús la seleccionan, ambas cosas
 mientras el propio terminal tiene el foco; las teclas que solo mueven la
-vista funcionan sea quien sea el que teclea. Cualquier tecla no nombrada
-abajo va al shell.
+vista funcionan sea quien sea el que teclea. En la línea de órdenes
+Mayús\-Arriba y Mayús\-Abajo mueven la vista una fila, Ctrl\-Arriba y
+Ctrl\-Abajo recorren allí el historial, y las demás teclas con Mayús de la
+línea de órdenes no hacen nada: el shell no tiene selección. Cualquier tecla
+no nombrada abajo va al shell.
 
 .EX
+RePág, AvPág   mover la vista una página
+Ctrl\-Arriba    mover la vista una fila arriba
+Ctrl\-Abajo     mover la vista una fila abajo
+Ctrl\-Inicio    ir a la fila más antigua
+Ctrl\-Fin       volver a la fila más nueva
 Ctrl\-Ins       copiar lo seleccionado al portapapeles
 Ctrl\-Mayús\-u   quitar la selección
 Alt\-s          buscar en la salida lo que se teclee a continuación

@@ -389,6 +389,21 @@ po prostu zaznacz jakiś już zaznaczony.
 : to tag files you may use the Insert key (the kich1 terminfo sequence).
 To untag files, just retag a tagged file.
 
+**Shift-Up, Shift-Down**
+: zaznacza plik pod paskiem wyboru albo odznacza zaznaczony i przesuwa pasek
+na następny plik w górę lub w dół.
+
+**Shift-PgUp, Shift-PgDn, Shift-Home, Shift-End**
+: przesuwają pasek wyboru tak jak klawisz bez Shift i zaznaczają pliki,
+przez które przechodzi. Jeśli plik, od którego zaczyna się seria tych
+klawiszy, jest zaznaczony, odznaczają je.
+
+**Shift-Left, Shift-Right**
+: robią to samo dla kolumny plików w górę lub w dół.
+
+Dopóki w wierszu poleceń jest tekst, Shift-Left, Shift-Right, Shift-Home i
+Shift-End należą do niego i nie zaznaczają plików.
+
 **M-e**
 : to change charset of panel you may use M-e (Alt-e).
 Recoding is made from selected codepage into system codepage. To
@@ -2376,10 +2391,17 @@ Za panelami terminal przechowuje wszystko, co powłoka wypisała, i dopóki
 panele są schowane, można to czytać, zaznaczać i czyścić. Strzałki chodzą po
 wyjściu, a te same z Shiftem je zaznaczają, jedno i drugie dopóki sam
 terminal dostaje klawisze; klawisze, które tylko przesuwają widok, działają
-niezależnie od tego, kto pisze. Każdy klawisz nie wymieniony poniżej trafia
-do powłoki.
+niezależnie od tego, kto pisze. W wierszu poleceń Shift-Up i Shift-Down
+przesuwają widok o wiersz, Ctrl-Up i Ctrl-Down przeglądają tam historię, a
+pozostałe klawisze z Shiftem nic nie robią: powłoka nie ma zaznaczenia.
+Każdy klawisz nie wymieniony poniżej trafia do powłoki.
 
 ```
+PgUp, PgDn     przesuwa widok o stronę
+Ctrl-Up        przesuwa widok o wiersz w górę
+Ctrl-Down      przesuwa widok o wiersz w dół
+Ctrl-Home      idzie do najstarszego wiersza
+Ctrl-End       wraca do najnowszego wiersza
 Ctrl-Insert    kopiuje zaznaczenie do schowka
 Ctrl-Shift-u   zdejmuje zaznaczenie
 Alt-s          szuka w wyjściu tego, co wpiszesz dalej
