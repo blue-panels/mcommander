@@ -1893,7 +1893,18 @@ mcterm_overlay_handle_key (Widget *w, int parm, mcterm_overlay_command_cb_t exec
         }
 
         if (in_alt || !at_prompt)
-            return mcterm_overlay_key_to_terminal (w, parm);
+        {
+            const cb_ret_t r = mcterm_overlay_key_to_terminal (w, parm);
+
+            /* A running program has the keys. One the terminal cannot send it is dropped: the
+               command line is not what is typed into now. */
+            if (r == MSG_NOT_HANDLED
+                && (in_alt
+                    || (mcterm_osc7_capable (mcterm_panel)
+                        && !mcterm_shell_at_prompt (mcterm_panel))))
+                return MSG_HANDLED;
+            return r;
+        }
     }
 
     // At the shell's prompt the command line is its own: hand it the key to edit and recall with.

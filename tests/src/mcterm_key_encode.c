@@ -178,6 +178,11 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_shift_tab_is_back_tab) { assert_encoded (KEY_M_SHIFT | '\t', FALSE, "\\e[Z"); }
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_backspace_maps_to_del)
 {
     unsigned char buf[4];
@@ -350,6 +355,7 @@ main (void)
     tcase_add_test (tc_core, test_application_cursor_plain_arrows);
     tcase_add_test (tc_core, test_xterm_keys_ignore_encoding_map);
     tcase_add_test (tc_core, test_enter_maps_to_cr);
+    tcase_add_test (tc_core, test_shift_tab_is_back_tab);
     tcase_add_test (tc_core, test_backspace_maps_to_del);
     tcase_add_test (tc_core, test_utf8_bytes_pass_through);
     tcase_add_test (tc_core, test_alt_ascii_uses_esc_prefix);
