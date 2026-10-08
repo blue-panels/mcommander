@@ -77,6 +77,8 @@ guint mcterm_busy_phase (const WMcTerm *t);
 void mcterm_set_busy_tick_callback (WMcTerm *t, void (*cb) (void *), void *data);
 void mcterm_set_prompt_callback (WMcTerm *t, void (*cb) (void *), void *data);
 void mcterm_set_after_redraw_callback (WMcTerm *t, void (*cb) (void *), void *data);
+// Called once the shell has gone, unless it could not be started at all.
+void mcterm_set_shell_exit_callback (WMcTerm *t, void (*cb) (void *), void *data);
 gboolean mcterm_osc7_capable (const WMcTerm *t);
 int mcterm_cursor_col (const WMcTerm *t);
 /* At a prompt the widget leaves the shell's row to the host: draw it with this. */
@@ -250,6 +252,13 @@ mcterm_set_prompt_callback (WMcTerm *t, void (*cb) (void *), void *data)
 }
 static inline void
 mcterm_set_after_redraw_callback (WMcTerm *t, void (*cb) (void *), void *data)
+{
+    (void) t;
+    (void) cb;
+    (void) data;
+}
+static inline void
+mcterm_set_shell_exit_callback (WMcTerm *t, void (*cb) (void *), void *data)
 {
     (void) t;
     (void) cb;

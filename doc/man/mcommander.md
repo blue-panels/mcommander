@@ -2798,6 +2798,14 @@ takes every key itself, those included.  All of them are listed in the
 **[mcterm]**
 section of the keymap file and can be redefined there.
 
+When the shell behind the panels ends, by
+**exit**
+or by a Ctrl-D the shell reads itself, M-Commander quits with it.  At the
+command line Ctrl-D deletes a character, as it does with the panels up; a
+command that reads its input, such as
+**cat**,
+gets it as the end of the input.
+
 If you type
 **mcommander**
 without arguments at the shell prompt behind the hidden panels, the running

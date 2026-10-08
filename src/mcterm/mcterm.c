@@ -157,6 +157,10 @@ struct WMcTerm
     void *on_prompt_ready_data;
     void (*on_after_redraw) (void *data);
     void *on_after_redraw_data;
+    void (*on_shell_exit) (void *data);
+    void *on_shell_exit_data;
+    // The shell has written something: it did run, and its leaving is a quit, not a failure.
+    gboolean shell_spoke;
     gboolean pending_internal_sync;
     gboolean waiting_for_initial_osc7;
     // What zsh was started with, and by when it must say it read the startup files.
@@ -392,6 +396,8 @@ mcterm_pty_ready_cb (int fd, void *info)
         ssize_t i;
         int history_before = mcview_vterm_history_len (t->vterm);
 
+        t->shell_spoke = TRUE;
+
         for (i = 0; i < n; i++)
         {
             vterm_event_t ev;
@@ -471,6 +477,16 @@ mcterm_pty_ready_cb (int fd, void *info)
             if (t->on_after_redraw != NULL)
                 t->on_after_redraw (t->on_after_redraw_data);
             tty_refresh ();
+        }
+
+        // A shell that could not be started stays on screen with what it said about it.
+        if (t->on_shell_exit != NULL && t->shell_spoke
+            && !(t->child_pid == -1 && WIFEXITED (t->child_exit_status)
+                 && WEXITSTATUS (t->child_exit_status) == 127))
+        {
+            t->on_shell_exit (t->on_shell_exit_data);
+            // Out of the wait for a key, for the dialog loop to see it was closed.
+            return 1;
         }
     }
 
@@ -3790,6 +3806,17 @@ mcterm_set_after_redraw_callback (WMcTerm *t, void (*cb) (void *), void *data)
         return;
     t->on_after_redraw = cb;
     t->on_after_redraw_data = data;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mcterm_set_shell_exit_callback (WMcTerm *t, void (*cb) (void *), void *data)
+{
+    if (t == NULL)
+        return;
+    t->on_shell_exit = cb;
+    t->on_shell_exit_data = data;
 }
 
 /* --------------------------------------------------------------------------------------------- */
