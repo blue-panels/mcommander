@@ -81,6 +81,13 @@ static enum ruler_type { RULER_NONE, RULER_TOP, RULER_BOTTOM } ruler = RULER_NON
 static void
 mcview_set_buttonbar (WView *view)
 {
+    static const buttonbar_command_label_t mod_labels[] = {
+        { CK_SyntaxOnOff, N_ ("ButtonBar|Syntax") },
+        { CK_AnsiMode, N_ ("ButtonBar|Ansi") },
+        { CK_StructView, N_ ("ButtonBar|Struct") },
+        { CK_SearchContinue, N_ ("ButtonBar|Next") },
+        { CK_IgnoreKey, NULL },
+    };
     Widget *w = WIDGET (view);
     WDialog *h = DIALOG (w->owner);
     WButtonBar *b;
@@ -90,6 +97,14 @@ mcview_set_buttonbar (WView *view)
 
     b = buttonbar_find (h);
     buttonbar_set_label (b, 1, Q_ ("ButtonBar|Help"), keymap, w);
+
+    // in a panel the bar is the one of the file manager
+    if (!mcview_is_in_panel (view))
+        buttonbar_set_modifier_labels (b,
+                                       view->mode_flags.structured ? &viewer_struct_map
+                                           : view->mode_flags.hex  ? &viewer_hex_map
+                                                                   : &viewer_map,
+                                       NULL, mod_labels, w);
 
     if (view->mode_flags.structured)
     {

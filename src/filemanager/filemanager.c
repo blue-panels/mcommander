@@ -2003,8 +2003,16 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
         return MSG_HANDLED;
 
     case MSG_ACTION:
+    {
         // Handle shortcuts, menu, and buttonbar.
-        return midnight_execute_cmd (sender, parm);
+        cb_ret_t ret;
+
+        ret = midnight_execute_cmd (sender, parm);
+        // a panel command from the key bar of a held modifier
+        if (ret == MSG_NOT_HANDLED && sender != NULL && sender == WIDGET (the_bar))
+            ret = send_message (current_panel, NULL, MSG_ACTION, parm, NULL);
+        return ret;
+    }
 
     case MSG_DESTROY:
         mcterm_overlay_destroy ();
@@ -2068,6 +2076,20 @@ update_menu (void)
 void
 midnight_set_buttonbar (WButtonBar *b)
 {
+    static const buttonbar_command_label_t mod_labels[] = {
+        { CK_PanelToggleLeft, N_ ("ButtonBar|Left") },
+        { CK_PanelToggleRight, N_ ("ButtonBar|Right") },
+        { CK_PluginDriveLeft, N_ ("ButtonBar|Left") },
+        { CK_PluginDriveRight, N_ ("ButtonBar|Right") },
+        { CK_ViewRaw, N_ ("ButtonBar|View") },
+        { CK_EditNew, N_ ("ButtonBar|Edit") },
+        { CK_CopySingle, N_ ("ButtonBar|Copy") },
+        { CK_MoveSingle, N_ ("ButtonBar|RenMov") },
+        { CK_DeleteSingle, N_ ("ButtonBar|Delete") },
+        { CK_MenuLastSelected, N_ ("ButtonBar|Menu") },
+        { CK_QuitQuiet, N_ ("ButtonBar|Quit") },
+        { CK_IgnoreKey, NULL },
+    };
     Widget *w = WIDGET (filemanager);
 
     buttonbar_set_label (b, 1, Q_ ("ButtonBar|Help"), w->keymap, NULL);
@@ -2080,6 +2102,7 @@ midnight_set_buttonbar (WButtonBar *b)
     buttonbar_set_label (b, 8, Q_ ("ButtonBar|Delete"), w->keymap, NULL);
     buttonbar_set_label (b, 9, Q_ ("ButtonBar|PullDn"), w->keymap, NULL);
     buttonbar_set_label (b, 10, Q_ ("ButtonBar|Quit"), w->keymap, NULL);
+    buttonbar_set_modifier_labels (b, &filemanager_map, &panel_map, mod_labels, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */

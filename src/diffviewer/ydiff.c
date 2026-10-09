@@ -3544,6 +3544,12 @@ dview_goto_cmd (WDiff *dview, diff_place_t ord)
 static void
 dview_labels (WDiff *dview)
 {
+    static const buttonbar_command_label_t mod_labels[] = {
+        { CK_EditOther, N_ ("ButtonBar|Edit") },
+        { CK_MergeOther, N_ ("ButtonBar|Merge") },
+        { CK_SearchContinue, N_ ("ButtonBar|Next") },
+        { CK_IgnoreKey, NULL },
+    };
     Widget *d = WIDGET (dview);
     WButtonBar *b;
 
@@ -3556,6 +3562,7 @@ dview_labels (WDiff *dview)
     buttonbar_set_label (b, 7, Q_ ("ButtonBar|Search"), d->keymap, d);
     buttonbar_set_label (b, 9, Q_ ("ButtonBar|Options"), d->keymap, d);
     buttonbar_set_label (b, 10, Q_ ("ButtonBar|Quit"), d->keymap, d);
+    buttonbar_set_modifier_labels (b, &diff_map, NULL, mod_labels, d);
 }
 
 /* --------------------------------------------------------------------------------------------- */

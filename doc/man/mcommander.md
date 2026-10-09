@@ -3800,6 +3800,12 @@ command line is not empty.
 : If true, use '+', '-', '\\' and '\*' keys normally. For select/unselect,
 use 'Alt-+', 'Alt--' and 'Alt-\*'.
 
+*keybar_modifiers*
+: If true, the key bar shows the commands of Shift, Ctrl or Alt with the F keys
+while that modifier is held. This needs a terminal with the kitty keyboard
+protocol: M-Commander then asks it for every key with its release, and for focus
+events. Other terminals are not affected. False by default.
+
 *show_output_starts_shell*
 : When you use the C-o keystroke to go back to the user screen, if this
 one is set, you will get a fresh shell.  Otherwise, pressing any key

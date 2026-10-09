@@ -1539,6 +1539,15 @@ edit_quit (WDialog *h)
 static inline void
 edit_set_buttonbar (WEdit *edit, WButtonBar *bb)
 {
+    static const buttonbar_command_label_t mod_labels[] = {
+        { CK_UserMenu, N_ ("ButtonBar|Menu") },
+        { CK_SaveAs, N_ ("ButtonBar|SaveAs") },
+        { CK_MarkColumn, N_ ("ButtonBar|Column") },
+        { CK_ReplaceContinue, N_ ("ButtonBar|Replac") },
+        { CK_InsertFile, N_ ("ButtonBar|Insert") },
+        { CK_SearchContinue, N_ ("ButtonBar|Next") },
+        { CK_IgnoreKey, NULL },
+    };
     Widget *w = WIDGET (edit);
 
     buttonbar_set_label (bb, 1, Q_ ("ButtonBar|Help"), w->keymap, NULL);
@@ -1551,6 +1560,7 @@ edit_set_buttonbar (WEdit *edit, WButtonBar *bb)
     buttonbar_set_label (bb, 8, Q_ ("ButtonBar|Delete"), w->keymap, w);
     buttonbar_set_label (bb, 9, Q_ ("ButtonBar|PullDn"), w->keymap, NULL);
     buttonbar_set_label (bb, 10, Q_ ("ButtonBar|Quit"), w->keymap, NULL);
+    buttonbar_set_modifier_labels (bb, &editor_map, NULL, mod_labels, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1751,7 +1761,8 @@ edit_dialog_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, voi
 
         /* We forward any commands coming from the menu, and which haven't been
            handled by the dialog, to the focused WEdit window. */
-        if (result == MSG_NOT_HANDLED && sender == WIDGET (menubar_find (h)))
+        if (result == MSG_NOT_HANDLED
+            && (sender == WIDGET (menubar_find (h)) || sender == WIDGET (buttonbar_find (h))))
             result = send_message (g->current->data, NULL, MSG_ACTION, parm, NULL);
 
         return result;

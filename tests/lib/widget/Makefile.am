@@ -14,6 +14,7 @@ LIBS += $(GLIB_LIBS)
 endif
 
 TESTS = \
+	buttonbar_modifiers \
 	complete_engine \
 	hotkey_equal \
 	group_init_destroy \
@@ -26,6 +27,9 @@ TESTS = \
 	widget_make_global_local
 
 check_PROGRAMS = $(TESTS)
+
+buttonbar_modifiers_SOURCES = \
+	buttonbar_modifiers.c
 
 complete_engine_SOURCES = \
 	complete_engine.c
