@@ -3,8 +3,8 @@
 #
 # What the editor got in this milestone: a line filter in the Search dialog
 # (F7 -> Filter, Alt-S to lift), Alt-Shift-S to filter by the word under the
-# cursor at once, the Search dialog opening with the selected text, and 8-bit
-# files drawn as text rather than as dots.
+# cursor at once, the Search dialog opening with the selected text, 8-bit
+# files drawn as text rather than as dots, and a paste taken as one block.
 set -e
 
 dir="${1:-/home/mc/cases/editor}"
@@ -63,6 +63,21 @@ cat > 03-search/cases.tsv <<'EOF'
 file	key	expect	why	transports
 zebra.txt	key F4,key F3,key End,key F3,key F7,key Enter	text: ENDMARK	the search dialog opens with the marked word and finds it below	local
 zebra.txt	key F4	no text: ENDMARK	without the search it is off the screen, which is what the case rests on	local
+EOF
+
+# ------------------------------------------------------------------- paste ---
+
+# A bracketed paste goes into the editor as one block: one step for Undo, no
+# auto indent, and a control byte in it is text or nothing, never a command.
+mkdir -p 04-paste
+: > 04-paste/empty.txt
+
+cat > 04-paste/cases.tsv <<'EOF'
+file	key	expect	why	transports
+empty.txt	key F4,paste alpha\nbravo\ncharlie	text: charlie	a paste from the terminal goes into the text	local
+empty.txt	key F4,paste alpha\nbravo\ncharlie,key C-u	no text: alpha	one Undo takes the whole paste back, not its last character	local
+empty.txt	key F4,paste keep1\nkeep2\0031tail\nkeep3	text: keep2tail	a control byte in the paste is dropped: Ctrl-Y there deletes no line	local
+empty.txt	key F4,paste if x:\n    y	no text:         y	a pasted line keeps its own indent and gets no auto indent on top of it	local
 EOF
 
 # ------------------------------------------------------------- 8-bit files ---

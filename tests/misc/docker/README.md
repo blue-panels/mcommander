@@ -108,6 +108,7 @@ the remote host.
 | `01-filter`   | the line filter: Alt-Shift-S by the word, Alt-S to lift it   |
 | `02-charset`  | 8-bit files, and every byte CP866 draws, laid out as a table |
 | `03-search`   | the search dialog opening with the marked word              |
+| `04-paste`    | a bracketed paste: one Undo takes it back, a control byte in it runs nothing, no auto indent on top of its own |
 
 ### terminal
 
