@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-10-04 15:24+0000\n"
+"PO-Revision-Date: 2026-10-09 10:45+0000\n"
 "Last-Translator: Strahinja <strahinja@noreply.codeberg.org>\n"
 "Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/>"
 "\n"
@@ -264,172 +264,121 @@ msgid "Select to line end"
 msgstr "Изабери до краја реда"
 
 msgid "Toggle navigate/browse mode"
-msgstr ""
+msgstr "Смени режим навигације/прегледања"
 
-#, fuzzy
-#| msgid "&Sort order..."
 msgid "Sort order..."
-msgstr "Поредак &сортирања..."
+msgstr "Поредак сортирања..."
 
-#, fuzzy
-#| msgid "Panel options"
 msgid "General options"
-msgstr "Опције панела"
+msgstr "Опште опције"
 
-#, fuzzy
-#| msgid "Learn keys"
 msgid "Learn terminal keys"
-msgstr "Учење тастера"
+msgstr "Учење тастера терминала"
 
 msgid "Key bindings"
-msgstr ""
+msgstr "Тастерске пречице"
 
 msgid "Key sniffer"
-msgstr ""
+msgstr "Детектор тастера"
 
 msgid "Manage plugins"
-msgstr ""
+msgstr "Управљање плагиновима"
 
-#, fuzzy
-#| msgid "&Next bookmark"
 msgid "Set bookmark"
-msgstr "&Следећи обележивач"
+msgstr "Постави обележивач"
 
 msgid "Quit program"
-msgstr ""
+msgstr "Изађи из програма"
 
 msgid "Quit without confirmation"
-msgstr ""
+msgstr "Изађи без потврде"
 
 msgid "Extended key prefix"
-msgstr ""
+msgstr "Префикс проширених тастера"
 
-#, fuzzy
-#| msgid "Use internal edi&t"
 msgid "Edit with internal editor"
-msgstr "Користи уграђени &уређивач"
+msgstr "Уреди уграђеним уређивачем"
 
 msgid "View file"
-msgstr "Преглед датотеке"
+msgstr "Прегледај датотеку"
 
-#, fuzzy
-#| msgid "View file"
 msgid "View raw file"
-msgstr "Преглед датотеке"
+msgstr "Прегледај датотеку сирово"
 
-#, fuzzy
-#| msgid "View file"
 msgid "View named file"
-msgstr "Преглед датотеке"
+msgstr "Прегледај именовану датотеку"
 
 msgid "View command output"
-msgstr ""
+msgstr "Прегледај излаз наредбе"
 
-#, fuzzy
-#| msgid "&Find file"
 msgid "Find file"
-msgstr "&Тражи датотеку"
+msgstr "Тражи датотеку"
 
-#, fuzzy
-#| msgid "Show directory s&izes"
 msgid "Show directory size"
-msgstr "Прикажи &величине директоријума"
+msgstr "Прикажи величину директоријума"
 
 msgid "Compare directories"
-msgstr "Упоређивање директоријума"
+msgstr "Упореди директоријуме"
 
-#, fuzzy
-#| msgid "C&ompare files"
 msgid "Compare files (diff)"
-msgstr "Упореди &датотеке"
+msgstr "Упореди датотеке (diff)"
 
-#, fuzzy
-#| msgid "Confirmation"
 msgid "Confirmation settings"
-msgstr "Потврђивање"
+msgstr "Подешавања потврђивања"
 
-#, fuzzy
-#| msgid "Edit &extension file"
 msgid "Edit extensions file"
-msgstr "Уреди датотеку &екстензија"
+msgstr "Уреди датотеку екстензија"
 
-#, fuzzy
-#| msgid "Synta&x highlighting"
 msgid "Edit syntax highlighting"
-msgstr "Истицање &синтаксе"
+msgstr "Уреди истицање синтаксе"
 
-#, fuzzy
-#| msgid "Edit symlink"
 msgid "Edit symbolic link"
-msgstr "Уређивање симвезе"
+msgstr "Уреди симболичку везу"
 
 msgid "External panelize"
 msgstr "Панелизовање спољашње наредбе"
 
-#, fuzzy
-#| msgid "Filtered view"
 msgid "Filter view"
 msgstr "Филтрирани преглед"
 
-#, fuzzy
 msgid "Quick filter"
-msgstr "&Брзи преглед"
+msgstr "Брзи филтер"
 
 msgid "Info panel"
-msgstr ""
+msgstr "Панел за информације"
 
 msgid "Background jobs"
 msgstr "Позадински послови"
 
 msgid "Layout settings"
-msgstr ""
+msgstr "Подешавања распореда"
 
-#, fuzzy
-#| msgid "Appearance"
 msgid "Appearance settings"
-msgstr "Изглед"
+msgstr "Подешавања изгледа"
 
-#, fuzzy
-#| msgid ""
-#| "Cannot create target hardlink\n"
-#| "%s"
 msgid "Create hard link"
-msgstr ""
-"Не може се креирати одредишна веза\n"
-"%s"
+msgstr "Креирај чврсту везу"
 
-#, fuzzy
-#| msgid "Listing format"
 msgid "Setup listing format"
-msgstr "Формат листинга"
+msgstr "Подеси формат листинга"
 
-#, fuzzy
-#| msgid "Panel options"
 msgid "Panel modes"
-msgstr "Опције панела"
+msgstr "Режими панела"
 
-#, fuzzy
-#| msgid "Use panel sort mo&de"
 msgid "Manage panel modes"
-msgstr "Користи &режим сортирања панела"
+msgstr "Управљај режимима панела"
 
-#, fuzzy
-#| msgid "Use panel sort mo&de"
 msgid "Panel listing mode"
-msgstr "Користи &режим сортирања панела"
+msgstr "Режим сортирања панела"
 
 msgid "Panel options"
 msgstr "Опције панела"
 
-#, fuzzy
-#| msgid "Panel options"
 msgid "Viewer options"
-msgstr "Опције панела"
+msgstr "Опције прегледача"
 
-#, fuzzy
-#| msgid "Diff extra options"
 msgid "Diff viewer options"
-msgstr "Додатне опције diff-а"
+msgstr "Опције diff прегледача"
 
 msgid "Editor options"
 msgstr "Опције уређивача"
@@ -437,72 +386,53 @@ msgstr "Опције уређивача"
 msgid "Quick cd"
 msgstr "Брзи cd"
 
-#, fuzzy
 msgid "Quick view panel"
-msgstr "&Брзи преглед"
+msgstr "Панел за брзи преглед"
 
-#, fuzzy
-#| msgid "Relative symlin&k"
 msgid "Create relative symlink"
-msgstr "Релативна &симвеза"
+msgstr "Креирај релативну симвезу"
 
-#, fuzzy
-#| msgid "&Save setup"
 msgid "Save setup"
-msgstr "&Сачувај подешавања"
+msgstr "Сачувај подешавања"
 
-#, fuzzy
-#| msgid ""
-#| "Cannot create symbolic link\n"
-#| "%s"
 msgid "Create symbolic link"
-msgstr ""
-"Не може се креирати симболичка веза\n"
-"%s"
+msgstr "Креирај симболичку везу"
 
-#, fuzzy
-#| msgid "Filtered view"
 msgid "Panel tree view"
-msgstr "Филтрирани преглед"
+msgstr "Преглед панела са стаблом"
 
 msgid "Directory tree"
 msgstr "Стабло директоријума"
 
 msgid "Put current link to cmdline"
-msgstr ""
+msgstr "Додај текућу везу у командну линију"
 
-#, fuzzy
-#| msgid "Shell link to machine"
 msgid "Put other link to cmdline"
-msgstr "Веза љуске на рачунар"
+msgstr "Додај другу везу у командну линију"
 
 msgid "Add to hotlist"
 msgstr "Додај у брзу листу"
 
-#, fuzzy
-#| msgid "Show &hidden files"
 msgid "Toggle hidden files"
-msgstr "Прикажи &сакривене датотеке"
+msgstr "Смени сакривене датотеке"
 
 msgid "Toggle horizontal/vertical split"
-msgstr ""
+msgstr "Смени хоризонталну/вертикалну поделу"
 
-#, fuzzy
-#| msgid "&Equal split"
 msgid "Equal panel split"
-msgstr "&Подједнака подела"
+msgstr "Подједнака подела панела"
 
 msgid "Enlarge current panel"
-msgstr ""
+msgstr "Увећај текући панел"
 
 msgid "Shrink current panel"
-msgstr ""
+msgstr "Смањи текући панел"
 
 msgid "Put current path to cmdline"
-msgstr ""
+msgstr "Додај текућу путању у командну линију"
 
 msgid "Put other path to cmdline"
-msgstr ""
+msgstr "Додај другу путању у командну линију"
 
 msgid "Put selected name to cmdline"
 msgstr ""
