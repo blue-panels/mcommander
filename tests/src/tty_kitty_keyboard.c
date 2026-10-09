@@ -27,10 +27,12 @@
 #include <fcntl.h>
 
 /* Run the real decoder on bytes given by the test. */
-#define tty_lowlevel_getch test_tty_lowlevel_getch
-#define tty_nodelay        test_tty_nodelay
+#define tty_lowlevel_getch         test_tty_lowlevel_getch
+#define tty_lowlevel_input_pending test_tty_lowlevel_input_pending
+#define tty_nodelay                test_tty_nodelay
 #include "lib/tty/key.c"
 #undef tty_lowlevel_getch
+#undef tty_lowlevel_input_pending
 #undef tty_nodelay
 
 static int test_input[KITTY_CSI_MAX + 256];
@@ -41,6 +43,12 @@ int
 test_tty_lowlevel_getch (void)
 {
     return test_input_pos < test_input_len ? test_input[test_input_pos++] : -1;
+}
+
+gboolean
+test_tty_lowlevel_input_pending (void)
+{
+    return test_input_pos < test_input_len;
 }
 
 void
@@ -56,6 +64,7 @@ setup (void)
     mc_global.tty.xterm_flag = TRUE;
     mc_global.tty.disable_x11 = TRUE;
     mc_global.tty.alternate_plus_minus = FALSE;
+    mc_global.utf8_display = TRUE;
     input_fd = open ("/dev/null", O_RDONLY);
     ck_assert_int_ge (input_fd, 0);
     test_input_len = test_input_pos = 0;
@@ -67,6 +76,8 @@ static void
 teardown (void)
 {
     kitty_keyboard_active = FALSE;
+    kitty_flags_wanted = 0;
+    kitty_text_len = kitty_text_pos = 0;
     done_key ();
     close (input_fd);
     input_fd = -1;
@@ -134,9 +145,18 @@ static const struct decode_ds
     { "\033[57358u", KEY_KITTY_EVENT },            // Caps Lock
     { "\033[57376u", KEY_KITTY_EVENT },            // F13
     { "\033[97;5:2u", XCTRL ('a') },               // Ctrl-A repeated
-    { "\033[97;5:3u", KEY_KITTY_EVENT },           // Ctrl-A released
+    { "\033[97;5:3u", -1 },                        // Ctrl-A released, no one asked for it
+    { "\033[57442;5u", KEY_KITTY_EVENT },          // Left Ctrl pressed
+    { "\033[57442;1:3u", KEY_KITTY_EVENT },        // Left Ctrl released
+    { "\033[57447;2:2u", KEY_KITTY_EVENT },        // Right Shift repeated
     { "\033[1;5:2A", KEY_M_CTRL | KEY_UP },        // Ctrl-Up repeated
-    { "\033[1;1:3A", KEY_KITTY_EVENT },            // Up released
+    { "\033[1;1:3A", -1 },                         // Up released
+    { "\033[97;;97u", 'a' },                       // a, every key as an escape code
+    { "\033[97:65;2;65u", 'A' },                   // Shift-A with its text
+    { "\033[32;;32u", ' ' },                       // Space
+    { "\033[97;5;1u", XCTRL ('a') },               // Ctrl-A: control text is not text
+    { "\033[97;3;97u", ALT ('a') },                // Alt-A: the text does not count
+    { "\033[57403;129;52u", '4' },                 // keypad 4 with Num Lock
     { "\033[13;1:2~", KEY_F (3) },                 // F3 repeated
 };
 
@@ -249,6 +269,7 @@ START_TEST (test_kitty_event_fields)
     ck_assert_int_eq (ev.text_len, 1);
     ck_assert_uint_eq (ev.text[0], 65);
 
+    kitty_flags_wanted = 2;
     ck_assert_int_eq (decode ("\033[1;3:3D"), KEY_KITTY_EVENT);
     ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
     ck_assert_int_eq (ev.final, 'D');
@@ -312,6 +333,61 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_kitty_release_wanted)
+{
+    kitty_flags_wanted = 2;
+    ck_assert_int_eq (decode ("\033[97;1:3u"), KEY_KITTY_EVENT);
+    kitty_flags_wanted = 0;
+    ck_assert_int_eq (decode ("\033[97;1:3u"), -1);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_release_dropped_before_key)
+{
+    feed ("\033[97;1:3uz");
+    ck_assert_int_eq (get_key_code (0), 'z');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_text_bytes)
+{
+    tty_key_event_t ev;
+
+    /* ef, a Cyrillic letter, with no base layout key: its UTF-8 bytes one by one */
+    feed ("\033[1092;;1092ux");
+    ck_assert_int_eq (get_key_code (1), 0xD1);
+    ck_assert (tty_key_event (0xD1, &ev));
+    ck_assert_uint_eq (ev.key, 1092);
+    ck_assert_int_eq (get_key_code (1), 0x84);
+    ck_assert (!tty_key_event (0x84, &ev));
+    ck_assert_int_eq (get_key_code (1), 'x');
+
+    /* the caller that takes the whole event gets no more bytes of it */
+    feed ("\033[1092;;1092ux");
+    ck_assert_int_eq (get_key_code (1), 0xD1);
+    ck_assert (tty_key_event_take (0xD1, &ev));
+    ck_assert_int_eq (get_key_code (1), 'x');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_flags_base)
+{
+    keybar_modifiers = FALSE;
+    ck_assert_uint_eq (kitty_flags_base (), 5);
+    keybar_modifiers = TRUE;
+    ck_assert_uint_eq (kitty_flags_base (), 31);
+    keybar_modifiers = FALSE;
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_super_key_names)
 {
     char *name;
@@ -355,6 +431,10 @@ main (void)
     tcase_add_test (tc_core, test_kitty_ctrl_digit_name);
     tcase_add_test (tc_core, test_kitty_event_fields);
     tcase_add_test (tc_core, test_kitty_long_text);
+    tcase_add_test (tc_core, test_kitty_release_wanted);
+    tcase_add_test (tc_core, test_kitty_release_dropped_before_key);
+    tcase_add_test (tc_core, test_kitty_text_bytes);
+    tcase_add_test (tc_core, test_kitty_flags_base);
     tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 

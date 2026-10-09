@@ -95,6 +95,8 @@
 int mou_auto_repeat = 100;     // ms
 int double_click_speed = 250;  // ms
 gboolean old_esc_mode = TRUE;
+/* Every key as a kitty event with its release, so that lone modifiers are seen */
+gboolean keybar_modifiers = FALSE;
 /* timeout for old_esc_mode in usec */
 int old_esc_mode_timeout = G_USEC_PER_SEC;  // us, settable via env
 
@@ -239,7 +241,8 @@ const key_code_name_t key_name_conv_tab[] = {
 /* Event types (2), every key as an escape code (8) and the text (16), for a program in mcterm */
 #define KITTY_KEYBOARD_EXTRA (2 | 8 | 16)
 /* The longest CSI sequence kept: a key with TTY_KITTY_TEXT_MAX code points of text fits */
-#define KITTY_CSI_MAX (TTY_KITTY_TEXT_MAX * 8 + 64)
+#define KITTY_CSI_MAX         (TTY_KITTY_TEXT_MAX * 8 + 64)
+#define KITTY_KEYBOARD_EVENTS 2
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
 #define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
 
@@ -253,6 +256,9 @@ const key_code_name_t key_name_conv_tab[] = {
 /* Kitty key numbers in the private use area */
 #define KITTY_KEY_KP_0     57399
 #define KITTY_KEY_KP_BEGIN 57427
+/* Left Shift (57441) up to ISO Level 5 Shift (57454) */
+#define KITTY_KEY_MOD_FIRST 57441
+#define KITTY_KEY_MOD_LAST  57454
 
 /*** file scope type declarations ****************************************************************/
 
@@ -305,6 +311,8 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 #endif
 
 /*** forward declarations (file scope functions) *************************************************/
+
+static inline gboolean kitty_text_pending (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -584,6 +592,10 @@ static int kitty_event_code;
 /* The flags asked of the terminal, and the ones a program in mcterm wants on top of them */
 static guint kitty_flags_wanted = 0;
 static guint kitty_flags_sent = 0;
+/* The rest of the text of the last kitty key, given as single bytes */
+static unsigned char kitty_text[64];
+static size_t kitty_text_len = 0;
+static size_t kitty_text_pos = 0;
 
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
@@ -873,7 +885,7 @@ getch_with_delay (void)
     while (TRUE)
     {
         // select() does not see input already buffered by the screen library
-        if (pending_keys == NULL && !tty_lowlevel_input_pending ())
+        if (pending_keys == NULL && !kitty_text_pending () && !tty_lowlevel_input_pending ())
             try_channels (FALSE);
 
         // Try to get a character
@@ -1599,6 +1611,96 @@ kitty_event_to_code (const tty_key_event_t *ev)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+static guint
+kitty_flags_base (void)
+{
+    return KITTY_KEYBOARD_BASE | (keybar_modifiers ? KITTY_KEYBOARD_EXTRA : 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static inline gboolean
+kitty_text_pending (void)
+{
+    return kitty_text_pos < kitty_text_len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The text of a key with no Ctrl, Alt or Super, in the bytes a legacy terminal would send.
+   Returns the first byte and keeps the rest for get_key_code (), or -1 when there is no text. */
+
+static int
+kitty_text_start (const tty_key_event_t *ev)
+{
+    GString *utf8;
+    char *bytes;
+    gsize len = 0;
+    int i;
+
+    if (ev->final != 'u' || ev->text_len == 0
+        || (ev->mods
+            & (KITTY_MOD_ALT | KITTY_MOD_CTRL | KITTY_MOD_SUPER | KITTY_MOD_HYPER | KITTY_MOD_META))
+            != 0)
+        return -1;
+
+    utf8 = g_string_sized_new (16);
+    for (i = 0; i < ev->text_len; i++)
+    {
+        if (ev->text[i] < 0x20 || ev->text[i] == 0x7F || !g_unichar_validate (ev->text[i]))
+        {
+            g_string_free (utf8, TRUE);
+            return -1;
+        }
+        g_string_append_unichar (utf8, ev->text[i]);
+    }
+
+    if (mc_global.utf8_display)
+    {
+        len = utf8->len;
+        bytes = g_string_free (utf8, FALSE);
+    }
+    else
+    {
+        bytes = g_locale_from_utf8 (utf8->str, (gssize) utf8->len, NULL, &len, NULL);
+        g_string_free (utf8, TRUE);
+    }
+
+    if (bytes == NULL || len == 0 || len > sizeof (kitty_text))
+    {
+        g_free (bytes);
+        return -1;
+    }
+
+    memcpy (kitty_text, bytes, len);
+    g_free (bytes);
+    kitty_text_len = len;
+    kitty_text_pos = 1;
+    return kitty_text[0];
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The mc key of a kitty event read from the terminal: the text of a printable key, -1 for a
+   release no one asked for, else what kitty_event_to_code () gives. */
+
+static int
+kitty_live_code (const tty_key_event_t *ev)
+{
+    int code;
+
+    if (ev->event == TTY_KITTY_RELEASE)
+    {
+        const gboolean modifier =
+            ev->final == 'u' && ev->key >= KITTY_KEY_MOD_FIRST && ev->key <= KITTY_KEY_MOD_LAST;
+
+        return modifier || (kitty_flags_wanted & KITTY_KEYBOARD_EVENTS) != 0 ? KEY_KITTY_EVENT : -1;
+    }
+
+    code = kitty_text_start (ev);
+    return code != -1 ? code : kitty_event_to_code (ev);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
    Returns -1 for a sequence that is no key at all, KEY_KITTY_EVENT for a key mc has no code for. */
 
@@ -1638,7 +1740,7 @@ kitty_read_csi (int c)
             if (kitty_parse_csi (params->str, params->len, &kitty_event))
             {
                 kitty_event_valid = TRUE;
-                code = kitty_event_to_code (&kitty_event);
+                code = kitty_live_code (&kitty_event);
             }
             break;
         }
@@ -2244,7 +2346,8 @@ is_idle (void)
        library's buffer in one go, and mc decodes escape sequences into a queue
        of its own. Either can hold a paste worth of keys while select() below
        reports nothing left to read. */
-    if (tty_paste_keys_pending || pending_keys != NULL || tty_lowlevel_input_pending ())
+    if (tty_paste_keys_pending || pending_keys != NULL || kitty_text_pending ()
+        || tty_lowlevel_input_pending ())
         return FALSE;
 
     FD_ZERO (&select_set);
@@ -2292,6 +2395,13 @@ get_key_code (int no_delay)
     static int lastnodelay = -1;
 
     kitty_event_valid = FALSE;
+
+    if (kitty_text_pending ())
+    {
+        c = correct_key_code (kitty_text[kitty_text_pos++], FALSE);
+        kitty_event_code = c;
+        return c;
+    }
 
     if (no_delay != lastnodelay)
     {
@@ -2506,6 +2616,9 @@ nodelay_try_again:
             {
                 this = NULL;
                 kitty_event_code = c;
+                // a dropped release must not leave the next key waiting for the select timeout
+                if (c == -1 && tty_lowlevel_input_pending ())
+                    goto nodelay_try_again;
                 return c;
             }
             goto done;
@@ -2765,7 +2878,7 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
         }
 
         // select() does not see input already buffered by the screen library
-        if (tty_lowlevel_input_pending ())
+        if (kitty_text_pending () || tty_lowlevel_input_pending ())
             break;
 
         tty_enable_interrupt_key ();
@@ -3010,6 +3123,17 @@ tty_key_event (int key, tty_key_event_t *ev)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_key_event_take (int key, tty_key_event_t *ev)
+{
+    if (!tty_key_event (key, ev))
+        return FALSE;
+    kitty_text_len = kitty_text_pos = 0;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Decode the bytes from learn_key () without reading or changing the live keyboard input.
    Returns 0 when they are not one whole key. */
 
@@ -3148,7 +3272,7 @@ enable_kitty_keyboard (void)
     if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
         return;
 
-    kitty_flags_sent = KITTY_KEYBOARD_BASE | kitty_flags_wanted;
+    kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[>%uu", kitty_flags_sent);
     fflush (stdout);
     kitty_keyboard_active = TRUE;
@@ -3160,10 +3284,10 @@ void
 tty_kitty_keyboard_want (guint flags)
 {
     kitty_flags_wanted = flags & KITTY_KEYBOARD_EXTRA;
-    if (!kitty_keyboard_active || (KITTY_KEYBOARD_BASE | kitty_flags_wanted) == kitty_flags_sent)
+    if (!kitty_keyboard_active || (kitty_flags_base () | kitty_flags_wanted) == kitty_flags_sent)
         return;
 
-    kitty_flags_sent = KITTY_KEYBOARD_BASE | kitty_flags_wanted;
+    kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[=%u;1u", kitty_flags_sent);
     fflush (stdout);
 }

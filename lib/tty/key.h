@@ -100,6 +100,7 @@ extern int old_esc_mode_timeout;
 
 extern int double_click_speed;
 extern gboolean old_esc_mode;
+extern gboolean keybar_modifiers;
 extern int mou_auto_repeat;
 
 extern gboolean bracketed_pasting_in_progress;
@@ -145,6 +146,8 @@ char *tty_key_lookup_sequence (int code);
 int tty_match_seq_to_keycode (const char *seq, int len);
 /* The kitty event of @key, the key get_key_code () gave last; FALSE when it came otherwise */
 gboolean tty_key_event (int key, tty_key_event_t *ev);
+/* The same, for a caller that takes the whole event: the rest of its text is not given as keys */
+gboolean tty_key_event_take (int key, tty_key_event_t *ev);
 /* The kitty event in the bytes of a key that learn_key () gave; FALSE when they are none */
 gboolean tty_kitty_seq_event (const char *seq, int len, tty_key_event_t *ev);
 int tty_decode_key_seq (const char *seq, int len);

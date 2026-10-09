@@ -2446,7 +2446,8 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
        no legacy bytes (F13 and up, the media keys) goes as CSI u with any flags. */
     if (tty_key_event (key, &ev)
         && ((flags & (0x01 | 0x08)) != 0 || ((flags & 0x02) != 0 && ev.final != 'u')
-            || (key == KEY_KITTY_EVENT && ev.final == 'u' && ev.key >= 57344 && ev.key <= 63743)))
+            || (key == KEY_KITTY_EVENT && ev.final == 'u' && ev.key >= 57344 && ev.key <= 63743))
+        && tty_key_event_take (key, &ev))
     {
         t->kitty_utf8_len = 0;
         if (ev.event != TTY_KITTY_RELEASE)
