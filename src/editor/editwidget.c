@@ -1455,6 +1455,37 @@ fin:
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A bracketed paste: the text goes in as typed, but it is one step for Undo, without auto indent,
+   and the screen is drawn once when it is all in. A byte that would be a command is dropped. */
+static void
+edit_paste_text (WEdit *e, const GString *text)
+{
+    size_t i;
+
+    e->charpoint = 0;
+    edit_push_key_press (e);
+    bracketed_pasting_in_progress = TRUE;
+    for (i = 0; i < text->len; i++)
+    {
+        const unsigned char c = (unsigned char) text->str[i];
+        int cmd, ch;
+
+        // A line break and a tab are text here, whatever the keys are bound to
+        if (c == '\n')
+            edit_execute_cmd (e, CK_Enter, -1);
+        else if (c == '\t')
+            edit_execute_cmd (e, CK_Tab, -1);
+        else if (edit_translate_key (e, c, &cmd, &ch) && cmd == CK_InsertChar)
+            edit_execute_cmd (e, cmd, ch);
+    }
+    bracketed_pasting_in_progress = FALSE;
+    e->charpoint = 0;
+    // The text may run over many lines: all of them are drawn again, not the last one only
+    e->force |= REDRAW_PAGE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static inline void
 edit_quit (WDialog *h)
 {
@@ -1917,6 +1948,11 @@ edit_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data
 
         return ret;
     }
+
+    case MSG_PASTE:
+        edit_paste_text (e, (const GString *) data);
+        edit_update_screen (e);
+        return MSG_HANDLED;
 
     case MSG_ACTION:
         // command from menubar or buttonbar
