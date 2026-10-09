@@ -77,6 +77,8 @@ teardown (void)
 {
     kitty_keyboard_active = FALSE;
     kitty_flags_wanted = 0;
+    kitty_flags_sent = 0;
+    kitty_mod_keys = 0;
     kitty_text_len = kitty_text_pos = 0;
     done_key ();
     close (input_fd);
@@ -388,6 +390,48 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_kitty_held_modifiers)
+{
+    kitty_flags_sent = 31;
+
+    ck_assert_int_eq (decode ("\033[57442;5u"), KEY_KITTY_EVENT);  // Left Ctrl down
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_CTRL);
+    ck_assert_int_eq (decode ("\033[57448;5u"), KEY_KITTY_EVENT);    // Right Ctrl down
+    ck_assert_int_eq (decode ("\033[57442;5:3u"), KEY_KITTY_EVENT);  // Left Ctrl up
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_CTRL);
+    ck_assert_int_eq (decode ("\033[57448;1:3u"), KEY_KITTY_EVENT);  // Right Ctrl up
+    ck_assert_uint_eq (tty_kitty_modifiers (), 0);
+
+    /* Shift and Alt together, then Shift up: the modifier field keeps Alt */
+    decode ("\033[57441;2u");
+    decode ("\033[57443;4u");
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_SHIFT | TTY_KITTY_MOD_ALT);
+    decode ("\033[57441;3:3u");
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_ALT);
+
+    /* a release that never came is fixed by the next key */
+    ck_assert_int_eq (decode ("\033[97;;97u"), 'a');
+    ck_assert_uint_eq (tty_kitty_modifiers (), 0);
+    ck_assert_int_eq (decode ("\033[1;5A"), KEY_M_CTRL | KEY_UP);
+    ck_assert_uint_eq (tty_kitty_modifiers (), 0);  // a legacy form is no kitty event
+    ck_assert_int_eq (decode ("\033[97;5u"), XCTRL ('a'));
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_CTRL);
+
+    /* the focus goes away with Ctrl held */
+    ck_assert_int_eq (decode ("\033[O"), KEY_KITTY_EVENT);
+    ck_assert (!tty_key_event (KEY_KITTY_EVENT, NULL));
+    ck_assert_uint_eq (tty_kitty_modifiers (), 0);
+    ck_assert_int_eq (decode ("\033[I"), -1);
+
+    /* without the flags 2 and 8 nothing is reported */
+    decode ("\033[57442;5u");
+    kitty_flags_sent = 5;
+    ck_assert_uint_eq (tty_kitty_modifiers (), 0);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_super_key_names)
 {
     char *name;
@@ -435,6 +479,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_release_dropped_before_key);
     tcase_add_test (tc_core, test_kitty_text_bytes);
     tcase_add_test (tc_core, test_kitty_flags_base);
+    tcase_add_test (tc_core, test_kitty_held_modifiers);
     tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 

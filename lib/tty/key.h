@@ -148,6 +148,8 @@ int tty_match_seq_to_keycode (const char *seq, int len);
 gboolean tty_key_event (int key, tty_key_event_t *ev);
 /* The same, for a caller that takes the whole event: the rest of its text is not given as keys */
 gboolean tty_key_event_take (int key, tty_key_event_t *ev);
+/* The modifiers held now (TTY_KITTY_MOD_* bits), 0 when the terminal does not report them */
+guint tty_kitty_modifiers (void);
 /* The kitty event in the bytes of a key that learn_key () gave; FALSE when they are none */
 gboolean tty_kitty_seq_event (const char *seq, int len, tty_key_event_t *ev);
 int tty_decode_key_seq (const char *seq, int len);

@@ -50,7 +50,8 @@ typedef enum
     MSG_VALIDATE,        // Dialog is to be closed
     MSG_END,             // Shut down dialog
     MSG_DESTROY,         // Sent to widget at destruction time
-    MSG_PASTE            // A bracketed paste as one block; data is the GString with its text
+    MSG_PASTE,           // A bracketed paste as one block; data is the GString with its text
+    MSG_MODIFIERS        // The held modifiers changed; tty_kitty_modifiers () gives them
 } widget_msg_t;
 
 /* Widgets are expected to answer to the following messages:

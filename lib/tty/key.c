@@ -243,6 +243,8 @@ const key_code_name_t key_name_conv_tab[] = {
 /* The longest CSI sequence kept: a key with TTY_KITTY_TEXT_MAX code points of text fits */
 #define KITTY_CSI_MAX         (TTY_KITTY_TEXT_MAX * 8 + 64)
 #define KITTY_KEYBOARD_EVENTS 2
+/* The flags that report a lone modifier key with its release */
+#define KITTY_KEYBOARD_MODIFIERS (2 | 8)
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
 #define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
 
@@ -259,6 +261,8 @@ const key_code_name_t key_name_conv_tab[] = {
 /* Left Shift (57441) up to ISO Level 5 Shift (57454) */
 #define KITTY_KEY_MOD_FIRST 57441
 #define KITTY_KEY_MOD_LAST  57454
+/* Left Shift, Ctrl, Alt, Super, Hyper, Meta, then the same six on the right */
+#define KITTY_KEY_MOD_SIDES 6
 
 /*** file scope type declarations ****************************************************************/
 
@@ -596,6 +600,13 @@ static guint kitty_flags_sent = 0;
 static unsigned char kitty_text[64];
 static size_t kitty_text_len = 0;
 static size_t kitty_text_pos = 0;
+/* The modifier keys held now, a bit for each from Left Shift to Right Meta */
+static guint kitty_mod_keys = 0;
+/* The kitty modifier bit of each of the six modifier keys of a side */
+static const guint kitty_mod_kinds[KITTY_KEY_MOD_SIDES] = {
+    KITTY_MOD_SHIFT, KITTY_MOD_CTRL,  KITTY_MOD_ALT,
+    KITTY_MOD_SUPER, KITTY_MOD_HYPER, KITTY_MOD_META,
+};
 
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
@@ -1680,6 +1691,41 @@ kitty_text_start (const tty_key_event_t *ev)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Follow the held modifier keys. A modifier key sets or clears its own bit; the modifier field
+   of any event fixes the other ones, so a release the terminal never sent is not kept. */
+
+static void
+kitty_track_modifiers (const tty_key_event_t *ev)
+{
+    int own = -1;
+    int i;
+
+    if (ev->final == 'u' && ev->key >= KITTY_KEY_MOD_FIRST
+        && ev->key < KITTY_KEY_MOD_FIRST + 2 * KITTY_KEY_MOD_SIDES)
+    {
+        const guint bit = 1U << (ev->key - KITTY_KEY_MOD_FIRST);
+
+        if (ev->event == TTY_KITTY_RELEASE)
+            kitty_mod_keys &= ~bit;
+        else
+            kitty_mod_keys |= bit;
+        own = (int) ((ev->key - KITTY_KEY_MOD_FIRST) % KITTY_KEY_MOD_SIDES);
+    }
+
+    for (i = 0; i < KITTY_KEY_MOD_SIDES; i++)
+    {
+        const guint both = (1U << i) | (1U << (i + KITTY_KEY_MOD_SIDES));
+
+        if (i == own)
+            continue;
+        if ((ev->mods & kitty_mod_kinds[i]) == 0)
+            kitty_mod_keys &= ~both;
+        else if ((kitty_mod_keys & both) == 0)
+            kitty_mod_keys |= 1U << i;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* The mc key of a kitty event read from the terminal: the text of a printable key, -1 for a
    release no one asked for, else what kitty_event_to_code () gives. */
 
@@ -1737,9 +1783,16 @@ kitty_read_csi (int c)
         g_string_append_c (params, (char) ch);
         if (ch >= 0x40)
         {
-            if (kitty_parse_csi (params->str, params->len, &kitty_event))
+            if (params->len == 1 && (ch == 'I' || ch == 'O'))
+            {
+                // the terminal got or lost the focus: a modifier released elsewhere is not seen
+                code = kitty_mod_keys != 0 ? KEY_KITTY_EVENT : -1;
+                kitty_mod_keys = 0;
+            }
+            else if (kitty_parse_csi (params->str, params->len, &kitty_event))
             {
                 kitty_event_valid = TRUE;
+                kitty_track_modifiers (&kitty_event);
                 code = kitty_live_code (&kitty_event);
             }
             break;
@@ -3124,6 +3177,24 @@ tty_key_event (int key, tty_key_event_t *ev)
 
 /* --------------------------------------------------------------------------------------------- */
 
+guint
+tty_kitty_modifiers (void)
+{
+    guint mods = 0;
+    int i;
+
+    if (!kitty_keyboard_active
+        || (kitty_flags_sent & KITTY_KEYBOARD_MODIFIERS) != KITTY_KEYBOARD_MODIFIERS)
+        return 0;
+
+    for (i = 0; i < KITTY_KEY_MOD_SIDES; i++)
+        if ((kitty_mod_keys & ((1U << i) | (1U << (i + KITTY_KEY_MOD_SIDES)))) != 0)
+            mods |= kitty_mod_kinds[i];
+    return mods;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 gboolean
 tty_key_event_take (int key, tty_key_event_t *ev)
 {
@@ -3274,8 +3345,11 @@ enable_kitty_keyboard (void)
 
     kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[>%uu", kitty_flags_sent);
+    if (keybar_modifiers)
+        printf (ESC_STR "[?1004h");
     fflush (stdout);
     kitty_keyboard_active = TRUE;
+    kitty_mod_keys = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3300,9 +3374,12 @@ disable_kitty_keyboard (void)
     if (!kitty_keyboard_active)
         return;
 
+    if (keybar_modifiers)
+        printf (ESC_STR "[?1004l");
     printf (ESC_STR "[<u");
     fflush (stdout);
     kitty_keyboard_active = FALSE;
+    kitty_mod_keys = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
