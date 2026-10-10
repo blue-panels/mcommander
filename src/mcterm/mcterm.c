@@ -2442,9 +2442,11 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
 
     /* A key the outer terminal sent by the kitty protocol keeps all it said: the release, Super,
        the base layout key. With the event types (2) alone a key of the CSI u form keeps the
-       legacy bytes: only the other forms (arrows, F keys) carry an event type then. */
-    if ((flags & (0x01 | 0x02 | 0x08)) != 0 && tty_key_event (key, &ev)
-        && ((flags & (0x01 | 0x08)) != 0 || ev.final != 'u'))
+       legacy bytes: only the other forms (arrows, F keys) carry an event type then. A key with
+       no legacy bytes (F13 and up, the media keys) goes as CSI u with any flags. */
+    if (tty_key_event (key, &ev)
+        && ((flags & (0x01 | 0x08)) != 0 || ((flags & 0x02) != 0 && ev.final != 'u')
+            || (key == KEY_KITTY_EVENT && ev.final == 'u' && ev.key >= 57344 && ev.key <= 63743)))
     {
         t->kitty_utf8_len = 0;
         if (ev.event != TTY_KITTY_RELEASE)

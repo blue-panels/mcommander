@@ -506,6 +506,12 @@ START_TEST (test_kitty_event_encoding)
     assert_event ('~', 3, 0, 0, A, P, 0, 1, "\\\\e[3;3~");
     assert_event ('~', 15, 0, 0, 0, X, 0, 1 | 2, "\\\\e[15;1:3~");
 
+    /* a key with no legacy bytes goes as CSI u with no flags too, its release only with 2 */
+    assert_event ('u', 57376, 0, 0, 0, P, 0, 0, "\\\\e[57376u");
+    assert_event ('u', 57376, 0, 0, S, P, 0, 0, "\\\\e[57376;2u");
+    assert_event ('u', 57376, 0, 0, 0, X, 0, 0, "");
+    assert_event ('u', 57376, 0, 0, 0, X, 0, 2, "\\\\e[57376;1:3u");
+
     /* the event types alone: the legacy forms carry them */
     assert_event ('A', 1, 0, 0, 0, P, 0, 2, "\\\\e[A");
     assert_event ('A', 1, 0, 0, 0, X, 0, 2, "\\\\e[1;1:3A");
