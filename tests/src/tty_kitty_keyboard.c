@@ -76,10 +76,13 @@ static void
 teardown (void)
 {
     kitty_keyboard_active = FALSE;
+    win32_input_active = FALSE;
+    win32_high_surrogate = 0;
     kitty_flags_wanted = 0;
     kitty_flags_sent = 0;
     kitty_mod_keys = 0;
     kitty_text_len = kitty_text_pos = 0;
+    key_repeat_left = 0;
     done_key ();
     close (input_fd);
     input_fd = -1;
@@ -526,6 +529,197 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Win32 input mode: CSI Vk ; Sc ; Uc ; Kd ; Cs ; Rc _ */
+
+static const struct win32_ds
+{
+    const char *seq;
+    int code;
+} win32_ds[] = {
+    { "\033[65;30;97;1;0;1_", 'a' },                     // a
+    { "\033[65;30;97;0;0;1_", -1 },                      // a released
+    { "\033[65;30;65;1;16;1_", 'A' },                    // Shift-A
+    { "\033[65;30;1;1;8;1_", XCTRL ('a') },              // Ctrl-A
+    { "\033[65;30;1;1;24;1_", XCTRL ('a') },             // Ctrl-Shift-A
+    { "\033[65;30;97;1;2;1_", ALT ('a') },               // Alt-A
+    { "\033[65;30;1092;1;2;1_", ALT ('a') },             // Alt-ef: the key of the base layout
+    { "\033[65;30;1;1;8;1_", XCTRL ('a') },              // Ctrl-ef: Uc is the control code
+    { "\033[81;16;64;1;9;1_", '@' },                     // AltGr-Q of a German layout
+    { "\033[49;2;33;1;16;1_", '!' },                     // Shift-1
+    { "\033[49;2;49;1;8;1_", KEY_M_CTRL | '1' },         // Ctrl-1
+    { "\033[37;75;0;1;256;1_", KEY_LEFT },               // Left
+    { "\033[37;75;0;1;288;1_", KEY_LEFT },               // Left with Num Lock
+    { "\033[37;75;0;1;264;1_", KEY_M_CTRL | KEY_LEFT },  // Ctrl-Left
+    { "\033[34;81;0;1;256;1_", KEY_NPAGE },              // PgDn
+    { "\033[46;83;0;1;256;1_", KEY_DC },                 // Delete
+    { "\033[112;59;0;1;0;1_", KEY_F (1) },               // F1
+    { "\033[114;61;0;1;0;1_", KEY_F (3) },               // F3
+    { "\033[116;63;0;1;16;1_", KEY_F (15) },             // Shift-F5
+    { "\033[116;63;0;1;8;1_", KEY_M_CTRL | KEY_F (5) },  // Ctrl-F5
+    { "\033[13;28;13;1;0;1_", '\n' },                    // Enter
+    { "\033[13;28;13;1;256;1_", '\n' },                  // keypad Enter
+    { "\033[27;1;27;1;0;1_", ESC_CHAR },                 // Esc
+    { "\033[8;14;8;1;0;1_", KEY_BACKSPACE },             // Backspace
+    { "\033[9;15;9;1;16;1_", KEY_M_SHIFT | '\t' },       // Shift-Tab
+    { "\033[32;57;32;1;0;1_", ' ' },                     // Space
+    { "\033[100;75;52;1;32;1_", '4' },                   // keypad 4 with Num Lock
+    { "\033[188;51;44;1;0;1_", ',' },                    // comma
+    { "\033[17;29;0;1;8;1_", MCKEY_MODIFIERS },          // Ctrl alone
+    { "\033[17;29;0;0;0;1_", MCKEY_MODIFIERS },          // Ctrl released
+    { "\033[124;100;0;1;0;1_", KEY_KITTY_EVENT },        // F13: no mc key
+    { "\033[19;69;0;1;0;1_", KEY_KITTY_EVENT },          // Pause: no mc key, but a key
+    { "\033[44;55;0;1;256;1_", KEY_KITTY_EVENT },        // Print Screen
+    { "\033[93;93;0;1;256;1_", KEY_KITTY_EVENT },        // Menu
+    { "\033[49;2;33;1;18;1_", ALT ('!') },               // Alt-Shift-1
+    { "\033[190;52;1102;1;2;1_", ALT ('.') },            // Alt-period, Russian layout
+    { "\033[188;51;1073;1;2;1_", ALT (',') },            // Alt-comma, Russian layout
+    { "\033[190;52;46;1;2;1_", ALT ('.') },              // Alt-period, Latin layout
+    { "\033[190;52;0;1;8;1_", XCTRL ('.') },             // Ctrl-period: no character
+    { "\033[18;56;169;0;0;1_", 0xC2 },                   // Alt+0169: the character on Alt up
+};
+
+START_PARAMETRIZED_TEST (test_win32_decode, win32_ds)
+{
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+    ck_assert_int_eq (decode (data->seq), data->code);
+}
+END_PARAMETRIZED_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_keys_without_code)
+{
+    tty_key_event_t ev;
+
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+
+    ck_assert_int_eq (decode ("\033[19;69;0;1;0;1_"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
+    ck_assert_uint_eq (ev.key, 57362);  // Pause
+    ck_assert_int_eq (decode ("\033[44;55;0;1;256;1_"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
+    ck_assert_uint_eq (ev.key, 57361);  // Print Screen
+    ck_assert_int_eq (decode ("\033[93;93;0;1;256;1_"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
+    ck_assert_uint_eq (ev.key, 57363);  // Menu
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_capture_pair)
+{
+    char *seq;
+    char *after;
+
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+
+    /* both halves of a UTF-16 pair are one key, the releases come after */
+    feed ("\033[0;0;55357;1;0;1_\033[0;0;56832;1;0;1_\033[0;0;56832;0;0;1_");
+    seq = learn_key_ex (&after);
+    ck_assert_str_eq (seq, "\\e[0;0;55357;1;0;1_\\e[0;0;56832;1;0;1_");
+    ck_assert_str_eq (after, "\\e[0;0;56832;0;0;1_");
+    g_free (seq);
+    g_free (after);
+
+    /* a key with no character between the halves is no second half */
+    ck_assert_int_eq (decode ("\033[0;0;55357;1;0;1_\033[255;0;0;1;0;1_"), -1);
+    ck_assert_int_eq (decode ("\033[0;0;56832;1;0;1_"), -1);
+
+    /* the capture leaves nothing half done for the live input */
+    ck_assert_int_eq (decode ("\033[0;0;56832;1;0;1_"), -1);
+    ck_assert_int_eq (decode ("\033[65;30;97;1;0;1_"), 'a');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_text_and_modifiers)
+{
+    tty_key_event_t ev;
+
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+
+    /* ef: its UTF-8 bytes, and the event says the key and the base layout */
+    feed ("\033[65;30;1092;1;0;1_x");
+    ck_assert_int_eq (get_key_code (1), 0xD1);
+    ck_assert (tty_key_event (0xD1, &ev));
+    ck_assert_uint_eq (ev.key, 'a');
+    ck_assert_uint_eq (ev.base, 'a');
+    ck_assert_uint_eq (ev.text[0], 1092);
+    ck_assert_int_eq (get_key_code (1), 0x84);
+    ck_assert_int_eq (get_key_code (1), 'x');
+
+    /* a character outside the BMP comes as the two halves of its UTF-16 pair */
+    feed ("\033[0;0;55357;1;0;1_\033[0;0;56832;1;0;1_");
+    ck_assert_int_eq (get_key_code (1), 0xF0);
+    ck_assert_int_eq (get_key_code (1), 0x9F);
+    ck_assert_int_eq (get_key_code (1), 0x98);
+    ck_assert_int_eq (get_key_code (1), 0x80);
+
+    /* the held modifiers, the left and the right Ctrl apart */
+    decode ("\033[17;29;0;1;8;1_");
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_CTRL);
+    decode ("\033[17;29;0;1;268;1_");  // the right Ctrl too: an enhanced key
+    decode ("\033[17;29;0;0;4;1_");    // the left one up, the right one held
+    ck_assert_uint_eq (tty_kitty_modifiers (), TTY_KITTY_MOD_CTRL);
+    decode ("\033[17;29;0;0;256;1_");
+    ck_assert_uint_eq (tty_kitty_modifiers (), 0);
+
+    /* a record with a repeat count is that many keys: three Left, then x */
+    feed ("\033[37;75;0;1;256;3_x");
+    ck_assert_int_eq (get_key_code (1), KEY_LEFT);
+    ck_assert_int_eq (get_key_code (1), KEY_LEFT);
+    ck_assert_int_eq (get_key_code (1), KEY_LEFT);
+    ck_assert_int_eq (get_key_code (1), 'x');
+
+    /* the repeats are repeat events, as kitty gives them */
+    feed ("\033[37;75;0;1;256;2_");
+    ck_assert_int_eq (get_key_code (1), KEY_LEFT);
+    ck_assert (tty_key_event (KEY_LEFT, &ev));
+    ck_assert_int_eq (ev.event, TTY_KITTY_PRESS);
+    ck_assert_int_eq (get_key_code (1), KEY_LEFT);
+    ck_assert (tty_key_event (KEY_LEFT, &ev));
+    ck_assert_int_eq (ev.event, TTY_KITTY_REPEAT);
+
+    /* a key with no mc code is repeated too: F13 for a program in mcterm */
+    feed ("\033[124;100;0;1;0;3_x");
+    ck_assert_int_eq (get_key_code (1), KEY_KITTY_EVENT);
+    ck_assert_int_eq (get_key_code (1), KEY_KITTY_EVENT);
+    ck_assert_int_eq (get_key_code (1), KEY_KITTY_EVENT);
+    ck_assert_int_eq (get_key_code (1), 'x');
+
+    /* a count of more than 256 is not cut */
+    {
+        int n;
+
+        feed ("\033[37;75;0;1;256;300_x");
+        for (n = 0; get_key_code (1) == KEY_LEFT; n++)
+            ;
+        ck_assert_int_eq (n, 300);
+    }
+
+    /* and a character as many times, each with all its bytes */
+    feed ("\033[65;30;1092;1;0;2_y");
+    ck_assert_int_eq (get_key_code (1), 0xD1);
+    ck_assert_int_eq (get_key_code (1), 0x84);
+    ck_assert_int_eq (get_key_code (1), 0xD1);
+    ck_assert_int_eq (get_key_code (1), 0x84);
+    ck_assert_int_eq (get_key_code (1), 'y');
+
+    /* not decoded when the mode is off */
+    win32_input_active = FALSE;
+    kitty_keyboard_active = TRUE;
+    ck_assert_int_ne (decode ("\033[65;30;97;1;0;1_"), 'a');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_super_key_names)
 {
     char *name;
@@ -576,6 +770,10 @@ main (void)
     tcase_add_test (tc_core, test_kitty_held_modifiers);
     tcase_add_test (tc_core, test_getch_skips_modifiers);
     tcase_add_test (tc_core, test_learn_skips_leading_release);
+    mctest_add_parameterized_test (tc_core, test_win32_decode, win32_ds);
+    tcase_add_test (tc_core, test_win32_keys_without_code);
+    tcase_add_test (tc_core, test_win32_capture_pair);
+    tcase_add_test (tc_core, test_win32_text_and_modifiers);
     tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 
