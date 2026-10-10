@@ -239,12 +239,13 @@ const key_code_name_t key_name_conv_tab[] = {
 /* Kitty keyboard protocol: disambiguate escape codes (1) and report alternate keys (4) */
 #define KITTY_KEYBOARD_BASE 5
 /* Event types (2), every key as an escape code (8) and the text (16), for a program in mcterm */
-#define KITTY_KEYBOARD_EXTRA (2 | 8 | 16)
-/* The longest CSI sequence kept: a key with TTY_KITTY_TEXT_MAX code points of text fits */
-#define KITTY_CSI_MAX         (TTY_KITTY_TEXT_MAX * 8 + 64)
-#define KITTY_KEYBOARD_EVENTS 2
+#define KITTY_KEYBOARD_EXTRA    (2 | 8 | 16)
+#define KITTY_KEYBOARD_EVENTS   2
+#define KITTY_KEYBOARD_ALL_KEYS 8
 /* The flags that report a lone modifier key with its release */
 #define KITTY_KEYBOARD_MODIFIERS (2 | 8)
+/* The longest CSI sequence kept: a key with TTY_KITTY_TEXT_MAX code points of text fits */
+#define KITTY_CSI_MAX (TTY_KITTY_TEXT_MAX * 8 + 64)
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
 #define KITTY_CSI_TIMEOUT   (100 * MC_USEC_PER_MSEC)
 
@@ -1787,20 +1788,21 @@ kitty_track_modifiers (const tty_key_event_t *ev)
 
 /* --------------------------------------------------------------------------------------------- */
 /* The mc key of a kitty event read from the terminal: the text of a printable key, -1 for a
-   release no one asked for, else what kitty_event_to_code () gives. */
+   release no one asked for, MCKEY_MODIFIERS for a lone modifier, else what kitty_event_to_code ()
+   gives. */
 
 static int
 kitty_live_code (const tty_key_event_t *ev)
 {
     int code;
 
-    if (ev->event == TTY_KITTY_RELEASE)
-    {
-        const gboolean modifier =
-            ev->final == 'u' && ev->key >= KITTY_KEY_MOD_FIRST && ev->key <= KITTY_KEY_MOD_LAST;
+    // a lone modifier is a key only for a program in mcterm that asked for every key
+    if (ev->final == 'u' && ev->key >= KITTY_KEY_MOD_FIRST && ev->key <= KITTY_KEY_MOD_LAST)
+        return (kitty_flags_wanted & KITTY_KEYBOARD_ALL_KEYS) != 0 ? KEY_KITTY_EVENT
+                                                                   : MCKEY_MODIFIERS;
 
-        return modifier || (kitty_flags_wanted & KITTY_KEYBOARD_EVENTS) != 0 ? KEY_KITTY_EVENT : -1;
-    }
+    if (ev->event == TTY_KITTY_RELEASE)
+        return (kitty_flags_wanted & KITTY_KEYBOARD_EVENTS) != 0 ? KEY_KITTY_EVENT : -1;
 
     code = kitty_text_start (ev);
     return code != -1 ? code : kitty_event_to_code (ev);
@@ -1846,7 +1848,7 @@ kitty_read_csi (int c)
             if (params->len == 1 && (ch == 'I' || ch == 'O'))
             {
                 // the terminal got or lost the focus: a modifier released elsewhere is not seen
-                code = kitty_mod_keys != 0 ? KEY_KITTY_EVENT : -1;
+                code = kitty_mod_keys != 0 ? MCKEY_MODIFIERS : -1;
                 kitty_mod_keys = 0;
             }
             else if (kitty_parse_csi (params->str, params->len, &kitty_event))
@@ -2865,7 +2867,7 @@ nodelay_try_again:
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
-            if (c == -1 || c == KEY_KITTY_EVENT)
+            if (c == -1 || c == KEY_KITTY_EVENT || c == MCKEY_MODIFIERS)
             {
                 this = NULL;
                 kitty_event_code = c;
@@ -3264,8 +3266,9 @@ tty_getch (void)
     int key;
 
     ev.x = -1;
-    while ((key = tty_get_event (&ev, FALSE, TRUE)) == EV_NONE)
-        ;
+    do
+        key = tty_get_event (&ev, FALSE, TRUE);
+    while (key == EV_NONE || key == MCKEY_MODIFIERS);
     return key;
 }
 

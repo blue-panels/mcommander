@@ -44,6 +44,10 @@
 /* A bracketed paste read as one block: tty_paste_take() gives its text */
 #define MCKEY_PASTE -6
 
+/* No key: the held modifiers changed (a lone modifier key of a kitty terminal, a focus change).
+   tty_kitty_modifiers () gives them. */
+#define MCKEY_MODIFIERS -7
+
 /* A kitty key event mc has no key code for: a release, a media key, a key with Super. The
    widget that wants it reads it with tty_key_event (). */
 #define KEY_KITTY_EVENT 0xFFF

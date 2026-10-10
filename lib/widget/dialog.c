@@ -573,6 +573,10 @@ dlg_process_event (WDialog *h, int key, Gpm_Event *event)
         break;
     }
 
+    case MCKEY_MODIFIERS:
+        dlg_check_modifiers (h);
+        break;
+
     case MCKEY_PASTE:
     {
         GString *text = tty_paste_take ();
