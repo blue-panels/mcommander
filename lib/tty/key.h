@@ -62,6 +62,9 @@
 #define TTY_KITTY_REPEAT        2
 #define TTY_KITTY_RELEASE       3
 
+/* The most code points of the text of a key event; a longer text is not kept */
+#define TTY_KITTY_TEXT_MAX 32
+
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/
@@ -75,7 +78,7 @@ typedef struct
     unsigned int base;     // the key in the base layout, 0 when not sent
     unsigned int mods;     // TTY_KITTY_MOD_* bits
     int event;             // TTY_KITTY_PRESS, TTY_KITTY_REPEAT or TTY_KITTY_RELEASE
-    gunichar text[8];
+    gunichar text[TTY_KITTY_TEXT_MAX];
     int text_len;
 } tty_key_event_t;
 

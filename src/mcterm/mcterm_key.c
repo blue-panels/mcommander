@@ -633,7 +633,7 @@ mcterm_encode_kitty_event (const tty_key_event_t *ev, guint flags, unsigned char
         if (text_key && command_mods == 0)
         {
             gunichar ch = (mods & TTY_KITTY_MOD_SHIFT) != 0 && ev->shifted != 0 ? ev->shifted : key;
-            gchar utf8[8 * 6 + 1];
+            gchar utf8[TTY_KITTY_TEXT_MAX * 6 + 1];
             int len = 0, i;
 
             if (event == TTY_KITTY_RELEASE)

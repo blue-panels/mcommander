@@ -2432,7 +2432,8 @@ mcterm_waitpid_reap (pid_t pid)
 static gboolean
 mcterm_send_encoded_key (WMcTerm *t, int key)
 {
-    unsigned char buf[64];
+    // a kitty event with its whole text
+    unsigned char buf[TTY_KITTY_TEXT_MAX * 8 + 64];
     const gboolean app_cursor = mcview_vterm_app_cursor_keys (t->vterm);
     const guint flags = mcview_vterm_kitty_flags (t->vterm);
     size_t n;
@@ -2440,10 +2441,14 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
     tty_key_event_t ev;
 
     /* A key the outer terminal sent by the kitty protocol keeps all it said: the release, Super,
-       the base layout key */
-    if ((flags & (0x01 | 0x08)) != 0 && tty_key_event (key, &ev))
+       the base layout key. With the event types (2) alone a key of the CSI u form keeps the
+       legacy bytes: only the other forms (arrows, F keys) carry an event type then. */
+    if ((flags & (0x01 | 0x02 | 0x08)) != 0 && tty_key_event (key, &ev)
+        && ((flags & (0x01 | 0x08)) != 0 || ev.final != 'u'))
     {
         t->kitty_utf8_len = 0;
+        if (ev.event != TTY_KITTY_RELEASE)
+            t->line_entered = (key == '\n' || key == '\r' || key == KEY_ENTER);
         n = mcterm_encode_kitty_event (&ev, flags, buf, sizeof (buf), app_cursor);
         return n == 0 || mcterm_write_all (t->pty_master, buf, n);
     }

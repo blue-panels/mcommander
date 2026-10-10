@@ -505,6 +505,45 @@ START_TEST (test_kitty_event_encoding)
     assert_event ('P', 1, 0, 0, 0, P, 0, 1, "\\\\eOP");
     assert_event ('~', 3, 0, 0, A, P, 0, 1, "\\\\e[3;3~");
     assert_event ('~', 15, 0, 0, 0, X, 0, 1 | 2, "\\\\e[15;1:3~");
+
+    /* the event types alone: the legacy forms carry them */
+    assert_event ('A', 1, 0, 0, 0, P, 0, 2, "\\\\e[A");
+    assert_event ('A', 1, 0, 0, 0, X, 0, 2, "\\\\e[1;1:3A");
+    assert_event ('~', 15, 0, 0, 0, R, 0, 2, "\\\\e[15;1:2~");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_event_long_text)
+{
+    tty_key_event_t ev;
+    unsigned char buf[TTY_KITTY_TEXT_MAX * 8 + 64];
+    GString *expected;
+    size_t len;
+    int i;
+
+    memset (&ev, 0, sizeof (ev));
+    ev.final = 'u';
+    ev.key = 97;
+    ev.event = TTY_KITTY_PRESS;
+    ev.text_len = 20;
+    expected = g_string_new ("\x1b[97;1;");
+    for (i = 0; i < ev.text_len; i++)
+    {
+        ev.text[i] = 0x430 + (gunichar) i;
+        g_string_append_printf (expected, i == 0 ? "%u" : ":%u", 0x430 + (unsigned int) i);
+    }
+    g_string_append_c (expected, 'u');
+
+    len = mcterm_encode_kitty_event (&ev, 8 | 16, buf, sizeof (buf), FALSE);
+    ck_assert_uint_eq (len, expected->len);
+    ck_assert (memcmp (buf, expected->str, len) == 0);
+
+    /* with flag 1 alone the whole text goes as UTF-8 */
+    len = mcterm_encode_kitty_event (&ev, 1, buf, sizeof (buf), FALSE);
+    ck_assert_uint_eq (len, 20 * 2);
+    g_string_free (expected, TRUE);
 }
 END_TEST
 
@@ -533,6 +572,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_disambiguate);
     tcase_add_test (tc_core, test_kitty_all_keys);
     tcase_add_test (tc_core, test_kitty_event_encoding);
+    tcase_add_test (tc_core, test_kitty_event_long_text);
     tcase_add_test (tc_core, test_small_buffer_returns_zero);
     tcase_add_test (tc_core, test_copy_self_does_not_loop);
     tcase_add_test (tc_core, test_copy_cycle_does_not_loop);

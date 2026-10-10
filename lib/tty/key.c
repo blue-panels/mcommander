@@ -1512,8 +1512,9 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
 static gboolean
 kitty_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
 {
-    unsigned int field[3][8];
+    unsigned int field[3][TTY_KITTY_TEXT_MAX];
     unsigned int nsub[3] = { 1, 1, 1 };
+    gboolean text_cut = FALSE;
     unsigned int f = 0, sub = 0;
     size_t i;
 
@@ -1527,14 +1528,16 @@ kitty_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
 
         if (g_ascii_isdigit (ch))
         {
-            if (f < 3 && sub < 8 && field[f][sub] < 0x10FFFF)
+            if (f < 3 && sub < TTY_KITTY_TEXT_MAX && field[f][sub] < 0x10FFFF)
                 field[f][sub] = field[f][sub] * 10 + (unsigned int) (ch - '0');
         }
         else if (ch == ':')
         {
             sub++;
-            if (f < 3 && sub < 8)
+            if (f < 3 && sub < TTY_KITTY_TEXT_MAX)
                 nsub[f] = sub + 1;
+            else if (f == 2)
+                text_cut = TRUE;
         }
         else if (ch == ';')
         {
@@ -1554,7 +1557,8 @@ kitty_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
     ev->base = field[0][2];
     ev->mods = field[1][0] > 0 ? field[1][0] - 1 : 0;
     ev->event = field[1][1] == 0 ? TTY_KITTY_PRESS : (int) field[1][1];
-    if (f >= 2)
+    // a part of the text would be another text: none is kept
+    if (f >= 2 && !text_cut)
         for (sub = 0; sub < nsub[2] && field[2][sub] != 0; sub++)
             ev->text[ev->text_len++] = (gunichar) field[2][sub];
     return TRUE;

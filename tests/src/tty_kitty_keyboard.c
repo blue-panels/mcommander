@@ -271,6 +271,35 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_kitty_long_text)
+{
+    tty_key_event_t ev;
+    GString *seq;
+    int i;
+
+    /* 20 code points of text are all kept */
+    seq = g_string_new ("\033[97;;");
+    for (i = 0; i < 20; i++)
+        g_string_append_printf (seq, i == 0 ? "%d" : ":%d", 0x430 + i);
+    g_string_append_c (seq, 'u');
+    ck_assert (tty_kitty_seq_event (seq->str, (int) seq->len, &ev));
+    ck_assert_int_eq (ev.text_len, 20);
+    ck_assert_uint_eq (ev.text[19], 0x430 + 19);
+
+    /* a text longer than TTY_KITTY_TEXT_MAX is not kept cut */
+    g_string_truncate (seq, seq->len - 1);
+    for (i = 20; i < TTY_KITTY_TEXT_MAX + 5; i++)
+        g_string_append_printf (seq, ":%d", 0x430 + i);
+    g_string_append_c (seq, 'u');
+    ck_assert (tty_kitty_seq_event (seq->str, (int) seq->len, &ev));
+    ck_assert_int_eq (ev.text_len, 0);
+    ck_assert_uint_eq (ev.key, 97);
+    g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_super_key_names)
 {
     char *name;
@@ -313,6 +342,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_learned_preserves_live_input);
     tcase_add_test (tc_core, test_kitty_ctrl_digit_name);
     tcase_add_test (tc_core, test_kitty_event_fields);
+    tcase_add_test (tc_core, test_kitty_long_text);
     tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 
