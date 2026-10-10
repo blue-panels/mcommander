@@ -183,8 +183,7 @@ mcterm_load_terminal (mc_config_t *cfg)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Modified cursor and editing keys use xterm CSI sequences. Ctrl with a digit has no
-   legacy control byte, so pass its distinct key code as kitty CSI u. */
+/* Modified cursor and editing keys use xterm CSI sequences. */
 static size_t
 mcterm_encode_modified_key (int key, unsigned char *buf, size_t bufsz)
 {
@@ -197,13 +196,6 @@ mcterm_encode_modified_key (int key, unsigned char *buf, size_t bufsz)
 
     if (mods == 0)
         return 0;
-
-    if ((mods & KEY_M_CTRL) != 0 && base >= '0' && base <= '9')
-    {
-        m = 1 + ((mods & KEY_M_SHIFT) != 0 ? 1 : 0) + ((mods & KEY_M_ALT) != 0 ? 2 : 0) + 4;
-        g_snprintf (seq, sizeof (seq), "\x1b[%d;%du", base, m);
-        return mcterm_copy_seq (buf, bufsz, seq);
-    }
 
     switch (base)
     {
@@ -267,6 +259,135 @@ mcterm_copy_enc_seq (int key, unsigned char *buf, size_t bufsz)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* The kitty keyboard protocol, for a program that asked for it with CSI > flags u */
+
+#define KITTY_DISAMBIGUATE 0x01
+#define KITTY_EVENT_TYPES  0x02
+#define KITTY_ALTERNATES   0x04
+#define KITTY_ALL_KEYS     0x08
+#define KITTY_TEXT         0x10
+
+#define KITTY_KEY_F13      57376
+
+static int
+mcterm_kitty_mods (int mods)
+{
+    return 1 + ((mods & KEY_M_SHIFT) != 0 ? 1 : 0) + ((mods & KEY_M_ALT) != 0 ? 2 : 0)
+        + ((mods & KEY_M_CTRL) != 0 ? 4 : 0) + ((mods & KEY_M_SUPER) != 0 ? 8 : 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* CSI key[:shifted] ; mods ; text u */
+
+static size_t
+mcterm_kitty_csi_u (unsigned char *buf, size_t bufsz, guint flags, gunichar code, gunichar shifted,
+                    int mods, gunichar text)
+{
+    GString *seq;
+    const int m = mcterm_kitty_mods (mods);
+    size_t n;
+
+    seq = g_string_new ("\x1b[");
+    g_string_append_printf (seq, "%u", (unsigned int) code);
+    if ((flags & KITTY_ALTERNATES) != 0 && shifted != 0 && shifted != code)
+        g_string_append_printf (seq, ":%u", (unsigned int) shifted);
+    if ((flags & KITTY_TEXT) != 0 && (flags & KITTY_ALL_KEYS) != 0 && text != 0)
+        g_string_append_printf (seq, ";%d;%u", m, (unsigned int) text);
+    else if (m != 1)
+        g_string_append_printf (seq, ";%d", m);
+    g_string_append_c (seq, 'u');
+
+    n = mcterm_copy_seq (buf, bufsz, seq->str);
+    g_string_free (seq, TRUE);
+    return n;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Function and cursor keys: the legacy forms with the modifiers, F3 as CSI 13 ~ and F13 and up
+   as CSI u. Returns 0 for a key that is not one of them. */
+
+static size_t
+mcterm_kitty_function_key (int key, unsigned char *buf, size_t bufsz, gboolean app_cursor)
+{
+    static const int tilde_f[] = { 0, 0, 0, 13, 0, 15, 17, 18, 19, 20, 21, 23, 24 };
+    const int mods = key & KEY_M_MASK;
+    const int base = key & ~KEY_M_MASK;
+    const int m = mcterm_kitty_mods (mods);
+    char seq[24];
+    char final = '\0';
+    int num = 0;
+
+    if (base >= KEY_F (13) && base <= KEY_F (35))
+        return mcterm_kitty_csi_u (buf, bufsz, 0, (gunichar) (KITTY_KEY_F13 + base - KEY_F (13)), 0,
+                                   mods, 0);
+
+    if (base >= KEY_F (1) && base <= KEY_F (12))
+    {
+        const int f = base - KEY_F (1) + 1;
+
+        if (f == 1 || f == 2 || f == 4)
+        {
+            final = f == 1 ? 'P' : (f == 2 ? 'Q' : 'S');
+            if (m == 1)
+            {
+                g_snprintf (seq, sizeof (seq), "\x1bO%c", final);
+                return mcterm_copy_seq (buf, bufsz, seq);
+            }
+        }
+        else
+            num = tilde_f[f];
+    }
+    else
+        switch (base)
+        {
+        case KEY_IC:
+            num = 2;
+            break;
+        case KEY_DC:
+            num = 3;
+            break;
+        case KEY_PPAGE:
+            num = 5;
+            break;
+        case KEY_NPAGE:
+            num = 6;
+            break;
+        case KEY_UP:
+        case KEY_DOWN:
+        case KEY_RIGHT:
+        case KEY_LEFT:
+        case KEY_HOME:
+        case KEY_END:
+            final = base == KEY_UP  ? 'A'
+                : base == KEY_DOWN  ? 'B'
+                : base == KEY_RIGHT ? 'C'
+                : base == KEY_LEFT  ? 'D'
+                : base == KEY_HOME  ? 'H'
+                                    : 'F';
+            if (m == 1)
+            {
+                g_snprintf (seq, sizeof (seq), "\x1b%c%c", app_cursor ? 'O' : '[', final);
+                return mcterm_copy_seq (buf, bufsz, seq);
+            }
+            break;
+        default:
+            return 0;
+        }
+
+    if (num != 0)
+    {
+        if (m == 1)
+            g_snprintf (seq, sizeof (seq), "\x1b[%d~", num);
+        else
+            g_snprintf (seq, sizeof (seq), "\x1b[%d;%d~", num, m);
+    }
+    else
+        g_snprintf (seq, sizeof (seq), "\x1b[1;%d%c", m, final);
+
+    return mcterm_copy_seq (buf, bufsz, seq);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 /*** public functions ****************************************************************************/
 
@@ -297,8 +418,22 @@ mcterm_encode_key_xterm (int key, unsigned char *buf, size_t bufsz, gboolean app
     if (bufsz == 0)
         return 0;
 
+    // the xterm keys have no Super
+    key &= ~KEY_M_SUPER;
+
     if ((key & ~0x1F) == KEY_M_CTRL)
         key &= 0x1F;
+
+    /* Ctrl with a digit, as xterm sends it without the kitty protocol */
+    if ((key & ~KEY_M_SHIFT) == (KEY_M_CTRL | (key & 0xFF)) && (key & 0xFF) >= '0'
+        && (key & 0xFF) <= '9')
+    {
+        static const unsigned char ctrl_digit[10] = { '0',  '1',  0x00, 0x1B, 0x1C,
+                                                      0x1D, 0x1E, 0x1F, 0x7F, '9' };
+
+        buf[0] = ctrl_digit[(key & 0xFF) - '0'];
+        return 1;
+    }
 
     if (key == '\n' || key == '\r')
     {
@@ -372,4 +507,187 @@ mcterm_encode_key_xterm (int key, unsigned char *buf, size_t bufsz, gboolean app
     }
 
     return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+size_t
+mcterm_encode_kitty_codepoint (gunichar cp, int mods, guint flags, unsigned char *buf, size_t bufsz)
+{
+    const gunichar code = g_unichar_tolower (cp);
+    const gboolean shifted = code != cp;
+
+    if (shifted)
+        mods |= KEY_M_SHIFT;
+    const int command_mods = KEY_M_CTRL | KEY_M_ALT | KEY_M_SUPER;
+
+    if ((flags & KITTY_ALL_KEYS) == 0
+        && ((flags & KITTY_DISAMBIGUATE) == 0 || (mods & command_mods) == 0))
+        return 0;
+
+    return mcterm_kitty_csi_u (buf, bufsz, flags, code, shifted ? cp : 0, mods,
+                               (mods & command_mods) == 0 ? cp : 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+size_t
+mcterm_encode_key (int key, guint kitty_flags, unsigned char *buf, size_t bufsz,
+                   gboolean app_cursor)
+{
+    int mods = key & KEY_M_MASK;
+    int base = key & ~KEY_M_MASK;
+    gunichar code = 0;
+    size_t n;
+
+    if ((kitty_flags & (KITTY_DISAMBIGUATE | KITTY_ALL_KEYS)) == 0 || bufsz == 0)
+        return mcterm_encode_key_xterm (key, buf, bufsz, app_cursor);
+
+    n = mcterm_kitty_function_key (key, buf, bufsz, app_cursor);
+    if (n > 0)
+        return n;
+
+    if (base == '\n' || base == '\r' || base == KEY_ENTER)
+        code = 13;
+    else if (base == '\t')
+        code = 9;
+    else if (base == KEY_BACKSPACE || base == 0x7F)
+        code = 127;
+    else if (base == ESC_CHAR)
+        code = 27;
+    else if (base >= 0x00 && base < 0x20)
+    {
+        /* Ctrl with a letter or one of @ [ \ ] ^ _ came as its control byte */
+        mods |= KEY_M_CTRL;
+        code = (gunichar) (base == 0 ? ' ' : (base <= 0x1A ? base + 0x60 : base + 0x40));
+    }
+    else if (base >= 0x20 && base < 0x7F)
+    {
+        n = mcterm_encode_kitty_codepoint ((gunichar) base, mods, kitty_flags, buf, bufsz);
+        return n > 0 ? n : mcterm_encode_key_xterm (key, buf, bufsz, app_cursor);
+    }
+    else
+        return mcterm_encode_key_xterm (key, buf, bufsz, app_cursor);
+
+    /* Enter, Tab and Backspace stay legacy without modifiers unless every key is asked for */
+    if ((kitty_flags & KITTY_ALL_KEYS) == 0 && mods == 0 && code != 27)
+        return mcterm_encode_key_xterm (key, buf, bufsz, app_cursor);
+
+    return mcterm_kitty_csi_u (buf, bufsz, kitty_flags, code, 0, mods, 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+size_t
+mcterm_encode_kitty_event (const tty_key_event_t *ev, guint flags, unsigned char *buf, size_t bufsz,
+                           gboolean app_cursor)
+{
+    const gboolean all = (flags & KITTY_ALL_KEYS) != 0;
+    const unsigned int locks = TTY_KITTY_MOD_CAPS_LOCK | TTY_KITTY_MOD_NUM_LOCK;
+    const unsigned int mods = all ? ev->mods : ev->mods & ~locks;
+    const unsigned int command_mods = mods & ~(TTY_KITTY_MOD_SHIFT | locks);
+    const int event = (flags & KITTY_EVENT_TYPES) != 0 ? ev->event
+        : ev->event == TTY_KITTY_RELEASE               ? -1
+                                                       : TTY_KITTY_PRESS;
+    const unsigned int key = ev->key;
+    const gboolean private_key = key >= 57344 && key <= 63743;
+    const gboolean text_key = key >= 32 && key != 127 && !private_key;
+    GString *seq;
+    size_t n;
+
+    if (event == -1 || bufsz == 0)
+        return 0;
+
+    if (ev->final != 'u')
+    {
+        char seq_buf[32];
+        char ev_part[4] = "";
+
+        if (event != TTY_KITTY_PRESS)
+            g_snprintf (ev_part, sizeof (ev_part), ":%d", event);
+
+        if (mods == 0 && event == TTY_KITTY_PRESS)
+        {
+            if (ev->final == '~')
+                g_snprintf (seq_buf, sizeof (seq_buf), "\x1b[%u~", key);
+            else if (strchr ("PQS", ev->final) != NULL
+                     || (app_cursor && strchr ("ABCDHF", ev->final)))
+                g_snprintf (seq_buf, sizeof (seq_buf), "\x1bO%c", ev->final);
+            else
+                g_snprintf (seq_buf, sizeof (seq_buf), "\x1b[%c", ev->final);
+        }
+        else if (ev->final == '~')
+            g_snprintf (seq_buf, sizeof (seq_buf), "\x1b[%u;%u%s~", key, mods + 1, ev_part);
+        else
+            g_snprintf (seq_buf, sizeof (seq_buf), "\x1b[1;%u%s%c", mods + 1, ev_part, ev->final);
+
+        return mcterm_copy_seq (buf, bufsz, seq_buf);
+    }
+
+    if (!all)
+    {
+        /* the modifier keys and the lock keys themselves are only for "every key" */
+        if ((key >= 57358 && key <= 57363) || (key >= 57441 && key <= 57452))
+            return 0;
+
+        if (text_key && command_mods == 0)
+        {
+            gunichar ch = (mods & TTY_KITTY_MOD_SHIFT) != 0 && ev->shifted != 0 ? ev->shifted : key;
+            gchar utf8[TTY_KITTY_TEXT_MAX * 6 + 1];
+            int len = 0, i;
+
+            if (event == TTY_KITTY_RELEASE)
+                return 0;
+            if (ev->text_len > 0)
+                for (i = 0; i < ev->text_len; i++)
+                    len += g_unichar_to_utf8 (ev->text[i], utf8 + len);
+            else
+                len = g_unichar_to_utf8 (ch, utf8);
+            utf8[len] = '\0';
+            return mcterm_copy_seq (buf, bufsz, utf8);
+        }
+
+        if ((key == 13 || key == 9 || key == 127) && mods == 0)
+        {
+            if (event == TTY_KITTY_RELEASE)
+                return 0;
+            buf[0] = (unsigned char) (key == 13 ? '\r' : key);
+            return 1;
+        }
+    }
+
+    seq = g_string_new ("\x1b[");
+    g_string_append_printf (seq, "%u", key);
+    if ((flags & KITTY_ALTERNATES) != 0)
+    {
+        const gboolean shifted = (mods & TTY_KITTY_MOD_SHIFT) != 0 && ev->shifted != 0;
+        const gboolean base = ev->base != 0 && ev->base != key;
+
+        if (shifted)
+            g_string_append_printf (seq, ":%u", ev->shifted);
+        if (base)
+            g_string_append_printf (seq, shifted ? ":%u" : "::%u", ev->base);
+    }
+    if (all && (flags & KITTY_TEXT) != 0 && ev->text_len > 0 && event != TTY_KITTY_RELEASE)
+    {
+        int i;
+
+        g_string_append_printf (seq, ";%u", mods + 1);
+        if (event != TTY_KITTY_PRESS)
+            g_string_append_printf (seq, ":%d", event);
+        g_string_append_c (seq, ';');
+        for (i = 0; i < ev->text_len; i++)
+            g_string_append_printf (seq, i == 0 ? "%u" : ":%u", (unsigned int) ev->text[i]);
+    }
+    else if (mods != 0 || event != TTY_KITTY_PRESS)
+    {
+        g_string_append_printf (seq, ";%u", mods + 1);
+        if (event != TTY_KITTY_PRESS)
+            g_string_append_printf (seq, ":%d", event);
+    }
+    g_string_append_c (seq, 'u');
+
+    n = mcterm_copy_seq (buf, bufsz, seq->str);
+    g_string_free (seq, TRUE);
+    return n;
 }

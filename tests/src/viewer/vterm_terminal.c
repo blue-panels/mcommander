@@ -1983,6 +1983,140 @@ START_TEST (test_bracketed_paste_mode)
 END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
+/* The reply of the terminal to what was fed last, or "" when there is none. */
+
+static char *
+feed_reply (mcview_vterm_t *vt, const char *data)
+{
+    GString *reply = g_string_new ("");
+    size_t i;
+
+    for (i = 0; data[i] != '\0'; i++)
+    {
+        vterm_event_t ev = mcview_vterm_feed (vt, (unsigned char) data[i]);
+
+        if (ev.type == VTERM_REPLY && ev.reply != NULL)
+            g_string_append (reply, ev.reply);
+        mcview_vterm_apply_event (vt, &ev);
+    }
+    return g_string_free (reply, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mcview_vterm_t *
+kitty_vterm (void)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 5, 20);
+    mcview_vterm_reset (vt);
+    return vt;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_keyboard_query_push_pop)
+{
+    mcview_vterm_t *vt = kitty_vterm ();
+    char *reply;
+
+    reply = feed_reply (vt, "\033[?u");
+    ck_assert_str_eq (reply, "\033[?0u");
+    g_free (reply);
+
+    FEED (vt, "\033[>1u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 1);
+    FEED (vt, "\033[>31u");
+    reply = feed_reply (vt, "\033[?u");
+    ck_assert_str_eq (reply, "\033[?31u");
+    g_free (reply);
+
+    FEED (vt, "\033[<u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 1);
+    FEED (vt, "\033[<5u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 0);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_keyboard_set_modes)
+{
+    mcview_vterm_t *vt = kitty_vterm ();
+
+    FEED (vt, "\033[=5u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 5);
+    FEED (vt, "\033[=2;2u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 7);
+    FEED (vt, "\033[=4;3u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 3);
+    FEED (vt, "\033[=8;1u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 8);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_keyboard_stack_per_screen)
+{
+    mcview_vterm_t *vt = kitty_vterm ();
+
+    FEED (vt, "\033[>1u");
+    FEED (vt, "\033[?1049h");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 0);
+    FEED (vt, "\033[>15u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 15);
+    FEED (vt, "\033[?1049l");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 1);
+
+    mcview_vterm_reset (vt);
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 0);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_keyboard_stack_limit)
+{
+    mcview_vterm_t *vt = kitty_vterm ();
+    int i;
+
+    for (i = 0; i < 40; i++)
+        FEED (vt, "\033[>3u");
+    FEED (vt, "\033[>9u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 9);
+    for (i = 0; i < 40; i++)
+        FEED (vt, "\033[<u");
+    ck_assert_uint_eq (mcview_vterm_kitty_flags (vt), 0);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_keyboard_leaves_the_cursor_alone)
+{
+    mcview_vterm_t *vt = kitty_vterm ();
+
+    FEED (vt, "\033[4;6H");
+    FEED (vt, "\033[>1u\033[=1;1u\033[?u\033[<u");
+    ck_assert_int_eq (mcview_vterm_cursor_row (vt), 3);
+    ck_assert_int_eq (mcview_vterm_cursor_col (vt), 5);
+    ck_assert_uint_eq (cell_ch (vt, 3, 5), 0);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
 
 int
 main (void)
@@ -2022,6 +2156,11 @@ main (void)
     tcase_add_test (tc_core, test_wide_char_takes_two_cells);
     tcase_add_test (tc_core, test_wide_char_goes_to_the_next_row_whole);
     tcase_add_test (tc_core, test_wide_char_half_overwritten_leaves_a_blank);
+    tcase_add_test (tc_core, test_kitty_keyboard_query_push_pop);
+    tcase_add_test (tc_core, test_kitty_keyboard_set_modes);
+    tcase_add_test (tc_core, test_kitty_keyboard_stack_per_screen);
+    tcase_add_test (tc_core, test_kitty_keyboard_stack_limit);
+    tcase_add_test (tc_core, test_kitty_keyboard_leaves_the_cursor_alone);
     tcase_add_test (tc_core, test_reflow_keeps_a_wide_character_whole);
     tcase_add_test (tc_core, test_reflow_after_a_wide_character_wrapped);
     tcase_add_test (tc_core, test_erase_of_one_half_blanks_the_wide_character);

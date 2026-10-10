@@ -52,6 +52,7 @@
 /*** file scope variables ************************************************************************/
 
 static WLabel *ks_lbl_raw;
+static WLabel *ks_lbl_kitty;
 static WLabel *ks_lbl_keycode;
 static WLabel *ks_lbl_name;
 static WLabel *ks_lbl_action;
@@ -92,6 +93,34 @@ ks_update_display (const char *seq)
     }
 
     keycode = tty_decode_key_seq (raw, (int) strlen (raw));
+    {
+        tty_key_event_t ev;
+        GString *k = g_string_new ("");
+
+        if (tty_kitty_seq_event (raw, (int) strlen (raw), &ev))
+        {
+            static const char *const mod_names[] = { "Shift", "Alt",  "Ctrl", "Super",
+                                                     "Hyper", "Meta", "Caps", "Num" };
+            static const char *const event_names[] = { "press", "repeat", "release" };
+            size_t m;
+            int i;
+
+            g_string_append_printf (k, "%u", ev.key);
+            if (ev.shifted != 0 || ev.base != 0)
+                g_string_append_printf (k, ":%u", ev.shifted);
+            if (ev.base != 0)
+                g_string_append_printf (k, ":%u", ev.base);
+            for (m = 0; m < G_N_ELEMENTS (mod_names); m++)
+                if ((ev.mods & (1U << m)) != 0)
+                    g_string_append_printf (k, " %s", mod_names[m]);
+            if (ev.event >= TTY_KITTY_PRESS && ev.event <= TTY_KITTY_RELEASE)
+                g_string_append_printf (k, " %s", event_names[ev.event - 1]);
+            for (i = 0; i < ev.text_len; i++)
+                g_string_append_printf (k, i == 0 ? " U+%04X" : ":U+%04X", (unsigned) ev.text[i]);
+        }
+        label_set_text (ks_lbl_kitty, k->str);
+        g_string_free (k, TRUE);
+    }
     g_free (raw);
 
     /* display keycode */
@@ -220,6 +249,10 @@ key_sniffer (void)
     group_add_widget (g, label_new (5, 2, _ ("Keycode:")));
     ks_lbl_keycode = label_new (5, 12, "");
     group_add_widget (g, ks_lbl_keycode);
+
+    group_add_widget (g, label_new (6, 2, _ ("Kitty:")));
+    ks_lbl_kitty = label_new (6, 12, "");
+    group_add_widget (g, ks_lbl_kitty);
 
     group_add_widget (g, hline_new (7, -1, -1));
 

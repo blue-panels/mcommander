@@ -33,7 +33,7 @@
 #undef tty_lowlevel_getch
 #undef tty_nodelay
 
-static int test_input[64];
+static int test_input[KITTY_CSI_MAX + 256];
 static size_t test_input_len;
 static size_t test_input_pos;
 
@@ -127,10 +127,17 @@ static const struct decode_ds
     { "\033[1;2P", KEY_F (11) },                   // Shift-F1
     { "\033[1;5S", KEY_M_CTRL | KEY_F (4) },       // Ctrl-F4
     { "\033[1;5A", KEY_M_CTRL | KEY_UP },          // Ctrl-Up, from the xterm table
-    { "\033[1092;5u", -1 },                        // Ctrl-ef without the base layout key
-    { "\033[97;9u", -1 },                          // Super-A
-    { "\033[57358u", -1 },                         // Caps Lock
-    { "\033[57376u", -1 },                         // F13
+    { "\033[1092;5u", KEY_KITTY_EVENT },           // Ctrl-ef without the base layout key
+    { "\033[97;9u", KEY_M_SUPER | 'a' },           // Super-A
+    { "\033[97;13u", KEY_M_SUPER | XCTRL ('a') },  // Super-Ctrl-A
+    { "\033[97;17u", KEY_KITTY_EVENT },            // Hyper-A
+    { "\033[57358u", KEY_KITTY_EVENT },            // Caps Lock
+    { "\033[57376u", KEY_KITTY_EVENT },            // F13
+    { "\033[97;5:2u", XCTRL ('a') },               // Ctrl-A repeated
+    { "\033[97;5:3u", KEY_KITTY_EVENT },           // Ctrl-A released
+    { "\033[1;5:2A", KEY_M_CTRL | KEY_UP },        // Ctrl-Up repeated
+    { "\033[1;1:3A", KEY_KITTY_EVENT },            // Up released
+    { "\033[13;1:2~", KEY_F (3) },                 // F3 repeated
 };
 
 START_PARAMETRIZED_TEST (test_kitty_decode, decode_ds)
@@ -168,18 +175,19 @@ static const struct learned_ds
     const char *seq;
     int code;
 } learned_ds[] = {
-    { "\033[49;5u", KEY_M_CTRL | '1' },  // Ctrl-1 of the kitty protocol
-    { "\033[97;5u", XCTRL ('a') },       // Ctrl-A of the kitty protocol
-    { "\001", XCTRL ('a') },             // Ctrl-A of a legacy terminal
-    { "\033a", ALT ('a') },              // Alt-A
-    { "a", 'a' },                        //
-    { "\033[13~", KEY_F (3) },           // F3, from the xterm table
-    { "\033[97;9u", 0 },                 // Super-A
-    { "\033[1;5Az", 0 },                 // more than one key
-    { "\033", ESC_CHAR },                // Esc
-    { "\033O", ALT ('O') },              // Alt-Shift-O, a head of other sequences
-    { "\177", KEY_BACKSPACE },           // Backspace
-    { "\035", XCTRL (']') },             // Ctrl-]
+    { "\033[49;5u", KEY_M_CTRL | '1' },   // Ctrl-1 of the kitty protocol
+    { "\033[97;5u", XCTRL ('a') },        // Ctrl-A of the kitty protocol
+    { "\001", XCTRL ('a') },              // Ctrl-A of a legacy terminal
+    { "\033a", ALT ('a') },               // Alt-A
+    { "a", 'a' },                         //
+    { "\033[13~", KEY_F (3) },            // F3, from the xterm table
+    { "\033[97;9u", KEY_M_SUPER | 'a' },  // Super-A
+    { "\033[97;17u", 0 },                 // Hyper-A
+    { "\033[1;5Az", 0 },                  // more than one key
+    { "\033", ESC_CHAR },                 // Esc
+    { "\033O", ALT ('O') },               // Alt-Shift-O, a head of other sequences
+    { "\177", KEY_BACKSPACE },            // Backspace
+    { "\035", XCTRL (']') },              // Ctrl-]
 };
 
 START_PARAMETRIZED_TEST (test_kitty_learned_seq, learned_ds)
@@ -226,6 +234,103 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_kitty_event_fields)
+{
+    tty_key_event_t ev;
+
+    ck_assert_int_eq (decode ("\033[97:65;6:2;65u"), XCTRL ('a'));
+    ck_assert (tty_key_event (XCTRL ('a'), &ev));
+    ck_assert (!tty_key_event (KEY_LEFT, &ev));
+    ck_assert_int_eq (ev.final, 'u');
+    ck_assert_uint_eq (ev.key, 97);
+    ck_assert_uint_eq (ev.shifted, 65);
+    ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_SHIFT | TTY_KITTY_MOD_CTRL);
+    ck_assert_int_eq (ev.event, TTY_KITTY_REPEAT);
+    ck_assert_int_eq (ev.text_len, 1);
+    ck_assert_uint_eq (ev.text[0], 65);
+
+    ck_assert_int_eq (decode ("\033[1;3:3D"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
+    ck_assert_int_eq (ev.final, 'D');
+    ck_assert_uint_eq (ev.key, 1);
+    ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_ALT);
+    ck_assert_int_eq (ev.event, TTY_KITTY_RELEASE);
+
+    ck_assert_int_eq (decode ("\033[57441;9u"), KEY_KITTY_EVENT);
+    ck_assert (tty_key_event (KEY_KITTY_EVENT, &ev));
+    ck_assert_uint_eq (ev.key, 57441);
+    ck_assert_uint_eq (ev.mods, TTY_KITTY_MOD_SUPER);
+
+    /* a key that did not come as a kitty event has none */
+    ck_assert_int_eq (decode ("x"), 'x');
+    ck_assert (!tty_key_event ('x', &ev));
+    ck_assert_int_eq (decode ("\033[13~"), KEY_F (3));
+    ck_assert (!tty_key_event (KEY_F (3), &ev));
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_long_text)
+{
+    tty_key_event_t ev;
+    GString *seq;
+    int i, c;
+
+    /* 20 code points of text are all kept */
+    seq = g_string_new ("\033[97;;");
+    for (i = 0; i < 20; i++)
+        g_string_append_printf (seq, i == 0 ? "%d" : ":%d", 0x430 + i);
+    g_string_append_c (seq, 'u');
+    ck_assert (tty_kitty_seq_event (seq->str, (int) seq->len, &ev));
+    ck_assert_int_eq (ev.text_len, 20);
+    ck_assert_uint_eq (ev.text[19], 0x430 + 19);
+
+    /* a text longer than TTY_KITTY_TEXT_MAX is not kept cut */
+    g_string_truncate (seq, seq->len - 1);
+    for (i = 20; i < TTY_KITTY_TEXT_MAX + 5; i++)
+        g_string_append_printf (seq, ":%d", 0x430 + i);
+    g_string_append_c (seq, 'u');
+    ck_assert (tty_kitty_seq_event (seq->str, (int) seq->len, &ev));
+    ck_assert_int_eq (ev.text_len, 0);
+    ck_assert_uint_eq (ev.key, 97);
+    g_string_free (seq, TRUE);
+
+    /* a sequence too long to keep is read to its end: the key after it is not its tail */
+    seq = g_string_new ("\033[0;;");
+    for (i = 0; seq->len < KITTY_CSI_MAX + 16; i++)
+        g_string_append_printf (seq, i == 0 ? "%d" : ":%d", 0x430 + i % 32);
+    g_string_append (seq, "ux");
+    feed (seq->str);
+    // the dropped sequence may give -1 first, or the next key at once
+    for (i = 0; (c = get_key_code (1)) == -1 && i < 2; i++)
+        ;
+    ck_assert_int_eq (c, 'x');
+    g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_super_key_names)
+{
+    char *name;
+
+    ck_assert_int_eq (tty_keyname_to_keycode ("super-a", NULL), KEY_M_SUPER | 'a');
+    ck_assert_int_eq (tty_keyname_to_keycode ("super-ctrl-a", NULL), KEY_M_SUPER | XCTRL ('a'));
+    ck_assert_int_eq (tty_keyname_to_keycode ("super-f5", NULL), KEY_M_SUPER | KEY_F (5));
+
+    name = tty_keycode_to_keyname (KEY_M_SUPER | XCTRL ('a'));
+    ck_assert_int_eq (tty_keyname_to_keycode (name, NULL), KEY_M_SUPER | XCTRL ('a'));
+    g_free (name);
+    name = tty_keycode_to_keyname (KEY_M_SUPER | KEY_F (5));
+    ck_assert_int_eq (tty_keyname_to_keycode (name, NULL), KEY_M_SUPER | KEY_F (5));
+    g_free (name);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_kitty_inactive)
 {
     kitty_keyboard_active = FALSE;
@@ -248,6 +353,9 @@ main (void)
     tcase_add_test (tc_core, test_kitty_learned_after_cut_sequence);
     tcase_add_test (tc_core, test_kitty_learned_preserves_live_input);
     tcase_add_test (tc_core, test_kitty_ctrl_digit_name);
+    tcase_add_test (tc_core, test_kitty_event_fields);
+    tcase_add_test (tc_core, test_kitty_long_text);
+    tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 
     return mctest_run_all (tc_core);

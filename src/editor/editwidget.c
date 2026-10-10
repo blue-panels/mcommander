@@ -162,7 +162,8 @@ edit_publish_runtime_key (WEdit *edit, int keycode)
     snapshot->data.editor_key.key.ctrl = (keycode & KEY_M_CTRL) != 0;
     snapshot->data.editor_key.key.alt = (keycode & KEY_M_ALT) != 0;
     plain_key = (unsigned int) keycode & ~KEY_M_MASK;
-    if ((keycode & (KEY_M_CTRL | KEY_M_ALT)) == 0 && plain_key >= ' ' && plain_key <= '~')
+    if ((keycode & (KEY_M_CTRL | KEY_M_ALT | KEY_M_SUPER)) == 0 && plain_key >= ' '
+        && plain_key <= '~')
     {
         char text[2] = { (char) plain_key, '\0' };
 

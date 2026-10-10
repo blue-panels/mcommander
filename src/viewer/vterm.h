@@ -87,6 +87,8 @@ gboolean mcview_vterm_in_alt_screen (const mcview_vterm_t *vt);
 gboolean mcview_vterm_app_cursor_keys (const mcview_vterm_t *vt);
 /* Whether the program asked for bracketed paste (ESC[?2004h) and did not turn it off. */
 gboolean mcview_vterm_bracketed_paste (const mcview_vterm_t *vt);
+/* The kitty keyboard flags the program set on the current screen (CSI > flags u), 0 if none. */
+guint mcview_vterm_kitty_flags (const mcview_vterm_t *vt);
 mcview_terminal_buffer_t *mcview_vterm_buf (mcview_vterm_t *vt);
 off_t mcview_vterm_replay_offset (const mcview_vterm_t *vt);
 void mcview_vterm_set_replay_offset (mcview_vterm_t *vt, off_t offset);
