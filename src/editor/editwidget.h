@@ -152,6 +152,8 @@ struct WEdit
     long undo_content_gen;       /* increments each time edit history branches after undo */
     long undo_content_saved_gen; /* undo_content_gen value at last load or save */
     unsigned int undo_stack_disable : 1;  // If not 0, don't save events in the undo stack
+    // an undo has put the mark of its key press on the redo stack: what it undoes is one redo
+    unsigned int redo_key_pushed : 1;
 
     unsigned long redo_stack_pointer;
     long *redo_stack;

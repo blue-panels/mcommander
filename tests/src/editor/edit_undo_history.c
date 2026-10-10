@@ -21,6 +21,8 @@
  * WGroup has no room for the fields it reads there. */
 static WDialog owner;
 static WEdit *test_edit;
+// a test may show UTF-8 on the screen: put back in teardown, a failed check too
+static gboolean saved_utf8_display;
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -30,6 +32,7 @@ setup (void)
     WRect r;
 
     str_init_strings (NULL);
+    saved_utf8_display = mc_global.utf8_display;
 
     mc_global.sysconfig_dir = (char *) TEST_SHARE_DIR;
     load_codepages_list ();
@@ -66,6 +69,7 @@ teardown (void)
 
     free_codepages_list ();
     str_uninit_strings ();
+    mc_global.utf8_display = saved_utf8_display;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -199,6 +203,39 @@ START_TEST (test_utf8_char_count)
 END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
+/* UTF-8 typed a byte at a time: one undo takes a character whole, one redo puts it back whole,
+   without group undo too; a byte of it alone would leave a broken character */
+
+START_TEST (test_utf8_char_undo_redo_whole)
+{
+    test_edit->utf8 = TRUE;
+    mc_global.utf8_display = TRUE;
+
+    test_insert_char ('a');
+    /* U+0438, CYRILLIC SMALL LETTER I: 0xD0 0xB8 */
+    test_insert_char (0xD0);
+    test_insert_char (0xB8);
+    /* U+65E5, a CJK ideograph: 0xE6 0x97 0xA5 */
+    test_insert_char (0xE6);
+    test_insert_char (0x97);
+    test_insert_char (0xA5);
+    ck_assert_int_eq (test_edit->buffer.size, 6);
+
+    edit_execute_key_command (test_edit, CK_Undo, -1);
+    ck_assert_int_eq (test_edit->buffer.size, 3);
+    edit_execute_key_command (test_edit, CK_Undo, -1);
+    ck_assert_int_eq (test_edit->buffer.size, 1);
+
+    edit_execute_key_command (test_edit, CK_Redo, -1);
+    ck_assert_int_eq (test_edit->buffer.size, 3);
+    ck_assert_int_eq (edit_buffer_get_byte (&test_edit->buffer, 2), 0xB8);
+    edit_execute_key_command (test_edit, CK_Redo, -1);
+    ck_assert_int_eq (test_edit->buffer.size, 6);
+    ck_assert_int_eq (edit_buffer_get_byte (&test_edit->buffer, 5), 0xA5);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
 /* UTF-8: long Cyrillic insert (>15 chars) truncates preview with '~'. */
 
 START_TEST (test_utf8_preview_truncation)
@@ -253,6 +290,7 @@ main (void)
     tcase_add_test (tc_core, test_fast_ascii_cursor_move_undo);
     tcase_add_test (tc_core, test_space_breaks_coalesce);
     tcase_add_test (tc_core, test_redo_entry_after_undo);
+    tcase_add_test (tc_core, test_utf8_char_undo_redo_whole);
     tcase_add_test (tc_core, test_delete_entry);
     tcase_add_test (tc_core, test_preview_truncation_ascii);
     tcase_add_test (tc_core, test_utf8_char_count);

@@ -1501,6 +1501,7 @@ edit_do_undo (WEdit *edit)
     long count = 0;
 
     edit->undo_stack_disable = 1;  // don't record undo's onto undo stack!
+    edit->redo_key_pushed = 0;
     edit->over_col = 0;
 
     while ((ac = edit_pop_undo_action (edit)) < KEY_PRESS)
@@ -1579,6 +1580,7 @@ edit_do_undo (WEdit *edit)
 
 done_undo:
     edit->undo_stack_disable = 0;
+    edit->redo_key_pushed = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2200,6 +2202,20 @@ edit_recode_block (GString *block, const char *from_codeset)
     g_string_truncate (block, 0);
     g_string_append_len (block, out->str, out->len);
     g_string_free (out, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Whether a key goes on the character the key before began: a UTF-8 character comes from the
+ * terminal a byte at a time, and a byte 10xxxxxx after the first is of the same key press, to be
+ * undone and redone with it, never cut in two.
+ */
+
+static gboolean
+edit_key_goes_on_char (const WEdit *edit, long command, int char_for_insertion)
+{
+    return command == CK_InsertChar && mc_global.utf8_display && edit->utf8
+        && char_for_insertion >= 0x80 && char_for_insertion <= 0xBF;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2899,9 +2915,15 @@ edit_push_undo_action (WEdit *edit, long c)
         }
     }
     spm1 = (edit->undo_stack_pointer - 1) & edit->undo_stack_size_mask;
+    /* what one undo takes back, the actions of one key press, goes on the redo stack under one
+       mark: a redo puts it all back, a character of UTF-8 whole and not a byte of it */
     if (edit->undo_stack_disable)
     {
-        edit_push_redo_action (edit, KEY_PRESS);
+        if (!edit->redo_key_pushed)
+        {
+            edit_push_redo_action (edit, KEY_PRESS);
+            edit->redo_key_pushed = 1;
+        }
         edit_push_redo_action (edit, c);
         return;
     }
@@ -4889,7 +4911,8 @@ edit_execute_key_command (WEdit *edit, long command, int char_for_insertion)
     }
     // record the beginning of a set of editing actions initiated by a key press
     if (command != CK_Undo && command != CK_ExtendedKeyMap && command != CK_UndoHistory
-        && command != CK_MacroExplorer)
+        && command != CK_MacroExplorer
+        && !edit_key_goes_on_char (edit, command, char_for_insertion))
         edit_push_key_press (edit);
 
     edit_execute_cmd (edit, command, char_for_insertion);
