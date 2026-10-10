@@ -47,7 +47,7 @@ static const void *action_data = NULL;
 static const global_keymap_t own_map[] = {
     { KEY_F (5), CK_Copy, "" },
     { KEY_M_CTRL | KEY_F (1), CK_PanelToggleLeft, "" },
-    { KEY_M_SHIFT | KEY_F (8), CK_SyntaxOnOff, "" },  // as "shift-f8" is loaded
+    { KEY_M_SHIFT | KEY_F (8), CK_Help, "" },  // as "shift-f8" is loaded
     { 0, CK_IgnoreKey, "" },
 };
 
@@ -162,10 +162,10 @@ START_TEST (test_labels)
 {
     buttonbar_set_modifier_labels (bb, &first_map, &second_map, labels, receiver);
 
-    ck_assert_str_eq (label (1, KEY_M_CTRL), "Left");          // own label
-    ck_assert_str_eq (label (5, KEY_M_SHIFT), "Copy");         // from the second keymap
-    ck_assert_str_eq (label (8, KEY_M_SHIFT), "SyntaxOnOff");  // no label: the command name
-    ck_assert_str_eq (label (2, KEY_M_CTRL), "");              // nothing bound
+    ck_assert_str_eq (label (1, KEY_M_CTRL), "Left");   // own label
+    ck_assert_str_eq (label (5, KEY_M_SHIFT), "Copy");  // from the second keymap
+    ck_assert_str_eq (label (8, KEY_M_SHIFT), "Help");  // no label: the command name
+    ck_assert_str_eq (label (2, KEY_M_CTRL), "");       // nothing bound
     ck_assert_str_eq (label (5, KEY_M_ALT), "");
 
     // the keymaps are read through their variables: a reload is seen
