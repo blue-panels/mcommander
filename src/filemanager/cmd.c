@@ -1099,6 +1099,7 @@ apply_cmd (WPanel *panel)
     char *command;
     GString *script;
     gboolean any = FALSE;
+    int skipped = 0;
 
     if (panel == NULL)
         return;
@@ -1128,8 +1129,14 @@ apply_cmd (WPanel *panel)
         for (i = 0; i < panel->dir.len; i++)
             if (panel->dir.list[i].f.marked != 0 && !DIR_IS_DOTDOT (panel->dir.list[i].fname->str))
             {
-                apply_add_line (script, command, panel->dir.list[i].fname->str);
-                any = TRUE;
+                // a line break would end the command in the script of the user menu
+                if (strchr (panel->dir.list[i].fname->str, '\n') != NULL)
+                    skipped++;
+                else
+                {
+                    apply_add_line (script, command, panel->dir.list[i].fname->str);
+                    any = TRUE;
+                }
             }
     }
     else
@@ -1139,8 +1146,13 @@ apply_cmd (WPanel *panel)
         fe = panel_current_entry (panel);
         if (fe != NULL && !DIR_IS_DOTDOT (fe->fname->str))
         {
-            apply_add_line (script, command, fe->fname->str);
-            any = TRUE;
+            if (strchr (fe->fname->str, '\n') != NULL)
+                skipped++;
+            else
+            {
+                apply_add_line (script, command, fe->fname->str);
+                any = TRUE;
+            }
         }
     }
 
@@ -1150,6 +1162,12 @@ apply_cmd (WPanel *panel)
         update_panels (UP_OPTIMIZE, UP_KEEPSEL);
         repaint_screen ();
     }
+
+    if (skipped != 0)
+        message (D_ERROR, MSG_ERROR,
+                 ngettext ("%d file is skipped: its name has a line break",
+                           "%d files are skipped: their names have a line break", skipped),
+                 skipped);
 
     g_string_free (script, TRUE);
     g_free (command);
