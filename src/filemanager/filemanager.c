@@ -2003,16 +2003,11 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
         return MSG_HANDLED;
 
     case MSG_ACTION:
-    {
         // Handle shortcuts, menu, and buttonbar.
-        cb_ret_t ret;
-
-        ret = midnight_execute_cmd (sender, parm);
-        // a panel command from the key bar of a held modifier
-        if (ret == MSG_NOT_HANDLED && sender != NULL && sender == WIDGET (the_bar))
-            ret = send_message (current_panel, NULL, MSG_ACTION, parm, NULL);
-        return ret;
-    }
+        // a command of the panel keymap from the key bar of a held modifier, as a key would go
+        if (sender != NULL && sender == WIDGET (the_bar) && data == (void *) &panel_map)
+            return send_message (current_panel, NULL, MSG_ACTION, parm, NULL);
+        return midnight_execute_cmd (sender, parm);
 
     case MSG_DESTROY:
         mcterm_overlay_destroy ();
@@ -2102,7 +2097,8 @@ midnight_set_buttonbar (WButtonBar *b)
     buttonbar_set_label (b, 8, Q_ ("ButtonBar|Delete"), w->keymap, NULL);
     buttonbar_set_label (b, 9, Q_ ("ButtonBar|PullDn"), w->keymap, NULL);
     buttonbar_set_label (b, 10, Q_ ("ButtonBar|Quit"), w->keymap, NULL);
-    buttonbar_set_modifier_labels (b, &filemanager_map, &panel_map, mod_labels, NULL);
+    // a key goes to the current panel first, then to the file manager
+    buttonbar_set_modifier_labels (b, &panel_map, &filemanager_map, mod_labels, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -42,6 +42,7 @@ static int test_lines = 25;
 
 static guint held = 0;
 static long action = CK_IgnoreKey;
+static const void *action_data = NULL;
 
 static const global_keymap_t own_map[] = {
     { KEY_F (5), CK_Copy, "" },
@@ -51,7 +52,8 @@ static const global_keymap_t own_map[] = {
 };
 
 static const global_keymap_t panel_map_a[] = {
-    { KEY_F (15), CK_CopySingle, "" },  // Shift-F5
+    { KEY_F (15), CK_CopySingle, "" },                // Shift-F5
+    { KEY_M_CTRL | KEY_F (1), CK_DeleteSingle, "" },  // bound in the first keymap too
     { 0, CK_IgnoreKey, "" },
 };
 
@@ -88,6 +90,7 @@ receiver_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
     if (msg == MSG_ACTION)
     {
         action = parm;
+        action_data = data;
         return MSG_HANDLED;
     }
     return widget_default_callback (w, sender, msg, parm, data);
@@ -125,7 +128,7 @@ label (int idx, int mod)
 {
     const char *text;
 
-    (void) buttonbar_mod_command (bb, idx - 1, mod, &text);
+    (void) buttonbar_mod_command (bb, idx - 1, mod, &text, NULL);
     return text == NULL ? "" : text;
 }
 
@@ -180,6 +183,11 @@ START_TEST (test_call)
 
     ck_assert (buttonbar_call (bb, 4, KEY_M_SHIFT));
     ck_assert_int_eq (action, CK_CopySingle);
+    ck_assert_ptr_eq (action_data, &second_map);  // the receiver learns whose command it is
+
+    ck_assert (buttonbar_call (bb, 0, KEY_M_CTRL));
+    ck_assert_int_eq (action, CK_PanelToggleLeft);  // the first keymap wins, as for a key
+    ck_assert_ptr_eq (action_data, &first_map);
 
     action = CK_IgnoreKey;
     ck_assert (!buttonbar_call (bb, 3, KEY_M_SHIFT));
