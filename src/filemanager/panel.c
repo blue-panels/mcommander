@@ -6128,7 +6128,7 @@ panel_save_current_file_to_clip_file (const gchar *event_group_name, const gchar
 /* event callback */
 static gboolean
 panel_get_current_file_name (const gchar *event_group_name, const gchar *event_name,
-                            gpointer init_data, gpointer data)
+                             gpointer init_data, gpointer data)
 {
     ev_panel_file_name_t *ev = (ev_panel_file_name_t *) data;
     WPanel *panel;

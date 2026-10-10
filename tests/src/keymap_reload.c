@@ -455,7 +455,7 @@ START_TEST (test_keymap_far_mode_select_all_default_button)
     keymap_far_mode = TRUE;
     keymap_load (FALSE);
 
-    /* Shift-gray plus and minus select and unselect all the files; PgDn focuses the default button */
+    /* Shift-gray plus and minus select and unselect all files; PgDn focuses the default button */
     ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_SHIFT | KEY_KP_ADD),
                       CK_SelectAll);
     ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_SHIFT | KEY_KP_SUBTRACT),
