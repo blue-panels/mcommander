@@ -63,7 +63,7 @@
 #define TTY_KITTY_RELEASE       3
 
 /* The most code points of the text of a key event; a longer text is not kept */
-#define TTY_KITTY_TEXT_MAX 32
+#define TTY_KITTY_TEXT_MAX 512
 
 /*** enums ***************************************************************************************/
 

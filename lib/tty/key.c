@@ -238,6 +238,8 @@ const key_code_name_t key_name_conv_tab[] = {
 #define KITTY_KEYBOARD_BASE 5
 /* Event types (2), every key as an escape code (8) and the text (16), for a program in mcterm */
 #define KITTY_KEYBOARD_EXTRA (2 | 8 | 16)
+/* The longest CSI sequence kept: a key with TTY_KITTY_TEXT_MAX code points of text fits */
+#define KITTY_CSI_MAX (TTY_KITTY_TEXT_MAX * 8 + 64)
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
 #define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
 
@@ -1621,8 +1623,15 @@ kitty_read_csi (int c)
                 break;
         }
 
-        if (ch < 0x20 || ch > 0x7E || params->len > 256)
+        if (ch < 0x20 || ch > 0x7E)
             break;
+        if (params->len >= KITTY_CSI_MAX)
+        {
+            // too long to keep: read it to its end, so that no tail of it is taken as keys
+            if (ch >= 0x40)
+                break;
+            continue;
+        }
         g_string_append_c (params, (char) ch);
         if (ch >= 0x40)
         {

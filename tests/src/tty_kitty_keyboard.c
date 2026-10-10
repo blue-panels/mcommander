@@ -33,7 +33,7 @@
 #undef tty_lowlevel_getch
 #undef tty_nodelay
 
-static int test_input[64];
+static int test_input[KITTY_CSI_MAX + 256];
 static size_t test_input_len;
 static size_t test_input_pos;
 
@@ -294,6 +294,16 @@ START_TEST (test_kitty_long_text)
     ck_assert (tty_kitty_seq_event (seq->str, (int) seq->len, &ev));
     ck_assert_int_eq (ev.text_len, 0);
     ck_assert_uint_eq (ev.key, 97);
+    g_string_free (seq, TRUE);
+
+    /* a sequence too long to keep is read to its end: the key after it is not its tail */
+    seq = g_string_new ("\033[0;;");
+    for (i = 0; seq->len < KITTY_CSI_MAX + 16; i++)
+        g_string_append_printf (seq, i == 0 ? "%d" : ":%d", 0x430 + i % 32);
+    g_string_append (seq, "ux");
+    feed (seq->str);
+    ck_assert_int_eq (get_key_code (1), -1);
+    ck_assert_int_eq (get_key_code (1), 'x');
     g_string_free (seq, TRUE);
 }
 END_TEST
