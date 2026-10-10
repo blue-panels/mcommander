@@ -20,7 +20,7 @@ The releases of this fork, newest first.
   Alt-\\), Alt with a character is the fast find, with Ctrl-Enter and
   Ctrl-Shift-Enter for the next and the previous match; Ctrl-F7, Ctrl-F8
   and Ctrl-F9 sort by nothing, by the time of change and by the time of
-  access; Ctrl-G applies a command to the files (new action
+  access; Ctrl-G or Alt-X g applies a command to the files (new action
   ApplyCommand), and Alt-F6, Alt-F10, Shift-F9 and Shift-F10 create a hard
   link, show the tree of directories, save the setup and choose the last menu
   item. The mode stays off by default.

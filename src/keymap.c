@@ -822,6 +822,15 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
 };
 
 /* Dialogs: Ctrl-Enter does the default action (Far), as Enter does outside the buttons */
+/* Alt-X g: the Ctrl-G of Far for a terminal that takes Ctrl-G as the interrupt key */
+static const global_keymap_ini_t far_filemanager_x_keymap[] = {
+    { "ApplyCommand", "g" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
 static const global_keymap_ini_t far_dialog_keymap[] = {
     { "Ok", "enter; ctrl-enter" },
     // PgDn: the focus goes to the default button
@@ -992,6 +1001,8 @@ apply_far_mode_keymap (mc_config_t *keymap)
         return;
 
     create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER, far_filemanager_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER_EXT,
+                                   far_filemanager_x_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_DIALOG, far_dialog_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_PANEL, far_panel_keymap);
     create_default_keymap_section (keymap, KEYMAP_SECTION_INPUT, far_input_keymap);

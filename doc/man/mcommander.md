@@ -421,12 +421,15 @@ in the command line, but once the search has begun all Alt keys go to it; the
 Alt-Shift keys of the same letters are free for it when the Alt keys are
 taken. The quick search of M-Commander (Ctrl-s and Alt-s) works as before.
 
-**Ctrl-G**
+**Ctrl-G, Alt-X g**
 : applies a command to the files: it asks for a command and runs it for every
 tagged file, or for the file under the cursor if none is tagged. In the
 command, %f (or %p) is the name of the file, %n the name without the extension
 and %x the extension, all quoted for the shell; the other macros of the user
-menu work as they do there.
+menu work as they do there. Ctrl-G works only in a terminal that sends keys
+with the kitty keyboard protocol or the Win32 input mode (kitty, WezTerm, foot,
+Windows Terminal): in the others it is the interrupt key of the terminal and
+never reaches M-Commander. Alt-X g works in every terminal.
 
 **Alt-F6, Alt-F10, Shift-F9, Shift-F10**
 : create a hard link, show the tree of directories, save the setup and choose

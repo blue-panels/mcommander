@@ -414,6 +414,7 @@ START_TEST (test_keymap_far_mode_dialogs_and_workflows)
     /* Ctrl-G, Alt-F6, Alt-F10, Shift-F9 and Shift-F10 */
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
                       CK_ApplyCommand);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_x_map, 'g'), CK_ApplyCommand);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (6)),
                       CK_Link);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (10)),
@@ -440,6 +441,7 @@ START_TEST (test_keymap_far_mode_dialogs_and_workflows)
                       CK_SortByUnsorted);
     ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
                       CK_ApplyCommand);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_x_map, 'g'), CK_ApplyCommand);
     ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (10)),
                       CK_Tree);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (19)),
