@@ -600,7 +600,7 @@ static int kitty_event_code;
 static guint kitty_flags_wanted = 0;
 static guint kitty_flags_sent = 0;
 /* The rest of the text of the last kitty key, given as single bytes */
-static unsigned char kitty_text[64];
+static unsigned char kitty_text[TTY_KITTY_TEXT_MAX * 6];
 static size_t kitty_text_len = 0;
 static size_t kitty_text_pos = 0;
 /* The modifier keys held now, a bit for each from Left Shift to Right Meta */

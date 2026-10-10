@@ -339,6 +339,18 @@ START_TEST (test_kitty_long_text)
         ;
     ck_assert_int_eq (c, 'x');
     g_string_free (seq, TRUE);
+
+    /* all of a long text comes as bytes: 30 Cyrillic letters, 60 bytes, then x */
+    seq = g_string_new ("\033[97;;");
+    for (i = 0; i < 30; i++)
+        g_string_append_printf (seq, i == 0 ? "%d" : ":%d", 0x430 + i);
+    g_string_append (seq, "ux");
+    ck_assert_uint_lt (seq->len, G_N_ELEMENTS (test_input));
+    feed (seq->str);
+    for (i = 0; i < 60; i++)
+        ck_assert_int_ge (get_key_code (1), 0x80);
+    ck_assert_int_eq (get_key_code (1), 'x');
+    g_string_free (seq, TRUE);
 }
 END_TEST
 
