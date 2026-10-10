@@ -5435,9 +5435,6 @@ panel_execute_cmd (WPanel *panel, long command)
     case CK_SortByATime:
         panel_set_sort_type_by_id (panel, "atime");
         break;
-    case CK_SortByOwner:
-        panel_set_sort_type_by_id (panel, "owner");
-        break;
     case CK_CdRoot:
         goto_root_dir (panel);
         break;

@@ -364,11 +364,11 @@ each of them replaces:
 Far reverses the order when the same key is pressed twice; so does
 M-Commander.
 
-**Ctrl-F7, Ctrl-F8, Ctrl-F9, Ctrl-F11**
+**Ctrl-F7, Ctrl-F8, Ctrl-F9**
 : keep the files unsorted, sort them by the time of change (Far has the
-creation time there, which a Unix file system does not keep), by the time of
-access and by the owner. Ctrl-F10, the sort by descriptions, is not bound:
-M-Commander has no descriptions.
+creation time there, which a Unix file system does not keep) and by the time
+of access. Ctrl-F10 and Ctrl-F11, the sort by descriptions and by the owner,
+are not bound: M-Commander has no such sort orders.
 
 **Ctrl-F12**
 : the sort order menu.

@@ -256,7 +256,6 @@ enum
     CK_SortByUnsorted,
     CK_SortByCTime,
     CK_SortByATime,
-    CK_SortByOwner,
     CK_CdRoot,
     // Far mode: Shift-gray plus and Shift-gray minus
     CK_SelectAll,

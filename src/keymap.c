@@ -844,12 +844,11 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     { "SortBySize", "ctrl-f6" },
     { "Sort", "ctrl-f12" },
     // Ctrl-F7: unsorted; Ctrl-F8: by the time of change, for the creation time of Far; Ctrl-F9: by
-    // the time of access; Ctrl-F11: by the owner (Ctrl-F10 sorts by the descriptions of Far, which
-    // M-Commander does not have)
+    // the time of access. Ctrl-F10 (descriptions) and Ctrl-F11 (owner) are not bound: M-Commander
+    // has no such sort orders
     { "SortByUnsorted", "ctrl-f7" },
     { "SortByCTime", "ctrl-f8" },
     { "SortByATime", "ctrl-f9" },
-    { "SortByOwner", "ctrl-f11" },
     // Ctrl-\: the root directory
     { "CdRoot", "ctrl-backslash" },
     // Shift-gray plus and minus: select and unselect all the files

@@ -409,7 +409,7 @@ START_TEST (test_keymap_far_mode_dialogs_and_workflows)
     ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (9)),
                       CK_SortByATime);
     ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_CTRL | KEY_F (11)),
-                      CK_SortByOwner);
+                      CK_IgnoreKey);
 
     /* Ctrl-G, Alt-F6, Alt-F10, Shift-F9 and Shift-F10 */
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
