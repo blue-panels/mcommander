@@ -592,7 +592,7 @@ static int *seq_append = NULL;
 static int *pending_keys = NULL;
 
 static gboolean kitty_keyboard_active = FALSE;
-/* Win32 input mode of Windows Terminal (DECSET 9001), used when the kitty protocol is not there */
+/* Win32 input mode of Windows Terminal (DECSET 9001), used before the kitty protocol */
 static gboolean win32_input_active = FALSE;
 /* The high half of a UTF-16 pair a Win32 input record gave, waiting for the low one */
 static gunichar win32_high_surrogate = 0;
@@ -3919,11 +3919,10 @@ enable_kitty_keyboard (void)
     if (kitty_keyboard_active || win32_input_active)
         return;
 
-    // a terminal with no kitty protocol may have the Win32 input mode of Windows Terminal
-    if (!tty_has_kitty_keyboard ())
+    /* Windows Terminal knows both. Its kitty protocol (1.25) sends the text of a key that is not
+       in the US layout once more on the release, so the Win32 input mode goes first. */
+    if (tty_has_win32_input ())
     {
-        if (!tty_has_win32_input ())
-            return;
         printf (ESC_STR "[?9001h");
         if (keybar_modifiers)
             printf (ESC_STR "[?1004h");
@@ -3934,6 +3933,9 @@ enable_kitty_keyboard (void)
         kitty_mod_keys = 0;
         return;
     }
+
+    if (!tty_has_kitty_keyboard ())
+        return;
 
     kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[>%uu", kitty_flags_sent);
