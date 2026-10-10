@@ -95,6 +95,8 @@
 int mou_auto_repeat = 100;     // ms
 int double_click_speed = 250;  // ms
 gboolean old_esc_mode = TRUE;
+/* Every key as a kitty event with its release, so that lone modifiers are seen */
+gboolean keybar_modifiers = FALSE;
 /* timeout for old_esc_mode in usec */
 int old_esc_mode_timeout = G_USEC_PER_SEC;  // us, settable via env
 
@@ -237,22 +239,33 @@ const key_code_name_t key_name_conv_tab[] = {
 /* Kitty keyboard protocol: disambiguate escape codes (1) and report alternate keys (4) */
 #define KITTY_KEYBOARD_BASE 5
 /* Event types (2), every key as an escape code (8) and the text (16), for a program in mcterm */
-#define KITTY_KEYBOARD_EXTRA (2 | 8 | 16)
+#define KITTY_KEYBOARD_EXTRA    (2 | 8 | 16)
+#define KITTY_KEYBOARD_EVENTS   2
+#define KITTY_KEYBOARD_ALL_KEYS 8
+/* The flags that report a lone modifier key with its release */
+#define KITTY_KEYBOARD_MODIFIERS (2 | 8)
 /* The longest CSI sequence kept: a key with TTY_KITTY_TEXT_MAX code points of text fits */
 #define KITTY_CSI_MAX (TTY_KITTY_TEXT_MAX * 8 + 64)
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
-#define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
+#define KITTY_CSI_TIMEOUT   (100 * MC_USEC_PER_MSEC)
 
-#define KITTY_MOD_SHIFT   TTY_KITTY_MOD_SHIFT
-#define KITTY_MOD_ALT     TTY_KITTY_MOD_ALT
-#define KITTY_MOD_CTRL    TTY_KITTY_MOD_CTRL
-#define KITTY_MOD_SUPER   TTY_KITTY_MOD_SUPER
-#define KITTY_MOD_HYPER   TTY_KITTY_MOD_HYPER
-#define KITTY_MOD_META    TTY_KITTY_MOD_META
+#define KITTY_MOD_SHIFT     TTY_KITTY_MOD_SHIFT
+#define KITTY_MOD_ALT       TTY_KITTY_MOD_ALT
+#define KITTY_MOD_CTRL      TTY_KITTY_MOD_CTRL
+#define KITTY_MOD_SUPER     TTY_KITTY_MOD_SUPER
+#define KITTY_MOD_HYPER     TTY_KITTY_MOD_HYPER
+#define KITTY_MOD_META      TTY_KITTY_MOD_META
+#define KITTY_MOD_CAPS_LOCK TTY_KITTY_MOD_CAPS_LOCK
+#define KITTY_MOD_NUM_LOCK  TTY_KITTY_MOD_NUM_LOCK
 
 /* Kitty key numbers in the private use area */
 #define KITTY_KEY_KP_0     57399
 #define KITTY_KEY_KP_BEGIN 57427
+/* Left Shift (57441) up to ISO Level 5 Shift (57454) */
+#define KITTY_KEY_MOD_FIRST 57441
+#define KITTY_KEY_MOD_LAST  57454
+/* Left Shift, Ctrl, Alt, Super, Hyper, Meta, then the same six on the right */
+#define KITTY_KEY_MOD_SIDES 6
 
 /*** file scope type declarations ****************************************************************/
 
@@ -305,6 +318,8 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 #endif
 
 /*** forward declarations (file scope functions) *************************************************/
+
+static inline gboolean kitty_text_pending (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -584,6 +599,17 @@ static int kitty_event_code;
 /* The flags asked of the terminal, and the ones a program in mcterm wants on top of them */
 static guint kitty_flags_wanted = 0;
 static guint kitty_flags_sent = 0;
+/* The rest of the text of the last kitty key, given as single bytes */
+static unsigned char kitty_text[TTY_KITTY_TEXT_MAX * 6];
+static size_t kitty_text_len = 0;
+static size_t kitty_text_pos = 0;
+/* The modifier keys held now, a bit for each from Left Shift to Right Meta */
+static guint kitty_mod_keys = 0;
+/* The kitty modifier bit of each of the six modifier keys of a side */
+static const guint kitty_mod_kinds[KITTY_KEY_MOD_SIDES] = {
+    KITTY_MOD_SHIFT, KITTY_MOD_CTRL,  KITTY_MOD_ALT,
+    KITTY_MOD_SUPER, KITTY_MOD_HYPER, KITTY_MOD_META,
+};
 
 /* Keypad keys from KP_0 (57399) to KP_BEGIN (57427). -1: no mc key */
 static const int kitty_keypad_keys[] = {
@@ -873,7 +899,7 @@ getch_with_delay (void)
     while (TRUE)
     {
         // select() does not see input already buffered by the screen library
-        if (pending_keys == NULL && !tty_lowlevel_input_pending ())
+        if (pending_keys == NULL && !kitty_text_pending () && !tty_lowlevel_input_pending ())
             try_channels (FALSE);
 
         // Try to get a character
@@ -1417,6 +1443,46 @@ kitty_csi_started (int c)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* The key of CSI number ~ in the kitty protocol, -1 for none */
+
+static int
+kitty_tilde_key (unsigned int number)
+{
+    switch (number)
+    {
+    case 2:
+        return KEY_IC;
+    case 3:
+        return KEY_DC;
+    case 5:
+        return KEY_PPAGE;
+    case 6:
+        return KEY_NPAGE;
+    case 7:
+        return KEY_HOME;
+    case 8:
+        return KEY_END;
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+        return KEY_F ((int) number - 10);
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+        return KEY_F ((int) number - 11);
+    case 23:
+    case 24:
+        return KEY_F ((int) number - 12);
+    default:
+        return -1;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Turn a kitty key event into the code a legacy terminal would give for the same key. */
 
 static int
@@ -1440,12 +1506,30 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
 
     switch (final)
     {
+    case 'A':
+        return mod | KEY_UP;
+    case 'B':
+        return mod | KEY_DOWN;
+    case 'C':
+        return mod | KEY_RIGHT;
+    case 'D':
+        return mod | KEY_LEFT;
+    case 'H':
+        return mod | KEY_HOME;
+    case 'F':
+        return mod | KEY_END;
     case 'P':
         return mod | KEY_F (1);
     case 'Q':
         return mod | KEY_F (2);
     case 'S':
         return mod | KEY_F (4);
+    case '~':
+    {
+        const int code = kitty_tilde_key (key);
+
+        return code == -1 ? -1 : mod | code;
+    }
     case 'u':
         break;
     default:
@@ -1577,15 +1661,15 @@ kitty_event_to_code (const tty_key_event_t *ev)
     if (ev->event == TTY_KITTY_RELEASE)
         return KEY_KITTY_EVENT;
 
-    if (ev->final == 'u' || ev->final == 'P' || ev->final == 'Q' || ev->final == 'S')
-        code = kitty_key_code (ev->final, ev->key, ev->shifted, ev->base, ev->mods + 1);
-    else
+    code = kitty_key_code (ev->final, ev->key, ev->shifted, ev->base, ev->mods + 1);
+    if (code == -1 && ev->final != 'u')
     {
-        /* a legacy form that came with an event type: the same sequence without it */
+        /* a legacy form that came with an event type or a lock: the same sequence without them */
+        const unsigned int mods = ev->mods & ~(KITTY_MOD_CAPS_LOCK | KITTY_MOD_NUM_LOCK);
         GString *seq = g_string_new (ESC_STR "[");
 
-        if (ev->mods != 0)
-            g_string_append_printf (seq, "%u;%u", ev->key, ev->mods + 1);
+        if (mods != 0)
+            g_string_append_printf (seq, "%u;%u", ev->key, mods + 1);
         else if (ev->final == '~')
             g_string_append_printf (seq, "%u", ev->key);
         g_string_append_c (seq, ev->final);
@@ -1596,6 +1680,132 @@ kitty_event_to_code (const tty_key_event_t *ev)
     }
 
     return code == -1 ? KEY_KITTY_EVENT : code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static guint
+kitty_flags_base (void)
+{
+    return KITTY_KEYBOARD_BASE | (keybar_modifiers ? KITTY_KEYBOARD_EXTRA : 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static inline gboolean
+kitty_text_pending (void)
+{
+    return kitty_text_pos < kitty_text_len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The text of a key with no Ctrl, Alt or Super, in the bytes a legacy terminal would send.
+   Returns the first byte and keeps the rest for get_key_code (), or -1 when there is no text. */
+
+static int
+kitty_text_start (const tty_key_event_t *ev)
+{
+    GString *utf8;
+    char *bytes;
+    gsize len = 0;
+    int i;
+
+    if (ev->final != 'u' || ev->text_len == 0
+        || (ev->mods
+            & (KITTY_MOD_ALT | KITTY_MOD_CTRL | KITTY_MOD_SUPER | KITTY_MOD_HYPER | KITTY_MOD_META))
+            != 0)
+        return -1;
+
+    utf8 = g_string_sized_new (16);
+    for (i = 0; i < ev->text_len; i++)
+    {
+        if (ev->text[i] < 0x20 || ev->text[i] == 0x7F || !g_unichar_validate (ev->text[i]))
+        {
+            g_string_free (utf8, TRUE);
+            return -1;
+        }
+        g_string_append_unichar (utf8, ev->text[i]);
+    }
+
+    if (mc_global.utf8_display)
+    {
+        len = utf8->len;
+        bytes = g_string_free (utf8, FALSE);
+    }
+    else
+    {
+        bytes = g_locale_from_utf8 (utf8->str, (gssize) utf8->len, NULL, &len, NULL);
+        g_string_free (utf8, TRUE);
+    }
+
+    if (bytes == NULL || len == 0 || len > sizeof (kitty_text))
+    {
+        g_free (bytes);
+        return -1;
+    }
+
+    memcpy (kitty_text, bytes, len);
+    g_free (bytes);
+    kitty_text_len = len;
+    kitty_text_pos = 1;
+    return kitty_text[0];
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Follow the held modifier keys. A modifier key sets or clears its own bit; the modifier field
+   of any event fixes the other ones, so a release the terminal never sent is not kept. */
+
+static void
+kitty_track_modifiers (const tty_key_event_t *ev)
+{
+    int own = -1;
+    int i;
+
+    if (ev->final == 'u' && ev->key >= KITTY_KEY_MOD_FIRST
+        && ev->key < KITTY_KEY_MOD_FIRST + 2 * KITTY_KEY_MOD_SIDES)
+    {
+        const guint bit = 1U << (ev->key - KITTY_KEY_MOD_FIRST);
+
+        if (ev->event == TTY_KITTY_RELEASE)
+            kitty_mod_keys &= ~bit;
+        else
+            kitty_mod_keys |= bit;
+        own = (int) ((ev->key - KITTY_KEY_MOD_FIRST) % KITTY_KEY_MOD_SIDES);
+    }
+
+    for (i = 0; i < KITTY_KEY_MOD_SIDES; i++)
+    {
+        const guint both = (1U << i) | (1U << (i + KITTY_KEY_MOD_SIDES));
+
+        if (i == own)
+            continue;
+        if ((ev->mods & kitty_mod_kinds[i]) == 0)
+            kitty_mod_keys &= ~both;
+        else if ((kitty_mod_keys & both) == 0)
+            kitty_mod_keys |= 1U << i;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The mc key of a kitty event read from the terminal: the text of a printable key, -1 for a
+   release no one asked for, MCKEY_MODIFIERS for a lone modifier, else what kitty_event_to_code ()
+   gives. */
+
+static int
+kitty_live_code (const tty_key_event_t *ev)
+{
+    int code;
+
+    // a lone modifier is a key only for a program in mcterm that asked for every key
+    if (ev->final == 'u' && ev->key >= KITTY_KEY_MOD_FIRST && ev->key <= KITTY_KEY_MOD_LAST)
+        return (kitty_flags_wanted & KITTY_KEYBOARD_ALL_KEYS) != 0 ? KEY_KITTY_EVENT
+                                                                   : MCKEY_MODIFIERS;
+
+    if (ev->event == TTY_KITTY_RELEASE)
+        return (kitty_flags_wanted & KITTY_KEYBOARD_EVENTS) != 0 ? KEY_KITTY_EVENT : -1;
+
+    code = kitty_text_start (ev);
+    return code != -1 ? code : kitty_event_to_code (ev);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1635,10 +1845,17 @@ kitty_read_csi (int c)
         g_string_append_c (params, (char) ch);
         if (ch >= 0x40)
         {
-            if (kitty_parse_csi (params->str, params->len, &kitty_event))
+            if (params->len == 1 && (ch == 'I' || ch == 'O'))
+            {
+                // the terminal got or lost the focus: a modifier released elsewhere is not seen
+                code = kitty_mod_keys != 0 ? MCKEY_MODIFIERS : -1;
+                kitty_mod_keys = 0;
+            }
+            else if (kitty_parse_csi (params->str, params->len, &kitty_event))
             {
                 kitty_event_valid = TRUE;
-                code = kitty_event_to_code (&kitty_event);
+                kitty_track_modifiers (&kitty_event);
+                code = kitty_live_code (&kitty_event);
             }
             break;
         }
@@ -1646,6 +1863,146 @@ kitty_read_csi (int c)
 
     g_string_free (params, TRUE);
     return code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Remove the kitty release events at the start of the bytes @raw */
+
+static void
+kitty_drop_leading_releases (GString *raw)
+{
+    while (kitty_keyboard_active && raw->len > 3 && raw->str[0] == ESC_CHAR && raw->str[1] == '[')
+    {
+        tty_key_event_t ev;
+        size_t end;
+
+        for (end = 2; end < raw->len; end++)
+            if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
+                break;
+        if (end == raw->len || !kitty_parse_csi (raw->str + 2, end - 1, &ev)
+            || ev.event != TTY_KITTY_RELEASE)
+            return;
+        g_string_erase (raw, 0, (gssize) end + 1);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the bytes of one key into @raw: wait for the first one, then take what comes in a short
+   time after it. */
+
+static void
+learn_read_burst (GString *raw)
+{
+    // LEARN_TIMEOUT in ms
+#define LEARN_TIMEOUT 200
+
+    fd_set Read_FD_Set;
+    gint64 end_time;
+    int c;
+
+    c = tty_lowlevel_getch ();
+    while (c == -1)
+        c = tty_lowlevel_getch ();  // Sanity check, should be unnecessary
+    g_string_append_c (raw, (char) c);
+
+    end_time = g_get_monotonic_time () + LEARN_TIMEOUT * MC_USEC_PER_MSEC;
+
+    tty_nodelay (TRUE);
+    while (TRUE)
+    {
+        while ((c = tty_lowlevel_getch ()) == -1)
+        {
+            gint64 time_out;
+            struct timeval tv;
+
+            time_out = end_time - g_get_monotonic_time ();
+            if (time_out <= 0)
+                break;
+
+            tv.tv_sec = time_out / G_USEC_PER_SEC;
+            tv.tv_usec = time_out % G_USEC_PER_SEC;
+            FD_ZERO (&Read_FD_Set);
+            FD_SET (input_fd, &Read_FD_Set);
+            select (input_fd + 1, &Read_FD_Set, NULL, NULL, &tv);
+        }
+        if (c == -1)
+            break;
+        g_string_append_c (raw, (char) c);
+    }
+    tty_nodelay (FALSE);
+#undef LEARN_TIMEOUT
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Where the captured key starts in @raw, -1 to wait for more. A kitty terminal reports the
+   modifiers of Ctrl-X before the X: they are skipped. A modifier alone is the key when all the
+   modifiers are released with no other key. */
+
+static gssize
+kitty_capture_start (const GString *raw)
+{
+    gssize first_mod = -1;
+    guint held = 0;
+    size_t pos = 0;
+
+    if (!kitty_keyboard_active)
+        return 0;
+
+    while (pos < raw->len)
+    {
+        tty_key_event_t ev;
+        size_t end;
+
+        if (raw->str[pos] != ESC_CHAR || pos + 1 >= raw->len || raw->str[pos + 1] != '[')
+            return (gssize) pos;
+        for (end = pos + 2; end < raw->len; end++)
+            if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
+                break;
+        if (end == raw->len)
+            return -1;
+        if (!kitty_parse_csi (raw->str + pos + 2, end - pos - 1, &ev))
+            return (gssize) pos;
+
+        if (ev.final != 'u' || ev.key < KITTY_KEY_MOD_FIRST || ev.key > KITTY_KEY_MOD_LAST)
+        {
+            if (ev.event != TTY_KITTY_RELEASE)
+                return (gssize) pos;
+        }
+        else if (ev.event == TTY_KITTY_RELEASE)
+        {
+            held &= ~(1U << (ev.key - KITTY_KEY_MOD_FIRST));
+            if (held == 0 && first_mod >= 0)
+                return first_mod;
+        }
+        else
+        {
+            if (first_mod < 0)
+                first_mod = (gssize) pos;
+            held |= 1U << (ev.key - KITTY_KEY_MOD_FIRST);
+        }
+        pos = end + 1;
+    }
+
+    return -1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The length of the first key in the bytes @raw. A kitty terminal sends the release (and the
+   repeats) of a key right after it, as another CSI sequence. */
+
+static size_t
+kitty_first_key_len (const GString *raw)
+{
+    size_t end;
+
+    if (!kitty_keyboard_active || raw->len < 3 || raw->str[0] != ESC_CHAR || raw->str[1] != '[')
+        return raw->len;
+
+    for (end = 2; end < raw->len; end++)
+        if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
+            return end + 1 < raw->len && raw->str[end + 1] == ESC_CHAR ? end + 1 : raw->len;
+
+    return raw->len;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2244,7 +2601,8 @@ is_idle (void)
        library's buffer in one go, and mc decodes escape sequences into a queue
        of its own. Either can hold a paste worth of keys while select() below
        reports nothing left to read. */
-    if (tty_paste_keys_pending || pending_keys != NULL || tty_lowlevel_input_pending ())
+    if (tty_paste_keys_pending || pending_keys != NULL || kitty_text_pending ()
+        || tty_lowlevel_input_pending ())
         return FALSE;
 
     FD_ZERO (&select_set);
@@ -2292,6 +2650,13 @@ get_key_code (int no_delay)
     static int lastnodelay = -1;
 
     kitty_event_valid = FALSE;
+
+    if (kitty_text_pending ())
+    {
+        c = correct_key_code (kitty_text[kitty_text_pos++], FALSE);
+        kitty_event_code = c;
+        return c;
+    }
 
     if (no_delay != lastnodelay)
     {
@@ -2502,10 +2867,17 @@ nodelay_try_again:
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
-            if (c == -1 || c == KEY_KITTY_EVENT)
+            if (c == -1 || c == KEY_KITTY_EVENT || c == MCKEY_MODIFIERS)
             {
                 this = NULL;
                 kitty_event_code = c;
+                // a dropped release must not leave the next key waiting for the select timeout
+                if (c == -1 && tty_lowlevel_input_pending ())
+                {
+                    // nor give its event to that key
+                    kitty_event_valid = FALSE;
+                    goto nodelay_try_again;
+                }
                 return c;
             }
             goto done;
@@ -2765,7 +3137,7 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
         }
 
         // select() does not see input already buffered by the screen library
-        if (tty_lowlevel_input_pending ())
+        if (kitty_text_pending () || tty_lowlevel_input_pending ())
             break;
 
         tty_enable_interrupt_key ();
@@ -2898,8 +3270,9 @@ tty_getch (void)
     int key;
 
     ev.x = -1;
-    while ((key = tty_get_event (&ev, FALSE, TRUE)) == EV_NONE)
-        ;
+    do
+        key = tty_get_event (&ev, FALSE, TRUE);
+    while (key == EV_NONE || key == MCKEY_MODIFIERS);
     return key;
 }
 
@@ -2908,51 +3281,54 @@ tty_getch (void)
 char *
 learn_key (void)
 {
-    // LEARN_TIMEOUT in ms
-#define LEARN_TIMEOUT 200
+    return learn_key_ex (NULL);
+}
 
-    fd_set Read_FD_Set;
-    gint64 end_time;
-    int c;
+/* --------------------------------------------------------------------------------------------- */
+
+char *
+learn_key_ex (char **after)
+{
+    GString *raw;
     GString *buffer;
+    size_t i, first;
 
-    buffer = g_string_sized_new (16);
+    raw = g_string_sized_new (16);
 
     tty_keypad (FALSE);  // disable interpreting keys by ncurses
-    c = tty_lowlevel_getch ();
-    while (c == -1)
-        c = tty_lowlevel_getch ();  // Sanity check, should be unnecessary
-    learn_store_key (buffer, c);
-
-    end_time = g_get_monotonic_time () + LEARN_TIMEOUT * MC_USEC_PER_MSEC;
-
-    tty_nodelay (TRUE);
     while (TRUE)
     {
-        while ((c = tty_lowlevel_getch ()) == -1)
+        gssize start;
+
+        learn_read_burst (raw);
+        // the release of the key that started the capture (Enter on a button) is no key
+        kitty_drop_leading_releases (raw);
+        if (raw->len == 0)
+            continue;
+        start = kitty_capture_start (raw);
+        if (start >= 0)
         {
-            gint64 time_out;
-            struct timeval tv;
-
-            time_out = end_time - g_get_monotonic_time ();
-            if (time_out <= 0)
-                break;
-
-            tv.tv_sec = time_out / G_USEC_PER_SEC;
-            tv.tv_usec = time_out % G_USEC_PER_SEC;
-            FD_ZERO (&Read_FD_Set);
-            FD_SET (input_fd, &Read_FD_Set);
-            select (input_fd + 1, &Read_FD_Set, NULL, NULL, &tv);
-        }
-        if (c == -1)
+            g_string_erase (raw, 0, start);
             break;
-        learn_store_key (buffer, c);
+        }
     }
     tty_keypad (TRUE);
-    tty_nodelay (FALSE);
+
+    first = kitty_first_key_len (raw);
+    buffer = g_string_sized_new (16);
+    for (i = 0; i < first; i++)
+        learn_store_key (buffer, (unsigned char) raw->str[i]);
+    if (after != NULL)
+    {
+        GString *rest = g_string_sized_new (16);
+
+        for (; i < raw->len; i++)
+            learn_store_key (rest, (unsigned char) raw->str[i]);
+        *after = g_string_free (rest, FALSE);
+    }
+    g_string_free (raw, TRUE);
 
     return g_string_free (buffer, buffer->len == 0);
-#undef LEARN_TIMEOUT
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3006,6 +3382,35 @@ tty_key_event (int key, tty_key_event_t *ev)
         return FALSE;
     if (ev != NULL)
         *ev = kitty_event;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+guint
+tty_kitty_modifiers (void)
+{
+    guint mods = 0;
+    int i;
+
+    if (!kitty_keyboard_active
+        || (kitty_flags_sent & KITTY_KEYBOARD_MODIFIERS) != KITTY_KEYBOARD_MODIFIERS)
+        return 0;
+
+    for (i = 0; i < KITTY_KEY_MOD_SIDES; i++)
+        if ((kitty_mod_keys & ((1U << i) | (1U << (i + KITTY_KEY_MOD_SIDES)))) != 0)
+            mods |= kitty_mod_kinds[i];
+    return mods;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_key_event_take (int key, tty_key_event_t *ev)
+{
+    if (!tty_key_event (key, ev))
+        return FALSE;
+    kitty_text_len = kitty_text_pos = 0;
     return TRUE;
 }
 
@@ -3148,10 +3553,13 @@ enable_kitty_keyboard (void)
     if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
         return;
 
-    kitty_flags_sent = KITTY_KEYBOARD_BASE | kitty_flags_wanted;
+    kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[>%uu", kitty_flags_sent);
+    if (keybar_modifiers)
+        printf (ESC_STR "[?1004h");
     fflush (stdout);
     kitty_keyboard_active = TRUE;
+    kitty_mod_keys = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3160,10 +3568,10 @@ void
 tty_kitty_keyboard_want (guint flags)
 {
     kitty_flags_wanted = flags & KITTY_KEYBOARD_EXTRA;
-    if (!kitty_keyboard_active || (KITTY_KEYBOARD_BASE | kitty_flags_wanted) == kitty_flags_sent)
+    if (!kitty_keyboard_active || (kitty_flags_base () | kitty_flags_wanted) == kitty_flags_sent)
         return;
 
-    kitty_flags_sent = KITTY_KEYBOARD_BASE | kitty_flags_wanted;
+    kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[=%u;1u", kitty_flags_sent);
     fflush (stdout);
 }
@@ -3176,9 +3584,12 @@ disable_kitty_keyboard (void)
     if (!kitty_keyboard_active)
         return;
 
+    if (keybar_modifiers)
+        printf (ESC_STR "[?1004l");
     printf (ESC_STR "[<u");
     fflush (stdout);
     kitty_keyboard_active = FALSE;
+    kitty_mod_keys = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */

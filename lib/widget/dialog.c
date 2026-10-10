@@ -189,6 +189,22 @@ dlg_handle_key (WDialog *h, int d_key)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Tell the widgets when the terminal reports another set of held modifiers */
+
+static void
+dlg_check_modifiers (WDialog *h)
+{
+    static guint last = 0;
+    const guint mods = tty_kitty_modifiers ();
+
+    if (mods == last)
+        return;
+    last = mods;
+    group_send_broadcast_msg (GROUP (h), MSG_MODIFIERS);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 dlg_key_event (WDialog *h, int d_key)
 {
@@ -201,6 +217,8 @@ dlg_key_event (WDialog *h, int d_key)
 
     if (g->current == NULL)
         g->current = g->widgets;
+
+    dlg_check_modifiers (h);
 
     /* A kitty key with no mc code is for the terminal that reads such events: the dialog and
        the widget in focus may pass it on, the hotkeys and the keymaps never see it. */
@@ -554,6 +572,10 @@ dlg_process_event (WDialog *h, int key, Gpm_Event *event)
         GROUP (h)->mouse_status = w->mouse_handler (w, event);
         break;
     }
+
+    case MCKEY_MODIFIERS:
+        dlg_check_modifiers (h);
+        break;
 
     case MCKEY_PASTE:
     {

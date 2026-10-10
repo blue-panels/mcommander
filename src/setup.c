@@ -311,6 +311,7 @@ static const struct
     { "mouse_close_dialog", &mouse_close_dialog },
     { "drop_menus", &drop_menus },
     { "old_esc_mode", &old_esc_mode },
+    { "keybar_modifiers", &keybar_modifiers },
     { "cd_symlinks", &mc_global.vfs.cd_symlinks },
     { "show_all_if_ambiguous", &mc_global.widget.show_all_if_ambiguous },
 #ifdef USE_FILE_CMD

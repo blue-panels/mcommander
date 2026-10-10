@@ -40,7 +40,7 @@
 #include "lib/global.h"
 
 #include "lib/tty/tty.h"
-#include "lib/tty/key.h"  // XCTRL and ALT macros
+#include "lib/tty/key.h"  // XCTRL and ALT macros, tty_kitty_modifiers()
 #include "lib/skin.h"
 #include "lib/strutil.h"
 #include "lib/util.h"
@@ -143,19 +143,100 @@ set_label_text (WButtonBar *bb, int idx, const char *text)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The KEY_M_* modifiers held now, 0 for a bar that has no labels for them */
+
+static int
+buttonbar_held_modifiers (const WButtonBar *bb)
+{
+    guint held;
+    int mod = 0;
+
+    if (bb->mod_keymaps[0] == NULL)
+        return 0;
+
+    held = tty_kitty_modifiers ();
+    if ((held & TTY_KITTY_MOD_SHIFT) != 0)
+        mod |= KEY_M_SHIFT;
+    if ((held & (TTY_KITTY_MOD_ALT | TTY_KITTY_MOD_META)) != 0)
+        mod |= KEY_M_ALT;
+    if ((held & TTY_KITTY_MOD_CTRL) != 0)
+        mod |= KEY_M_CTRL;
+    if ((held & TTY_KITTY_MOD_SUPER) != 0)
+        mod |= KEY_M_SUPER;
+    return mod;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The command of button @i with the modifiers @mod, and its label in @text if not NULL. @keymap
+   (if not NULL) gets the keymap variable it was found through. */
+
+static long
+buttonbar_mod_command (const WButtonBar *bb, int i, int mod, const char **text,
+                       const global_keymap_t *const **keymap)
+{
+    // a keymap names Shift-F8 either "f18" or "shift-f8"
+    const int keys[2] = { tty_normalize_keycode (mod | KEY_F (i + 1)), mod | KEY_F (i + 1) };
+    long command = CK_IgnoreKey;
+    size_t k, n;
+
+    for (k = 0; k < G_N_ELEMENTS (bb->mod_keymaps) && command == CK_IgnoreKey; k++)
+        for (n = 0; n < G_N_ELEMENTS (keys) && command == CK_IgnoreKey; n++)
+            if (bb->mod_keymaps[k] != NULL)
+            {
+                command = keybind_lookup_keymap_command (*bb->mod_keymaps[k], keys[n]);
+                if (keymap != NULL)
+                    *keymap = bb->mod_keymaps[k];
+            }
+
+    if (text != NULL)
+    {
+        const buttonbar_command_label_t *l;
+
+        *text = NULL;
+        if (command == CK_IgnoreKey)
+            return command;
+        for (l = bb->mod_labels; l != NULL && l->text != NULL; l++)
+            if (l->command == command)
+            {
+                *text = Q_ (l->text);
+                return command;
+            }
+        *text = keybind_lookup_actionname (command);
+    }
+
+    return command;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* returns TRUE if a function has been called, FALSE otherwise. */
 static gboolean
-buttonbar_call (WButtonBar *bb, int i)
+buttonbar_call (WButtonBar *bb, int i, int mod)
 {
     cb_ret_t ret = MSG_NOT_HANDLED;
     Widget *w = WIDGET (bb);
     Widget *target;
+    const global_keymap_t *const *keymap = NULL;
+    long command;
 
-    if ((bb != NULL) && (bb->labels[i].command != CK_IgnoreKey))
+    if (bb == NULL)
+        return FALSE;
+
+    if (mod == 0)
     {
-        target = (bb->labels[i].receiver != NULL) ? bb->labels[i].receiver : WIDGET (w->owner);
-        ret = send_message (target, w, MSG_ACTION, bb->labels[i].command, NULL);
+        command = bb->labels[i].command;
+        target = bb->labels[i].receiver;
     }
+    else
+    {
+        command = buttonbar_mod_command (bb, i, mod, NULL, &keymap);
+        target = bb->mod_receiver;
+    }
+
+    // the receiver learns by the keymap whose command it is
+    if (command != CK_IgnoreKey)
+        ret = send_message (target != NULL ? target : WIDGET (w->owner), w, MSG_ACTION, command,
+                            (void *) keymap);
     return ret;
 }
 
@@ -171,13 +252,20 @@ buttonbar_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void 
     {
     case MSG_HOTKEY:
         for (i = 0; i < BUTTONBAR_LABELS_NUM; i++)
-            if (parm == KEY_F (i + 1) && buttonbar_call (bb, i))
+            if (parm == KEY_F (i + 1) && buttonbar_call (bb, i, 0))
                 return MSG_HANDLED;
         return MSG_NOT_HANDLED;
+
+    case MSG_MODIFIERS:
+        if (bb->mod_keymaps[0] != NULL && widget_get_state (w, WST_VISIBLE))
+            widget_draw (w);
+        return MSG_HANDLED;
 
     case MSG_DRAW:
         if (widget_get_state (w, WST_VISIBLE))
         {
+            const int mod = buttonbar_held_modifiers (bb);
+
             buttonbar_init_button_positions (bb);
             widget_gotoyx (w, 0, 0);
             tty_setcolor (CORE_DEFAULT_COLOR);
@@ -197,7 +285,12 @@ buttonbar_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void 
                 tty_printf ("%2d", i + 1);
 
                 tty_setcolor (BUTTONBAR_BUTTON_COLOR);
-                text = (bb->labels[i].text != NULL) ? bb->labels[i].text : "";
+                if (mod != 0)
+                    (void) buttonbar_mod_command (bb, i, mod, &text, NULL);
+                else
+                    text = bb->labels[i].text;
+                if (text == NULL)
+                    text = "";
                 tty_print_string (str_fit_to_term (text, width - 2, J_LEFT_FIT));
             }
         }
@@ -227,7 +320,7 @@ buttonbar_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
 
         button = buttonbar_get_button_by_x_coord (bb, event->x);
         if (button >= 0)
-            buttonbar_call (bb, button);
+            buttonbar_call (bb, button, buttonbar_held_modifiers (bb));
         break;
     }
 
@@ -278,6 +371,28 @@ buttonbar_set_label (WButtonBar *bb, int idx, const char *text, const global_key
         bb->labels[idx - 1].command = command;
         bb->labels[idx - 1].receiver = WIDGET (receiver);
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Let the bar show the commands of the F keys with the held modifiers: looked up in @keymap,
+   then in @keymap2 (may be NULL), in the order the keys go to them, labelled from @labels (ends
+   with a NULL text) or by the command names, sent to @receiver (NULL: the dialog) with the
+   address of the keymap variable as the data. The keymaps are given as the address of the
+   variable that holds them, so a reload of the keymaps is seen. */
+
+void
+buttonbar_set_modifier_labels (WButtonBar *bb, const global_keymap_t *const *keymap,
+                               const global_keymap_t *const *keymap2,
+                               const buttonbar_command_label_t *labels, Widget *receiver)
+{
+    if (bb == NULL)
+        return;
+
+    bb->mod_keymaps[0] = keymap;
+    bb->mod_keymaps[1] = keymap2;
+    bb->mod_labels = labels;
+    bb->mod_receiver = receiver;
 }
 
 /* --------------------------------------------------------------------------------------------- */
