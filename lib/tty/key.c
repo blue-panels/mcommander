@@ -1864,6 +1864,146 @@ kitty_read_csi (int c)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Remove the kitty release events at the start of the bytes @raw */
+
+static void
+kitty_drop_leading_releases (GString *raw)
+{
+    while (kitty_keyboard_active && raw->len > 3 && raw->str[0] == ESC_CHAR && raw->str[1] == '[')
+    {
+        tty_key_event_t ev;
+        size_t end;
+
+        for (end = 2; end < raw->len; end++)
+            if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
+                break;
+        if (end == raw->len || !kitty_parse_csi (raw->str + 2, end - 1, &ev)
+            || ev.event != TTY_KITTY_RELEASE)
+            return;
+        g_string_erase (raw, 0, (gssize) end + 1);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the bytes of one key into @raw: wait for the first one, then take what comes in a short
+   time after it. */
+
+static void
+learn_read_burst (GString *raw)
+{
+    // LEARN_TIMEOUT in ms
+#define LEARN_TIMEOUT 200
+
+    fd_set Read_FD_Set;
+    gint64 end_time;
+    int c;
+
+    c = tty_lowlevel_getch ();
+    while (c == -1)
+        c = tty_lowlevel_getch ();  // Sanity check, should be unnecessary
+    g_string_append_c (raw, (char) c);
+
+    end_time = g_get_monotonic_time () + LEARN_TIMEOUT * MC_USEC_PER_MSEC;
+
+    tty_nodelay (TRUE);
+    while (TRUE)
+    {
+        while ((c = tty_lowlevel_getch ()) == -1)
+        {
+            gint64 time_out;
+            struct timeval tv;
+
+            time_out = end_time - g_get_monotonic_time ();
+            if (time_out <= 0)
+                break;
+
+            tv.tv_sec = time_out / G_USEC_PER_SEC;
+            tv.tv_usec = time_out % G_USEC_PER_SEC;
+            FD_ZERO (&Read_FD_Set);
+            FD_SET (input_fd, &Read_FD_Set);
+            select (input_fd + 1, &Read_FD_Set, NULL, NULL, &tv);
+        }
+        if (c == -1)
+            break;
+        g_string_append_c (raw, (char) c);
+    }
+    tty_nodelay (FALSE);
+#undef LEARN_TIMEOUT
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Where the captured key starts in @raw, -1 to wait for more. A kitty terminal reports the
+   modifiers of Ctrl-X before the X: they are skipped. A modifier alone is the key when all the
+   modifiers are released with no other key. */
+
+static gssize
+kitty_capture_start (const GString *raw)
+{
+    gssize first_mod = -1;
+    guint held = 0;
+    size_t pos = 0;
+
+    if (!kitty_keyboard_active)
+        return 0;
+
+    while (pos < raw->len)
+    {
+        tty_key_event_t ev;
+        size_t end;
+
+        if (raw->str[pos] != ESC_CHAR || pos + 1 >= raw->len || raw->str[pos + 1] != '[')
+            return (gssize) pos;
+        for (end = pos + 2; end < raw->len; end++)
+            if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
+                break;
+        if (end == raw->len)
+            return -1;
+        if (!kitty_parse_csi (raw->str + pos + 2, end - pos - 1, &ev))
+            return (gssize) pos;
+
+        if (ev.final != 'u' || ev.key < KITTY_KEY_MOD_FIRST || ev.key > KITTY_KEY_MOD_LAST)
+        {
+            if (ev.event != TTY_KITTY_RELEASE)
+                return (gssize) pos;
+        }
+        else if (ev.event == TTY_KITTY_RELEASE)
+        {
+            held &= ~(1U << (ev.key - KITTY_KEY_MOD_FIRST));
+            if (held == 0 && first_mod >= 0)
+                return first_mod;
+        }
+        else
+        {
+            if (first_mod < 0)
+                first_mod = (gssize) pos;
+            held |= 1U << (ev.key - KITTY_KEY_MOD_FIRST);
+        }
+        pos = end + 1;
+    }
+
+    return -1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The length of the first key in the bytes @raw. A kitty terminal sends the release (and the
+   repeats) of a key right after it, as another CSI sequence. */
+
+static size_t
+kitty_first_key_len (const GString *raw)
+{
+    size_t end;
+
+    if (!kitty_keyboard_active || raw->len < 3 || raw->str[0] != ESC_CHAR || raw->str[1] != '[')
+        return raw->len;
+
+    for (end = 2; end < raw->len; end++)
+        if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
+            return end + 1 < raw->len && raw->str[end + 1] == ESC_CHAR ? end + 1 : raw->len;
+
+    return raw->len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static void
 learn_store_key (GString *buffer, int c)
@@ -3134,51 +3274,54 @@ tty_getch (void)
 char *
 learn_key (void)
 {
-    // LEARN_TIMEOUT in ms
-#define LEARN_TIMEOUT 200
+    return learn_key_ex (NULL);
+}
 
-    fd_set Read_FD_Set;
-    gint64 end_time;
-    int c;
+/* --------------------------------------------------------------------------------------------- */
+
+char *
+learn_key_ex (char **after)
+{
+    GString *raw;
     GString *buffer;
+    size_t i, first;
 
-    buffer = g_string_sized_new (16);
+    raw = g_string_sized_new (16);
 
     tty_keypad (FALSE);  // disable interpreting keys by ncurses
-    c = tty_lowlevel_getch ();
-    while (c == -1)
-        c = tty_lowlevel_getch ();  // Sanity check, should be unnecessary
-    learn_store_key (buffer, c);
-
-    end_time = g_get_monotonic_time () + LEARN_TIMEOUT * MC_USEC_PER_MSEC;
-
-    tty_nodelay (TRUE);
     while (TRUE)
     {
-        while ((c = tty_lowlevel_getch ()) == -1)
+        gssize start;
+
+        learn_read_burst (raw);
+        // the release of the key that started the capture (Enter on a button) is no key
+        kitty_drop_leading_releases (raw);
+        if (raw->len == 0)
+            continue;
+        start = kitty_capture_start (raw);
+        if (start >= 0)
         {
-            gint64 time_out;
-            struct timeval tv;
-
-            time_out = end_time - g_get_monotonic_time ();
-            if (time_out <= 0)
-                break;
-
-            tv.tv_sec = time_out / G_USEC_PER_SEC;
-            tv.tv_usec = time_out % G_USEC_PER_SEC;
-            FD_ZERO (&Read_FD_Set);
-            FD_SET (input_fd, &Read_FD_Set);
-            select (input_fd + 1, &Read_FD_Set, NULL, NULL, &tv);
-        }
-        if (c == -1)
+            g_string_erase (raw, 0, start);
             break;
-        learn_store_key (buffer, c);
+        }
     }
     tty_keypad (TRUE);
-    tty_nodelay (FALSE);
+
+    first = kitty_first_key_len (raw);
+    buffer = g_string_sized_new (16);
+    for (i = 0; i < first; i++)
+        learn_store_key (buffer, (unsigned char) raw->str[i]);
+    if (after != NULL)
+    {
+        GString *rest = g_string_sized_new (16);
+
+        for (; i < raw->len; i++)
+            learn_store_key (rest, (unsigned char) raw->str[i]);
+        *after = g_string_free (rest, FALSE);
+    }
+    g_string_free (raw, TRUE);
 
     return g_string_free (buffer, buffer->len == 0);
-#undef LEARN_TIMEOUT
 }
 
 /* --------------------------------------------------------------------------------------------- */

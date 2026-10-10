@@ -440,6 +440,60 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_learn_skips_leading_release)
+{
+    char *seq;
+    char *after;
+
+    /* the release of Enter that pressed the button, then Left with its release */
+
+    feed ("\033[13;1:3u\033[1;129D\033[1;129:3D");
+    seq = learn_key_ex (&after);
+    ck_assert_str_eq (seq, "\\e[1;129D");
+    ck_assert_str_eq (after, "\\e[1;129:3D");
+    g_free (seq);
+    g_free (after);
+
+    /* a, its repeat and its release; a key with a byte after it stays whole */
+    feed ("\033[97;;97u\033[97;1:2u\033[97;1:3u");
+    seq = learn_key_ex (&after);
+    ck_assert_str_eq (seq, "\\e[97;;97u");
+    ck_assert_str_eq (after, "\\e[97;1:2u\\e[97;1:3u");
+    g_free (seq);
+    g_free (after);
+
+    feed ("\033[13~x");
+    seq = learn_key ();
+    ck_assert_str_eq (seq, "\\e[13~x");
+    g_free (seq);
+
+    /* Ctrl-Shift-X: the modifiers before the X are skipped */
+    feed ("\033[57442;5u\033[57441;6u\033[120;6u\033[120;6:3u");
+    seq = learn_key_ex (&after);
+    ck_assert_str_eq (seq, "\\e[120;6u");
+    ck_assert_str_eq (after, "\\e[120;6:3u");
+    g_free (seq);
+    g_free (after);
+
+    /* Ctrl and Shift alone: the first of them is the key */
+    feed ("\033[57442;5u\033[57441;6u\033[57441;5:3u\033[57442;1:3u");
+    seq = learn_key_ex (&after);
+    ck_assert_str_eq (seq, "\\e[57442;5u");
+    ck_assert_str_eq (after, "\\e[57441;6u\\e[57441;5:3u\\e[57442;1:3u");
+    g_free (seq);
+    g_free (after);
+
+    /* a legacy terminal: no split */
+    kitty_keyboard_active = FALSE;
+    feed ("\033[D\033[D");
+    seq = learn_key ();
+    ck_assert_str_eq (seq, "\\e[D\\e[D");
+    g_free (seq);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_super_key_names)
 {
     char *name;
@@ -488,6 +542,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_text_bytes);
     tcase_add_test (tc_core, test_kitty_flags_base);
     tcase_add_test (tc_core, test_kitty_held_modifiers);
+    tcase_add_test (tc_core, test_learn_skips_leading_release);
     tcase_add_test (tc_core, test_super_key_names);
     tcase_add_test (tc_core, test_kitty_inactive);
 

@@ -141,6 +141,8 @@ void load_xtra_key_defines (void);
 
 /* Learn a single key */
 char *learn_key (void);
+/* The same; @after (if not NULL) gets what came right after the key: its kitty release */
+char *learn_key_ex (char **after);
 int tty_normalize_keycode (int code);
 char *tty_key_lookup_sequence (int code);
 int tty_match_seq_to_keycode (const char *seq, int len);
