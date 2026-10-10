@@ -2873,7 +2873,11 @@ nodelay_try_again:
                 kitty_event_code = c;
                 // a dropped release must not leave the next key waiting for the select timeout
                 if (c == -1 && tty_lowlevel_input_pending ())
+                {
+                    // nor give its event to that key
+                    kitty_event_valid = FALSE;
                     goto nodelay_try_again;
+                }
                 return c;
             }
             goto done;

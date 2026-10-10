@@ -369,8 +369,16 @@ END_TEST
 
 START_TEST (test_kitty_release_dropped_before_key)
 {
+    tty_key_event_t ev;
+
     feed ("\033[97;1:3uz");
     ck_assert_int_eq (get_key_code (0), 'z');
+    ck_assert (!tty_key_event ('z', &ev));
+
+    /* a key from the table after it has no kitty event either */
+    feed ("\033[97;1:3u\033[1;5A");
+    ck_assert_int_eq (get_key_code (0), KEY_M_CTRL | KEY_UP);
+    ck_assert (!tty_key_event (KEY_M_CTRL | KEY_UP, &ev));
 }
 END_TEST
 
