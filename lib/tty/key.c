@@ -246,14 +246,16 @@ const key_code_name_t key_name_conv_tab[] = {
 /* The flags that report a lone modifier key with its release */
 #define KITTY_KEYBOARD_MODIFIERS (2 | 8)
 /* The rest of a CSI sequence comes in the same write; this only guards a stuck read */
-#define KITTY_CSI_TIMEOUT (100 * MC_USEC_PER_MSEC)
+#define KITTY_CSI_TIMEOUT   (100 * MC_USEC_PER_MSEC)
 
-#define KITTY_MOD_SHIFT   TTY_KITTY_MOD_SHIFT
-#define KITTY_MOD_ALT     TTY_KITTY_MOD_ALT
-#define KITTY_MOD_CTRL    TTY_KITTY_MOD_CTRL
-#define KITTY_MOD_SUPER   TTY_KITTY_MOD_SUPER
-#define KITTY_MOD_HYPER   TTY_KITTY_MOD_HYPER
-#define KITTY_MOD_META    TTY_KITTY_MOD_META
+#define KITTY_MOD_SHIFT     TTY_KITTY_MOD_SHIFT
+#define KITTY_MOD_ALT       TTY_KITTY_MOD_ALT
+#define KITTY_MOD_CTRL      TTY_KITTY_MOD_CTRL
+#define KITTY_MOD_SUPER     TTY_KITTY_MOD_SUPER
+#define KITTY_MOD_HYPER     TTY_KITTY_MOD_HYPER
+#define KITTY_MOD_META      TTY_KITTY_MOD_META
+#define KITTY_MOD_CAPS_LOCK TTY_KITTY_MOD_CAPS_LOCK
+#define KITTY_MOD_NUM_LOCK  TTY_KITTY_MOD_NUM_LOCK
 
 /* Kitty key numbers in the private use area */
 #define KITTY_KEY_KP_0     57399
@@ -1440,6 +1442,46 @@ kitty_csi_started (int c)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* The key of CSI number ~ in the kitty protocol, -1 for none */
+
+static int
+kitty_tilde_key (unsigned int number)
+{
+    switch (number)
+    {
+    case 2:
+        return KEY_IC;
+    case 3:
+        return KEY_DC;
+    case 5:
+        return KEY_PPAGE;
+    case 6:
+        return KEY_NPAGE;
+    case 7:
+        return KEY_HOME;
+    case 8:
+        return KEY_END;
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+        return KEY_F ((int) number - 10);
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+        return KEY_F ((int) number - 11);
+    case 23:
+    case 24:
+        return KEY_F ((int) number - 12);
+    default:
+        return -1;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Turn a kitty key event into the code a legacy terminal would give for the same key. */
 
 static int
@@ -1463,12 +1505,30 @@ kitty_key_code (int final, unsigned int key, unsigned int shifted, unsigned int 
 
     switch (final)
     {
+    case 'A':
+        return mod | KEY_UP;
+    case 'B':
+        return mod | KEY_DOWN;
+    case 'C':
+        return mod | KEY_RIGHT;
+    case 'D':
+        return mod | KEY_LEFT;
+    case 'H':
+        return mod | KEY_HOME;
+    case 'F':
+        return mod | KEY_END;
     case 'P':
         return mod | KEY_F (1);
     case 'Q':
         return mod | KEY_F (2);
     case 'S':
         return mod | KEY_F (4);
+    case '~':
+    {
+        const int code = kitty_tilde_key (key);
+
+        return code == -1 ? -1 : mod | code;
+    }
     case 'u':
         break;
     default:
@@ -1600,15 +1660,15 @@ kitty_event_to_code (const tty_key_event_t *ev)
     if (ev->event == TTY_KITTY_RELEASE)
         return KEY_KITTY_EVENT;
 
-    if (ev->final == 'u' || ev->final == 'P' || ev->final == 'Q' || ev->final == 'S')
-        code = kitty_key_code (ev->final, ev->key, ev->shifted, ev->base, ev->mods + 1);
-    else
+    code = kitty_key_code (ev->final, ev->key, ev->shifted, ev->base, ev->mods + 1);
+    if (code == -1 && ev->final != 'u')
     {
-        /* a legacy form that came with an event type: the same sequence without it */
+        /* a legacy form that came with an event type or a lock: the same sequence without them */
+        const unsigned int mods = ev->mods & ~(KITTY_MOD_CAPS_LOCK | KITTY_MOD_NUM_LOCK);
         GString *seq = g_string_new (ESC_STR "[");
 
-        if (ev->mods != 0)
-            g_string_append_printf (seq, "%u;%u", ev->key, ev->mods + 1);
+        if (mods != 0)
+            g_string_append_printf (seq, "%u;%u", ev->key, mods + 1);
         else if (ev->final == '~')
             g_string_append_printf (seq, "%u", ev->key);
         g_string_append_c (seq, ev->final);

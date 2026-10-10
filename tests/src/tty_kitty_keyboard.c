@@ -160,6 +160,14 @@ static const struct decode_ds
     { "\033[97;3;97u", ALT ('a') },                // Alt-A: the text does not count
     { "\033[57403;129;52u", '4' },                 // keypad 4 with Num Lock
     { "\033[13;1:2~", KEY_F (3) },                 // F3 repeated
+    { "\033[1;129D", KEY_LEFT },                   // Left with Num Lock
+    { "\033[6;129~", KEY_NPAGE },                  // PgDn with Num Lock
+    { "\033[1;133A", KEY_M_CTRL | KEY_UP },        // Ctrl-Up with Num Lock
+    { "\033[1;65P", KEY_F (1) },                   // F1 with Caps Lock
+    { "\033[13;193~", KEY_F (3) },                 // F3 with Caps and Num Lock
+    { "\033[1;129:3D", -1 },                       // Left released with Num Lock
+    { "\033[97;65;65u", 'A' },                     // a with Caps Lock: its text
+    { "\033[97;69u", XCTRL ('a') },                // Ctrl-A with Caps Lock
 };
 
 START_PARAMETRIZED_TEST (test_kitty_decode, decode_ds)
