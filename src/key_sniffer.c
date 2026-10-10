@@ -42,7 +42,7 @@
 
 /* wide enough for a kitty key and its release with their bytes in hex */
 #define KS_DLG_WIDTH   76
-#define KS_DLG_HEIGHT  12
+#define KS_DLG_HEIGHT  14
 
 #define KS_BTN_CAPTURE (B_USER + 1)
 
@@ -53,8 +53,10 @@
 /*** file scope variables ************************************************************************/
 
 static WLabel *ks_lbl_raw;
+static WLabel *ks_lbl_raw_hex;
 static WLabel *ks_lbl_rest_title;
 static WLabel *ks_lbl_rest;
+static WLabel *ks_lbl_rest_hex;
 static WLabel *ks_lbl_kitty;
 static WLabel *ks_lbl_keycode;
 static WLabel *ks_lbl_name;
@@ -64,31 +66,31 @@ static WLabel *ks_lbl_action;
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
-/* @seq as learn_key () writes it, and its bytes in hex */
+/* @seq as learn_key () writes it in @label, and its bytes in hex in @hex_label below it */
 
 static void
-ks_set_raw (WLabel *label, const char *seq)
+ks_set_raw (WLabel *label, WLabel *hex_label, const char *seq)
 {
     char *raw;
-    GString *disp;
+    GString *hex;
     size_t i;
 
     raw = convert_controls (seq);
-    disp = g_string_sized_new (64);
-    g_string_append (disp, seq);
+    hex = g_string_sized_new (64);
     if (raw[0] != '\0')
     {
-        g_string_append (disp, "  [");
+        g_string_append_c (hex, '[');
         for (i = 0; raw[i] != '\0'; i++)
         {
             if (i > 0)
-                g_string_append_c (disp, ' ');
-            g_string_append_printf (disp, "%02x", (unsigned char) raw[i]);
+                g_string_append_c (hex, ' ');
+            g_string_append_printf (hex, "%02x", (unsigned char) raw[i]);
         }
-        g_string_append_c (disp, ']');
+        g_string_append_c (hex, ']');
     }
-    label_set_text (label, disp->str);
-    g_string_free (disp, TRUE);
+    label_set_text (label, seq);
+    label_set_text (hex_label, hex->str);
+    g_string_free (hex, TRUE);
     g_free (raw);
 }
 
@@ -104,8 +106,8 @@ ks_update_display (const char *seq, const char *rest)
     const char *action_name;
     char kc_display[32];
 
-    ks_set_raw (ks_lbl_raw, seq);
-    ks_set_raw (ks_lbl_rest, rest);
+    ks_set_raw (ks_lbl_raw, ks_lbl_raw_hex, seq);
+    ks_set_raw (ks_lbl_rest, ks_lbl_rest_hex, rest);
     {
         char *rest_raw = convert_controls (rest);
         tty_key_event_t ev;
@@ -287,27 +289,31 @@ key_sniffer (void)
     group_add_widget (g, label_new (4, 2, _ ("Raw:")));
     ks_lbl_raw = label_new (4, 12, "");
     group_add_widget (g, ks_lbl_raw);
+    ks_lbl_raw_hex = label_new (5, 12, "");
+    group_add_widget (g, ks_lbl_raw_hex);
 
-    ks_lbl_rest_title = label_new (5, 2, _ ("Then:"));
+    ks_lbl_rest_title = label_new (6, 2, _ ("Then:"));
     group_add_widget (g, ks_lbl_rest_title);
-    ks_lbl_rest = label_new (5, 12, "");
+    ks_lbl_rest = label_new (6, 12, "");
     group_add_widget (g, ks_lbl_rest);
+    ks_lbl_rest_hex = label_new (7, 12, "");
+    group_add_widget (g, ks_lbl_rest_hex);
 
-    group_add_widget (g, label_new (6, 2, _ ("Keycode:")));
-    ks_lbl_keycode = label_new (6, 12, "");
+    group_add_widget (g, label_new (8, 2, _ ("Keycode:")));
+    ks_lbl_keycode = label_new (8, 12, "");
     group_add_widget (g, ks_lbl_keycode);
 
-    group_add_widget (g, label_new (7, 2, _ ("Kitty:")));
-    ks_lbl_kitty = label_new (7, 12, "");
+    group_add_widget (g, label_new (9, 2, _ ("Kitty:")));
+    ks_lbl_kitty = label_new (9, 12, "");
     group_add_widget (g, ks_lbl_kitty);
 
-    group_add_widget (g, hline_new (8, -1, -1));
+    group_add_widget (g, hline_new (10, -1, -1));
 
-    btn = button_new (9, width / 2 - 19, KS_BTN_CAPTURE, NORMAL_BUTTON, _ ("&Capture key"),
+    btn = button_new (11, width / 2 - 19, KS_BTN_CAPTURE, NORMAL_BUTTON, _ ("&Capture key"),
                       ks_capture_btn);
     group_add_widget (g, btn);
     group_add_widget (g,
-                      button_new (9, width / 2 + 5, B_CANCEL, NORMAL_BUTTON, _ ("&Close"), NULL));
+                      button_new (11, width / 2 + 5, B_CANCEL, NORMAL_BUTTON, _ ("&Close"), NULL));
 
     dlg_run (dlg);
     widget_destroy (WIDGET (dlg));
