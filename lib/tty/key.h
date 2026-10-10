@@ -172,7 +172,8 @@ void application_keypad_mode (void);
 void enable_bracketed_paste (void);
 void disable_bracketed_paste (void);
 
-/* Kitty keyboard protocol, if the terminal knows it */
+/* Kitty keyboard protocol, if the terminal knows it, else the Win32 input mode of Windows
+   Terminal, if it knows that */
 void enable_kitty_keyboard (void);
 void disable_kitty_keyboard (void);
 /* Ask the terminal for the kitty flags 2, 8 and 16 in @flags on top of mc's own, or for no more */

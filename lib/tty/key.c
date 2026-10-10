@@ -592,6 +592,10 @@ static int *seq_append = NULL;
 static int *pending_keys = NULL;
 
 static gboolean kitty_keyboard_active = FALSE;
+/* Win32 input mode of Windows Terminal (DECSET 9001), used when the kitty protocol is not there */
+static gboolean win32_input_active = FALSE;
+/* The high half of a UTF-16 pair a Win32 input record gave, waiting for the low one */
+static gunichar win32_high_surrogate = 0;
 /* The kitty event of the key get_key_code () gave last */
 static tty_key_event_t kitty_event;
 static gboolean kitty_event_valid = FALSE;
@@ -603,6 +607,10 @@ static guint kitty_flags_sent = 0;
 static unsigned char kitty_text[TTY_KITTY_TEXT_MAX * 6];
 static size_t kitty_text_len = 0;
 static size_t kitty_text_pos = 0;
+/* How many more times the last key comes: a Win32 input record with a repeat count */
+static unsigned int key_repeat_left = 0;
+/* The repeat count of the Win32 input record parsed last, 1 for any other key */
+static unsigned int win32_record_repeat = 1;
 /* The modifier keys held now, a bit for each from Left Shift to Right Meta */
 static guint kitty_mod_keys = 0;
 /* The kitty modifier bit of each of the six modifier keys of a side */
@@ -1651,6 +1659,328 @@ kitty_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Win32 input mode: CSI Vk ; Sc ; Uc ; Kd ; Cs ; Rc _ is one key record of the Windows console.
+   The bits of the control key state Cs: */
+
+#define WIN32_CS_RIGHT_ALT  0x0001
+#define WIN32_CS_LEFT_ALT   0x0002
+#define WIN32_CS_RIGHT_CTRL 0x0004
+#define WIN32_CS_LEFT_CTRL  0x0008
+#define WIN32_CS_SHIFT      0x0010
+#define WIN32_CS_NUM_LOCK   0x0020
+#define WIN32_CS_CAPS_LOCK  0x0080
+#define WIN32_CS_ENHANCED   0x0100
+
+/* The kitty form of a key that has a final letter or a number with '~' in the kitty protocol */
+static gboolean
+win32_vk_kitty_form (unsigned int vk, char *final, unsigned int *key)
+{
+    static const struct
+    {
+        unsigned int vk;
+        char final;
+        unsigned int key;
+    } forms[] = {
+        { 0x25, 'D', 1 },  { 0x26, 'A', 1 },  { 0x27, 'C', 1 },  { 0x28, 'B', 1 },
+        { 0x24, 'H', 1 },  { 0x23, 'F', 1 },  { 0x2D, '~', 2 },  { 0x2E, '~', 3 },
+        { 0x21, '~', 5 },  { 0x22, '~', 6 },  { 0x70, 'P', 1 },  { 0x71, 'Q', 1 },
+        { 0x72, '~', 13 }, { 0x73, 'S', 1 },  { 0x74, '~', 15 }, { 0x75, '~', 17 },
+        { 0x76, '~', 18 }, { 0x77, '~', 19 }, { 0x78, '~', 20 }, { 0x79, '~', 21 },
+        { 0x7A, '~', 23 }, { 0x7B, '~', 24 },
+    };
+    size_t i;
+
+    for (i = 0; i < G_N_ELEMENTS (forms); i++)
+        if (forms[i].vk == vk)
+        {
+            *final = forms[i].final;
+            *key = forms[i].key;
+            return TRUE;
+        }
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The character of a punctuation key (VK_OEM_*) in the US layout, 0 for none */
+
+static unsigned int
+win32_vk_base_key (unsigned int vk)
+{
+    switch (vk)
+    {
+    case 0xBA:
+        return ';';
+    case 0xBB:
+        return '=';
+    case 0xBC:
+        return ',';
+    case 0xBD:
+        return '-';
+    case 0xBE:
+        return '.';
+    case 0xBF:
+        return '/';
+    case 0xC0:
+        return '`';
+    case 0xDB:
+        return '[';
+    case 0xDC:
+        return '\\';
+    case 0xDD:
+        return ']';
+    case 0xDE:
+        return '\'';
+    default:
+        return 0;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The kitty key number of a key of the CSI u form, 0 for none */
+
+static unsigned int
+win32_vk_kitty_key (unsigned int vk, unsigned int sc, unsigned int cs, unsigned int uc)
+{
+    const gboolean right = (cs & WIN32_CS_ENHANCED) != 0;
+
+    switch (vk)
+    {
+    case 0x08:
+        return 127;
+    case 0x09:
+        return 9;
+    case 0x0D:
+        return right ? 57414 : 13;  // the keypad Enter is an enhanced key
+    case 0x1B:
+        return 27;
+    case 0x20:
+        return 32;
+    case 0x10:
+        return sc == 0x36 ? 57447 : 57441;  // Shift: the scan code tells the right one
+    case 0xA0:
+        return 57441;
+    case 0xA1:
+        return 57447;
+    case 0x11:
+        return right ? 57448 : 57442;
+    case 0xA2:
+        return 57442;
+    case 0xA3:
+        return 57448;
+    case 0x12:
+        return right ? 57449 : 57443;
+    case 0xA4:
+        return 57443;
+    case 0xA5:
+        return 57449;
+    case 0x5B:
+        return 57444;
+    case 0x5C:
+        return 57450;
+    case 0x14:
+        return 57358;
+    case 0x91:
+        return 57359;
+    case 0x90:
+        return 57360;
+    case 0x2C:
+        return 57361;  // Print Screen
+    case 0x13:
+        return 57362;  // Pause
+    case 0x5D:
+        return 57363;  // Menu
+    case 0x6A:
+        return 57411;
+    case 0x6B:
+        return 57413;
+    case 0x6C:
+        return 57415;
+    case 0x6D:
+        return 57412;
+    case 0x6E:
+        return 57409;
+    case 0x6F:
+        return 57410;
+    default:
+        break;
+    }
+
+    if (vk >= 'A' && vk <= 'Z')
+        return vk - 'A' + 'a';  // the key in the base layout, whatever the layout gives
+    if (vk >= '0' && vk <= '9')
+        return vk;
+    if (vk >= 0x60 && vk <= 0x69)
+        return KITTY_KEY_KP_0 + vk - 0x60;
+    if (vk >= 0x7C && vk <= 0x87)
+        return 57376 + vk - 0x7C;  // F13 to F24
+
+    // a punctuation key: the character of the layout, else the one of the key in the US layout
+    if (uc >= 0x20 && uc < 0x7F)
+        return uc;
+    return win32_vk_base_key (vk);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Parse the parameters of a Win32 input record (what follows ESC [, with the '_') into @ev.
+   A half of a UTF-16 pair leaves @ev->final 0 and the half in @ev->key. */
+
+static gboolean
+win32_parse_record (const char *params, size_t len, tty_key_event_t *ev)
+{
+    unsigned int field[6] = { 0, 0, 0, 0, 0, 1 };
+    unsigned int f = 0;
+    unsigned int vk, sc, uc, cs;
+    gboolean ctrl, alt;
+    size_t i;
+
+    if (len == 0 || params[len - 1] != '_')
+        return FALSE;
+
+    for (i = 0; i + 1 < len; i++)
+    {
+        const unsigned char ch = (unsigned char) params[i];
+
+        if (g_ascii_isdigit (ch))
+        {
+            if (f < G_N_ELEMENTS (field) && field[f] < 0x10FFFF)
+                field[f] = field[f] * 10 + (unsigned int) (ch - '0');
+        }
+        else if (ch == ';')
+        {
+            f++;
+            if (f < G_N_ELEMENTS (field))
+                field[f] = 0;
+        }
+        else
+            return FALSE;
+    }
+
+    // a held key may come as one record with a count, a WORD in the Windows console
+    win32_record_repeat = field[5] == 0 ? 1 : MIN (field[5], 0xFFFF);
+
+    vk = field[0];
+    sc = field[1];
+    uc = field[2];
+    cs = field[4];
+
+    memset (ev, 0, sizeof (*ev));
+    ev->event = field[3] != 0 ? TTY_KITTY_PRESS : TTY_KITTY_RELEASE;
+
+    ctrl = (cs & (WIN32_CS_LEFT_CTRL | WIN32_CS_RIGHT_CTRL)) != 0;
+    alt = (cs & (WIN32_CS_LEFT_ALT | WIN32_CS_RIGHT_ALT)) != 0;
+    // AltGr is Ctrl and Alt on Windows: with a character it is only that character
+    if (ctrl && alt && uc >= 0x20 && uc != 0x7F)
+        ctrl = alt = FALSE;
+
+    if ((cs & WIN32_CS_SHIFT) != 0)
+        ev->mods |= KITTY_MOD_SHIFT;
+    if (alt)
+        ev->mods |= KITTY_MOD_ALT;
+    if (ctrl)
+        ev->mods |= KITTY_MOD_CTRL;
+    if ((cs & WIN32_CS_CAPS_LOCK) != 0)
+        ev->mods |= KITTY_MOD_CAPS_LOCK;
+    if ((cs & WIN32_CS_NUM_LOCK) != 0)
+        ev->mods |= KITTY_MOD_NUM_LOCK;
+
+    // a character outside the BMP comes as two records, one for each half of its UTF-16 pair:
+    // the half is kept in key, and win32_join_pair () puts the two together
+    if (uc >= 0xD800 && uc <= 0xDFFF)
+    {
+        ev->key = uc;
+        return TRUE;
+    }
+
+    // Alt and the digits of the keypad give their character on the release of Alt
+    if (ev->event == TTY_KITTY_RELEASE && (vk == 0x12 || vk == 0xA4 || vk == 0xA5) && uc >= 0x20
+        && uc != 0x7F)
+    {
+        ev->event = TTY_KITTY_PRESS;
+        ev->mods &= ~KITTY_MOD_ALT;
+        vk = 0;
+    }
+
+    if (!win32_vk_kitty_form (vk, &ev->final, &ev->key))
+    {
+        ev->key = win32_vk_kitty_key (vk, sc, cs, uc);
+        // an input method or a paste gives a character with no key
+        if (ev->key == 0 && uc >= 0x20 && uc != 0x7F)
+            ev->key = uc;
+        if (ev->key == 0)
+            return TRUE;
+        ev->final = 'u';
+        if (vk >= 'A' && vk <= 'Z')
+            ev->base = ev->key;
+        else if (win32_vk_base_key (vk) != 0)
+            ev->base = win32_vk_base_key (vk);
+        // the shifted character, as the kitty protocol gives it with its alternate keys
+        if ((ev->mods & KITTY_MOD_SHIFT) != 0 && uc > 0x20 && uc < 0x7F)
+            ev->shifted = uc;
+    }
+
+    if (ev->event == TTY_KITTY_PRESS && uc >= 0x20 && uc != 0x7F)
+    {
+        ev->text[0] = (gunichar) uc;
+        ev->text_len = 1;
+    }
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Put the two halves of a UTF-16 pair of the live input together. TRUE when @ev is a whole key:
+   any key but a half, or the second half that makes the character with the first one. */
+
+static gboolean
+win32_join_pair (tty_key_event_t *ev)
+{
+    gunichar cp;
+
+    if (ev->final != '\0')
+        return TRUE;
+    if (ev->event != TTY_KITTY_PRESS)
+        return FALSE;
+    if (ev->key >= 0xD800 && ev->key <= 0xDBFF)
+    {
+        win32_high_surrogate = ev->key;
+        return FALSE;
+    }
+    // anything but a second half after a first one: no character, and the first half is gone
+    if (win32_high_surrogate == 0 || ev->key < 0xDC00 || ev->key > 0xDFFF)
+    {
+        win32_high_surrogate = 0;
+        return FALSE;
+    }
+
+    cp = 0x10000 + ((win32_high_surrogate - 0xD800) << 10) + (ev->key - 0xDC00);
+    win32_high_surrogate = 0;
+    ev->final = 'u';
+    ev->key = cp;
+    ev->text[0] = cp;
+    ev->text_len = 1;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Parse a key sequence (what follows ESC [) of the protocol that is on into @ev */
+
+static gboolean
+key_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
+{
+    win32_record_repeat = 1;
+    if (win32_input_active && len > 0 && params[len - 1] == '_')
+        return win32_parse_record (params, len, ev);
+    return kitty_parse_csi (params, len, ev);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static inline gboolean
+key_events_active (void)
+{
+    return kitty_keyboard_active || win32_input_active;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* The mc key of a kitty event: -1 for none, KEY_KITTY_EVENT for a key mc has no code for. */
 
 static int
@@ -1695,7 +2025,7 @@ kitty_flags_base (void)
 static inline gboolean
 kitty_text_pending (void)
 {
-    return kitty_text_pos < kitty_text_len;
+    return kitty_text_pos < kitty_text_len || key_repeat_left > 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1851,11 +2181,18 @@ kitty_read_csi (int c)
                 code = kitty_mod_keys != 0 ? MCKEY_MODIFIERS : -1;
                 kitty_mod_keys = 0;
             }
-            else if (kitty_parse_csi (params->str, params->len, &kitty_event))
+            else if (key_parse_csi (params->str, params->len, &kitty_event))
             {
-                kitty_event_valid = TRUE;
-                kitty_track_modifiers (&kitty_event);
-                code = kitty_live_code (&kitty_event);
+                // a half of a UTF-16 pair is a key only with the other half
+                if (win32_join_pair (&kitty_event))
+                {
+                    kitty_event_valid = TRUE;
+                    kitty_track_modifiers (&kitty_event);
+                    code = kitty_live_code (&kitty_event);
+                    if (win32_record_repeat > 1 && kitty_event.event != TTY_KITTY_RELEASE
+                        && code >= 0)
+                        key_repeat_left = win32_record_repeat - 1;
+                }
             }
             break;
         }
@@ -1871,7 +2208,7 @@ kitty_read_csi (int c)
 static void
 kitty_drop_leading_releases (GString *raw)
 {
-    while (kitty_keyboard_active && raw->len > 3 && raw->str[0] == ESC_CHAR && raw->str[1] == '[')
+    while (key_events_active () && raw->len > 3 && raw->str[0] == ESC_CHAR && raw->str[1] == '[')
     {
         tty_key_event_t ev;
         size_t end;
@@ -1879,7 +2216,7 @@ kitty_drop_leading_releases (GString *raw)
         for (end = 2; end < raw->len; end++)
             if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
                 break;
-        if (end == raw->len || !kitty_parse_csi (raw->str + 2, end - 1, &ev)
+        if (end == raw->len || !key_parse_csi (raw->str + 2, end - 1, &ev)
             || ev.event != TTY_KITTY_RELEASE)
             return;
         g_string_erase (raw, 0, (gssize) end + 1);
@@ -1945,7 +2282,7 @@ kitty_capture_start (const GString *raw)
     guint held = 0;
     size_t pos = 0;
 
-    if (!kitty_keyboard_active)
+    if (!key_events_active ())
         return 0;
 
     while (pos < raw->len)
@@ -1960,7 +2297,7 @@ kitty_capture_start (const GString *raw)
                 break;
         if (end == raw->len)
             return -1;
-        if (!kitty_parse_csi (raw->str + pos + 2, end - pos - 1, &ev))
+        if (!key_parse_csi (raw->str + pos + 2, end - pos - 1, &ev))
             return (gssize) pos;
 
         if (ev.final != 'u' || ev.key < KITTY_KEY_MOD_FIRST || ev.key > KITTY_KEY_MOD_LAST)
@@ -1995,12 +2332,28 @@ kitty_first_key_len (const GString *raw)
 {
     size_t end;
 
-    if (!kitty_keyboard_active || raw->len < 3 || raw->str[0] != ESC_CHAR || raw->str[1] != '[')
+    if (!key_events_active () || raw->len < 3 || raw->str[0] != ESC_CHAR || raw->str[1] != '[')
         return raw->len;
 
     for (end = 2; end < raw->len; end++)
         if ((unsigned char) raw->str[end] >= 0x40 && (unsigned char) raw->str[end] <= 0x7E)
-            return end + 1 < raw->len && raw->str[end + 1] == ESC_CHAR ? end + 1 : raw->len;
+        {
+            tty_key_event_t ev;
+            size_t next;
+
+            if (end + 1 >= raw->len || raw->str[end + 1] != ESC_CHAR)
+                return raw->len;
+
+            // the first half of a UTF-16 pair of Win32 records: the key is both of them
+            if (key_parse_csi (raw->str + 2, end - 1, &ev) && ev.final == '\0'
+                && ev.event == TTY_KITTY_PRESS && ev.key >= 0xD800 && ev.key <= 0xDBFF)
+                for (next = end + 3; next < raw->len; next++)
+                    if ((unsigned char) raw->str[next] >= 0x40
+                        && (unsigned char) raw->str[next] <= 0x7E)
+                        return next + 1 < raw->len && raw->str[next + 1] == ESC_CHAR ? next + 1
+                                                                                     : raw->len;
+            return end + 1;
+        }
 
     return raw->len;
 }
@@ -2651,9 +3004,20 @@ get_key_code (int no_delay)
 
     kitty_event_valid = FALSE;
 
-    if (kitty_text_pending ())
+    if (kitty_text_pos < kitty_text_len)
     {
         c = correct_key_code (kitty_text[kitty_text_pos++], FALSE);
+        kitty_event_code = c;
+        return c;
+    }
+
+    // the same key again, with its text, for a record with a repeat count
+    if (key_repeat_left > 0)
+    {
+        key_repeat_left--;
+        kitty_event.event = TTY_KITTY_REPEAT;
+        kitty_event_valid = TRUE;
+        c = correct_key_code (kitty_live_code (&kitty_event), FALSE);
         kitty_event_code = c;
         return c;
     }
@@ -2863,7 +3227,7 @@ nodelay_try_again:
             goto done;
         }
 
-        if (kitty_keyboard_active && kitty_csi_started (c))
+        if (key_events_active () && kitty_csi_started (c))
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
@@ -3393,8 +3757,10 @@ tty_kitty_modifiers (void)
     guint mods = 0;
     int i;
 
-    if (!kitty_keyboard_active
-        || (kitty_flags_sent & KITTY_KEYBOARD_MODIFIERS) != KITTY_KEYBOARD_MODIFIERS)
+    // Win32 input mode always reports the modifier keys
+    if (!win32_input_active
+        && (!kitty_keyboard_active
+            || (kitty_flags_sent & KITTY_KEYBOARD_MODIFIERS) != KITTY_KEYBOARD_MODIFIERS))
         return 0;
 
     for (i = 0; i < KITTY_KEY_MOD_SIDES; i++)
@@ -3459,10 +3825,10 @@ tty_decode_key_seq (const char *seq, int len)
 gboolean
 tty_kitty_seq_event (const char *seq, int len, tty_key_event_t *ev)
 {
-    if (!kitty_keyboard_active || seq == NULL || len < 3 || seq[0] != ESC_CHAR || seq[1] != '[')
+    if (!key_events_active () || seq == NULL || len < 3 || seq[0] != ESC_CHAR || seq[1] != '[')
         return FALSE;
 
-    return kitty_parse_csi (seq + 2, (size_t) len - 2, ev);
+    return key_parse_csi (seq + 2, (size_t) len - 2, ev);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3550,8 +3916,24 @@ disable_bracketed_paste (void)
 void
 enable_kitty_keyboard (void)
 {
-    if (kitty_keyboard_active || !tty_has_kitty_keyboard ())
+    if (kitty_keyboard_active || win32_input_active)
         return;
+
+    // a terminal with no kitty protocol may have the Win32 input mode of Windows Terminal
+    if (!tty_has_kitty_keyboard ())
+    {
+        if (!tty_has_win32_input ())
+            return;
+        printf (ESC_STR "[?9001h");
+        if (keybar_modifiers)
+            printf (ESC_STR "[?1004h");
+        fflush (stdout);
+        win32_input_active = TRUE;
+        win32_high_surrogate = 0;
+        key_repeat_left = 0;
+        kitty_mod_keys = 0;
+        return;
+    }
 
     kitty_flags_sent = kitty_flags_base () | kitty_flags_wanted;
     printf (ESC_STR "[>%uu", kitty_flags_sent);
@@ -3581,6 +3963,18 @@ tty_kitty_keyboard_want (guint flags)
 void
 disable_kitty_keyboard (void)
 {
+    if (win32_input_active)
+    {
+        if (keybar_modifiers)
+            printf (ESC_STR "[?1004l");
+        printf (ESC_STR "[?9001l");
+        fflush (stdout);
+        win32_input_active = FALSE;
+        key_repeat_left = 0;
+        kitty_mod_keys = 0;
+        return;
+    }
+
     if (!kitty_keyboard_active)
         return;
 

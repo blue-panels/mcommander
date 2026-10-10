@@ -183,6 +183,8 @@ extern void tty_unget_input (const unsigned char *data, size_t len);
 extern gboolean tty_has_sixel (void);
 /* The terminal answered CSI ? u. MC_KITTY_KEYBOARD=0 turns the question off. */
 extern gboolean tty_has_kitty_keyboard (void);
+/* The terminal knows the Win32 input mode (DECSET 9001) of Windows Terminal */
+extern gboolean tty_has_win32_input (void);
 /* Pixels per cell, 0 when the terminal did not say. */
 extern void tty_cell_size (int *width, int *height);
 
