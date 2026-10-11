@@ -1486,6 +1486,45 @@ edit_load_file_from_history (WDialog *h)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
+ * Make the Syntax file of the user where there is none.
+ *
+ * It is not a copy of the installed one: that one is still read after it, and a
+ * copy would keep the user from every type installed later.  What the user
+ * writes here comes first and wins for the files it matches.
+ *
+ * @return TRUE if the file is there now
+ */
+
+static gboolean
+editcmd_create_user_syntax_file (const vfs_path_t *vpath)
+{
+    static const char text[] =
+        "# The Syntax file of your own.\n"
+        "#\n"
+        "# It is read before the Syntax file installed with mcedit, which is still\n"
+        "# used for every file type not named here.  An entry here wins over the\n"
+        "# installed ones for the files it matches.  The rules an entry includes are\n"
+        "# looked for in this directory first, and among the installed ones after.\n"
+        "#\n"
+        "# file ..\\*\\\\.foo$ Foo\\sFile\n"
+        "# include foo.syntax\n";
+    const char *path = vfs_path_get_last_path_str (vpath);
+    GError *error = NULL;
+
+    if (exist_file (path))
+        return TRUE;
+
+    if (g_file_set_contents (path, text, sizeof (text) - 1, &error))
+        return TRUE;
+
+    message (D_ERROR, MSG_ERROR, _ ("Cannot create %s:\n%s"), path, error->message);
+    g_error_free (error);
+
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
  * Load syntax file to edit.
  *
  * @return TRUE on success
@@ -1518,9 +1557,9 @@ edit_load_syntax_file (WDialog *h)
 
         user_syntax_file_vpath = mc_config_get_full_vpath (EDIT_SYNTAX_FILE);
 
-        if (editcmd_check_and_create_user_syntax_directory (user_syntax_file_vpath))
+        if (editcmd_check_and_create_user_syntax_directory (user_syntax_file_vpath)
+            && editcmd_create_user_syntax_file (user_syntax_file_vpath))
         {
-            check_for_default (extdir_vpath, user_syntax_file_vpath);
             edit_arg_init (&arg, user_syntax_file_vpath, 0);
             ret = edit_load_file_from_filename (h, &arg);
         }

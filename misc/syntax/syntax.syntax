@@ -25,8 +25,11 @@ context default
     keyword whole define\[\] brightcyan
 
     keyword whole spellcheck\[\] yellow
+    keyword whole embed\[\] yellow
+    keyword whole overlay\[\] yellow
     keyword whole keyword\[\] yellow
     keyword whole context\[\t\s\]exclusive brightred
+    keyword whole oneline brightred
     keyword whole context\[\t\s\]default brightred
     keyword whole context\[\] brightred
     keyword whole caseinsensitive\[\] brightred

@@ -23,6 +23,81 @@ context linestart > \n green
 
 context linestart \s\s\s\s \n cyan
 
+# a fenced block that names its language is read by the rules of that
+# language; the fence closes it wherever it stands at the start of a line.
+# The more specific names come first: the first one that fits is taken
+context linestart ```py*\n linestart ``` cyan
+    embed Python\sProgram
+
+context linestart ```json*\n linestart ``` cyan
+    embed JSON\sFile
+
+context linestart ```js*\n linestart ``` cyan
+    embed JavaScript\sProgram
+
+context linestart ```javascript*\n linestart ``` cyan
+    embed JavaScript\sProgram
+
+context linestart ```ts*\n linestart ``` cyan
+    embed TypeScript\sProgram
+
+context linestart ```typescript*\n linestart ``` cyan
+    embed TypeScript\sProgram
+
+context linestart ```sh*\n linestart ``` cyan
+    embed Shell\sScript
+
+context linestart ```bash*\n linestart ``` cyan
+    embed Shell\sScript
+
+context linestart ```zsh*\n linestart ``` cyan
+    embed Shell\sScript
+
+context linestart ```c\n linestart ``` cyan
+    embed C\sProgram
+
+context linestart ```cpp*\n linestart ``` cyan
+    embed C/C\+\+\sProgram
+
+context linestart ```c\+\+*\n linestart ``` cyan
+    embed C/C\+\+\sProgram
+
+context linestart ```rust*\n linestart ``` cyan
+    embed Rust\sProgram
+
+context linestart ```go*\n linestart ``` cyan
+    embed GoLang\sProgram
+
+context linestart ```lua*\n linestart ``` cyan
+    embed Lua\sProgram
+
+context linestart ```sql*\n linestart ``` cyan
+    embed SQL\sProgram
+
+context linestart ```yaml*\n linestart ``` cyan
+    embed YAML\sFile
+
+context linestart ```yml*\n linestart ``` cyan
+    embed YAML\sFile
+
+context linestart ```toml*\n linestart ``` cyan
+    embed TOML\sFile
+
+context linestart ```html*\n linestart ``` cyan
+    embed HTML\sFile
+
+context linestart ```xml*\n linestart ``` cyan
+    embed XML\sdocument
+
+context linestart ```css*\n linestart ``` cyan
+    embed CSS\sFile
+
+context linestart ```diff*\n linestart ``` cyan
+    embed Diff\sOutput
+
+context linestart ```make*\n linestart ``` cyan
+    embed Makefile
+
 context ``` ``` cyan
 
 context `` `` cyan

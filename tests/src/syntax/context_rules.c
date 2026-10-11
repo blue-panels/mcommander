@@ -492,6 +492,31 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_context_oneline)
+{
+    load ("context default\n"
+          "  keyword int red\n"
+          "context oneline `` `` green\n"
+          "context exclusive oneline < > yellow\n");
+
+    // a single backtick inside is no end of the context
+    check_mask ("a ``b ` c`` int", "..ggggggggg.rrr");
+    // left open, the context ends with its line
+    check_mask ("a ``b\nint ``c``",
+                "..gggg"
+                "rrr.ggggg");
+    check_mask ("x <a\nint",
+                "...yy"
+                "rrr");
+    // and the next line can start a context on its first byte
+    check_mask ("``a\n``b``",
+                "gggg"
+                "ggggg");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_context_linestart)
 {
     load ("context default\n"
@@ -590,6 +615,20 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_exclusive_first_byte)
+{
+    load ("context default\n"
+          "context exclusive < > green\n"
+          "context { } red\n");
+
+    // the body of an exclusive context is its own from the first byte on
+    check_mask ("a<{x}>b", "..ggg..");
+    check_mask ("a<x{y}>b", "..gggg..");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_newline_keyword_in_newline_context)
 {
     load ("context default\n"
@@ -612,6 +651,19 @@ START_TEST (test_keyword_at_context_start)
 
     // the context turns on and a keyword of it starts on the same byte
     check_mask ("a<xy>", ".rrgg");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_context_over_keyword_starting_with_it)
+{
+    load ("context default\n"
+          "  keyword << red\n"
+          "context <<< >>> green\n");
+
+    // the longer context wins over the keyword, and is entered
+    check_mask ("a<<<x>>>b<<c", ".ggggggg.rr.");
 }
 END_TEST
 
@@ -865,6 +917,8 @@ START_TEST (test_truncated_context_and_keyword_lines)
 {
     // a context line that stops before every word of it has been read
     ck_assert_int_eq (load_result ("context default\ncontext exclusive\n"), 2);
+    ck_assert_int_eq (load_result ("context default\ncontext oneline\n"), 2);
+    ck_assert_int_eq (load_result ("context default\ncontext exclusive oneline\n"), 2);
     ck_assert_int_eq (load_result ("context default\ncontext whole\n"), 2);
     ck_assert_int_eq (load_result ("context default\ncontext linestart\n"), 2);
     ck_assert_int_eq (load_result ("context default\ncontext <\n"), 2);
@@ -1103,6 +1157,658 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The rules the tests below embed: a keyword and a string of their own. */
+#define INNER_RULES                                                                                \
+    "file \\.none$ Inner\n"                                                                        \
+    "context default\n"                                                                            \
+    "  keyword whole int yellow\n"                                                                 \
+    "context \" \" cyan\n"
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "  keyword whole int red\n"
+                                     "context <s> </s> green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // the delimiters are the context's, what stands between them the embedded rules'
+    check_mask ("int <s>int \"x\"</s> int", "rrr.gggyyy.cccgggg.rrr");
+    // and the embedded rules end with the body, not before
+    check_mask ("<s>int\nint</s>int", "gggyyy.yyyggggrrr");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_escape)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context <s> </s> green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // the right delimiter ends the body in a string of the embedded rules as well
+    check_mask ("<s>\"a</s>b", "gggccgggg.");
+    // a body with nothing in it
+    check_mask ("<s></s>b", "ggggggg.");
+    // and one that never ends runs to the end of the text
+    check_mask ("<s>int", "gggyyy");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_exclusive)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context exclusive <s> </s> green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // exclusive leaves the delimiters to the scope around
+    check_mask ("<s>int x</s>.", "...yyy.......");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_case)
+{
+    // the rules around ignore case, the embedded ones do not; the type is found
+    // though the line naming it was folded
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "caseinsensitive\n"
+                                     "context default\n"
+                                     "context <s> </s> green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    check_mask ("<S>int INT</S>.", "gggyyy....gggg.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_nested)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "  keyword whole int red\n"
+                                     "context <a> </a> green\n"
+                                     "  embed Middle\n"
+                                     "file \\.none$ Middle\n"
+                                     "context default\n"
+                                     "  keyword whole int cyan\n"
+                                     "context <b> </b> magenta\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // each body ends with its own delimiter, and the scope around takes over
+    check_mask ("<a><b>x</b>int</a>int",
+                "gggmmm.mmmmccc"
+                "gggg"
+                "rrr");
+    // the outer delimiter ends every body inside it at once
+    check_mask ("<a><b>\"int</a>int",
+                "gggmmmcccc"
+                "gggg"
+                "rrr");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_itself)
+{
+    /* a rule set inside itself is copied in so many levels deep, and then left
+       plain; each parenthesis is closed by its own */
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "  keyword whole int red\n"
+                                     "context ( ) green\n"
+                                     "  embed Tested\n"),
+                      0);
+
+    check_mask ("(int(int))int", "grrrgrrrggrrr");
+    check_mask ("(((((x)))))int", "gggggggggggrrr");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_shared)
+{
+    syntax_scanner_t *sc;
+    syntax_state_t a, b, c;
+
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context <a> </s> green\n"
+                                     "  embed Inner\n"
+                                     "context <b> </s> green\n"
+                                     "  embed Inner\n"
+                                     "context <c> </c> green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    check_mask ("<a>int</s><b>int</s><c>int</c>", "gggyyygggggggyyygggggggyyygggg");
+
+    // the bodies that end alike are read in one scope, the other one in its own
+    sc = syntax_scanner_new (rules, get_byte, NULL, text_len);
+    a = syntax_state_at (sc, 3);
+    b = syntax_state_at (sc, 13);
+    c = syntax_state_at (sc, 23);
+    syntax_scanner_free (sc);
+    ck_assert_int_eq (a.context, b.context);
+    ck_assert_int_ne (a.context, c.context);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_left_ends_like_right)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context run\\s' ' green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // the quote that ends the left delimiter does not end the body it opens
+    check_mask ("run 'int'.", "gggggyyyg.");
+    check_mask ("run ''.", "gggggg.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_soft)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context {{ }} green\n"
+                                     "  embed soft Inner\n"
+                                     "context <s> </s> magenta\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // a soft delimiter in a string of the embedded rules is part of the string
+    check_mask ("{{\"}}\"}}.", "ggccccgg.");
+    // and ends the body from the default context of those rules as ever
+    check_mask ("{{int}}.", "ggyyygg.");
+    check_mask ("{{}}.", "gggg.");
+    // a hard one ends it anywhere
+    check_mask ("<s>\"</s>\".", "mmmcmmmm..");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_soft_keyword)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context { } green\n"
+                                     "  embed soft Escapes\n"
+                                     "file \\.none$ Escapes\n"
+                                     "context default\n"
+                                     "  keyword \\\\} yellow\n"),
+                      0);
+
+    // a soft delimiter inside a keyword of the embedded rules is part of it
+    check_mask ("{a\\}b}.", "g.yy.g.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_soft_nested)
+{
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context {{ }} green\n"
+                                     "  embed soft Middle\n"
+                                     "file \\.none$ Middle\n"
+                                     "context default\n"
+                                     "context <b> </b> magenta\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // the body of <b> is a context of the rules {{ embeds: its "}}" is no end
+    check_mask ("{{<b>}}</b>}}.", "ggmmm..mmmmgg.");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_unknown_type)
+{
+    // a type no Syntax file names leaves the context in its own colors
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "  keyword whole int red\n"
+                                     "context < > green\n"
+                                     "  embed Nowhere\n" INNER_RULES),
+                      0);
+    check_mask ("int <int> int", "rrr.ggggg.rrr");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_from_installed_syntax)
+{
+    char *saved_share = mc_global.share_data_dir;
+    char *share, *dir, *installed, *lang, *content;
+
+    /* the Syntax file the user keeps is older than the rules and does not know
+       the type they embed; the one installed with the program does */
+    share = g_build_filename (tmpdir, "share", (char *) NULL);
+    dir = g_build_filename (share, "syntax", (char *) NULL);
+    g_mkdir_with_parents (dir, 0700);
+    lang = g_build_filename (dir, "inner.syntax", (char *) NULL);
+    write_file (lang,
+                "context default\n"
+                "  keyword whole int yellow\n");
+    installed = g_build_filename (dir, "Syntax", (char *) NULL);
+    content = g_strdup_printf ("file \\.none$ Inner\ninclude %s\n", lang);
+    write_file (installed, content);
+    mc_global.share_data_dir = share;
+
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed Inner\n"),
+                      0);
+    check_mask ("<int>", "gyyyg");
+
+    mc_global.share_data_dir = saved_share;
+    unlink (installed);
+    unlink (lang);
+    rmdir (dir);
+    rmdir (share);
+    g_free (content);
+    g_free (installed);
+    g_free (lang);
+    g_free (dir);
+    g_free (share);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * An installed Syntax file under a share directory of the test's own:
+ * .bar files are Bar, .foo files InstalledFoo.  Gives back the directory.
+ */
+static char *
+make_installed_syntax (void)
+{
+    char *share, *dir, *path, *lang, *content;
+
+    share = g_build_filename (tmpdir, "share", (char *) NULL);
+    dir = g_build_filename (share, "syntax", (char *) NULL);
+    g_mkdir_with_parents (dir, 0700);
+
+    lang = g_build_filename (dir, "installed.syntax", (char *) NULL);
+    write_file (lang,
+                "context default\n"
+                "  keyword whole int yellow\n");
+    path = g_build_filename (dir, "Syntax", (char *) NULL);
+    content = g_strdup_printf ("file \\.bar$ Bar\ninclude %s\n"
+                               "file \\.foo$ InstalledFoo\ninclude %s\n",
+                               lang, lang);
+    write_file (path, content);
+
+    g_free (content);
+    g_free (path);
+    g_free (lang);
+    g_free (dir);
+
+    return share;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+remove_installed_syntax (char *share)
+{
+    char *dir, *path;
+
+    dir = g_build_filename (share, "syntax", (char *) NULL);
+    path = g_build_filename (dir, "Syntax", (char *) NULL);
+    unlink (path);
+    g_free (path);
+    path = g_build_filename (dir, "installed.syntax", (char *) NULL);
+    unlink (path);
+    g_free (path);
+    rmdir (dir);
+    rmdir (share);
+    g_free (dir);
+    g_free (share);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The type the Syntax file of the user and the installed one choose for @filename. */
+static const char *
+type_for (const char *filename)
+{
+    syntax_select_t sel;
+
+    sel.type = NULL;
+    sel.filename = filename;
+    sel.first_line = "";
+    syntax_rules_unref (rules);
+    rules = NULL;
+    if (syntax_rules_load (syntax_file, &sel, &rules, NULL) != 0)
+        return NULL;
+
+    return syntax_rules_type (rules);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_user_syntax_inherits_installed)
+{
+    char *saved_share = mc_global.share_data_dir;
+    char *share;
+
+    share = make_installed_syntax ();
+    mc_global.share_data_dir = share;
+
+    // the file of the user names .foo files, the installed one the rest
+    write_file (syntax_file,
+                "file \\.foo$ UserFoo\n"
+                "context default\n"
+                "  keyword whole int red\n");
+    ck_assert_str_eq (type_for ("x.foo"), "UserFoo");
+    ck_assert_str_eq (type_for ("x.bar"), "Bar");
+    ck_assert_ptr_null (type_for ("x.none"));
+
+    // a file of the user that names nothing leaves everything to the installed one
+    write_file (syntax_file, "# nothing here yet\n");
+    ck_assert_str_eq (type_for ("x.foo"), "InstalledFoo");
+    ck_assert_str_eq (type_for ("x.bar"), "Bar");
+
+    mc_global.share_data_dir = saved_share;
+    remove_installed_syntax (share);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_user_syntax_types_listed_with_installed)
+{
+    char *saved_share = mc_global.share_data_dir;
+    char *share;
+    GPtrArray *names;
+
+    share = make_installed_syntax ();
+    mc_global.share_data_dir = share;
+
+    write_file (syntax_file,
+                "file \\.foo$ UserFoo\n"
+                "context default\n"
+                "file \\.baz$ Bar\n"
+                "context default\n");
+
+    // the types of the user first, then the installed ones not named yet
+    names = g_ptr_array_new_with_free_func (g_free);
+    ck_assert_int_eq (syntax_rules_list_types (syntax_file, names), 0);
+    ck_assert_int_eq ((int) names->len, 3);
+    ck_assert_str_eq (g_ptr_array_index (names, 0), "UserFoo");
+    ck_assert_str_eq (g_ptr_array_index (names, 1), "Bar");
+    ck_assert_str_eq (g_ptr_array_index (names, 2), "InstalledFoo");
+    g_ptr_array_free (names, TRUE);
+
+    mc_global.share_data_dir = saved_share;
+    remove_installed_syntax (share);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A layer of tags over rules of a host of its own. */
+#define LAYERED_RULES                                                                              \
+    "file .\\* Tested\n"                                                                           \
+    "overlay Host\n"                                                                               \
+    "context default\n"                                                                            \
+    "context {\\* \\*} magenta\n"                                                                  \
+    "context { } yellow\n"                                                                         \
+    "file \\.none$ Host\n"                                                                         \
+    "context default\n"                                                                            \
+    "  keyword whole int red\n"                                                                    \
+    "context \" \" green\n"                                                                        \
+    "context # \\n brown\n"
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_overlay)
+{
+    ck_assert_int_eq (load_toplevel (LAYERED_RULES), 0);
+
+    // the tags of the layer stand anywhere, inside a string of the host as well,
+    // and the host reads on around them
+    check_mask ("int {x} \"a{b}c\" int", "rrr.yyy.ggyyygg.rrr");
+    // a tag over lines keeps them for the host, which sees nothing of it
+    check_mask ("int {* x\n y *} # c\nint",
+                "rrr.mmmmm"
+                "mmmmm.bbbb"
+                "rrr");
+    // where the layer has no tag, the text is all the host's
+    check_mask ("int \"s\" # c", "rrr.ggg.bbb");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** The colors of every byte of text, by a scanner kept over the edits. */
+static char *
+mask_of_scanner (syntax_scanner_t *sc)
+{
+    GString *out;
+    off_t i;
+
+    out = g_string_sized_new ((gsize) text_len);
+    for (i = 0; i < text_len; i++)
+    {
+        guint color;
+        const char *fg = NULL, *bg, *attrs;
+
+        color = syntax_rules_color_of (rules, syntax_state_at (sc, i));
+        if (color != 0)
+            syntax_rules_color_spec (rules, color, &fg, &bg, &attrs);
+        g_string_append_c (out, fg == NULL || *fg == '\0' ? '.' : *fg);
+    }
+
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_overlay_after_edits)
+{
+    GString *buf;
+    syntax_scanner_t *sc;
+    char *kept, *fresh;
+    off_t i;
+
+    ck_assert_int_eq (load_toplevel (LAYERED_RULES), 0);
+
+    /* one line long enough for checkpoints inside it, the tag that matters
+       near its end: the mask of the line is kept at hand over the edit */
+    buf = g_string_new (NULL);
+    for (i = 0; i < 100; i++)
+        g_string_append (buf, "int \"s\" x ");
+    g_string_append (buf, "int x\"y} int \"z\"\n");
+    text = buf->str;
+    text_len = (off_t) buf->len;
+
+    sc = syntax_scanner_new (rules, get_byte, NULL, text_len);
+    g_free (mask_of_scanner (sc));
+
+    /* the editor tells before it changes the text: a brace that makes a tag of
+       x"y}, which hides its quote from the host, then one taken away again */
+    i = (off_t) (strstr (buf->str, "x\"y}") - buf->str);
+    syntax_notify_insert (sc, i, FALSE);
+    g_string_insert_c (buf, (gssize) i, '{');
+    text = buf->str;
+    text_len = (off_t) buf->len;
+
+    kept = mask_of_scanner (sc);
+    fresh = mask ((const char *) buf->str);
+    ck_assert_str_eq (kept, fresh);
+    // the tag, and the host reading on after it: int is a keyword again
+    ck_assert_str_eq (kept + text_len - 18, "rrr.yyyyy.rrr.ggg.");
+    g_free (kept);
+    g_free (fresh);
+
+    syntax_notify_delete (sc, i, FALSE);
+    g_string_erase (buf, (gssize) i, 1);
+    text = buf->str;
+    text_len = (off_t) buf->len;
+
+    kept = mask_of_scanner (sc);
+    fresh = mask ((const char *) buf->str);
+    ck_assert_str_eq (kept, fresh);
+    g_free (kept);
+    g_free (fresh);
+
+    syntax_scanner_free (sc);
+    g_string_free (buf, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_overlay_errors)
+{
+    // a type no Syntax file names leaves the layer over plain text
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Nowhere\n"
+                                     "context default\n"
+                                     "context { } yellow\n"),
+                      0);
+    check_mask ("int {x}", "....yyy");
+
+    // one host, named once
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay\n"),
+                      2);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Host\n"
+                                     "overlay Host\n"),
+                      3);
+    // rules that keep no state between lines are no layer, nor a host
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Host\n"
+                                     "line-local\n"),
+                      3);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "overlay Plain\n"
+                                     "context default\n"
+                                     "context { } yellow\n"
+                                     "file \\.none$ Plain\n"
+                                     "line-local\n"
+                                     "number 4 red\n"),
+                      2);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_errors)
+{
+    // the default context has no delimiters to embed between
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      3);
+    // one type, named once
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed\n"),
+                      4);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed Inner Inner\n"),
+                      4);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed soft\n"),
+                      4);
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed Inner\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      5);
+    // rules that keep no state between lines have no contexts to copy in
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context < > green\n"
+                                     "  embed Plain\n"
+                                     "file \\.none$ Plain\n"
+                                     "line-local\n"
+                                     "number 4 red\n"),
+                      4);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_embed_state_from_checkpoints)
+{
+    GString *s;
+    syntax_scanner_t *sc;
+    char *forward;
+    off_t i;
+
+    ck_assert_int_eq (load_toplevel ("file .\\* Tested\n"
+                                     "context default\n"
+                                     "context <s> </s> green\n"
+                                     "  embed Inner\n" INNER_RULES),
+                      0);
+
+    // a body long enough to be checkpointed on the way, walked back to front
+    s = g_string_new ("x <s>");
+    for (i = 0; i < 300; i++)
+        g_string_append (s, "int \"a\" ");
+    g_string_append (s, "</s> x");
+
+    forward = mask (s->str);
+
+    sc = syntax_scanner_new (rules, get_byte, NULL, text_len);
+    for (i = text_len - 1; i >= 0; i--)
+    {
+        syntax_state_t st = syntax_state_at (sc, i);
+        const char *fg = NULL, *bg, *attrs;
+        guint color;
+
+        color = syntax_rules_color_of (rules, st);
+        if (color != 0)
+            syntax_rules_color_spec (rules, color, &fg, &bg, &attrs);
+        ck_assert_int_eq (fg == NULL || *fg == '\0' ? '.' : *fg, forward[i]);
+    }
+    syntax_scanner_free (sc);
+
+    g_free (forward);
+    g_string_free (s, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 add_tests (TCase *tc_core)
 {
@@ -1122,6 +1828,7 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_case_insensitive);
     tcase_add_test (tc_core, test_context);
     tcase_add_test (tc_core, test_context_exclusive);
+    tcase_add_test (tc_core, test_context_oneline);
     tcase_add_test (tc_core, test_context_linestart);
     tcase_add_test (tc_core, test_keyword_in_context);
     tcase_add_test (tc_core, test_plus_corners);
@@ -1129,8 +1836,10 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_keyword_over_newline);
     tcase_add_test (tc_core, test_nul_byte);
     tcase_add_test (tc_core, test_exclusive_empty);
+    tcase_add_test (tc_core, test_exclusive_first_byte);
     tcase_add_test (tc_core, test_newline_keyword_in_newline_context);
     tcase_add_test (tc_core, test_keyword_at_context_start);
+    tcase_add_test (tc_core, test_context_over_keyword_starting_with_it);
     tcase_add_test (tc_core, test_newline_keyword_at_context_start);
     tcase_add_test (tc_core, test_wholechars);
     tcase_add_test (tc_core, test_context_word_borders);
@@ -1157,6 +1866,26 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_rules_without_any_keyword);
     tcase_add_test (tc_core, test_broken_file_line);
     tcase_add_test (tc_core, test_error_inside_the_chosen_rules);
+    tcase_add_test (tc_core, test_embed);
+    tcase_add_test (tc_core, test_embed_escape);
+    tcase_add_test (tc_core, test_embed_exclusive);
+    tcase_add_test (tc_core, test_embed_case);
+    tcase_add_test (tc_core, test_embed_nested);
+    tcase_add_test (tc_core, test_embed_itself);
+    tcase_add_test (tc_core, test_embed_shared);
+    tcase_add_test (tc_core, test_embed_left_ends_like_right);
+    tcase_add_test (tc_core, test_embed_soft);
+    tcase_add_test (tc_core, test_embed_soft_keyword);
+    tcase_add_test (tc_core, test_embed_soft_nested);
+    tcase_add_test (tc_core, test_embed_unknown_type);
+    tcase_add_test (tc_core, test_embed_from_installed_syntax);
+    tcase_add_test (tc_core, test_user_syntax_inherits_installed);
+    tcase_add_test (tc_core, test_user_syntax_types_listed_with_installed);
+    tcase_add_test (tc_core, test_overlay);
+    tcase_add_test (tc_core, test_overlay_after_edits);
+    tcase_add_test (tc_core, test_overlay_errors);
+    tcase_add_test (tc_core, test_embed_errors);
+    tcase_add_test (tc_core, test_embed_state_from_checkpoints);
 }
 
 /* --------------------------------------------------------------------------------------------- */

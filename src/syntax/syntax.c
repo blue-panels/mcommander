@@ -78,6 +78,9 @@
 
 #define ARGS_LEN              1024
 
+/* how deep one rule set can be embedded in another; deeper, a body is left plain */
+#define SYNTAX_EMBED_DEPTH_MAX 4
+
 /* color 0 is "whatever an uncolored byte gets"; the table starts at 1 */
 #define SYNTAX_COLOR_NONE 0
 
@@ -115,6 +118,7 @@ typedef struct
     gboolean line_start_left;
     gboolean line_start_right;
     gboolean between_delimiters;
+    gboolean one_line;  // ends at the end of its line if the right delimiter is not there
     const syntax_charset_t *whole_word_chars_left;
     const syntax_charset_t *whole_word_chars_right;
     char *keyword_first_chars;
@@ -123,8 +127,28 @@ typedef struct
     guint32 *keyword_candidates;
     guint32 *keyword_candidate_start;  // UCHAR_MAX + 2 entries
     gboolean spelling;
+    gboolean case_insensitive;  // of the rule set the context comes from
     // first word is word[1]
     GPtrArray *keyword;
+
+    /* Nesting.  Every context belongs to a scope, named by the default context
+       the text falls back to when the context is over: 0 at the top.  A context
+       that embeds a rule set opens a scope of its own for its body, and the
+       contexts of that rule set are copied in behind it. */
+    guint base;   // default context of the scope this one belongs to
+    guint host;   // the context whose body this scope is, 0 at the top
+    guint embed;  // default context of the scope the body opens, 0 if it opens none
+    /* the right delimiter ends the body only where the text is in the default
+       context of the embedded rules, not in a string or a comment of theirs */
+    gboolean soft_escape;
+    /* on the default context of a scope: which contexts of it can start on a
+       byte, context_candidates[start[b] .. start[b + 1]), in the order named */
+    guint32 *context_candidates;
+    guint32 *context_candidate_start;  // UCHAR_MAX + 2 entries
+    // what 'embed' said, until the rule set named there is read
+    char *embed_type;
+    char *embed_file;
+    int embed_line;
 } context_rule_t;
 
 /** A color as the .syntax file spells it, before it is interned. */
@@ -161,6 +185,16 @@ struct syntax_rules_t
     guint ll_double_quote_color;
     char *ll_symbols;
     guint ll_symbols_color;
+
+    /* A layer over the rules of another type: the contexts of this set color
+       what they hold, and the text outside them is read by the host, with the
+       bytes of the layer blanked out.  Smarty over HTML, say. */
+    syntax_rules_t *host;
+    guint *host_colors;  // a color of the host, as a color of this set
+    // what 'overlay' said, until the rule set named there is read
+    char *overlay_type;
+    char *overlay_file;
+    int overlay_line;
 };
 
 /** The running rule, wider than what callers see: borders are ours. */
@@ -240,8 +274,15 @@ struct syntax_scanner_t
     off_t size;
 
     syntax_rule_t rule;
+    gboolean fold;  // whether the rules at hand ignore case
     off_t last;     // byte the rule above describes
     GArray *index;  // syntax_checkpoint_t, ascending by offset
+
+    /* for rules that are a layer over a host */
+    syntax_scanner_t *host;  // over the host rules, reading the text with the layer blanked
+    syntax_scanner_t *mask;  // the layer again, asked which bytes it holds
+    off_t mask_from;         // where the line mask_line describes starts
+    GByteArray *mask_line;   // a byte of that line, whether the layer holds it
 };
 
 struct syntax_palette_t
@@ -255,6 +296,8 @@ struct syntax_palette_t
 
 static void syntax_rules_free (syntax_rules_t *r);
 static void destroy_defines (GTree **defines);
+static int syntax_load_embed (const char *syntax_file, const char *type, int depth,
+                              syntax_rules_t **rules);
 
 /*** file scope variables ************************************************************************/
 
@@ -283,6 +326,10 @@ context_rule_free (gpointer rule)
     g_free (r->keyword_first_chars);
     g_free (r->keyword_candidates);
     g_free (r->keyword_candidate_start);
+    g_free (r->context_candidates);
+    g_free (r->context_candidate_start);
+    g_free (r->embed_type);
+    g_free (r->embed_file);
 
     if (r->keyword != NULL)
         g_ptr_array_free (r->keyword, TRUE);
@@ -301,6 +348,20 @@ mc_defines_destroy (gpointer key, gpointer value, gpointer data)
     g_strfreev ((char **) value);
 
     return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** Forget the rules this set is a layer over, and what 'overlay' said. */
+static void
+syntax_rules_drop_overlay (syntax_rules_t *r)
+{
+    syntax_rules_unref (r->host);
+    r->host = NULL;
+    MC_PTR_FREE (r->host_colors);
+    MC_PTR_FREE (r->overlay_type);
+    MC_PTR_FREE (r->overlay_file);
+    r->overlay_line = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -346,6 +407,7 @@ syntax_rules_clear (syntax_rules_t *r)
     r->ll_single_quote_color = SYNTAX_COLOR_NONE;
     r->ll_double_quote_color = SYNTAX_COLOR_NONE;
     r->ll_symbols_color = SYNTAX_COLOR_NONE;
+    syntax_rules_drop_overlay (r);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -486,6 +548,7 @@ syntax_rules_free (syntax_rules_t *r)
     g_array_free (r->colors, TRUE);
 
     g_free (r->ll_symbols);
+    syntax_rules_drop_overlay (r);
     g_free (r->type);
     g_free (r);
 }
@@ -521,11 +584,11 @@ xx_tolower (gboolean case_insensitive, int c)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/** The byte at @i as the automaton reads it: folded when the rule set ignores case. */
+/** The byte at @i as the automaton reads it: folded when the rules at hand ignore case. */
 inline static int
 get_byte_folded (const syntax_scanner_t *sc, off_t i)
 {
-    return xx_tolower (sc->rules->case_insensitive, sc->get_byte (sc->data, i));
+    return xx_tolower (sc->fold, sc->get_byte (sc->data, i));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -848,6 +911,150 @@ try_keyword (const syntax_scanner_t *sc, off_t i, int c, int prev, syntax_rule_t
 
 /* --------------------------------------------------------------------------------------------- */
 
+/** The context numbered @n of the rule set the scanner walks over. */
+inline static context_rule_t *
+context_of (const syntax_scanner_t *sc, guint n)
+{
+    return CONTEXT_RULE (g_ptr_array_index (sc->rules->contexts, n));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * The byte at @i and the one before it, read the way the rules of context @n
+ * want them.  The rule sets embedded in one another need not agree on case.
+ */
+static int
+read_bytes_for (syntax_scanner_t *sc, guint n, off_t i, int *prev)
+{
+    sc->fold = context_of (sc, n)->case_insensitive;
+    *prev = get_byte_folded (sc, i - 1);
+
+    return get_byte_folded (sc, i);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Does the body of an embedded rule set end at @i?
+ *
+ * The right delimiter of the context that embeds the rules ends the body
+ * wherever it turns up, in a string or a comment of those rules as well: a
+ * "</script>" inside a string of a script ends the script all the same.  When
+ * the rules embed some more of their own, every body around is asked, the
+ * innermost first: a rule set embedded in itself closes its own parenthesis
+ * before the one around it.
+ *
+ * A soft delimiter ends the body only from the default context of the rules
+ * it embeds, and not inside a keyword of theirs: the "}}" in {{ "}}" }} is part
+ * of a string, the "}" in ${x/\}/y} part of an escape.
+ *
+ * @param keyword whether a keyword is on at @i
+ * @param end how far the delimiter found reaches
+ * @return the context whose body ends at @i, 0 if none does
+ */
+static guint
+find_escape (syntax_scanner_t *sc, guint context, gboolean keyword, off_t i, off_t *end)
+{
+    guint h;
+    gboolean inside = FALSE;  // in a context of the rules that h embeds
+
+    for (h = context_of (sc, context)->host; h != 0; h = context_of (sc, h)->host)
+    {
+        const context_rule_t *r = context_of (sc, h);
+        int c, prev;
+        off_t e;
+
+        inside = inside || context != r->embed || keyword;
+        if (r->soft_escape && inside)
+            continue;
+
+        c = read_bytes_for (sc, h, i, &prev);
+        if (r->first_right == c && r->right->len != 0
+            && (e = compare_word_to_right (sc, i, prev, r->right, r->whole_word_chars_left,
+                                           r->whole_word_chars_right, r->line_start_right))
+                > 0)
+        {
+            *end = e;
+            return h;
+        }
+    }
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Can the right delimiter of @r end it on the byte at hand?
+ *
+ * Not while it is being ended already.  Nor, for a context that embeds a rule
+ * set, while its left delimiter lasts: the right one ends the body, and there is
+ * none yet.  "python -c '" ends with the quote that ends the code as well.
+ */
+inline static gboolean
+right_can_match (const syntax_scanner_t *sc, const context_rule_t *r)
+{
+    if ((sc->rule.border & RULE_ON_RIGHT_BORDER) != 0)
+        return FALSE;
+
+    return r->embed == 0 || (sc->rule.border & RULE_ON_LEFT_BORDER) == 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Does the right delimiter of the context @rule is in start at @i?  Asked the
+ * way the part of apply_rules_going_right() that turns a context off asks it.
+ */
+static gboolean
+context_ends_here (const syntax_scanner_t *sc, const syntax_rule_t *rule, off_t i, int c, int prev)
+{
+    const context_rule_t *r = context_of (sc, rule->context);
+
+    return rule->context != r->base && rule->keyword == 0 && r->first_right == c
+        && right_can_match (sc, r) && r->right->len != 0
+        && compare_word_to_right (sc, i, prev, r->right, r->whole_word_chars_left,
+                                  r->whole_word_chars_right, r->line_start_right)
+        > 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Leave the body of an embedded rule set if it ends at @i.
+ *
+ * @return the byte at @i as the rules the text is in now read it, @prev the
+ *         one before; @c and @prev as they were when the body goes on
+ */
+static int
+leave_body (syntax_scanner_t *sc, syntax_rule_t *rule, syntax_found_t *found, off_t i, int c,
+            int *prev)
+{
+    const context_rule_t *r;
+    guint escape;
+    off_t e;
+
+    if (context_of (sc, rule->context)->host == 0)
+        return c;
+
+    escape = find_escape (sc, rule->context, rule->keyword != 0, i, &e);
+    if (escape != 0)
+    {
+        r = context_of (sc, escape);
+        rule->context = r->between_delimiters ? r->base : escape;
+        rule->keyword = 0;
+        rule->end = e;
+        rule->border = RULE_ON_RIGHT_BORDER;
+        found->left = TRUE;
+        found->right = TRUE;
+    }
+
+    return read_bytes_for (sc, rule->context, i, prev);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 apply_rules_going_right (syntax_scanner_t *sc, off_t i)
 {
@@ -856,14 +1063,14 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
     syntax_found_t found = { FALSE, FALSE, FALSE, FALSE, FALSE, 0 };
     gboolean is_end;
     syntax_rule_t _rule = sc->rule;
+    guint base;
 
-    c = get_byte_folded (sc, i);
-    if (c == 0)
+    if (sc->get_byte (sc->data, i) == 0)
         return;
 
     /* the byte before is what every rule that starts here is tested against:
        read it once, not once per rule */
-    prev = get_byte_folded (sc, i - 1);
+    c = read_bytes_for (sc, _rule.context, i, &prev);
     is_end = (sc->rule.end == i);
 
     // check to turn off a keyword
@@ -878,14 +1085,41 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
         }
     }
 
+    /* a context that keeps to its line is over with the line, right delimiter
+       or not: an unclosed quote colors no more than the rest of its line */
+    if (prev == '\n' && context_of (sc, _rule.context)->one_line)
+    {
+        _rule.context = context_of (sc, _rule.context)->base;
+        _rule.keyword = 0;
+        _rule.border = 0;
+        found.left = TRUE;
+    }
+
+    /* the left delimiter of a context that embeds a rule set is over: from here
+       on the body is read by the rules it embeds */
+    if (is_end && (sc->rule.border & RULE_ON_LEFT_BORDER) != 0
+        && context_of (sc, _rule._context)->embed != 0)
+    {
+        _rule.context = context_of (sc, _rule._context)->embed;
+        _rule.keyword = 0;
+        _rule.border = 0;
+        found.left = TRUE;
+        c = read_bytes_for (sc, _rule.context, i, &prev);
+    }
+
+    /* check to leave the body of an embedded rule set, unless the context the
+       text is in ends here by itself: that one is inner still */
+    if (!context_ends_here (sc, &_rule, i, c, prev))
+        c = leave_body (sc, &_rule, &found, i, c, &prev);
+
     // check to turn off a context
-    if (_rule.context != 0 && _rule.keyword == 0)
+    base = context_of (sc, _rule.context)->base;
+    if (!found.right && _rule.context != base && _rule.keyword == 0)
     {
         off_t e;
 
-        r = CONTEXT_RULE (g_ptr_array_index (sc->rules->contexts, _rule.context));
-        if (r->first_right == c && (sc->rule.border & RULE_ON_RIGHT_BORDER) == 0
-            && r->right->len != 0
+        r = context_of (sc, _rule.context);
+        if (r->first_right == c && right_can_match (sc, r) && r->right->len != 0
             && (e = compare_word_to_right (sc, i, prev, r->right, r->whole_word_chars_left,
                                            r->whole_word_chars_right, r->line_start_right))
                 > 0)
@@ -894,7 +1128,7 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
             found.right = TRUE;
             _rule.border = RULE_ON_RIGHT_BORDER;
             if (r->between_delimiters)
-                _rule.context = 0;
+                _rule.context = base;
         }
         else if (is_end && (sc->rule.border & RULE_ON_RIGHT_BORDER) != 0)
         {
@@ -902,7 +1136,7 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
             found.left = TRUE;
             _rule.border = 0;
             if (!found.keyword_left)
-                _rule.context = 0;
+                _rule.context = base;
         }
         else if (is_end && (sc->rule.border & RULE_ON_LEFT_BORDER) != 0)
         {
@@ -912,25 +1146,31 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
         }
     }
 
+    /* a context of the embedded rules that ended here leaves the text in their
+       default context, where a soft delimiter counts */
+    if (!found.right && _rule.context == base)
+        c = leave_body (sc, &_rule, &found, i, c, &prev);
+    base = context_of (sc, _rule.context)->base;
+
     // check to turn on a keyword
     if (_rule.keyword == 0)
         found.keyword_right = try_keyword (sc, i, c, prev, &_rule, &found.end, TRUE);
 
     // check to turn on a context
-    if (_rule.context == 0)
+    if (_rule.context == base)
     {
         if (!found.left && is_end)
         {
             if ((sc->rule.border & RULE_ON_RIGHT_BORDER) != 0)
             {
                 _rule.border = 0;
-                _rule.context = 0;
+                _rule.context = base;
                 found.context_changed = TRUE;
                 _rule.keyword = 0;
             }
             else if ((sc->rule.border & RULE_ON_LEFT_BORDER) != 0)
             {
-                r = CONTEXT_RULE (g_ptr_array_index (sc->rules->contexts, _rule._context));
+                r = context_of (sc, _rule._context);
                 _rule.border = 0;
                 if (r->between_delimiters)
                 {
@@ -951,39 +1191,45 @@ apply_rules_going_right (syntax_scanner_t *sc, off_t i)
                             _rule.end = e;
                             found.right = TRUE;
                             _rule.border = RULE_ON_RIGHT_BORDER;
-                            _rule.context = 0;
+                            _rule.context = base;
                         }
                     }
                 }
             }
         }
 
-        if (!found.right)
+        /* an exclusive context that has just been entered keeps its first
+           byte: no other context starts on it */
+        if (!found.right && _rule.context == base)
         {
-            size_t count;
+            const context_rule_t *scope = context_of (sc, base);
+            guint n, last;
 
-            for (count = 1; count < sc->rules->contexts->len; count++)
+            last = scope->context_candidate_start[(unsigned char) c + 1];
+            for (n = scope->context_candidate_start[(unsigned char) c]; n < last; n++)
             {
-                r = CONTEXT_RULE (g_ptr_array_index (sc->rules->contexts, count));
-                if (r->first_left == c)
-                {
-                    off_t e = -1;
+                const guint count = scope->context_candidates[n];
+                off_t e = -1;
 
-                    if (r->left->len != 0)
-                        e = compare_word_to_right (sc, i, prev, r->left, r->whole_word_chars_left,
-                                                   r->whole_word_chars_right, r->line_start_left);
-                    if (e >= found.end && (_rule.keyword == 0 || found.keyword_right))
+                r = context_of (sc, count);
+                if (r->left->len != 0)
+                    e = compare_word_to_right (sc, i, prev, r->left, r->whole_word_chars_left,
+                                               r->whole_word_chars_right, r->line_start_left);
+                if (e >= found.end && (_rule.keyword == 0 || found.keyword_right))
+                {
+                    _rule.end = e;
+                    _rule.border = RULE_ON_LEFT_BORDER;
+                    _rule._context = count;
+                    /* a keyword of the context around that starts on this byte
+                       too gives way; it used to keep the context from ever
+                       being entered */
+                    if (!r->between_delimiters)
                     {
-                        _rule.end = e;
-                        _rule.border = RULE_ON_LEFT_BORDER;
-                        _rule._context = count;
-                        if (!r->between_delimiters && _rule.keyword == 0)
-                        {
-                            _rule.context = count;
-                            found.context_changed = TRUE;
-                        }
-                        break;
+                        _rule.keyword = 0;
+                        _rule.context = count;
+                        found.context_changed = TRUE;
                     }
+                    break;
                 }
             }
         }
@@ -1271,7 +1517,7 @@ read_whole_word_chars (syntax_parser_t *p, char ***args, const syntax_charset_t 
 static syntax_directive_result_t
 directive_line_local (syntax_parser_t *p)
 {
-    if (p->argc != 1 || p->rules->contexts->len != 0)
+    if (p->argc != 1 || p->rules->contexts->len != 0 || p->rules->overlay_type != NULL)
         return SYNTAX_DIRECTIVE_ERROR;
 
     p->rules->line_local = TRUE;
@@ -1429,7 +1675,7 @@ directive_wholechars (syntax_parser_t *p)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/** context [exclusive] [whole...] [linestart] <left> [linestart] <right> [colors] */
+/** context [exclusive] [oneline] [whole...] [linestart] <left> [linestart] <right> [colors] */
 static syntax_directive_result_t
 directive_context (syntax_parser_t *p)
 {
@@ -1465,6 +1711,11 @@ directive_context (syntax_parser_t *p)
         {
             a++;
             c->between_delimiters = TRUE;
+        }
+        if (*a != NULL && strcmp (*a, "oneline") == 0)
+        {
+            a++;
+            c->one_line = TRUE;
         }
         if (*a == NULL)
             return SYNTAX_DIRECTIVE_ERROR;
@@ -1522,6 +1773,58 @@ directive_spellcheck (syntax_parser_t *p)
         return SYNTAX_DIRECTIVE_ERROR;
 
     p->context->spelling = TRUE;
+
+    return SYNTAX_DIRECTIVE_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * embed [soft] <type>: what stands between the delimiters of the context opened
+ * last is read by the rules of <type>, until the right delimiter turns up.
+ * Soft, it turns up only outside the strings and comments of those rules.
+ */
+static syntax_directive_result_t
+directive_embed (syntax_parser_t *p)
+{
+    context_rule_t *c = p->context;
+    char **a = p->args + 1;
+
+    // the default context has no delimiters to embed between
+    if (p->rules->line_local || c == NULL || p->rules->contexts->len < 2 || c->embed_type != NULL)
+        return SYNTAX_DIRECTIVE_ERROR;
+
+    if (*a != NULL && strcmp (*a, "soft") == 0)
+    {
+        a++;
+        c->soft_escape = TRUE;
+    }
+    if (*a == NULL || a[1] != NULL)
+        return SYNTAX_DIRECTIVE_ERROR;
+
+    c->embed_type = g_strdup (*a);
+    c->embed_file = g_strdup (*p->error_file);
+    c->embed_line = p->line;
+
+    return SYNTAX_DIRECTIVE_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * overlay <type>: this rule set is a layer over the rules of <type>.  Its
+ * contexts color what they hold wherever it stands, and the rest of the text
+ * is read by the rules of <type>, which do not see what the contexts hold.
+ */
+static syntax_directive_result_t
+directive_overlay (syntax_parser_t *p)
+{
+    if (p->rules->line_local || p->argc != 2 || p->rules->overlay_type != NULL)
+        return SYNTAX_DIRECTIVE_ERROR;
+
+    p->rules->overlay_type = g_strdup (p->args[1]);
+    p->rules->overlay_file = g_strdup (*p->error_file);
+    p->rules->overlay_line = p->line;
 
     return SYNTAX_DIRECTIVE_OK;
 }
@@ -1630,6 +1933,8 @@ static const struct
     { "wholechars", directive_wholechars },
     { "context", directive_context },
     { "spellcheck", directive_spellcheck },
+    { "embed", directive_embed },
+    { "overlay", directive_overlay },
     { "keyword", directive_keyword },
     { "file", directive_file },
     { "define", directive_define },
@@ -1799,17 +2104,328 @@ collect_keyword_first_chars (syntax_rules_t *r)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/** @cs of another rule set, as the same bytes in @r. */
+static const syntax_charset_t *
+syntax_reintern_charset (syntax_rules_t *r, const syntax_charset_t *cs)
+{
+    return cs == NULL ? NULL : syntax_intern_charset (r, cs->chars);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** @color of @from, as a color of @r. */
+static guint
+syntax_reintern_color (syntax_rules_t *r, const syntax_rules_t *from, guint color)
+{
+    syntax_color_spec_t spec;
+
+    syntax_rules_color_spec (from, color, &spec.fg, &spec.bg, &spec.attrs);
+
+    return syntax_intern_color (r, &spec);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A copy of the context @from of the rule set @from_rules, to be kept in @r.
+ *
+ * Colors and word borders are the rule set's, so they are asked for again in
+ * @r.  Where the context stands among the others is left to the caller.
+ */
+static context_rule_t *
+context_rule_copy (syntax_rules_t *r, const syntax_rules_t *from_rules, const context_rule_t *from)
+{
+    context_rule_t *c;
+    guint j, n;
+
+    c = g_new0 (context_rule_t, 1);
+    c->left = g_string_new_len (from->left->str, from->left->len);
+    c->first_left = from->first_left;
+    c->right = g_string_new_len (from->right->str, from->right->len);
+    c->first_right = from->first_right;
+    c->line_start_left = from->line_start_left;
+    c->line_start_right = from->line_start_right;
+    c->between_delimiters = from->between_delimiters;
+    c->one_line = from->one_line;
+    c->whole_word_chars_left = syntax_reintern_charset (r, from->whole_word_chars_left);
+    c->whole_word_chars_right = syntax_reintern_charset (r, from->whole_word_chars_right);
+    c->spelling = from->spelling;
+    c->case_insensitive = from->case_insensitive;
+
+    c->keyword = g_ptr_array_new_with_free_func (syntax_keyword_free);
+    for (j = 0; j < from->keyword->len; j++)
+    {
+        const syntax_keyword_t *fk = SYNTAX_KEYWORD (g_ptr_array_index (from->keyword, j));
+        syntax_keyword_t *k;
+
+        k = g_new0 (syntax_keyword_t, 1);
+        k->keyword = g_string_new_len (fk->keyword->str, fk->keyword->len);
+        k->whole_word_chars_left = syntax_reintern_charset (r, fk->whole_word_chars_left);
+        k->whole_word_chars_right = syntax_reintern_charset (r, fk->whole_word_chars_right);
+        k->line_start = fk->line_start;
+        k->color = syntax_reintern_color (r, from_rules, fk->color);
+        g_ptr_array_add (c->keyword, k);
+    }
+
+    // the keywords keep their order, so which of them to try for a byte holds as it is
+    if (from->keyword_candidates != NULL)
+    {
+        n = from->keyword_candidate_start[UCHAR_MAX + 1];
+        c->keyword_candidates = g_new (guint32, MAX (n, 1));
+        memcpy (c->keyword_candidates, from->keyword_candidates, n * sizeof (guint32));
+        c->keyword_candidate_start = g_new (guint32, UCHAR_MAX + 2);
+        memcpy (c->keyword_candidate_start, from->keyword_candidate_start,
+                (UCHAR_MAX + 2) * sizeof (guint32));
+    }
+
+    return c;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Copy the contexts of @child in behind those of @r, as the body of the
+ * context @host.
+ *
+ * @child has had its own embeds copied in already, so what is copied is a tree
+ * of scopes, and only its numbers move: the top scope of @child becomes the one
+ * @host opens.
+ *
+ * @return FALSE when the contexts would no longer fit in the state
+ */
+static gboolean
+syntax_splice_embedded (syntax_rules_t *r, guint host, const syntax_rules_t *child)
+{
+    const guint offset = r->contexts->len;
+    guint j;
+
+    if ((guint64) offset + child->contexts->len > G_MAXUSHORT)
+        return FALSE;
+
+    for (j = 0; j < child->contexts->len; j++)
+    {
+        const context_rule_t *from = CONTEXT_RULE (g_ptr_array_index (child->contexts, j));
+        context_rule_t *c;
+
+        c = context_rule_copy (r, child, from);
+        c->base = from->base + offset;
+        c->host = from->host == 0 ? host : from->host + offset;
+        c->embed = from->embed == 0 ? 0 : from->embed + offset;
+        g_ptr_array_add (r->contexts, c);
+    }
+
+    CONTEXT_RULE (g_ptr_array_index (r->contexts, host))->embed = offset;
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Can the body of @c be read in the scope @other opens for its own?
+ *
+ * The scope knows one context around it, the one whose right delimiter ends it
+ * and which the text is in while that delimiter lasts.  Two contexts that end
+ * alike and look alike there can share it, and the rules are copied in once:
+ * a fence named "sh" and one named "bash" read the same rules to the same end.
+ */
+static gboolean
+syntax_embed_shareable (const context_rule_t *c, const context_rule_t *other)
+{
+    const syntax_keyword_t *k, *ok;
+
+    if (other->embed == 0 || g_ascii_strcasecmp (c->embed_type, other->embed_type) != 0)
+        return FALSE;
+    if (c->base != other->base || c->between_delimiters != other->between_delimiters
+        || c->soft_escape != other->soft_escape || c->line_start_right != other->line_start_right
+        || c->whole_word_chars_left != other->whole_word_chars_left
+        || c->whole_word_chars_right != other->whole_word_chars_right
+        || !g_string_equal (c->right, other->right))
+        return FALSE;
+
+    // no keywords of their own, which could start on the right delimiter
+    if (c->keyword->len != 1 || other->keyword->len != 1)
+        return FALSE;
+    k = SYNTAX_KEYWORD (g_ptr_array_index (c->keyword, 0));
+    ok = SYNTAX_KEYWORD (g_ptr_array_index (other->keyword, 0));
+
+    return k->color == ok->color;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Read the rule sets the contexts of @r embed, and copy them in.
+ *
+ * A type that no Syntax file names leaves the context as if it embedded
+ * nothing, in its own colors: the rules can be newer than the Syntax file the
+ * user keeps, or name a type that is not installed, and neither is a reason
+ * to fail the whole rule set.
+ *
+ * @param error_file set to the file of the 'embed' line at fault
+ * @return 0 on success, otherwise the line of the 'embed' whose rules are at fault
+ */
+static int
+syntax_resolve_embeds (syntax_rules_t *r, const char *syntax_file, int depth, char **error_file)
+{
+    const guint n = r->contexts->len;  // the ones copied in have theirs done
+    guint i, j;
+
+    for (i = 1; i < n; i++)
+    {
+        context_rule_t *c = CONTEXT_RULE (g_ptr_array_index (r->contexts, i));
+        syntax_rules_t *child = NULL;
+        gboolean ok;
+        int res;
+
+        if (c->embed_type == NULL)
+            continue;
+
+        // a rule set that embeds itself, or one too deep down: the body stays plain
+        if (depth >= SYNTAX_EMBED_DEPTH_MAX)
+            continue;
+
+        for (j = 1; j < i; j++)
+        {
+            const context_rule_t *other = CONTEXT_RULE (g_ptr_array_index (r->contexts, j));
+
+            if (syntax_embed_shareable (c, other))
+            {
+                c->embed = other->embed;
+                break;
+            }
+        }
+        if (c->embed != 0)
+            continue;
+
+        res = syntax_load_embed (syntax_file, c->embed_type, depth + 1, &child);
+        if (res == -1)
+            continue;
+
+        ok = res == 0 && child->contexts != NULL && syntax_splice_embedded (r, i, child);
+        syntax_rules_unref (child);
+
+        if (!ok)
+        {
+            g_free (*error_file);
+            *error_file = g_strdup (c->embed_file);
+            return c->embed_line;
+        }
+    }
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Which contexts of every scope can start on which byte.
+ *
+ * The scanner used to try every context of the rule set on every byte; with
+ * rule sets copied into one another there are too many of them for that, and
+ * most belong to a scope the text is not in anyway.
+ */
+static void
+build_context_candidates (syntax_rules_t *r)
+{
+    const guint n = r->contexts->len;
+    guint s;
+
+    for (s = 0; s < n; s++)
+    {
+        context_rule_t *scope = CONTEXT_RULE (g_ptr_array_index (r->contexts, s));
+        guint32 *start;
+        guint32 fill[UCHAR_MAX + 1];
+        guint j, b;
+
+        if (scope->base != s)
+            continue;
+
+        // count the contexts of the scope by first byte, then lay them out in order
+        start = g_new0 (guint32, UCHAR_MAX + 2);
+        for (j = 1; j < n; j++)
+        {
+            const context_rule_t *c = CONTEXT_RULE (g_ptr_array_index (r->contexts, j));
+
+            if (j != s && c->base == s)
+                start[c->first_left + 1]++;
+        }
+        for (b = 0; b <= UCHAR_MAX; b++)
+        {
+            start[b + 1] += start[b];
+            fill[b] = start[b];
+        }
+
+        scope->context_candidates = g_new (guint32, MAX (start[UCHAR_MAX + 1], 1));
+        for (j = 1; j < n; j++)
+        {
+            const context_rule_t *c = CONTEXT_RULE (g_ptr_array_index (r->contexts, j));
+
+            if (j != s && c->base == s)
+                scope->context_candidates[fill[c->first_left]++] = j;
+        }
+        scope->context_candidate_start = start;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Read the rules the set is a layer over, and take their colors in.
+ *
+ * The host keeps its own contexts and is walked by a scanner of its own; only
+ * its colors are copied into this set, so that one palette serves both.  A
+ * type no Syntax file names leaves the layer over plain text.
+ *
+ * @param error_file set to the file of the 'overlay' line at fault
+ * @return 0 on success, otherwise the line of the 'overlay' whose rules are at fault
+ */
+static int
+syntax_resolve_overlay (syntax_rules_t *r, const char *syntax_file, int depth, char **error_file)
+{
+    syntax_rules_t *host = NULL;
+    guint i;
+    int res;
+
+    if (r->overlay_type == NULL || depth >= SYNTAX_EMBED_DEPTH_MAX)
+        return 0;
+
+    res = syntax_load_embed (syntax_file, r->overlay_type, depth + 1, &host);
+    if (res == -1)
+        return 0;
+
+    if (res != 0 || host->contexts == NULL)
+    {
+        syntax_rules_unref (host);
+        g_free (*error_file);
+        *error_file = g_strdup (r->overlay_file);
+        return r->overlay_line;
+    }
+
+    r->host = host;
+    r->host_colors = g_new (guint, host->colors->len);
+    for (i = 0; i < host->colors->len; i++)
+        r->host_colors[i] = syntax_reintern_color (r, host, i);
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /**
  * Read the rules of one set, from the 'file' line already read up to the next
  * one, or the whole of an included file.
  *
+ * @param syntax_file the Syntax file, where the rule sets named by 'embed' are
+ * @param depth how deep in other rule sets this one is embedded
  * @param error_file holds the name of the included file being read, NULL while
  *        the parser is in the Syntax file itself; freed by the caller
  * @return 0 on success, otherwise the line the parser choked on
  */
 
 static int
-edit_read_syntax_rules (syntax_rules_t *r, FILE *f, char **args, int args_size, char **error_file)
+edit_read_syntax_rules (syntax_rules_t *r, FILE *f, char **args, int args_size,
+                        const char *syntax_file, int depth, char **error_file)
 {
     syntax_parser_t p;
     char *l = NULL;
@@ -1828,6 +2444,7 @@ edit_read_syntax_rules (syntax_rules_t *r, FILE *f, char **args, int args_size, 
     args[0] = NULL;
     r->case_insensitive = FALSE;
     r->line_local = FALSE;
+    syntax_rules_drop_overlay (r);
     r->ll_number_max = 0;
     r->ll_number_color = SYNTAX_COLOR_NONE;
     r->ll_single_quote_color = SYNTAX_COLOR_NONE;
@@ -1905,6 +2522,22 @@ edit_read_syntax_rules (syntax_rules_t *r, FILE *f, char **args, int args_size, 
 
     collect_keyword_first_chars (r);
 
+    {
+        guint i;
+
+        for (i = 0; i < r->contexts->len; i++)
+            CONTEXT_RULE (g_ptr_array_index (r->contexts, i))->case_insensitive =
+                r->case_insensitive;
+    }
+
+    result = syntax_resolve_embeds (r, syntax_file, depth, error_file);
+    if (result == 0)
+        result = syntax_resolve_overlay (r, syntax_file, depth, error_file);
+    if (result != 0)
+        return result;
+
+    build_context_candidates (r);
+
     return 0;
 }
 
@@ -1939,11 +2572,12 @@ open_syntax_file (const char *syntax_file)
  */
 static gboolean
 syntax_file_line_selected (const syntax_rules_t *r, char **args, const char *editor_file,
-                           const char *first_line, const char *type)
+                           const char *first_line, const char *type, int depth)
 {
-    // rule set was explicitly specified by the caller
+    /* rule set was explicitly specified by the caller.  An 'embed' names it
+       in any case: the file it stands in may ignore case, and fold its lines */
     if (type != NULL)
-        return strcmp (type, args[2]) == 0;
+        return depth == 0 ? strcmp (type, args[2]) == 0 : g_ascii_strcasecmp (type, args[2]) == 0;
 
     if (editor_file == NULL || r == NULL)
         return FALSE;
@@ -1981,13 +2615,14 @@ syntax_rules_are_empty (const syntax_rules_t *r)
  * set and reads none, @type names the set wanted, and without either the set is
  * guessed from @editor_file and @first_line.
  *
+ * @param depth how deep in other rule sets the one read is embedded
  * @param error_file name of the included file at fault, if any; freed by the caller
  * @return 0 on success, -1 if no Syntax file could be opened, otherwise the
  *         line the parser choked on
  */
 static int
 edit_read_syntax_file (syntax_rules_t *r, GPtrArray *pnames, const char *syntax_file,
-                       const char *editor_file, const char *first_line, const char *type,
+                       const char *editor_file, const char *first_line, const char *type, int depth,
                        char **error_file)
 {
     FILE *f;
@@ -2046,7 +2681,7 @@ edit_read_syntax_file (syntax_rules_t *r, GPtrArray *pnames, const char *syntax_
                 continue;
             }
 
-            if (!syntax_file_line_selected (r, args, editor_file, first_line, type))
+            if (!syntax_file_line_selected (r, args, editor_file, first_line, type, depth))
                 continue;
         }
 
@@ -2054,7 +2689,8 @@ edit_read_syntax_file (syntax_rules_t *r, GPtrArray *pnames, const char *syntax_
            parser, so the name of the set has to be kept before the call; it
            points into l, which the parser does not touch. */
         syntax_type = args[2];
-        line_error = edit_read_syntax_rules (r, g != NULL ? g : f, args, ARGS_LEN - 1, error_file);
+        line_error = edit_read_syntax_rules (r, g != NULL ? g : f, args, ARGS_LEN - 1, syntax_file,
+                                             depth, error_file);
         if (line_error != 0)
         {
             // an included file counts its own lines, the Syntax file continues ours
@@ -2261,6 +2897,235 @@ syntax_get_rule (syntax_scanner_t *sc, off_t byte_index)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Read the rule set an 'embed' names, @depth levels down.
+ *
+ * @return 0 on success; where the embedded rules are at fault is not told,
+ *         the 'embed' line is what gets the blame
+ */
+static int
+syntax_rules_load_embedded (const char *syntax_file, const char *type, int depth,
+                            syntax_rules_t **rules)
+{
+    syntax_rules_t *r;
+    char *err_file = NULL;
+    int res;
+
+    *rules = NULL;
+
+    r = syntax_rules_new ();
+    res = edit_read_syntax_file (r, NULL, syntax_file, NULL, "", type, depth, &err_file);
+    g_free (err_file);
+
+    if (res != 0 || (r->contexts == NULL && !r->line_local))
+    {
+        syntax_rules_free (r);
+        return res != 0 ? res : -1;
+    }
+
+    *rules = r;
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * The Syntax file installed with the program, NULL when the share directory is
+ * not known or @syntax_file is that file already.  Freed by the caller.
+ */
+static char *
+syntax_installed_file (const char *syntax_file)
+{
+    char *installed;
+
+    if (mc_global.share_data_dir == NULL)
+        return NULL;
+
+    installed = g_build_filename (mc_global.share_data_dir, EDIT_SYNTAX_FILE, (char *) NULL);
+    if (strcmp (installed, syntax_file) == 0)
+        MC_PTR_FREE (installed);
+
+    return installed;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Read the rule set an 'embed' names: from @syntax_file, and failing that from
+ * the Syntax file installed with the program.
+ *
+ * The copy of the Syntax file a user keeps is not updated with the program, and
+ * the rule sets installed next to it come to embed types it does not list.
+ *
+ * @return 0 on success, -1 if no Syntax file names @type, otherwise the line
+ *         the embedded rules are at fault on
+ */
+static int
+syntax_load_embed (const char *syntax_file, const char *type, int depth, syntax_rules_t **rules)
+{
+    char *installed;
+    int res;
+
+    res = syntax_rules_load_embedded (syntax_file, type, depth, rules);
+    if (res == 0)
+        return res;
+
+    installed = syntax_installed_file (syntax_file);
+    if (installed != NULL)
+    {
+        const int installed_res = syntax_rules_load_embedded (installed, type, depth, rules);
+
+        // what the installed file says is the answer, unless it knows nothing of the type
+        if (installed_res != -1 || res == -1)
+            res = installed_res;
+    }
+    g_free (installed);
+
+    return res;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*** the scanner of a layer **********************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/** Drop the line of the mask kept at hand: the text or the layer moved. */
+static void
+syntax_mask_forget (syntax_scanner_t *sc)
+{
+    if (sc != NULL && sc->mask_line != NULL)
+    {
+        g_byte_array_set_size (sc->mask_line, 0);
+        sc->mask_from = -1;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Does the layer hold the byte at @i, that is, is it in a context of the layer
+ * there rather than in its default one?
+ *
+ * The host asks for the bytes of the line it is on over and over, forward and a
+ * byte back, so the answer is worked out for a whole line at a time, by a
+ * scanner of the layer of its own that walks forward along it.
+ */
+static gboolean
+syntax_layer_holds (syntax_scanner_t *sc, off_t i)
+{
+    if (i < sc->mask_from || i >= sc->mask_from + (off_t) sc->mask_line->len)
+    {
+        off_t start = i, end = i, k;
+
+        while (start > 0 && sc->get_byte (sc->data, start - 1) != '\n')
+            start--;
+        while (end < sc->size && sc->get_byte (sc->data, end) != '\n')
+            end++;
+
+        g_byte_array_set_size (sc->mask_line, (guint) (end - start));
+        for (k = start; k < end; k++)
+            sc->mask_line->data[k - start] = syntax_state_at (sc->mask, k).context != 0;
+        sc->mask_from = start;
+    }
+
+    return sc->mask_line->data[i - sc->mask_from] != 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A byte as the host of a layer reads it: a space where the layer holds the
+ * text, the byte itself elsewhere.  Line breaks stay, for the host counts lines.
+ */
+static int
+syntax_masked_get_byte (void *data, off_t i)
+{
+    syntax_scanner_t *sc = (syntax_scanner_t *) data;
+    int c;
+
+    if (i < 0 || i >= sc->size)
+        return '\n';
+
+    c = sc->get_byte (sc->data, i);
+    if (c == '\n' || !syntax_layer_holds (sc, i))
+        return c;
+
+    return ' ';
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * The text of a layer changed at @pos.
+ *
+ * What the layer holds on the line of @pos can change left of @pos too, for the
+ * rules look ahead, so the host goes back to the start of that line.
+ */
+static void
+syntax_layer_changed (syntax_scanner_t *sc, off_t pos)
+{
+    syntax_scanner_t *host = sc->host;
+    off_t start = pos;
+
+    while (start > 0 && sc->get_byte (sc->data, start - 1) != '\n')
+        start--;
+
+    syntax_mask_forget (sc);
+    syntax_index_truncate (host, start);
+    if (host->last >= start)
+    {
+        const syntax_checkpoint_t *cp;
+
+        cp = syntax_checkpoint_find (host, start - 1);
+        if (cp != NULL)
+        {
+            host->rule = cp->rule;
+            host->last = cp->offset;
+        }
+        else
+        {
+            memset (&host->rule, 0, sizeof (host->rule));
+            host->last = -2;
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * A scanner over @rules; with @layered, a layer gets a scanner over its host
+ * and one to tell which bytes it holds, which themselves need neither.
+ */
+static syntax_scanner_t *
+syntax_scanner_create (syntax_rules_t *rules, syntax_get_byte_fn get_byte, void *data, off_t size,
+                       gboolean layered)
+{
+    syntax_scanner_t *sc;
+
+    if (rules == NULL || get_byte == NULL)
+        return NULL;
+
+    sc = g_new0 (syntax_scanner_t, 1);
+    sc->rules = syntax_rules_ref (rules);
+    sc->get_byte = get_byte;
+    sc->data = data;
+    sc->size = size;
+    sc->index = g_array_new (FALSE, FALSE, sizeof (syntax_checkpoint_t));
+    sc->last = -2;  // nothing walked yet; the first step is byte -1
+
+    if (layered && rules->host != NULL)
+    {
+        sc->mask = syntax_scanner_create (rules, get_byte, data, size, FALSE);
+        sc->mask_line = g_byte_array_new ();
+        sc->mask_from = -1;
+        sc->host = syntax_scanner_create (rules->host, syntax_masked_get_byte, sc, size, TRUE);
+    }
+
+    return sc;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -2278,8 +3143,24 @@ syntax_rules_load (const char *syntax_file, const syntax_select_t *sel, syntax_r
 
     r = syntax_rules_new ();
     res = edit_read_syntax_file (r, NULL, syntax_file, sel->filename,
-                                 sel->first_line != NULL ? sel->first_line : "", sel->type,
+                                 sel->first_line != NULL ? sel->first_line : "", sel->type, 0,
                                  &err_file);
+
+    /* the Syntax file of the user names what the user wants otherwise, the one
+       installed with the program everything else */
+    if (res == 0 && r->type == NULL)
+    {
+        char *installed;
+
+        installed = syntax_installed_file (syntax_file);
+        if (installed != NULL)
+        {
+            res = edit_read_syntax_file (r, NULL, installed, sel->filename,
+                                         sel->first_line != NULL ? sel->first_line : "", sel->type,
+                                         0, &err_file);
+            g_free (installed);
+        }
+    }
 
     if (res != 0 || (r->contexts == NULL && !r->line_local))
     {
@@ -2309,7 +3190,37 @@ syntax_rules_list_types (const char *syntax_file, GPtrArray *names)
     int res;
 
     r = syntax_rules_new ();
-    res = edit_read_syntax_file (r, names, syntax_file, NULL, "", NULL, &err_file);
+    res = edit_read_syntax_file (r, names, syntax_file, NULL, "", NULL, 0, &err_file);
+
+    // and the types of the installed Syntax file the user's one does not name
+    if (res == 0)
+    {
+        char *installed;
+
+        installed = syntax_installed_file (syntax_file);
+        if (installed != NULL)
+        {
+            GPtrArray *more;
+            guint i;
+
+            more = g_ptr_array_new_with_free_func (g_free);
+            if (edit_read_syntax_file (r, more, installed, NULL, "", NULL, 0, &err_file) == 0)
+                for (i = 0; i < more->len; i++)
+                {
+                    const char *name = g_ptr_array_index (more, i);
+                    guint k;
+
+                    for (k = 0; k < names->len; k++)
+                        if (strcmp (g_ptr_array_index (names, k), name) == 0)
+                            break;
+                    if (k == names->len)
+                        g_ptr_array_add (names, g_strdup (name));
+                }
+            g_ptr_array_free (more, TRUE);
+            g_free (installed);
+        }
+    }
+
     syntax_rules_free (r);
     g_free (err_file);
 
@@ -2389,6 +3300,20 @@ syntax_rules_color_of (const syntax_rules_t *r, syntax_state_t st)
     const context_rule_t *c;
     const syntax_keyword_t *k;
 
+    // a byte the host of a layer colors, in a color copied into the layer
+    if (st.layer > 0)
+    {
+        guint color;
+
+        if (r == NULL || r->host == NULL)
+            return SYNTAX_COLOR_NONE;
+
+        st.layer--;
+        color = syntax_rules_color_of (r->host, st);
+
+        return color < r->host->colors->len ? r->host_colors[color] : SYNTAX_COLOR_NONE;
+    }
+
     if (r == NULL || r->contexts == NULL || st.context >= r->contexts->len)
         return SYNTAX_COLOR_NONE;
 
@@ -2406,20 +3331,7 @@ syntax_rules_color_of (const syntax_rules_t *r, syntax_state_t st)
 syntax_scanner_t *
 syntax_scanner_new (syntax_rules_t *rules, syntax_get_byte_fn get_byte, void *data, off_t size)
 {
-    syntax_scanner_t *sc;
-
-    if (rules == NULL || get_byte == NULL)
-        return NULL;
-
-    sc = g_new0 (syntax_scanner_t, 1);
-    sc->rules = syntax_rules_ref (rules);
-    sc->get_byte = get_byte;
-    sc->data = data;
-    sc->size = size;
-    sc->index = g_array_new (FALSE, FALSE, sizeof (syntax_checkpoint_t));
-    sc->last = -2;  // nothing walked yet; the first step is byte -1
-
-    return sc;
+    return syntax_scanner_create (rules, get_byte, data, size, TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2430,6 +3342,10 @@ syntax_scanner_free (syntax_scanner_t *sc)
     if (sc == NULL)
         return;
 
+    syntax_scanner_free (sc->host);
+    syntax_scanner_free (sc->mask);
+    if (sc->mask_line != NULL)
+        g_byte_array_free (sc->mask_line, TRUE);
     syntax_rules_unref (sc->rules);
     g_array_free (sc->index, TRUE);
     g_free (sc);
@@ -2440,8 +3356,13 @@ syntax_scanner_free (syntax_scanner_t *sc)
 void
 syntax_scanner_set_size (syntax_scanner_t *sc, off_t size)
 {
-    if (sc != NULL)
-        sc->size = size;
+    if (sc == NULL)
+        return;
+
+    sc->size = size;
+    syntax_scanner_set_size (sc->host, size);
+    syntax_scanner_set_size (sc->mask, size);
+    syntax_mask_forget (sc);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2463,6 +3384,9 @@ syntax_scanner_reset (syntax_scanner_t *sc)
     memset (&sc->rule, 0, sizeof (sc->rule));
     sc->last = -2;
     g_array_set_size (sc->index, 0);
+    syntax_scanner_reset (sc->host);
+    syntax_scanner_reset (sc->mask);
+    syntax_mask_forget (sc);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2477,6 +3401,13 @@ syntax_notify_insert (syntax_scanner_t *sc, off_t pos, gboolean inclusive)
         sc->last++;
     syntax_index_truncate (sc, pos);
     sc->size++;
+
+    if (sc->host != NULL)
+    {
+        syntax_notify_insert (sc->mask, pos, inclusive);
+        syntax_notify_insert (sc->host, pos, inclusive);
+        syntax_layer_changed (sc, pos);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2492,6 +3423,13 @@ syntax_notify_delete (syntax_scanner_t *sc, off_t pos, gboolean inclusive)
     syntax_index_truncate (sc, pos);
     if (sc->size > 0)
         sc->size--;
+
+    if (sc->host != NULL)
+    {
+        syntax_notify_delete (sc->mask, pos, inclusive);
+        syntax_notify_delete (sc->host, pos, inclusive);
+        syntax_layer_changed (sc, pos);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2499,7 +3437,7 @@ syntax_notify_delete (syntax_scanner_t *sc, off_t pos, gboolean inclusive)
 syntax_state_t
 syntax_state_at (syntax_scanner_t *sc, off_t byte_index)
 {
-    syntax_state_t st = { 0, 0 };
+    syntax_state_t st = { 0, 0, 0 };
 
     if (sc == NULL || sc->rules->contexts == NULL || byte_index >= sc->size)
         return st;
@@ -2507,6 +3445,13 @@ syntax_state_at (syntax_scanner_t *sc, off_t byte_index)
     syntax_get_rule (sc, byte_index);
     st.context = sc->rule.context;
     st.keyword = sc->rule.keyword;
+
+    // outside the contexts of a layer, the byte is its host's
+    if (sc->host != NULL && st.context == 0)
+    {
+        st = syntax_state_at (sc->host, byte_index);
+        st.layer++;
+    }
 
     return st;
 }
@@ -2533,12 +3478,18 @@ syntax_runs_for_range (syntax_scanner_t *sc, off_t from, off_t to, GArray *runs)
 
     for (i = from; i < to; i++)
     {
-        const context_rule_t *c;
         guint color;
 
-        syntax_get_rule (sc, i);
-        c = CONTEXT_RULE (g_ptr_array_index (contexts, sc->rule.context));
-        color = SYNTAX_KEYWORD (g_ptr_array_index (c->keyword, sc->rule.keyword))->color;
+        if (sc->host != NULL)
+            color = syntax_rules_color_of (sc->rules, syntax_state_at (sc, i));
+        else
+        {
+            const context_rule_t *c;
+
+            syntax_get_rule (sc, i);
+            c = CONTEXT_RULE (g_ptr_array_index (contexts, sc->rule.context));
+            color = SYNTAX_KEYWORD (g_ptr_array_index (c->keyword, sc->rule.keyword))->color;
+        }
 
         if (color != cur && len != 0)
         {

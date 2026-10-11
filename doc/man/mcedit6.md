@@ -299,9 +299,17 @@ supports syntax highlighting.  This means that keywords and contexts
 (like C comments, string constants, etc) are highlighted in different
 colors.  The following section explains the format of the file
 **~/.local/share/mc6/syntax/Syntax**.
-If this file is missing, system-wide
+The system-wide
 **{{pkgdatadir}}/syntax/Syntax**
-is used.
+is read after it, for every file type it does not name: the file of the user
+holds only what the user added or wants otherwise, and an entry of its own
+wins over an installed one for the files it matches.  The files its
+**include**
+lines name are looked for in
+*~/.local/share/mc6/syntax/*
+first and among the installed ones after.  A full copy of the system file, as
+older versions made, hides every file type installed after it: keep in it only
+the entries you changed.
 The file
 **~/.local/share/mc6/syntax/Syntax**
 is rescanned on opening of every new editor file.  The file contains
@@ -380,6 +388,7 @@ Each context starts with a line of the form:
 
 **context**
 [**exclusive**]
+[**oneline**]
 [**whole**|**wholeright**|**wholeleft**]
 [**linestart**]
 *delim*
@@ -426,6 +435,69 @@ The
 **exclusive**
 option causes the text between the delimiters to be highlighted, but not
 the delimiters themselves.
+
+The
+**oneline**
+option, after
+**exclusive**
+if both are given, ends the context at the end of its line when the right
+delimiter is not there, so that a delimiter left open colors no more than
+the rest of its line.
+
+A context can hand the text between its delimiters to the rules of
+another syntax, with a line right below it:
+
+**embed**
+[**soft**]
+*type*
+
+where
+*type*
+is the name of the rules as the file line of the Syntax file gives it,
+with \\s for a space.  It is looked up in the Syntax file the rules are
+read from, and then in the one installed with mcedit, so that a copy of the
+Syntax file older than the rules still finds it; a type found in neither
+leaves the context as if it embedded nothing, in its own colors.  The delimiters keep the colors of the context.  The
+right delimiter ends the embedded text wherever it stands, inside a string
+or a comment of the embedded rules as well.  An embedded syntax can embed
+another one in turn, a few levels deep.  For example, HTML hands scripts to
+JavaScript:
+
+```
+  context <SCRIPT*> </SCRIPT> brightcyan
+      embed JavaScript\sProgram
+```
+
+With
+**soft**
+the right delimiter ends the embedded text only outside the strings,
+comments and keywords of the embedded rules, so that in {{ "}}" }} of a
+Jinja2 template the first }} is part of the string, and in ${x/\\}/y} of a
+shell script the first } is part of the escape.
+
+A whole syntax can instead be a layer over another one, with a line
+
+**overlay**
+*type*
+
+anywhere among its rules.  Its contexts then color what they hold wherever it
+stands, and the rest of the text is read by the rules of
+*type*,
+which see what the contexts hold as blanks and never know it was there.  This
+is how the tags of a template language are colored in the text, inside an HTML
+tag, in a string of an attribute and in a script alike, while HTML colors the
+rest.  The default context of a layer colors nothing: a keyword there only
+keeps a context from starting.  A type found in no Syntax file leaves the
+layer over plain text.  For example, Smarty over HTML:
+
+```
+  overlay HTML\sFile
+  context default
+      keyword {\s
+  context {\* \*} brown
+  context { } brightcyan
+      embed soft Smarty\sTag
+```
 
 Each rule is a line of the form:
 

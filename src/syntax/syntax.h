@@ -84,11 +84,18 @@ typedef struct
     const char *first_line;  // and by the first line of the text
 } syntax_select_t;
 
-/** Lexical state at a byte: where in the rule set we are. */
+/**
+ * Lexical state at a byte: where in the rule set we are.
+ *
+ * @layer is 0 for the rule set asked for.  A rule set that is a layer over
+ * another leaves the bytes outside its contexts to that one, its host: there
+ * the state is the host's, with @layer 1, and so on down the hosts.
+ */
 typedef struct
 {
     unsigned short context;
     unsigned short keyword;
+    unsigned short layer;
 } syntax_state_t;
 
 /** A stretch of bytes sharing one color. */
@@ -120,6 +127,10 @@ typedef struct syntax_palette_t syntax_palette_t;
 /**
  * Parse a Syntax file and keep the rule set it selects.
  *
+ * The Syntax file installed with the program is read after @syntax_file, for
+ * the file types @syntax_file does not name: the file of the user holds what
+ * the user added or wants otherwise, not a copy of everything.
+ *
  * Errors are returned, never shown: this layer opens no dialogs.
  *
  * @param syntax_file the Syntax file listing the rule sets
@@ -143,7 +154,7 @@ void syntax_rules_color_spec (const syntax_rules_t *r, guint color, const char *
 /** Color a state maps to; the projection that makes the scanner a highlighter. */
 guint syntax_rules_color_of (const syntax_rules_t *r, syntax_state_t st);
 
-/** Names of every type @syntax_file describes, for a chooser. */
+/** Names of every type @syntax_file and the installed Syntax file describe, for a chooser. */
 int syntax_rules_list_types (const char *syntax_file, GPtrArray *names);
 
 /* ---- scanner ---- */

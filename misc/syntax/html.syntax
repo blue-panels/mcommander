@@ -1075,6 +1075,15 @@ context <TITLE >                brightcyan/17
     keyword whole lang yellow/24
     keyword "*" cyan/5
 
+# what stands between the tags of a script or a style sheet is read by the
+# rules of its language; a tag that reaches over a line is left to the
+# contexts below, which color its attributes but not what it holds
+context <SCRIPT*> </SCRIPT>        brightcyan/17
+    embed JavaScript\sProgram
+
+context <STYLE*> </STYLE>          brightcyan/17
+    embed CSS\sFile
+
 context <SCRIPT >               brightcyan/17
     keyword = brightred/18
 
