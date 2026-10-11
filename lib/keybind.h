@@ -211,6 +211,8 @@ enum
     CK_ApplyCommand,
     // Far mode: Esc of Far Manager
     CK_CmdlineClear,
+    // Far mode: Ctrl-gray minus of Far Manager
+    CK_UnselectExt,
 
     // panels
     CK_PanelOtherCd = 200L,

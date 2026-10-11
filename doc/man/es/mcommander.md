@@ -475,10 +475,11 @@ archivos y los desmarcan todos (las teclas grises solas piden un patrón, igual
 que sin el modo). Un terminal solo las envía cuando informa de las teclas con
 modificadores, véase más abajo.
 
-**Ctrl-gray plus**
-: selecciona los archivos con la extensión del archivo bajo el cursor, o los
-deselecciona si ese archivo ya está seleccionado. La terminal solo la envía si
-informa de las teclas con modificadores.
+**Ctrl-gray plus, Ctrl-gray minus**
+: Ctrl-gray plus selecciona los archivos con la extensión del archivo bajo el
+cursor, o los deselecciona si ese archivo ya está seleccionado; Ctrl-gray minus
+los deselecciona. La terminal solo envía estas teclas si informa de las teclas
+con modificadores.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
 : en la búsqueda rápida (Ctrl-s, Alt-s), pasan al archivo siguiente y al

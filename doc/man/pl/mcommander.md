@@ -396,10 +396,11 @@ Hotlista katalogów, która była pod Ctrl-\\, przechodzi na Alt-\\.
 pytają o wzorzec, tak jak bez trybu). Terminal wysyła je tylko wtedy, gdy
 zgłasza klawisze z modyfikatorami, zobacz niżej.
 
-**Ctrl-gray plus**
-: zaznacza pliki z rozszerzeniem pliku pod kursorem albo odznacza je, jeśli ten
-plik jest już zaznaczony. Terminal wysyła ten klawisz tylko wtedy, gdy zgłasza
-klawisze z modyfikatorami.
+**Ctrl-gray plus, Ctrl-gray minus**
+: Ctrl-gray plus zaznacza pliki z rozszerzeniem pliku pod kursorem albo
+odznacza je, jeśli ten plik jest już zaznaczony; Ctrl-gray minus je odznacza.
+Terminal wysyła te klawisze tylko wtedy, gdy zgłasza klawisze z
+modyfikatorami.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
 : w szybkim wyszukiwaniu (Ctrl-s, Alt-s) przechodzą do następnego i do

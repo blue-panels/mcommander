@@ -865,8 +865,10 @@ static const global_keymap_ini_t far_panel_keymap[] = {
     // Shift-gray plus and minus: select and unselect all the files
     { "SelectAll", "shift-kpplus" },
     { "UnselectAll", "shift-kpminus" },
-    // Ctrl-gray plus: mark the files with the extension of the one under the cursor
+    // Ctrl-gray plus and minus: select and unselect the files with the extension of the one under
+    // the cursor
     { "SelectExt", "ctrl-kpplus" },
+    { "UnselectExt", "ctrl-kpminus" },
     // Ctrl-1 .. Ctrl-0: the listing modes of Far
     { "PanelListingMode1", "ctrl-1" },
     { "PanelListingMode2", "ctrl-2" },

@@ -467,10 +467,10 @@ senza la modalità). Un terminale li invia solo quando riporta i tasti con
 modificatori, vedere sotto.
 
 .TP
-\fBCtrl\-gray plus\fP
-seleziona i file con l'estensione del file sotto il cursore, o li deseleziona
-se quel file è già selezionato. Il terminale lo invia solo se riporta i tasti
-con modificatori.
+\fBCtrl\-gray plus, Ctrl\-gray minus\fP
+Ctrl\-gray plus seleziona i file con l'estensione del file sotto il cursore, o
+li deseleziona se quel file è già selezionato; Ctrl\-gray minus li deseleziona.
+Il terminale invia questi tasti solo se riporta i tasti con modificatori.
 
 .TP
 \fBCtrl\-Enter, Ctrl\-Shift\-Enter\fP

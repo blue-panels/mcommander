@@ -408,10 +408,10 @@ file e li smarcano tutti (i tasti grigi da soli chiedono un modello, come
 senza la modalità). Un terminale li invia solo quando riporta i tasti con
 modificatori, vedere sotto.
 
-**Ctrl-gray plus**
-: seleziona i file con l'estensione del file sotto il cursore, o li deseleziona
-se quel file è già selezionato. Il terminale lo invia solo se riporta i tasti
-con modificatori.
+**Ctrl-gray plus, Ctrl-gray minus**
+: Ctrl-gray plus seleziona i file con l'estensione del file sotto il cursore, o
+li deseleziona se quel file è già selezionato; Ctrl-gray minus li deseleziona.
+Il terminale invia questi tasti solo se riporta i tasti con modificatori.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
 : nella ricerca rapida (Ctrl-s, Alt-s), passano al file successivo e al

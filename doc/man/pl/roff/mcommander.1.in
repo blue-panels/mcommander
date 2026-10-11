@@ -454,10 +454,11 @@ pytają o wzorzec, tak jak bez trybu). Terminal wysyła je tylko wtedy, gdy
 zgłasza klawisze z modyfikatorami, zobacz niżej.
 
 .TP
-\fBCtrl\-gray plus\fP
-zaznacza pliki z rozszerzeniem pliku pod kursorem albo odznacza je, jeśli ten
-plik jest już zaznaczony. Terminal wysyła ten klawisz tylko wtedy, gdy zgłasza
-klawisze z modyfikatorami.
+\fBCtrl\-gray plus, Ctrl\-gray minus\fP
+Ctrl\-gray plus zaznacza pliki z rozszerzeniem pliku pod kursorem albo
+odznacza je, jeśli ten plik jest już zaznaczony; Ctrl\-gray minus je odznacza.
+Terminal wysyła te klawisze tylko wtedy, gdy zgłasza klawisze z
+modyfikatorami.
 
 .TP
 \fBCtrl\-Enter, Ctrl\-Shift\-Enter\fP

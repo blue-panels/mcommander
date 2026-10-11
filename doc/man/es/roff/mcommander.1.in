@@ -553,10 +553,11 @@ que sin el modo). Un terminal solo las envía cuando informa de las teclas con
 modificadores, véase más abajo.
 
 .TP
-\fBCtrl\-gray plus\fP
-selecciona los archivos con la extensión del archivo bajo el cursor, o los
-deselecciona si ese archivo ya está seleccionado. La terminal solo la envía si
-informa de las teclas con modificadores.
+\fBCtrl\-gray plus, Ctrl\-gray minus\fP
+Ctrl\-gray plus selecciona los archivos con la extensión del archivo bajo el
+cursor, o los deselecciona si ese archivo ya está seleccionado; Ctrl\-gray minus
+los deselecciona. La terminal solo envía estas teclas si informa de las teclas
+con modificadores.
 
 .TP
 \fBCtrl\-Enter, Ctrl\-Shift\-Enter\fP

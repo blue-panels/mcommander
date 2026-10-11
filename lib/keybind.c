@@ -230,6 +230,7 @@ static name_keymap_t command_names[] = {
 
     // panel
     ADD_KEYMAP_NAME_DESC_FLAGS (SelectExt, N_ ("Select by extension"), PANEL_FILTER_SELECTION),
+    ADD_KEYMAP_NAME_DESC_FLAGS (UnselectExt, N_ ("Unselect by extension"), PANEL_FILTER_SELECTION),
     ADD_KEYMAP_NAME_DESC_FLAGS (ScrollLeft, N_ ("Scroll panel left"), PANEL_FILTER_NAVIGATION),
     ADD_KEYMAP_NAME_DESC_FLAGS (ScrollRight, N_ ("Scroll panel right"), PANEL_FILTER_NAVIGATION),
     ADD_KEYMAP_NAME_DESC_FLAGS (ScrollHome, N_ ("Scroll to left edge"), PANEL_FILTER_NAVIGATION),

@@ -412,10 +412,11 @@ A Könyvjelzők, amely eddig a Ctrl-\\ volt, az Alt-\\ billentyűre kerül.
 szürke billentyűk magukban mintát kérnek, ahogy a mód nélkül is). A terminál
 csak akkor küldi ezeket, ha jelzi a módosított billentyűket, lásd lent.
 
-**Ctrl-gray plus**
-: kijelöli a kurzor alatti fájl kiterjesztésével egyező fájlokat, vagy
-megszünteti a kijelölésüket, ha az a fájl már ki van jelölve. A terminál csak
-akkor küldi, ha jelzi a módosított billentyűket.
+**Ctrl-gray plus, Ctrl-gray minus**
+: a Ctrl-gray plus kijelöli a kurzor alatti fájl kiterjesztésével egyező
+fájlokat, vagy megszünteti a kijelölésüket, ha az a fájl már ki van jelölve; a
+Ctrl-gray minus megszünteti a kijelölésüket. A terminál csak akkor küldi ezeket
+a billentyűket, ha jelzi a módosított billentyűket.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
 : a gyorskeresésben (Ctrl-s, Alt-s) a következő, illetve az előző illeszkedő

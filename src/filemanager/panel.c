@@ -2676,10 +2676,11 @@ unselect_item (WPanel *panel)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/** Select/unselect all the files like a current file by extension */
+/** Select/unselect all the files like a current file by extension: @toggle selects them when the
+    current file is not selected and unselects them when it is; else they are unselected */
 
 static void
-panel_select_ext_cmd (WPanel *panel)
+panel_select_ext_cmd (WPanel *panel, gboolean toggle)
 {
     const file_entry_t *fe;
     gboolean do_select;
@@ -2691,7 +2692,7 @@ panel_select_ext_cmd (WPanel *panel)
     if (fe == NULL)
         return;
 
-    do_select = (fe->f.marked == 0);
+    do_select = toggle && fe->f.marked == 0;
 
     cur_file_ext = str_regex_escape (extension (fe->fname->str));
     if (cur_file_ext[0] != '\0')
@@ -5249,7 +5250,10 @@ panel_execute_cmd (WPanel *panel, long command)
         panel_select_files (panel);
         break;
     case CK_SelectExt:
-        panel_select_ext_cmd (panel);
+        panel_select_ext_cmd (panel, TRUE);
+        break;
+    case CK_UnselectExt:
+        panel_select_ext_cmd (panel, FALSE);
         break;
     case CK_Unselect:
         panel_unselect_files (panel);
