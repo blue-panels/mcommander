@@ -2092,6 +2092,14 @@ midnight_set_buttonbar (WButtonBar *b)
         { CK_DeleteSingle, N_ ("ButtonBar|Delete") },
         { CK_MenuLastSelected, N_ ("ButtonBar|Menu") },
         { CK_QuitQuiet, N_ ("ButtonBar|Quit") },
+        { CK_SortByName, N_ ("ButtonBar|Name") },
+        { CK_SortByVersion, N_ ("ButtonBar|Version") },
+        { CK_SortByExt, N_ ("ButtonBar|Ext") },
+        { CK_SortBySize, N_ ("ButtonBar|Size") },
+        { CK_SortByMTime, N_ ("ButtonBar|MTime") },
+        { CK_SortByUnsorted, N_ ("ButtonBar|Unsort") },
+        { CK_SortByCTime, N_ ("ButtonBar|CTime") },
+        { CK_SortByATime, N_ ("ButtonBar|ATime") },
         { CK_IgnoreKey, NULL },
     };
     Widget *w = WIDGET (filemanager);
