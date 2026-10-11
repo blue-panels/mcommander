@@ -1583,6 +1583,19 @@ mcterm_overlay_cmdline_is_empty (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+void
+mcterm_overlay_cmdline_clear (void)
+{
+    input_assign_text (cmdline, "");
+    // a line put aside while a command of mc's runs is cleared too, not typed back afterwards
+    g_clear_pointer (&mcterm_parked_line, g_free);
+
+    if (mcterm_overlay_shell_owns_cmdline () && !mcterm_shell_line_is_empty (mcterm_panel))
+        mcterm_clear_shell_line (mcterm_panel);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 char *
 mcterm_overlay_cmdline_text (void)
 {
@@ -2097,6 +2110,12 @@ gboolean
 mcterm_overlay_cmdline_is_empty (void)
 {
     return input_is_empty (cmdline);
+}
+
+void
+mcterm_overlay_cmdline_clear (void)
+{
+    input_assign_text (cmdline, "");
 }
 
 char *

@@ -223,6 +223,8 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (PanelToggleLeft, N_ ("Toggle left panel in terminal mode")),
     ADD_KEYMAP_NAME_DESC (PanelToggleRight, N_ ("Toggle right panel in terminal mode")),
 #endif
+    ADD_KEYMAP_NAME_DESC (ApplyCommand, N_ ("Apply command to the files")),
+    ADD_KEYMAP_NAME_DESC (CmdlineClear, N_ ("Clear the command line")),
     ADD_KEYMAP_NAME_DESC_FLAGS (Select, N_ ("Select files by pattern"), PANEL_FILTER_SELECTION),
     ADD_KEYMAP_NAME_DESC_FLAGS (Unselect, N_ ("Unselect files by pattern"), PANEL_FILTER_SELECTION),
 
@@ -254,13 +256,32 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (CdParentSmart, N_ ("Smart parent directory")),
     ADD_KEYMAP_NAME_DESC_FLAGS (CycleListingFormat, N_ ("Cycle listing format"),
                                 PANEL_FILTER_NAVIGATION),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode1, N_ ("Far listing mode 1")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode2, N_ ("Far listing mode 2")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode3, N_ ("Far listing mode 3")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode4, N_ ("Far listing mode 4")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode5, N_ ("Far listing mode 5")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode6, N_ ("Far listing mode 6")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode7, N_ ("Far listing mode 7")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode8, N_ ("Far listing mode 8")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode9, N_ ("Far listing mode 9")),
+    ADD_KEYMAP_NAME_DESC (PanelListingMode10, N_ ("Far listing mode 10")),
+    ADD_KEYMAP_NAME_DESC (SortByUnsorted, N_ ("Keep files unsorted")),
+    ADD_KEYMAP_NAME_DESC (SortByCTime, N_ ("Sort by change time")),
+    ADD_KEYMAP_NAME_DESC (SortByATime, N_ ("Sort by access time")),
+    ADD_KEYMAP_NAME_DESC (CdRoot, N_ ("Go to the root directory")),
+    ADD_KEYMAP_NAME_DESC (SelectAll, N_ ("Select all files")),
+    ADD_KEYMAP_NAME_DESC (UnselectAll, N_ ("Unselect all files")),
 
     // dialog
     ADD_KEYMAP_NAME (Ok),
     ADD_KEYMAP_NAME (Cancel),
+    ADD_KEYMAP_NAME_DESC (DefaultButton, N_ ("Focus the default button")),
 
     // input line
     ADD_KEYMAP_NAME_DESC (Yank, N_ ("Yank (paste kill buffer)")),
+    ADD_KEYMAP_NAME_DESC (PutPanelFile, N_ ("Insert the file name from the active panel")),
+    ADD_KEYMAP_NAME_DESC (PutOtherPanelFile, N_ ("Insert the file name from the passive panel")),
 
     // help
     ADD_KEYMAP_NAME_DESC (Index, N_ ("Help index")),

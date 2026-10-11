@@ -47,6 +47,9 @@
 
 /*** global variables ****************************************************************************/
 
+/* Far mode: panel keys of Far Manager, see "Far mode" in the manual */
+gboolean keymap_far_mode = FALSE;
+
 GArray *filemanager_keymap = NULL;
 GArray *filemanager_x_keymap = NULL;
 GArray *panel_keymap = NULL;
@@ -782,6 +785,156 @@ static const global_keymap_ini_t default_mcterm_keymap[] = {
 };
 #endif
 
+/* Far mode (opt-in, see "Far mode" in the manual): keys that Far Manager gives to panel actions.
+   It is put over the built-in keymap and over the installed keymap.ini, and under the keymaps of
+   the user, so that keymap.ini of the user has the last word. An action listed here loses the keys
+   that it had before, except the ones kept in the value on purpose. */
+
+static const global_keymap_ini_t far_filemanager_keymap[] = {
+    // Alt-F7: find file; Alt-F8: history of the command line; Alt-F11: history of viewed files
+    { "Find", "alt-f7; alt-question" },
+    { "History", "alt-f8; alt-h" },
+    { "EditorViewerHistory", "alt-f11; alt-shift-e" },
+    // Ctrl-L: info panel, Ctrl-Q: quick view panel, Ctrl-T: tree panel. Ctrl-, is not here: the
+    // key code of a control key keeps the low five bits only, so it is the code of Ctrl-L
+    { "PanelInfo", "ctrl-l" },
+    { "PanelQuickView", "ctrl-q" },
+    { "PanelTree", "ctrl-t" },
+    // Ctrl-F: the full name of the file under the cursor goes to the command line; Ctrl-A: the
+    // attributes of the file. Ctrl-X goes to the command line history, so the prefix of the
+    // extended commands moves to Alt-X
+    { "PutCurrentFullSelected", "ctrl-f; ctrl-shift-enter" },
+    { "ChangeMode", "ctrl-a" },
+    { "ExtendedKeyMap", "alt-x" },
+    // Ctrl-G: apply a command to the files; Alt-F6: hard link; Alt-F10: the tree of directories;
+    // Shift-F9: save the setup; Shift-F10: the menu item chosen last. Ctrl-\ goes to the root
+    // directory (see the panel), so the hotlist moves to Alt and the backslash
+    { "ApplyCommand", "ctrl-g" },
+    // Esc clears the command line, when no dialog is up
+    { "CmdlineClear", "esc" },
+    { "Link", "alt-f6" },
+    { "Tree", "alt-f10" },
+    { "SaveSetup", "f21" },
+    { "MenuLastSelected", "f22; f19" },
+    { "HotList", "alt-backslash" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+/* Dialogs: Ctrl-Enter does the default action (Far), as Enter does outside the buttons */
+/* Alt-X g: the Ctrl-G of Far for a terminal that takes Ctrl-G as the interrupt key */
+static const global_keymap_ini_t far_filemanager_x_keymap[] = {
+    { "ApplyCommand", "g" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+static const global_keymap_ini_t far_dialog_keymap[] = {
+    { "Ok", "enter; ctrl-enter" },
+    // PgDn: the focus goes to the default button
+    { "DefaultButton", "pgdn" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+static const global_keymap_ini_t far_panel_keymap[] = {
+    // Ctrl-T belongs to the tree panel
+    { "Mark", "insert" },
+    // Alt-F12: history of the directories
+    { "History", "alt-shift-h; alt-f12" },
+    // Ctrl-F3..Ctrl-F6: sort by name, extension, modification time and size; Ctrl-F12: sort menu
+    { "SortByName", "ctrl-f3" },
+    { "SortByExt", "ctrl-f4" },
+    { "SortByMTime", "ctrl-f5" },
+    { "SortBySize", "ctrl-f6" },
+    { "Sort", "ctrl-f12" },
+    // Ctrl-F7: unsorted; Ctrl-F8: by the time of change, for the creation time of Far; Ctrl-F9: by
+    // the time of access. Ctrl-F10 (descriptions) and Ctrl-F11 (owner) are not bound: M-Commander
+    // has no such sort orders
+    { "SortByUnsorted", "ctrl-f7" },
+    { "SortByCTime", "ctrl-f8" },
+    { "SortByATime", "ctrl-f9" },
+    // Ctrl-\: the root directory
+    { "CdRoot", "ctrl-backslash" },
+    // Shift-gray plus and minus: select and unselect all the files
+    { "SelectAll", "shift-kpplus" },
+    { "UnselectAll", "shift-kpminus" },
+    // Ctrl-1 .. Ctrl-0: the listing modes of Far
+    { "PanelListingMode1", "ctrl-1" },
+    { "PanelListingMode2", "ctrl-2" },
+    { "PanelListingMode3", "ctrl-3" },
+    { "PanelListingMode4", "ctrl-4" },
+    { "PanelListingMode5", "ctrl-5" },
+    { "PanelListingMode6", "ctrl-6" },
+    { "PanelListingMode7", "ctrl-7" },
+    { "PanelListingMode8", "ctrl-8" },
+    { "PanelListingMode9", "ctrl-9" },
+    { "PanelListingMode10", "ctrl-0" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+/* The edit lines: the command line and the ones of the dialogs. Ctrl-E and Ctrl-X are the previous
+   and the next command of the history, Ctrl-Y deletes the line; the keys of the Emacs that they
+   take go to other keys, or are given up */
+static const global_keymap_ini_t far_input_keymap[] = {
+    { "End", "alt-gt; end; c1" },
+    { "HistoryPrev", "alt-p; ctrl-down; ctrl-e" },
+    { "HistoryNext", "alt-n; ctrl-up; ctrl-x" },
+    { "Clear", "ctrl-y" },
+    { "Yank", "alt-y" },
+    // Shift-Enter and Ctrl-Shift-Enter: the name of the file of the active and of the passive panel
+    { "PutPanelFile", "shift-enter" },
+    { "PutOtherPanelFile", "ctrl-shift-enter" },
+    { "DeleteToWordBegin", "alt-backspace; ctrl-backspace" },
+    { "DeleteToWordEnd", "alt-d; ctrl-delete" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
+#ifdef USE_INTERNAL_EDIT
+static const global_keymap_ini_t far_editor_keymap[] = {
+    // Ctrl-F7: replace (F4 quits the editor, as in Far); Shift-F7 goes on searching
+    { "Replace", "ctrl-f7" },
+    { "SearchContinue", "f17" },
+    { "Quit", "f10; esc; f4" },
+    // Alt-F8: go to line; Ctrl-F3: line numbers; Alt-F11: history of edited files
+    { "Goto", "alt-f8; alt-l; alt-shift-l" },
+    { "ShowNumbers", "ctrl-f3; alt-n" },
+    { "History", "alt-f11; alt-shift-e" },
+    // Ctrl-Z: undo; Ctrl-U: deselect the block; Ctrl-A: select all
+    { "Undo", "ctrl-z; ctrl-backspace" },
+    { "WordLeft", "ctrl-left" },
+    { "Unmark", "ctrl-u" },
+    { "MarkAll", "ctrl-a" },
+    {
+        NULL,
+        NULL,
+    },
+};
+#endif
+
+static const global_keymap_ini_t far_viewer_keymap[] = {
+    // Alt-F8: go to position; Alt-F7: search in the opposite direction; Alt-F11: history
+    { "Goto", "f5; alt-f8" },
+    { "SearchOppositeContinue", "shift-n; alt-f7" },
+    { "History", "alt-f11; alt-shift-e" },
+    {
+        NULL,
+        NULL,
+    },
+};
+
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
@@ -835,6 +988,30 @@ create_default_keymap (void)
 #endif
 
     return keymap;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Put the keys of Far mode over the keymap; does nothing while the mode is off */
+
+static void
+apply_far_mode_keymap (mc_config_t *keymap)
+{
+    check_far_keys = keymap_far_mode;
+
+    if (!keymap_far_mode)
+        return;
+
+    create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER, far_filemanager_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_FILEMANAGER_EXT,
+                                   far_filemanager_x_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_DIALOG, far_dialog_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_PANEL, far_panel_keymap);
+    create_default_keymap_section (keymap, KEYMAP_SECTION_INPUT, far_input_keymap);
+#ifdef USE_INTERNAL_EDIT
+    create_default_keymap_section (keymap, KEYMAP_SECTION_EDITOR, far_editor_keymap);
+#endif
+    create_default_keymap_section (keymap, KEYMAP_SECTION_VIEWER, far_viewer_keymap);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -979,7 +1156,10 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
     // 0) Create default keymap
     keymap_config = create_default_keymap ();
     if (!load_from_file)
+    {
+        apply_far_mode_keymap (keymap_config);
         return keymap_config;
+    }
 
     // load and merge global keymaps
 
@@ -991,6 +1171,9 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
     sysconfig_keymap =
         g_build_filename (mc_global.sysconfig_dir, GLOBAL_KEYMAP_FILE, (char *) NULL);
     load_setup_init_config_from_file (&keymap_config, sysconfig_keymap, TRUE);
+
+    // Far mode goes over the global keymaps, which carry every key of the default keymap
+    apply_far_mode_keymap (keymap_config);
 
     // then load and merge one of user-defined keymap
 

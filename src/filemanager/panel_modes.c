@@ -778,6 +778,49 @@ panel_apply_mode (WPanel *panel, const panel_mode_t *mode)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* The ten listing modes of Far Manager, for Ctrl-1 .. Ctrl-0 in Far mode. They are fixed and do
+   not touch the list of the modes of the user; M-Commander has no file descriptions, so the modes
+   6 and 7 of Far show the names with the size and with the time. */
+static const struct
+{
+    const char *name;
+    const char *types;
+    const char *widths;
+    const char *status_types;
+} far_listing_modes[] = {
+    { "Brief", "type name,type name,type name", "0,0,0", "type name space bsize space perm space" },
+    { "Medium", "type name,type name", "0,0", "type name space bsize space perm space" },
+    { "Full", "type name,size,mtime", "0,0,0", "type name" },
+    { "Wide", "type name,size", "0,0", "type name" },
+    { "Detailed", "type name,size,mtime,atime,ctime,perm", "0,0,0,0,0,0", "type name" },
+    { "Names", "type name", "0", "type name" },
+    { "Times", "type name,mtime", "0,0", "type name" },
+    { "Owners", "type name,owner,group", "0,0,0", "type name" },
+    { "Links", "type name,size,nlink", "0,0,0", "type name" },
+    { "Long", "perm space nlink space owner space group space size space mtime space name", "0",
+      "perm space nlink space owner space group space size space mtime space name" },
+};
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+panel_apply_far_listing (WPanel *panel, guint n)
+{
+    panel_mode_t *mode;
+
+    if (panel == NULL || n < 1 || n > G_N_ELEMENTS (far_listing_modes))
+        return;
+
+    mode = g_new0 (panel_mode_t, 1);
+    panel_mode_set (mode, far_listing_modes[n - 1].name, far_listing_modes[n - 1].types,
+                    far_listing_modes[n - 1].widths, far_listing_modes[n - 1].status_types, "0");
+    panel_apply_mode (panel, mode);  // id 0: the panel does not show a mode of the list
+    panel_mode_free (mode);
+    do_refresh ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** dialogs *************************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 

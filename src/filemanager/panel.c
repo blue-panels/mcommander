@@ -173,6 +173,7 @@ typedef enum
 static const char *panel_format (WPanel *panel);
 static gboolean do_enter (WPanel *panel);
 static void goto_parent_dir (WPanel *panel);
+static void goto_root_dir (WPanel *panel);
 static panel_magic_open_result_t panel_magic_open_local_file (WPanel *panel, const char *fname,
                                                               const vfs_path_t *full_name_vpath,
                                                               const char *action_name,
@@ -3038,6 +3039,41 @@ goto_parent_dir (WPanel *panel)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/** Go to the root directory of the file system the panel shows, or to the root of the archive or
+ *  of the remote host it shows (Ctrl-\ in Far mode). A panel of a plugin stays where it is. */
+
+static void
+goto_root_dir (WPanel *panel)
+{
+    vfs_path_t *root;
+    int i, n;
+
+    if (panel->is_plugin_panel)
+        return;
+
+    n = vfs_path_elements_count (panel->cwd_vpath);
+    if (n == 0)
+        return;
+
+    root = vfs_path_new (FALSE);
+    for (i = 0; i < n; i++)
+    {
+        vfs_path_element_t *element;
+
+        element = vfs_path_element_clone (vfs_path_get_by_index (panel->cwd_vpath, i));
+        if (i == n - 1)
+        {
+            g_free (element->path);
+            element->path = g_strdup (PATH_SEP_STR);
+        }
+        vfs_path_add_element (root, element);
+    }
+
+    panel_cd (panel, root, cd_exact);
+    vfs_path_free (root, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static void
 next_page (WPanel *panel)
@@ -3460,6 +3496,24 @@ panel_unselect_files (WPanel *panel)
 {
     panel_select_unselect_files (panel, _ ("Unselect"), MC_HISTORY_FM_PANEL_UNSELECT,
                                  "[Select/Unselect Files]", FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/** Mark (or unmark) all the files, the way Shift-gray plus and Shift-gray minus of Far do. */
+
+static void
+panel_mark_all_files (WPanel *panel, gboolean do_select)
+{
+    int i;
+
+    panel_mark_batch_begin ();
+
+    for (i = 0; i < panel->dir.len; i++)
+        if (!DIR_IS_DOTDOT (panel->dir.list[i].fname->str))
+            do_file_mark (panel, i, do_select ? 1 : 0);
+
+    panel_mark_batch_end (panel);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3964,6 +4018,72 @@ start_search (WPanel *panel)
         panel->quick_search.chpoint = 0;
         display_mini_info (panel);
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/** Go back to the previous file that matches the quick search (Ctrl-Shift-Enter in Far mode). */
+
+static void
+search_previous (WPanel *panel)
+{
+    mc_search_t *search;
+    int n;
+
+    if (panel->quick_search.buffer->len == 0 || panel->dir.len == 0)
+        return;
+
+    search = panel_quick_search_new_handler (panel);
+
+    for (n = 1; n < panel->dir.len; n++)
+    {
+        int i = (panel->current - n + panel->dir.len) % panel->dir.len;
+
+        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
+                           NULL))
+        {
+            unselect_item (panel);
+            panel->current = i;
+            select_item (panel);
+            widget_draw (WIDGET (panel));
+            break;
+        }
+    }
+
+    mc_search_free (search);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * The character that Alt, or Alt-Shift, with a key stands for in the fast find of Far mode, or
+ * 0 when the key is not one for the fast find. An Alt key that an action is bound to keeps the
+ * action, as does one of the edit line of the command line while there is text in it; once the
+ * search has begun, the keys go to it, since Far keeps the Alt down while it types.
+ */
+
+static int
+panel_far_find_char (const WPanel *panel, int key)
+{
+    int c;
+
+    if (!keymap_far_mode || (key & KEY_M_ALT) == 0 || (key & KEY_M_CTRL) != 0)
+        return 0;
+
+    c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+    if (c <= ' ' || c > 255)
+        return 0;
+
+    if (panel->quick_search.active)
+        return c;
+
+    if (keybind_lookup_keymap_command (panel_map, key) != CK_IgnoreKey
+        || keybind_lookup_keymap_command (filemanager_map, key) != CK_IgnoreKey)
+        return 0;
+
+    if (!mcterm_overlay_cmdline_is_empty ()
+        && keybind_lookup_keymap_command (input_map, key) != CK_IgnoreKey)
+        return 0;
+
+    return c;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -5098,6 +5218,18 @@ panel_execute_cmd (WPanel *panel, long command)
     case CK_CycleListingFormat:
         panel_cycle_listing_format (panel);
         break;
+    case CK_PanelListingMode1:
+    case CK_PanelListingMode2:
+    case CK_PanelListingMode3:
+    case CK_PanelListingMode4:
+    case CK_PanelListingMode5:
+    case CK_PanelListingMode6:
+    case CK_PanelListingMode7:
+    case CK_PanelListingMode8:
+    case CK_PanelListingMode9:
+    case CK_PanelListingMode10:
+        panel_apply_far_listing (panel, (guint) (command - CK_PanelListingMode1 + 1));
+        break;
     case CK_PanelModes:
         panel_modes_cmd (panel);
         break;
@@ -5141,6 +5273,12 @@ panel_execute_cmd (WPanel *panel, long command)
         break;
     case CK_SelectInvert:
         panel_select_invert_files (panel);
+        break;
+    case CK_SelectAll:
+        panel_mark_all_files (panel, TRUE);
+        break;
+    case CK_UnselectAll:
+        panel_mark_all_files (panel, FALSE);
         break;
     case CK_Select:
         panel_select_files (panel);
@@ -5288,6 +5426,18 @@ panel_execute_cmd (WPanel *panel, long command)
     case CK_SortByMTime:
         panel_set_sort_type_by_id (panel, "mtime");
         break;
+    case CK_SortByUnsorted:
+        panel_set_sort_type_by_id (panel, "unsorted");
+        break;
+    case CK_SortByCTime:
+        panel_set_sort_type_by_id (panel, "ctime");
+        break;
+    case CK_SortByATime:
+        panel_set_sort_type_by_id (panel, "atime");
+        break;
+    case CK_CdRoot:
+        goto_root_dir (panel);
+        break;
     default:
         res = MSG_NOT_HANDLED;
         break;
@@ -5305,10 +5455,42 @@ static cb_ret_t
 panel_key (WPanel *panel, int key)
 {
     long command;
+    int far_find_char;
 
     if (is_abort_char (key))
     {
+        // an Esc with no search going on is the file manager's, when its keymap has Esc
+        if (key == ESC_CHAR && !panel->quick_search.active
+            && keybind_lookup_keymap_command (filemanager_map, ESC_CHAR) != CK_IgnoreKey)
+            return MSG_NOT_HANDLED;
         stop_search (panel);
+        return MSG_HANDLED;
+    }
+
+    // Far mode: Alt with a character is the fast find; Ctrl-Enter and Ctrl-Shift-Enter go on to
+    // the next and to the previous file that matches
+    far_find_char = panel_far_find_char (panel, key);
+    if (far_find_char != 0)
+    {
+        if (!panel->quick_search.active)
+            start_search (panel);
+        if (panel->quick_search.active)
+        {
+            if (panel->quick_search.filtering)
+                do_quick_filter (panel, far_find_char);
+            else
+                do_search (panel, far_find_char);
+        }
+        return MSG_HANDLED;
+    }
+
+    if (keymap_far_mode && panel->quick_search.active && !panel->quick_search.filtering
+        && (key == (KEY_M_CTRL | '\n') || key == (KEY_M_CTRL | KEY_M_SHIFT | '\n')))
+    {
+        if ((key & KEY_M_SHIFT) != 0)
+            search_previous (panel);
+        else
+            start_search (panel);
         return MSG_HANDLED;
     }
 
@@ -5939,6 +6121,43 @@ panel_save_current_file_to_clip_file (const gchar *event_group_name, const gchar
     }
 
     ev->ret = TRUE;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* event callback */
+static gboolean
+panel_get_current_file_name (const gchar *event_group_name, const gchar *event_name,
+                             gpointer init_data, gpointer data)
+{
+    ev_panel_file_name_t *ev = (ev_panel_file_name_t *) data;
+    WPanel *panel;
+    const file_entry_t *fe;
+
+    (void) event_group_name;
+    (void) event_name;
+    (void) init_data;
+
+    ev->name = NULL;
+
+    // Only for the dialogs: with the file manager on top, the keys are the ones of the command line
+    if (current_panel == NULL || top_dlg == NULL || top_dlg->data == WIDGET (current_panel)->owner)
+        return TRUE;
+
+    if (ev->passive)
+    {
+        if (get_other_type () != view_listing)
+            return TRUE;
+        panel = other_panel;
+    }
+    else
+        panel = current_panel;
+
+    fe = panel_current_entry (panel);
+    if (fe != NULL && !DIR_IS_DOTDOT (fe->fname->str))
+        ev->name = g_strndup (fe->fname->str, fe->fname->len);
+
     return TRUE;
 }
 
@@ -6943,6 +7162,8 @@ panel_init (void)
     mc_event_add (MCEVENT_GROUP_FILEMANAGER, "update_panels", event_update_panels, NULL, NULL);
     mc_event_add (MCEVENT_GROUP_FILEMANAGER, "panel_save_current_file_to_clip_file",
                   panel_save_current_file_to_clip_file, NULL, NULL);
+    mc_event_add (MCEVENT_GROUP_FILEMANAGER, "panel_get_current_file_name",
+                  panel_get_current_file_name, NULL, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */
