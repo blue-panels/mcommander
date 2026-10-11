@@ -410,6 +410,11 @@ is). The directory hotlist, which was Ctrl-\\, moves to Alt-\\.
 pattern, as they do without the mode). A terminal sends them only when it
 reports modified keys, see below.
 
+**Ctrl-gray plus**
+: selects the files with the extension of the file under the cursor, or
+unselects them when that file is selected. A terminal sends it only when it
+reports modified keys.
+
 **Ctrl-Enter, Ctrl-Shift-Enter**
 : in the quick search (Ctrl-s, Alt-s), go on to the next and to the previous
 file that matches, as in the fast find of Far. Alt with a character keeps the

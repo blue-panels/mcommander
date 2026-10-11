@@ -474,6 +474,12 @@ pattern, as they do without the mode). A terminal sends them only when it
 reports modified keys, see below.
 
 .TP
+\fBCtrl\-gray plus\fP
+selects the files with the extension of the file under the cursor, or
+unselects them when that file is selected. A terminal sends it only when it
+reports modified keys.
+
+.TP
 \fBCtrl\-Enter, Ctrl\-Shift\-Enter\fP
 in the quick search (Ctrl\-s, Alt\-s), go on to the next and to the previous
 file that matches, as in the fast find of Far. Alt with a character keeps the
