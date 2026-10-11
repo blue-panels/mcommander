@@ -58,6 +58,8 @@ gboolean mcterm_overlay_exec_command (const char *cmd);
 
 /* The command line as the user sees it: mc's own input and the shell's line together. */
 gboolean mcterm_overlay_cmdline_is_empty (void);
+/* Empty the command line: mc's input, and the shell's line when the shell has it */
+void mcterm_overlay_cmdline_clear (void);
 /* What is on it, wherever it is held; NULL when nothing. Caller frees. */
 char *mcterm_overlay_cmdline_text (void);
 /* The name of what runs in the terminal, for the window title; NULL at the prompt.

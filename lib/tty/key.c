@@ -1355,7 +1355,8 @@ correct_key_code (int code, gboolean from_sequence)
     if (c >= KEY_F (1) && c <= KEY_F (20))
         mod &= ~KEY_M_SHIFT;
 
-    if (!mc_global.tty.alternate_plus_minus)
+    // with Ctrl or Shift the gray keys stay keys of the keypad: "ctrl-kpplus" in a keymap is that
+    if (!mc_global.tty.alternate_plus_minus && (mod & (KEY_M_CTRL | KEY_M_SHIFT)) == 0)
         switch (c)
         {
         case KEY_KP_ADD:

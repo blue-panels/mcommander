@@ -307,6 +307,207 @@ che viene letto per ultimo e non richiede alcuna opzione:
 ln -s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
 ```
 
+## Modalità Far <a id="far-mode"></a>
+
+M-Commander può usare nei pannelli i tasti di Far Manager al posto dei propri.
+La modalità è pensata per chi viene da Far e vuole ritrovare gli stessi tasti
+sotto le dita; è disattivata in modo predefinito, e non cambia nulla per chi
+non la attiva.
+
+Si attiva con la casella
+*Far Manager keys*
+della finestra
+[Configurazione](#configuration)
+nel menu
+**Opzioni**,
+oppure impostando
+**far_mode=true**
+nella sezione
+**[Midnight-Commander]**
+di
+**~/.config/mc6/ini**.
+I tasti cambiano subito, e l'impostazione viene salvata con il resto della
+configurazione. La modalità è uno strato sopra la mappa dei tasti: sta sopra i
+tasti integrati e i file
+**keymap.ini**
+del sistema, e sotto il
+**keymap.ini**
+dell'utente, così l'utente può ancora cambiare qualsiasi tasto
+[a mano](#keys_redefine).
+
+La modalità riguarda i pannelli directory, l'editor, il visualizzatore, la
+riga di comando, le righe di ingresso delle finestre e alcuni tasti delle
+finestre stesse. Questi sono i tasti che la modalità assegna ai pannelli, con
+ciò che ognuno di essi sostituisce:
+
+**Alt-F7**
+: trova file. Alt-? continua a funzionare.
+
+**Alt-F8**
+: la cronologia della riga di comando. Alt-h continua a funzionare.
+
+**Alt-F11**
+: la cronologia dei file visualizzati e modificati. Alt-Shift-e continua a
+funzionare.
+
+**Alt-F12**
+: la cronologia delle directory. Alt-Shift-h continua a funzionare.
+
+**Ctrl-F3, Ctrl-F4, Ctrl-F5, Ctrl-F6**
+: ordinano il pannello per nome, per estensione, per data di modifica e per
+dimensione. Far inverte l'ordine quando si preme due volte lo stesso tasto;
+lo fa anche M-Commander.
+
+**Ctrl-F7, Ctrl-F8, Ctrl-F9**
+: lasciano i file non ordinati, li ordinano per data di cambiamento (Far lì
+usa la data di creazione, che un file system Unix non conserva) e per data di
+accesso. Ctrl-F10 e Ctrl-F11, l'ordinamento per descrizioni e per
+proprietario, non sono associati: M-Commander non ha questi ordinamenti.
+
+**Ctrl-F12**
+: il menu dell'ordinamento.
+
+**Ctrl-L, Ctrl-Q, Ctrl-T**
+: il pannello informazioni, il pannello vista rapida e il pannello ad albero.
+Nei pannelli Ctrl-L non ridisegna più lo schermo (nelle finestre lo fa
+ancora), e Ctrl-T non marca più un file; lo marca Insert, come in Far.
+
+**Da Ctrl-1 a Ctrl-9, Ctrl-0**
+: le modalità di elenco di Far: breve (tre colonne di nomi), media (due
+colonne), completa (nome, dimensione e data), larga (nome e dimensione),
+dettagliata (con le date di accesso e di cambiamento e i permessi), solo nomi
+(Ctrl-6) e nomi con la data di modifica (Ctrl-7), che prendono il posto delle
+descrizioni che M-Commander non ha, proprietari, collegamenti, e l'elenco
+lungo di M-Commander per Ctrl-0. Le modalità sono fisse e non toccano l'elenco
+delle
+[modalità dei pannelli](#panel-modes)
+dell'utente.
+
+**Ctrl-A**
+: gli attributi del file, cioè la finestra dei permessi (chmod). Nella riga
+di comando Ctrl-A non porta più all'inizio della riga; lo fa Home.
+
+**Ctrl-F**
+: mette nella riga di comando il nome completo del file sotto il cursore (lo
+fa anche Ctrl-Shift-Enter). Ctrl-Enter mette il solo nome, come con la
+modalità disattivata.
+
+**Ctrl-X**
+: è il comando successivo della cronologia, vedere sotto. Il prefisso dei
+comandi estesi, che era Ctrl-X, passa ad Alt-X.
+
+**Ctrl-\\ (control-barra rovesciata)**
+: va alla directory radice del pannello: del file system, dell'archivio o
+dell'host remoto che il pannello mostra (il pannello di un componente
+aggiuntivo resta dov'è). Le directory favorite, che erano Ctrl-\\, passano ad
+Alt-\\.
+
+**Shift-gray plus, Shift-gray minus**
+: (Shift con il più o il meno grigio del tastierino numerico) marcano tutti i
+file e li smarcano tutti (i tasti grigi da soli chiedono un modello, come
+senza la modalità). Un terminale li invia solo quando riporta i tasti con
+modificatori, vedere sotto.
+
+**Ctrl-gray plus, Ctrl-gray minus**
+: Ctrl-gray plus seleziona i file con l'estensione del file sotto il cursore, o
+li deseleziona se quel file è già selezionato; Ctrl-gray minus li deseleziona.
+Il terminale invia questi tasti solo se riporta i tasti con modificatori.
+
+**Ctrl-Enter, Ctrl-Shift-Enter**
+: nella ricerca rapida (Ctrl-s, Alt-s), passano al file successivo e al
+precedente che corrispondono, come nella ricerca veloce di Far. Alt con un
+carattere mantiene le azioni di M-Commander: non avvia una ricerca.
+
+**Ctrl-G, Alt-X g**
+: applicano un comando ai file: chiedono un comando e lo eseguono per ogni
+file marcato, o per il file sotto il cursore se nessuno è marcato. Nel
+comando, %f (o %p) è il nome del file, %n il nome senza estensione e %x
+l'estensione, tutti quotati per la shell; le altre macro del menu utente
+funzionano come lì. Ctrl-G funziona solo in un terminale che invia i tasti con
+il protocollo di tastiera di kitty o con la modalità di input Win32 (kitty,
+WezTerm, foot, Windows Terminal): negli altri è il tasto di interruzione del
+terminale e non arriva mai a M-Commander. Alt-X g funziona in ogni terminale.
+
+**Esc**
+: svuota la riga di comando quando nessuna finestra è aperta e l'elenco dei
+file ha il focus. Se la ricerca rapida è in corso, Esc prima la termina, e
+l'Esc successivo svuota la riga. In un terminale che invia i tasti alla
+vecchia maniera, M-Commander riconosce un Esc da solo solo dopo una breve
+attesa, quindi la riga viene svuotata con un ritardo.
+
+**Alt-F6, Alt-F10, Shift-F9, Shift-F10**
+: creano un collegamento fisico, mostrano l'albero delle directory, salvano
+la configurazione e scelgono l'ultima voce di menu scelta (Shift-F7, che
+prima lo faceva, lo fa ancora).
+
+**Nella riga di comando e nelle righe di ingresso delle finestre** (tutte
+condividono i tasti):
+Ctrl-E è il comando precedente della cronologia e Ctrl-X il successivo, come
+in Far, e Ctrl-Y cancella l'intera riga. Ctrl-Backspace e Ctrl-Delete
+cancellano una parola a sinistra e a destra. I tasti che questi occupavano
+vengono ceduti: Ctrl-E non porta più alla fine della riga (lo fa End), e
+Yank, che era Ctrl-Y, passa ad Alt-y.
+
+**Nell'editor** (come li elenca l'aiuto di far2l):
+Ctrl-F7 sostituisce, e F4, che sostituiva il testo, esce dall'editor insieme a
+F10 ed Esc; Alt-F8 va a una riga (Alt-l continua a funzionare); Ctrl-F3 mostra
+i numeri di riga; Alt-F11 mostra la cronologia dei file modificati; Ctrl-Z
+annulla, Ctrl-U deseleziona il blocco (prima annullava) e Ctrl-A seleziona
+tutto. Ctrl-F7 non continua più la ricerca, lo fa Shift-F7, e Ctrl-Z non
+sposta più di una parola a sinistra, lo fa Ctrl-Left.
+
+**Nel visualizzatore:**
+Alt-F8 va a una posizione (F5 continua a funzionare), Alt-F7 continua la
+ricerca nella direzione opposta e Alt-F11 mostra la cronologia dei file
+visualizzati.
+
+**Nelle finestre:**
+Ctrl-Enter fa ciò che fa Enter quando nessun pulsante ha il focus, cioè
+l'azione predefinita della finestra, e il più e il meno del tastierino
+numerico (e il più e il meno della tastiera principale) attivano e
+disattivano la casella che ha il focus, mentre Space la inverte. PgDn dà il
+focus al pulsante predefinito (un elenco che ha il focus tiene PgDn per sé).
+Shift-Enter nella riga di ingresso di una finestra inserisce il nome del file
+sotto il cursore del pannello attivo, Ctrl-Shift-Enter quello del pannello
+passivo (non nella riga di comando, dove Ctrl-Shift-Enter mantiene il suo
+significato; un terminale li invia solo quando riporta i tasti con
+modificatori, vedere sotto). Esc, F10, Tab, i tasti freccia e i tasti rapidi
+dei pulsanti sono gli stessi in Far e in M-Commander. Un terminale invia
+Ctrl-Enter solo quando riporta i tasti con modificatori (vedere sotto).
+
+I tasti che M-Commander ha in comune con Far sono gli stessi con o senza la
+modalità: da F1 a F10, Shift-F4, Shift-F5, Shift-F6 e Shift-F8, Tab, Ctrl-U,
+Ctrl-R, Ctrl-O, Ctrl-F1 e Ctrl-F2, Alt-F1 e Alt-F2, Ctrl-PgUp e Ctrl-PgDn,
+Insert e il più, il meno e l'asterisco del tastierino numerico.
+
+Ciò che è diverso da Far, e resta così per ora: F3 nell'editor marca ancora un
+blocco invece di andare a capo con le righe, i tasti degli appunti Ctrl-C,
+Ctrl-V e Ctrl-X dell'editor non sono associati (Ctrl-Insert, Shift-Insert e
+Shift-Delete funzionano), e il visualizzatore mantiene i propri tasti F8, F9,
+Space, più e meno; i pannelli mantengono i colori di M-Commander e non hanno
+descrizioni dei file (Ctrl-6 e Ctrl-7 mostrano altre colonne, vedere sopra),
+Ctrl-Z, Ctrl-M e le scorciatoie delle cartelle non sono associati, e nemmeno
+Ctrl-H per i file nascosti (un terminale invia Backspace come Ctrl-H, ed Enter
+come Ctrl-M, e M-Commander non può distinguerli; Alt-. mostra e nasconde i
+file nascosti, come senza la modalità), Ctrl con una parentesi quadra non
+mette nella riga di comando il percorso del pannello sinistro o di quello
+destro (un terminale invia Ctrl-parentesi quadra aperta come Esc), e Ctrl-,
+non cambia la disposizione dei pannelli (un terminale lo invia come Ctrl-L,
+che in questa modalità mostra il pannello informazioni); lo fa Alt-,. Alt con
+un carattere è la ricerca veloce solo dove nessuna azione di M-Commander ha
+quel tasto, vedere sopra, e la ricerca veloce non accetta caratteri che non
+siano Latin-1. Le finestre mantengono i propri tasti, tranne le righe di
+ingresso, Ctrl-Enter e le caselle: M-Commander non ha un tasto di Far per
+spostare una finestra, e il mouse non fa parte della modalità.
+
+Alcuni tasti della modalità (Ctrl con una cifra, con una virgola, con Enter o
+con un tasto funzione) vengono inviati da un terminale solo quando riporta i
+tasti con modificatori, come fanno xterm e i terminali che parlano il
+protocollo di tastiera di kitty. In un terminale che non lo fa, il tasto
+arriva come un altro o non arriva affatto, e non si perde nulla: ogni azione
+si trova anche nei menu, e il tasto che aveva prima della modalità è ancora
+associato dove lo dice l'elenco qui sopra.
+
 ## Tasti vari <a id="miscellaneous-keys"></a>
 
 Qua ci sono alcuni tasti che non sono classificabili in nessuna delle
@@ -1948,6 +2149,11 @@ espressioni regolari sono quelle descritte in ed(1).
 Se quest'opzione è abilitata, quando si esce dal M-Commander le
 opzioni configurabili del M-Commander vengono salvate nel file
 ~/.config/mc6/ini.
+
+*Far Manager keys.*
+Se quest'opzione è abilitata, i pannelli rispondono ai tasti di Far Manager;
+vedere
+[modalità Far](#far-mode). Quest'opzione è disabilitata in modo predefinito.
 
 *Menu automatici.*
 Se quest'opzione è abilitata, il menu utente sarà invocato alla partenza.

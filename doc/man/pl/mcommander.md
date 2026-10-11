@@ -300,6 +300,201 @@ który czytany jest jako ostatni i nie wymaga żadnej opcji:
 ln -s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
 ```
 
+## Tryb Far <a id="far-mode"></a>
+
+M-Commander może zamiast własnych klawiszy paneli używać klawiszy Far
+Managera. Tryb jest dla tych, którzy przychodzą z Far i chcą, by palce
+znajdowały te same klawisze; domyślnie jest wyłączony i nic się nie zmienia
+dla nikogo, kto go nie włączy.
+
+Włącza się go polem wyboru
+*Klawisze Far Managera*
+w oknie
+[Konfiguracja](#configuration)
+z menu
+**Opcje**
+albo ustawieniem
+**far_mode=true**
+w sekcji
+**[Midnight-Commander]**
+pliku
+**~/.config/mc6/ini**.
+Klawisze zmieniają się od razu, a ustawienie jest zapisywane razem z resztą
+konfiguracji.
+Tryb jest warstwą nad mapą klawiszy: przykrywa klawisze wbudowane i pliki
+**keymap.ini**
+systemu, ale leży pod plikiem
+**keymap.ini**
+użytkownika, więc użytkownik nadal może zmienić każdy klawisz
+[ręcznie](#keys_redefine).
+
+Tryb obejmuje panele katalogów, edytor, przeglądarkę, wiersz poleceń, pola
+edycji w oknach dialogowych i kilka klawiszy samych okien dialogowych. Oto
+klawisze, które tryb daje panelom, wraz z tym, co każdy z nich zastępuje:
+
+**Alt-F7**
+: wyszukiwanie plików. Alt-? nadal działa.
+
+**Alt-F8**
+: historia wiersza poleceń. Alt-h nadal działa.
+
+**Alt-F11**
+: historia oglądanych i edytowanych plików. Alt-Shift-e nadal działa.
+
+**Alt-F12**
+: historia katalogów. Alt-Shift-h nadal działa.
+
+**Ctrl-F3, Ctrl-F4, Ctrl-F5, Ctrl-F6**
+: sortują panel według nazwy, rozszerzenia, czasu modyfikacji i rozmiaru.
+Far odwraca kolejność, gdy ten sam klawisz zostanie naciśnięty dwa razy;
+M-Commander robi tak samo.
+
+**Ctrl-F7, Ctrl-F8, Ctrl-F9**
+: zostawiają pliki nieposortowane, sortują je według czasu zmiany (Far ma
+tam czas utworzenia, którego uniksowy system plików nie przechowuje) i według
+czasu dostępu. Ctrl-F10 i Ctrl-F11, sortowanie według opisów i według
+właściciela, nie są przypisane: M-Commander nie ma takich porządków
+sortowania.
+
+**Ctrl-F12**
+: menu porządku sortowania.
+
+**Ctrl-L, Ctrl-Q, Ctrl-T**
+: panel Info, panel Quick View i panel Tree (drzewo). W panelach Ctrl-L
+przestaje odświeżać ekran (w oknach dialogowych nadal to robi), a Ctrl-T
+przestaje zaznaczać plik; zaznacza go Insert, tak jak w Far.
+
+**Ctrl-1 do Ctrl-9, Ctrl-0**
+: tryby wyświetlania Far: krótki (trzy kolumny nazw), średni (dwie kolumny),
+pełny (nazwa, rozmiar i czas), szeroki (nazwa i rozmiar), szczegółowy (z
+czasami dostępu i zmiany oraz prawami dostępu), same nazwy (Ctrl-6) i nazwy z
+czasem modyfikacji (Ctrl-7), które stoją w miejscu opisów, których
+M-Commander nie ma, właściciele, dowiązania oraz długi listing M-Commandera
+dla Ctrl-0. Tryby są stałe i nie ruszają listy
+[trybów panelu](#panel-modes)
+użytkownika.
+
+**Ctrl-A**
+: atrybuty pliku, czyli okno praw dostępu (chmod). W wierszu poleceń Ctrl-A
+nie przenosi już na początek wiersza; robi to Home.
+
+**Ctrl-F**
+: wstawia do wiersza poleceń pełną nazwę pliku pod kursorem (robi to też
+Ctrl-Shift-Enter). Ctrl-Enter wstawia samą nazwę, tak jak bez trybu.
+
+**Ctrl-X**
+: to następne polecenie z historii, zobacz niżej. Prefiks poleceń
+rozszerzonych, którym był Ctrl-X, przechodzi na Alt-X.
+
+**Ctrl-\\ (control-backslash)**
+: przechodzi do katalogu głównego panelu: systemu plików, archiwum albo
+zdalnego hosta, który panel pokazuje (panel wtyczki zostaje na miejscu).
+Hotlista katalogów, która była pod Ctrl-\\, przechodzi na Alt-\\.
+
+**Shift-gray plus, Shift-gray minus**
+: zaznaczają wszystkie pliki i odznaczają wszystkie (same szare klawisze
+pytają o wzorzec, tak jak bez trybu). Terminal wysyła je tylko wtedy, gdy
+zgłasza klawisze z modyfikatorami, zobacz niżej.
+
+**Ctrl-gray plus, Ctrl-gray minus**
+: Ctrl-gray plus zaznacza pliki z rozszerzeniem pliku pod kursorem albo
+odznacza je, jeśli ten plik jest już zaznaczony; Ctrl-gray minus je odznacza.
+Terminal wysyła te klawisze tylko wtedy, gdy zgłasza klawisze z
+modyfikatorami.
+
+**Ctrl-Enter, Ctrl-Shift-Enter**
+: w szybkim wyszukiwaniu (Ctrl-s, Alt-s) przechodzą do następnego i do
+poprzedniego pasującego pliku, jak w szybkim wyszukiwaniu Far. Alt ze znakiem
+zachowuje działania M-Commandera: nie zaczyna wyszukiwania.
+
+**Ctrl-G, Alt-X g**
+: wykonuje polecenie na plikach: pyta o polecenie i uruchamia je dla każdego
+zaznaczonego pliku albo dla pliku pod kursorem, jeśli nic nie jest
+zaznaczone. W poleceniu %f (albo %p) to nazwa pliku, %n nazwa bez
+rozszerzenia, a %x rozszerzenie, wszystkie ujęte w cudzysłów dla powłoki;
+pozostałe makra menu użytkownika działają tak samo jak tam. Ctrl-G działa
+tylko w terminalu, który wysyła klawisze przez kitty keyboard protocol albo
+tryb Win32 input (kitty, WezTerm, foot, Windows Terminal): w innych to klawisz
+przerwania terminala i nigdy nie dociera do M-Commandera. Alt-X g działa w
+każdym terminalu.
+
+**Esc**
+: czyści wiersz poleceń, gdy nie jest otwarte żadne okno dialogowe, a lista
+plików ma fokus. Jeśli trwa szybkie wyszukiwanie, Esc najpierw je kończy, a
+następny Esc czyści wiersz. W terminalu, który wysyła klawisze po staremu,
+M-Commander rozpoznaje samotny Esc dopiero po krótkiej chwili, więc wiersz
+jest czyszczony z opóźnieniem.
+
+**Alt-F6, Alt-F10, Shift-F9, Shift-F10**
+: tworzą dowiązanie twarde, pokazują drzewo katalogów, zapisują konfigurację
+i wybierają ostatnio wybraną pozycję menu (Shift-F7, który to robił, nadal
+działa).
+
+**W wierszu poleceń i w polach edycji okien dialogowych** (wszystkie mają
+wspólne klawisze):
+Ctrl-E to poprzednie polecenie z historii, a Ctrl-X następne, jak w Far, a
+Ctrl-Y kasuje cały wiersz. Ctrl-Backspace i Ctrl-Delete kasują słowo w lewo i
+w prawo. Działania, które miały te klawisze, tracą je: Ctrl-E nie przenosi już
+na koniec wiersza (robi to End), a Yank, który był pod Ctrl-Y, jest pod Alt-y.
+
+**W edytorze** (tak jak wymienia je pomoc far2l):
+Ctrl-F7 zamienia, a F4, który zamieniał tekst, zamyka edytor razem z F10 i
+Esc; Alt-F8 przechodzi do wiersza (Alt-l nadal działa); Ctrl-F3 pokazuje
+numery wierszy; Alt-F11 pokazuje historię edytowanych plików; Ctrl-Z cofa,
+Ctrl-U odznacza blok (wcześniej cofał), a Ctrl-A zaznacza wszystko. Ctrl-F7
+nie kontynuuje już wyszukiwania, robi to Shift-F7, a Ctrl-Z nie przenosi już
+o słowo w lewo, robi to Ctrl-Left.
+
+**W przeglądarce:**
+Alt-F8 przechodzi do pozycji (F5 nadal działa), Alt-F7 kontynuuje
+wyszukiwanie w przeciwnym kierunku, a Alt-F11 pokazuje historię oglądanych
+plików.
+
+**W oknach dialogowych:**
+Ctrl-Enter robi to, co Enter, gdy żaden przycisk nie ma fokusu, czyli
+domyślne działanie okna, a plus i minus z klawiatury numerycznej (oraz plus i
+minus z głównej klawiatury) włączają i wyłączają pole wyboru, które ma fokus,
+tam gdzie Space je przełącza. PgDn daje fokus domyślnemu przyciskowi (lista,
+która ma fokus, zatrzymuje PgDn dla siebie). Shift-Enter w polu edycji okna
+dialogowego wstawia nazwę pliku pod kursorem aktywnego panelu,
+Ctrl-Shift-Enter nazwę z panelu pasywnego (nie w wierszu poleceń, gdzie
+Ctrl-Shift-Enter zachowuje swoje znaczenie; terminal wysyła je tylko wtedy,
+gdy zgłasza klawisze z modyfikatorami, zobacz niżej). Esc, F10, Tab, strzałki
+i skróty przycisków są takie same w Far i w M-Commanderze. Ctrl-Enter terminal
+wysyła tylko wtedy, gdy zgłasza klawisze z modyfikatorami (zobacz niżej).
+
+Klawisze wspólne dla M-Commandera i Far są takie same z trybem i bez niego:
+F1 do F10, Shift-F4, Shift-F5, Shift-F6 i Shift-F8, Tab, Ctrl-U, Ctrl-R,
+Ctrl-O, Ctrl-F1 i Ctrl-F2, Alt-F1 i Alt-F2, Ctrl-PgUp i Ctrl-PgDn, Insert
+oraz plus, minus i gwiazdka z klawiatury numerycznej.
+
+Co różni się od Far i na razie tak zostaje: F3 w edytorze nadal zaznacza blok
+zamiast zawijać wiersze, klawisze schowka Ctrl-C, Ctrl-V i Ctrl-X w edytorze
+nie są przypisane (działają Ctrl-Insert, Shift-Insert i Shift-Delete), a
+przeglądarka zachowuje własne klawisze F8, F9, Space oraz plus i minus;
+panele zachowują kolory M-Commandera i nie mają opisów plików (Ctrl-6 i
+Ctrl-7 pokazują inne kolumny, zobacz wyżej), Ctrl-Z, Ctrl-M i skróty do
+folderów nie są przypisane, tak samo jak Ctrl-H dla plików ukrytych (terminal
+wysyła Backspace jako Ctrl-H, a Enter jako Ctrl-M, i M-Commander nie potrafi
+ich odróżnić; Alt-. pokazuje i ukrywa pliki ukryte, tak jak bez trybu), Ctrl
+z nawiasem kwadratowym nie wstawia do wiersza poleceń ścieżki lewego ani
+prawego panelu (terminal wysyła Ctrl-lewy nawias kwadratowy jako Esc), a
+Ctrl-, nie przełącza układu paneli (terminal wysyła go jako Ctrl-L, który w
+tym trybie pokazuje panel Info); robi to Alt-,. Alt ze znakiem to szybkie
+wyszukiwanie tylko tam, gdzie klawisz nie ma działania M-Commandera, zobacz
+wyżej, a szybkie wyszukiwanie nie przyjmuje znaków spoza Latin-1. Okna
+dialogowe zachowują własne klawisze, poza polami edycji, Ctrl-Enter i polami
+wyboru: M-Commander nie ma klawisza Far do przesuwania okna dialogowego, a
+mysz nie jest częścią trybu.
+
+Niektóre klawisze trybu (Ctrl z cyfrą, z przecinkiem, z Enter albo z
+klawiszem funkcyjnym) terminal wysyła tylko wtedy, gdy zgłasza klawisze z
+modyfikatorami, tak jak xterm i terminale obsługujące kitty keyboard
+protocol. W terminalu, który tego nie robi, klawisz przychodzi jako inny albo
+nie przychodzi wcale, i nic nie ginie: każde działanie jest też w menu, a
+klawisz, który miało przed trybem, jest nadal przypisany tam, gdzie mówi to
+lista powyżej.
+
 ## Klawisze różne <a id="miscellaneous-keys"></a>
 
 Jest tu kilka klawiszy, które nie kwalifikują się do żadnej z wymienionych
@@ -1848,6 +2043,12 @@ te, których używa w komenda
 Jeśli ta opcja jest włączona, kiedy wychodzisz z M-Commandera
 konfiguracja M-Commander zostanie zachowana automatycznie (bez pytania)
 do pliku ~/.config/mc6/ini.
+
+*Klawisze Far Managera (Far Manager keys).*
+Jeśli ta opcja jest włączona, panele odpowiadają na klawisze Far Managera;
+zobacz
+[Tryb Far](#far-mode).
+Ta opcja jest domyślnie wyłączona.
 
 *Auto menus.*
 Jeśli ta opcja jest włączona, menu użytkownika będzie włączone na starcie.

@@ -41,6 +41,7 @@ void view_cmd (WPanel *panel);
 void view_file_cmd (const WPanel *panel);
 void view_raw_cmd (WPanel *panel);
 void view_filtered_cmd (const WPanel *panel);
+void apply_cmd (WPanel *panel);
 void edit_file_at_line (const vfs_path_t *what_vpath, gboolean internal, long start_line);
 void edit_cmd (const WPanel *panel);
 void edit_cmd_new (void);

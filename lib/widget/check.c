@@ -43,6 +43,8 @@
 
 /*** global variables ****************************************************************************/
 
+gboolean check_far_keys = FALSE;
+
 /*** file scope macro definitions ****************************************************************/
 
 /*** file scope type declarations ****************************************************************/
@@ -75,6 +77,19 @@ check_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         return MSG_NOT_HANDLED;
 
     case MSG_KEY:
+        if (check_far_keys
+            && (parm == '+' || parm == KEY_KP_ADD || parm == '-' || parm == KEY_KP_SUBTRACT))
+        {
+            // Far: Gray + turns the box on, Gray - turns it off
+            gboolean on = (parm == '+' || parm == KEY_KP_ADD);
+
+            if (c->state == on)
+                return MSG_HANDLED;
+            c->state = on;
+            widget_draw (w);
+            send_message (w->owner, w, MSG_NOTIFY, 0, NULL);
+            return MSG_HANDLED;
+        }
         if (parm != ' ')
             return MSG_NOT_HANDLED;
         c->state = !c->state;

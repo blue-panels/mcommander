@@ -131,6 +131,7 @@ char *mc_prompt = NULL;
 /*** forward declarations (file scope functions) *************************************************/
 
 static gboolean plugin_show_file (const vfs_path_t *vpath, const char *hint);
+static gboolean is_cmdline_mute (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -1242,6 +1243,7 @@ midnight_execute_cmd (Widget *sender, long command)
             if (plugin_panel_dirsize_cmd (current_panel))
                 return MSG_HANDLED;
             break; /* real local files; native handlers can operate on them */
+        case CK_ApplyCommand:
         case CK_ChangeMode:
         case CK_ChangeOwn:
         case CK_ChangeOwnAdvanced:
@@ -1290,6 +1292,13 @@ midnight_execute_cmd (Widget *sender, long command)
         break;
     case CK_ChangeMode:
         chmod_cmd (current_panel);
+        break;
+    case CK_ApplyCommand:
+        apply_cmd (current_panel);
+        break;
+    case CK_CmdlineClear:
+        if (command_prompt && !is_cmdline_mute ())
+            mcterm_overlay_cmdline_clear ();
         break;
     case CK_ChangeOwn:
         chown_cmd (current_panel);
@@ -2083,6 +2092,14 @@ midnight_set_buttonbar (WButtonBar *b)
         { CK_DeleteSingle, N_ ("ButtonBar|Delete") },
         { CK_MenuLastSelected, N_ ("ButtonBar|Menu") },
         { CK_QuitQuiet, N_ ("ButtonBar|Quit") },
+        { CK_SortByName, N_ ("ButtonBar|Name") },
+        { CK_SortByVersion, N_ ("ButtonBar|Version") },
+        { CK_SortByExt, N_ ("ButtonBar|Ext") },
+        { CK_SortBySize, N_ ("ButtonBar|Size") },
+        { CK_SortByMTime, N_ ("ButtonBar|MTime") },
+        { CK_SortByUnsorted, N_ ("ButtonBar|Unsort") },
+        { CK_SortByCTime, N_ ("ButtonBar|CTime") },
+        { CK_SortByATime, N_ ("ButtonBar|ATime") },
         { CK_IgnoreKey, NULL },
     };
     Widget *w = WIDGET (filemanager);

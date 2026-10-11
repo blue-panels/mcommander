@@ -311,6 +311,211 @@ fájlba, amely utoljára olvasódik be, és nem kell hozzá kapcsoló:
 ln -s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
 ```
 
+## Far mód <a id="far-mode"></a>
+
+Az M-Commander a saját panelbillentyűi helyett átveheti a Far Manager
+billentyűit. Ez a mód azoknak szól, akik a Far felől érkeznek, és azt
+szeretnék, hogy az ujjuk ugyanott találja a billentyűket. Alapesetben ki van
+kapcsolva, és aki nem kapcsolja be, annak semmi sem változik.
+
+Bekapcsolni a
+**Beállítások**
+menü
+[M-Commander konfigurálása](#configuration)
+párbeszédablakának
+*Far Manager billentyűk*
+jelölőnégyzetével lehet, vagy a
+**~/.config/mc6/ini**
+fájl
+**[Midnight-Commander]**
+szakaszában a
+**far_mode=true**
+beállítással.
+A billentyűk azonnal megváltoznak, és a beállítás a többi beállítással együtt
+mentődik.
+A mód egy réteg a billentyűkiosztás fölött: felülírja a beépített
+billentyűket és a rendszer
+**keymap.ini**
+fájljait, de a felhasználó
+**keymap.ini**
+fájlja alatt marad, így bármelyik billentyű továbbra is
+[kézzel](#keys_redefine)
+átállítható.
+
+A mód a könyvtár panelekre, a szerkesztőre, a fájlnézőre, a parancssorra, a
+párbeszédablakok beviteli soraira és maguknak a párbeszédablakoknak néhány
+billentyűjére terjed ki. Ezeket a billentyűket kapják a panelek a módban,
+és ezt cserélik le:
+
+**Alt-F7**
+: fájlkeresés. Az Alt-? továbbra is működik.
+
+**Alt-F8**
+: a parancssor előzményei. Az Alt-h továbbra is működik.
+
+**Alt-F11**
+: a megnézett és szerkesztett fájlok előzményei. Az Alt-Shift-e továbbra is
+működik.
+
+**Alt-F12**
+: a könyvtárak előzményei. Az Alt-Shift-h továbbra is működik.
+
+**Ctrl-F3, Ctrl-F4, Ctrl-F5, Ctrl-F6**
+: a panel rendezése név, kiterjesztés, módosítási idő és méret szerint.
+A Far megfordítja a sorrendet, ha ugyanazt a billentyűt kétszer nyomod le;
+az M-Commander is így tesz.
+
+**Ctrl-F7, Ctrl-F8, Ctrl-F9**
+: a fájlok rendezetlenül maradnak, illetve a változás ideje (a Farban itt a
+létrehozás ideje áll, amelyet egy Unix fájlrendszer nem tárol) és a hozzáférés
+ideje szerint rendeződnek. A Ctrl-F10 és a Ctrl-F11, a leírás és a tulajdonos
+szerinti rendezés, nincs hozzárendelve: az M-Commander nem ismer ilyen
+rendezési sorrendet.
+
+**Ctrl-F12**
+: a rendezési sorrend menüje.
+
+**Ctrl-L, Ctrl-Q, Ctrl-T**
+: az Infó panel, a Gyorsnézőke panel és a Könyvtárfa panel. A panelekben a
+Ctrl-L nem rajzolja újra a képernyőt (a párbeszédablakokban továbbra is), a
+Ctrl-T pedig nem jelöl ki fájlt; ezt az Insert végzi, ahogy a Farban is.
+
+**Ctrl-1-től Ctrl-9-ig, Ctrl-0**
+: a Far listázási módjai: rövid (három oszlop név), közepes (két oszlop),
+teljes (név, méret és idő), széles (név és méret), részletes (a hozzáférés és
+a változás idejével és a jogokkal), csak nevek (Ctrl-6) és nevek a módosítási
+idővel (Ctrl-7), amelyek a leírások helyett állnak, mert az M-Commander nem
+ismeri őket, tulajdonosok, linkek, és Ctrl-0-ra az M-Commander hosszú
+listája. A módok rögzítettek, és nem érintik a felhasználó
+[panel módjainak](#panel-modes)
+listáját.
+
+**Ctrl-A**
+: a fájl attribútumai, vagyis a jogok párbeszédablaka (chmod). A parancssorban
+a Ctrl-A már nem a sor elejére ugrik; ezt a Home végzi.
+
+**Ctrl-F**
+: a kurzor alatti fájl teljes nevét a parancssorba írja (a Ctrl-Shift-Enter
+is ezt teszi). A Ctrl-Enter csak a nevet írja be, ahogy a mód nélkül is.
+
+**Ctrl-X**
+: a következő parancs az előzményekből, lásd lent. A kiterjesztett parancsok
+előtagja, amely eddig a Ctrl-X volt, az Alt-X-re kerül.
+
+**Ctrl-\\ (control-backslash)**
+: a panel gyökérkönyvtárába lép: a fájlrendszer, az archívum vagy a távoli
+gép gyökerébe, amelyet a panel mutat (egy bővítmény panele helyben marad).
+A Könyvjelzők, amely eddig a Ctrl-\\ volt, az Alt-\\ billentyűre kerül.
+
+**Shift-gray plus, Shift-gray minus**
+: az összes fájl kijelölése, illetve az összes kijelölés megszüntetése (a
+szürke billentyűk magukban mintát kérnek, ahogy a mód nélkül is). A terminál
+csak akkor küldi ezeket, ha jelzi a módosított billentyűket, lásd lent.
+
+**Ctrl-gray plus, Ctrl-gray minus**
+: a Ctrl-gray plus kijelöli a kurzor alatti fájl kiterjesztésével egyező
+fájlokat, vagy megszünteti a kijelölésüket, ha az a fájl már ki van jelölve; a
+Ctrl-gray minus megszünteti a kijelölésüket. A terminál csak akkor küldi ezeket
+a billentyűket, ha jelzi a módosított billentyűket.
+
+**Ctrl-Enter, Ctrl-Shift-Enter**
+: a gyorskeresésben (Ctrl-s, Alt-s) a következő, illetve az előző illeszkedő
+fájlra lép, ahogy a Far gyorskeresése. Az Alt egy karakterrel megtartja az
+M-Commander műveleteit: nem indít keresést.
+
+**Ctrl-G, Alt-X g**
+: parancsot alkalmaz a fájlokra: bekér egy parancsot, és lefuttatja minden
+kijelölt fájlra, vagy ha nincs kijelölt fájl, a kurzor alatti fájlra. A
+parancsban a %f (vagy %p) a fájl neve, a %n a név kiterjesztés nélkül, a %x a
+kiterjesztés, mind a shellnek idézőjelezve; a felhasználói menü többi makrója
+ugyanúgy működik, mint ott. A Ctrl-G csak olyan terminálban működik, amely a
+kitty keyboard protokollal vagy a Win32 input móddal küldi a billentyűket
+(kitty, WezTerm, foot, Windows Terminal): a többiben ez a terminál megszakító
+billentyűje, és el sem jut az M-Commanderig. Az Alt-X g minden terminálban
+működik.
+
+**Esc**
+: törli a parancssort, ha nincs nyitva párbeszédablak, és a fájllistán van a
+fókusz. Ha fut a gyorskeresés, az Esc először azt fejezi be, és a következő
+Esc törli a sort. Olyan terminálban, amely a régi módon küldi a billentyűket,
+az M-Commander csak rövid várakozás után ismeri fel a magában álló Esc-et,
+ezért a sor késéssel törlődik.
+
+**Alt-F6, Alt-F10, Shift-F9, Shift-F10**
+: hard link létrehozása, a könyvtárfa megjelenítése, a beállítások mentése és
+a legutóbb választott menüpont újbóli választása (a Shift-F7, amely eddig ezt
+végezte, továbbra is működik).
+
+**A parancssorban és a párbeszédablakok beviteli soraiban** (ezek közösen
+használják a billentyűket):
+a Ctrl-E az előzmények előző parancsa, a Ctrl-X a következő, ahogy a Farban,
+a Ctrl-Y pedig az egész sort törli. A Ctrl-Backspace és a Ctrl-Delete egy
+szót töröl balra, illetve jobbra. Az így elvett billentyűk régi feladata
+máshová kerül: a Ctrl-E már nem a sor végére ugrik (ezt az End végzi), a
+Beillesztés (Yank), amely eddig a Ctrl-Y volt, az Alt-y lesz.
+
+**A szerkesztőben** (ahogy a far2l súgója felsorolja őket):
+a Ctrl-F7 cserél, az F4, amely eddig szöveget cserélt, az F10-zel és az
+Esc-kel együtt kilép a szerkesztőből; az Alt-F8 egy sorra ugrik (az Alt-l
+továbbra is működik); a Ctrl-F3 megmutatja a sorszámokat; az Alt-F11 a
+szerkesztett fájlok előzményeit mutatja; a Ctrl-Z visszavon, a Ctrl-U
+megszünteti a blokk kijelölését (eddig visszavont), a Ctrl-A pedig mindent
+kijelöl. A Ctrl-F7 már nem folytatja a keresést, ezt a Shift-F7 végzi, és a
+Ctrl-Z már nem lép egy szót balra, ezt a Ctrl-Left végzi.
+
+**A fájlnézőben:**
+az Alt-F8 egy pozícióra ugrik (az F5 továbbra is működik), az Alt-F7
+ellenkező irányban folytatja a keresést, az Alt-F11 pedig a megnézett fájlok
+előzményeit mutatja.
+
+**A párbeszédablakokban:**
+a Ctrl-Enter azt teszi, amit az Enter, ha egyik gombon sincs a fókusz, vagyis
+a párbeszédablak alapértelmezett műveletét végzi; a numerikus plusz és mínusz
+(és a fő billentyűzet plusz és mínusz jele) be-, illetve kikapcsolja a
+fókuszban levő jelölőnégyzetet, míg a Space átváltja. A PgDn az
+alapértelmezett gombra adja a fókuszt (a fókuszban levő lista megtartja
+magának a PgDn-t). A Shift-Enter egy párbeszédablak beviteli sorában beírja
+az aktív panel kurzora alatti fájl nevét, a Ctrl-Shift-Enter a passzív panelét
+(a parancssorban nem, ott a Ctrl-Shift-Enter megtartja a jelentését; a
+terminál csak akkor küldi ezeket, ha jelzi a módosított billentyűket, lásd
+lent). Az Esc, az F10, a Tab, a nyílbillentyűk és a gombok gyorsbillentyűi a
+Farban és az M-Commanderben ugyanazok. A Ctrl-Enter-t a terminál csak akkor
+küldi, ha jelzi a módosított billentyűket (lásd lent).
+
+Azok a billentyűk, amelyek a Farban és az M-Commanderben közösek, a móddal és
+anélkül is ugyanazok: F1-től F10-ig, Shift-F4, Shift-F5, Shift-F6 és Shift-F8,
+Tab, Ctrl-U, Ctrl-R, Ctrl-O, Ctrl-F1 és Ctrl-F2, Alt-F1 és Alt-F2, Ctrl-PgUp és
+Ctrl-PgDn, Insert, valamint a numerikus plusz, mínusz és csillag.
+
+Ami eltér a Fartól, és egyelőre így marad: az F3 a szerkesztőben továbbra is
+blokkot jelöl ki a sortördelés helyett, a szerkesztő Ctrl-C, Ctrl-V és Ctrl-X
+vágólap billentyűi nincsenek hozzárendelve (a Ctrl-Insert, a Shift-Insert és
+a Shift-Delete működik), a fájlnéző pedig megtartja a saját F8, F9, Space,
+plusz és mínusz billentyűit; a panelek megtartják az M-Commander színeit, és
+nincsenek fájlleírásaik (a Ctrl-6 és a Ctrl-7 más oszlopokat mutat, lásd
+fent), a Ctrl-Z, a Ctrl-M és a mappa gyorsbillentyűk nincsenek hozzárendelve,
+ahogy a rejtett fájlokhoz tartozó Ctrl-H sem (a terminál a Backspace-t Ctrl-H
+formában küldi, az Enter-t Ctrl-M formában, és az M-Commander nem tudja
+megkülönböztetni őket; az Alt-. mutatja és rejti a rejtett fájlokat, ahogy a
+mód nélkül is), a Ctrl és egy szögletes zárójel nem írja a bal vagy a jobb
+panel útvonalát a parancssorba (a terminál a Ctrl-bal szögletes zárójelet
+Esc-ként küldi), és a Ctrl-, nem váltja a panelek elrendezését (a terminál
+Ctrl-L-ként küldi, amely ebben a módban az Infó panelt mutatja); ezt az Alt-,
+végzi. Az Alt egy karakterrel csak ott gyorskeresés, ahol a billentyűhöz nem
+tartozik M-Commander művelet, lásd fent, és a gyorskeresés nem fogad el
+Latin-1-en kívüli karaktert. A párbeszédablakok megtartják a saját
+billentyűiket, kivéve a beviteli sorokat, a Ctrl-Enter-t és a
+jelölőnégyzeteket: az M-Commanderben nincs Far billentyű a párbeszédablak
+mozgatására, és az egér nem része a módnak.
+
+A mód néhány billentyűjét (a Ctrl-t egy számjeggyel, vesszővel, Enter-rel vagy
+funkcióbillentyűvel) a terminál csak akkor küldi, ha jelzi a módosított
+billentyűket, ahogy az xterm és a kitty keyboard protokollt ismerő terminálok.
+Olyan terminálban, amely ezt nem teszi, a billentyű másik billentyűként érkezik,
+vagy egyáltalán nem érkezik meg, de semmi sem vész el: minden művelet a
+menükben is megvan, és a billentyű, amely a mód előtt tartozott hozzá, ott,
+ahol a fenti lista ezt mondja, továbbra is működik.
+
 ## Különleges gombok <a id="miscellaneous-keys"></a>
 
 Itt azon billentyűket találhatod meg, amelyek nem tartoznak bele
@@ -1971,6 +2176,12 @@ engedélyezett, akkor a szokásos kiterjesztések azonosak a ed-ben lévőkkel:
 *Beállítások automatikus mentése*
 Ha ez az opciót bekapcsoltad, amikor kilépsz a M-Commander-ből,
 az M-Commander opcióinak beállításait az ~/.config/mc6/ini fájlba menti.
+
+*Far Manager billentyűk.*
+Ha ez az opció engedélyezve van, a panelek a Far Manager billentyűire
+válaszolnak; lásd
+[Far mód](#far-mode).
+Ez az opció alapesetben ki van kapcsolva.
 
 *Auto menük.*
 Ha ez az opció engedélyezett, a felhasználói menü megjelenik az mcommander

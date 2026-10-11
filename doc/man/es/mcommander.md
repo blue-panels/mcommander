@@ -375,6 +375,208 @@ que se lee el último y no necesita opción alguna:
 ln -s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
 ```
 
+## Modo Far <a id="far-mode"></a>
+
+M-Commander puede usar en los paneles las teclas de Far Manager en lugar de
+las suyas. El modo está pensado para quien viene de Far y quiere encontrar
+las mismas teclas bajo los dedos; está desactivado por defecto, y nada cambia
+para quien no lo active.
+
+Se activa con la casilla
+*Far Manager keys*
+del diálogo
+[Configuración](#configuration)
+del menú
+**Opciones**,
+o poniendo
+**far_mode=true**
+en la sección
+**[Midnight-Commander]**
+de
+**~/.config/mc6/ini**.
+Las teclas cambian en el acto, y el ajuste se guarda con el resto de la
+configuración. El modo es una capa sobre el mapa de teclado: está por encima
+de las teclas incorporadas y de los archivos
+**keymap.ini**
+del sistema, y por debajo del
+**keymap.ini**
+del usuario, de modo que el usuario todavía puede cambiar cualquier tecla
+[a mano](#keys_redefine).
+
+El modo abarca los paneles de directorio, el editor, el visor, la línea de
+órdenes, las líneas de entrada de los diálogos y algunas teclas de los propios
+diálogos. Estas son las teclas que el modo da a los paneles, junto con lo que
+cada una sustituye:
+
+**Alt-F7**
+: buscar archivo. Alt-? sigue funcionando.
+
+**Alt-F8**
+: el historial de la línea de órdenes. Alt-h sigue funcionando.
+
+**Alt-F11**
+: el historial de los archivos vistos y editados. Alt-Shift-e sigue
+funcionando.
+
+**Alt-F12**
+: el historial de directorios. Alt-Shift-h sigue funcionando.
+
+**Ctrl-F3, Ctrl-F4, Ctrl-F5, Ctrl-F6**
+: ordenan el panel por nombre, por extensión, por hora de modificación y por
+tamaño. Far invierte el orden cuando se pulsa dos veces la misma tecla;
+M-Commander también.
+
+**Ctrl-F7, Ctrl-F8, Ctrl-F9**
+: dejan los archivos sin ordenar, los ordenan por hora de cambio (Far usa ahí
+la hora de creación, que un sistema de archivos Unix no guarda) y por hora de
+acceso. Ctrl-F10 y Ctrl-F11, el orden por descripciones y por propietario, no
+están asignadas: M-Commander no tiene esos modos de ordenación.
+
+**Ctrl-F12**
+: el menú del modo de ordenación.
+
+**Ctrl-L, Ctrl-Q, Ctrl-T**
+: el panel de información, el panel de vista rápida y el panel de árbol. En
+los paneles Ctrl-L deja de redibujar la pantalla (en los diálogos lo sigue
+haciendo), y Ctrl-T deja de marcar un archivo; lo marca Insert, como en Far.
+
+**Ctrl-1 a Ctrl-9, Ctrl-0**
+: los modos de listado de Far: breve (tres columnas de nombres), medio (dos
+columnas), completo (nombre, tamaño y hora), ancho (nombre y tamaño),
+detallado (con las horas de acceso y de cambio y los permisos), solo nombres
+(Ctrl-6) y nombres con la hora de modificación (Ctrl-7), que sustituyen a las
+descripciones que M-Commander no tiene, propietarios, enlaces, y el listado
+largo de M-Commander para Ctrl-0. Los modos son fijos y no tocan la lista de
+[modos de panel](#panel-modes)
+del usuario.
+
+**Ctrl-A**
+: los atributos del archivo, es decir, el diálogo de permisos (chmod). En la
+línea de órdenes Ctrl-A ya no lleva al principio de la línea; lo hace Home.
+
+**Ctrl-F**
+: pone en la línea de órdenes el nombre completo del archivo bajo el cursor
+(también lo hace Ctrl-Shift-Enter). Ctrl-Enter pone solo el nombre, igual que
+con el modo desactivado.
+
+**Ctrl-X**
+: es la orden siguiente del historial, véase más abajo. El prefijo de las
+órdenes extendidas, que era Ctrl-X, pasa a Alt-X.
+
+**Ctrl-\\ (control-barra invertida)**
+: va al directorio raíz del panel: del sistema de archivos, del archivo
+comprimido o del equipo remoto que muestra el panel (el panel de un
+complemento se queda donde está). Los favoritos, que eran Ctrl-\\, pasan a
+Alt-\\.
+
+**Shift-gray plus, Shift-gray minus**
+: (Shift con el más o el menos gris del teclado numérico) marcan todos los
+archivos y los desmarcan todos (las teclas grises solas piden un patrón, igual
+que sin el modo). Un terminal solo las envía cuando informa de las teclas con
+modificadores, véase más abajo.
+
+**Ctrl-gray plus, Ctrl-gray minus**
+: Ctrl-gray plus selecciona los archivos con la extensión del archivo bajo el
+cursor, o los deselecciona si ese archivo ya está seleccionado; Ctrl-gray minus
+los deselecciona. La terminal solo envía estas teclas si informa de las teclas
+con modificadores.
+
+**Ctrl-Enter, Ctrl-Shift-Enter**
+: en la búsqueda rápida (Ctrl-s, Alt-s), pasan al archivo siguiente y al
+anterior que coinciden, como en la búsqueda rápida de Far. Alt con un carácter
+conserva las acciones de M-Commander: no inicia una búsqueda.
+
+**Ctrl-G, Alt-X g**
+: aplican una orden a los archivos: piden una orden y la ejecutan para cada
+archivo marcado, o para el archivo bajo el cursor si no hay ninguno marcado.
+En la orden, %f (o %p) es el nombre del archivo, %n el nombre sin la extensión
+y %x la extensión, todos entrecomillados para la shell; las demás macros del
+menú de usuario funcionan como allí. Ctrl-G solo funciona en un terminal que
+envía las teclas con el protocolo de teclado de kitty o con el modo de entrada
+Win32 (kitty, WezTerm, foot, Windows Terminal): en los demás es la tecla de
+interrupción del terminal y nunca llega a M-Commander. Alt-X g funciona en
+todos los terminales.
+
+**Esc**
+: borra la línea de órdenes cuando no hay ningún diálogo abierto y la lista de
+archivos tiene el foco. Si la búsqueda rápida está en curso, Esc primero la
+termina, y el siguiente Esc borra la línea. En un terminal que envía las
+teclas a la manera antigua, M-Commander reconoce un Esc solo tras una breve
+espera, así que la línea se borra con retraso.
+
+**Alt-F6, Alt-F10, Shift-F9, Shift-F10**
+: crean un enlace duro, muestran el árbol de directorios, guardan la
+configuración y eligen la última opción de menú elegida (Shift-F7, que era
+la tecla para ello, lo sigue haciendo).
+
+**En la línea de órdenes y en las líneas de entrada de los diálogos** (todas
+comparten las teclas):
+Ctrl-E es la orden anterior del historial y Ctrl-X la siguiente, como en Far,
+y Ctrl-Y borra la línea entera. Ctrl-Backspace y Ctrl-Delete borran una
+palabra a la izquierda y a la derecha. Las teclas que estas ocupaban se
+ceden: Ctrl-E ya no lleva al final de la línea (lo hace End), y Yank, que era
+Ctrl-Y, pasa a Alt-y.
+
+**En el editor** (tal como las enumera la ayuda de far2l):
+Ctrl-F7 reemplaza, y F4, que reemplazaba texto, sale del editor junto con F10
+y Esc; Alt-F8 va a una línea (Alt-l sigue funcionando); Ctrl-F3 muestra los
+números de línea; Alt-F11 muestra el historial de los archivos editados;
+Ctrl-Z deshace, Ctrl-U desmarca el bloque (antes deshacía) y Ctrl-A lo
+selecciona todo. Ctrl-F7 ya no continúa la búsqueda, lo hace Shift-F7, y
+Ctrl-Z ya no mueve una palabra a la izquierda, lo hace Ctrl-Left.
+
+**En el visor:**
+Alt-F8 va a una posición (F5 sigue funcionando), Alt-F7 continúa la búsqueda
+en la dirección contraria y Alt-F11 muestra el historial de los archivos
+vistos.
+
+**En los diálogos:**
+Ctrl-Enter hace lo que Enter cuando ningún botón tiene el foco, es decir, la
+acción por defecto del diálogo, y el más y el menos del teclado numérico (y el
+más y el menos del teclado principal) activan y desactivan la casilla que
+tiene el foco, mientras que Space la alterna. PgDn da el foco al botón por
+defecto (una lista que tiene el foco se queda PgDn para sí). Shift-Enter en la
+línea de entrada de un diálogo inserta el nombre del archivo bajo el cursor
+del panel activo, y Ctrl-Shift-Enter el del panel pasivo (no en la línea de
+órdenes, donde Ctrl-Shift-Enter conserva su significado; un terminal solo las
+envía cuando informa de las teclas con modificadores, véase más abajo). Esc,
+F10, Tab, las teclas de cursor y las teclas rápidas de los botones son las
+mismas en Far y en M-Commander. Un terminal solo envía Ctrl-Enter cuando
+informa de las teclas con modificadores (véase más abajo).
+
+Las teclas que M-Commander comparte con Far son las mismas con el modo o sin
+él: F1 a F10, Shift-F4, Shift-F5, Shift-F6 y Shift-F8, Tab, Ctrl-U, Ctrl-R,
+Ctrl-O, Ctrl-F1 y Ctrl-F2, Alt-F1 y Alt-F2, Ctrl-PgUp y Ctrl-PgDn, Insert y el
+más, el menos y el asterisco del teclado numérico.
+
+Lo que difiere de Far, y sigue así por ahora: F3 en el editor todavía marca
+un bloque en lugar de ajustar las líneas, las teclas del portapapeles Ctrl-C,
+Ctrl-V y Ctrl-X del editor no están asignadas (Ctrl-Insert, Shift-Insert y
+Shift-Delete funcionan), y el visor conserva sus propias teclas F8, F9, Space,
+más y menos; los paneles conservan los colores de M-Commander y no tienen
+descripciones de los archivos (Ctrl-6 y Ctrl-7 muestran otras columnas, véase
+más arriba), Ctrl-Z, Ctrl-M y los atajos de carpetas no están asignados, ni
+tampoco Ctrl-H para los archivos ocultos (un terminal envía Backspace como
+Ctrl-H, y Enter como Ctrl-M, y M-Commander no puede distinguirlos; Alt-.
+muestra y oculta los archivos ocultos, igual que sin el modo), Ctrl con un
+corchete no pone la ruta del panel izquierdo o del derecho en la línea de
+órdenes (un terminal envía Ctrl-corchete izquierdo como Esc), y Ctrl-, no
+cambia la disposición de los paneles (un terminal la envía como Ctrl-L, que
+en este modo muestra el panel de información); lo hace Alt-,. Alt con un
+carácter es la búsqueda rápida solo donde ninguna acción de M-Commander tiene
+esa tecla, véase más arriba, y la búsqueda rápida no acepta caracteres que no
+sean Latin-1. Los diálogos conservan sus propias teclas, salvo las líneas de
+entrada, Ctrl-Enter y las casillas: M-Commander no tiene ninguna tecla de Far
+para mover un diálogo, y el ratón no forma parte del modo.
+
+Algunas teclas del modo (Ctrl con un dígito, con una coma, con Enter o con una
+tecla de función) un terminal solo las envía cuando informa de las teclas con
+modificadores, como hacen xterm y los terminales que hablan el protocolo de
+teclado de kitty. En un terminal que no lo hace, la tecla llega como otra
+distinta o no llega, y no se pierde nada: cada acción está también en los
+menús, y la tecla que tenía antes del modo sigue asignada donde lo dice la
+lista de arriba.
+
 ## Otras Teclas <a id="miscellaneous-keys"></a>
 
 Se incluyen aquí las teclas que no encajan en ninguna categoría concreta:
@@ -2147,6 +2349,11 @@ opción está desactivada.
 Si esta opción está activada, cuando salimos de M-Commander las
 opciones configurables de M-Commander se guardan en el archivo
 *~/.config/mc6/ini.*
+
+*Far Manager keys.*
+Si esta opción está activada, los paneles responden a las teclas de Far
+Manager; véase
+[Modo Far](#far-mode). Por defecto, esta opción está desactivada.
 
 ### Presentación <a id="layout"></a>
 
