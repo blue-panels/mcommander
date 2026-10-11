@@ -79,6 +79,12 @@ typedef struct
     int key_refresh;
     int key_reset;
     int key_fav_add;
+    int key_coole;
+    int key_commit;
+    int key_amend;
+    int key_show;
+    int key_reword;
+    char *coole_executable;
     int view;
     char *selected_commit;
     char *current_branch;
@@ -176,6 +182,17 @@ static const mc_panel_column_t git_columns[] = {
 #define GIT_PANEL_FORMAT_DEFAULT       "type name | status | mtime"
 #define GIT_PANEL_KEY_FAV_ADD          "hotkey_fav_add"
 #define GIT_PANEL_KEY_FAV_ADD_DEFAULT  "ctrl-b"
+#define GIT_PANEL_COOLE_EXECUTABLE     "coole_executable"
+#define GIT_PANEL_KEY_COOLE            "hotkey_coole"
+#define GIT_PANEL_KEY_COMMIT           "hotkey_commit"
+#define GIT_PANEL_KEY_AMEND            "hotkey_amend"
+#define GIT_PANEL_KEY_SHOW             "hotkey_show"
+#define GIT_PANEL_KEY_REWORD           "hotkey_reword"
+#define GIT_PANEL_KEY_COOLE_DEFAULT    "alt-g"
+#define GIT_PANEL_KEY_COMMIT_DEFAULT   "alt-c"
+#define GIT_PANEL_KEY_AMEND_DEFAULT    "alt-a"
+#define GIT_PANEL_KEY_SHOW_DEFAULT     "alt-v"
+#define GIT_PANEL_KEY_REWORD_DEFAULT   "alt-r"
 #define GIT_FAVORITES_CONFIG_GROUP     "git-favorites"
 #define GIT_FAVORITES_CONFIG_KEY       "repos"
 
@@ -371,6 +388,17 @@ git_save_defaults_to_user_file (const char *path)
                           GIT_PANEL_KEY_REFRESH_DEFAULT);
     mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_RESET,
                           GIT_PANEL_KEY_RESET_DEFAULT);
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_COOLE_EXECUTABLE, "coole");
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_COOLE,
+                          GIT_PANEL_KEY_COOLE_DEFAULT);
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_COMMIT,
+                          GIT_PANEL_KEY_COMMIT_DEFAULT);
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_AMEND,
+                          GIT_PANEL_KEY_AMEND_DEFAULT);
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_SHOW,
+                          GIT_PANEL_KEY_SHOW_DEFAULT);
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_REWORD,
+                          GIT_PANEL_KEY_REWORD_DEFAULT);
     mc_config_save_file (cfg, NULL);
     mc_config_deinit (cfg);
 }
@@ -1875,6 +1903,159 @@ git_show_commit_description_by_sha (git_data_t *data, const char *sha, const cha
 
 /* --------------------------------------------------------------------------------------------- */
 
+typedef enum
+{
+    GIT_COOLE_WINDOW,
+    GIT_COOLE_COMMIT,
+    GIT_COOLE_AMEND,
+    GIT_COOLE_SHOW,
+    GIT_COOLE_REWORD
+} git_coole_action_t;
+
+static void
+git_load_coole_settings (git_data_t *data)
+{
+    g_free (data->coole_executable);
+    data->coole_executable = git_load_config_value (GIT_PANEL_COOLE_EXECUTABLE, "coole");
+    data->key_coole = git_load_hotkey (GIT_PANEL_KEY_COOLE, GIT_PANEL_KEY_COOLE_DEFAULT, ALT ('g'));
+    data->key_commit =
+        git_load_hotkey (GIT_PANEL_KEY_COMMIT, GIT_PANEL_KEY_COMMIT_DEFAULT, ALT ('c'));
+    data->key_amend = git_load_hotkey (GIT_PANEL_KEY_AMEND, GIT_PANEL_KEY_AMEND_DEFAULT, ALT ('a'));
+    data->key_show = git_load_hotkey (GIT_PANEL_KEY_SHOW, GIT_PANEL_KEY_SHOW_DEFAULT, ALT ('v'));
+    data->key_reword =
+        git_load_hotkey (GIT_PANEL_KEY_REWORD, GIT_PANEL_KEY_REWORD_DEFAULT, ALT ('r'));
+}
+
+static char *
+git_read_head (git_data_t *data)
+{
+    char *argv[] = {
+        (char *) "git",  (char *) "-C", data->repo_root, (char *) "rev-parse", (char *) "--verify",
+        (char *) "HEAD", NULL
+    };
+    char *head = NULL;
+
+    if (!git_run_stdout (argv, &head))
+        return NULL;
+    g_strchomp (head);
+    if (*head == '\0')
+        g_clear_pointer (&head, g_free);
+    return head;
+}
+
+/* coole owns the message editor and the Git operation. Run it in the foreground so the panel
+   reloads only after the editor has closed, including when MC has an overlay terminal. */
+static mc_pp_result_t
+git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
+{
+    char *executable;
+    char *quoted_executable;
+    char *quoted_root;
+    char *command;
+    char *option = NULL;
+    char *head_before = NULL;
+
+    if (data->host == NULL || data->host->run_command == NULL || data->repo_root == NULL)
+        return MC_PPR_FAILED;
+
+    if (action == GIT_COOLE_SHOW || action == GIT_COOLE_REWORD)
+    {
+        if (sha == NULL || *sha == '\0')
+        {
+            git_show_error (data, _ ("Git panel"), _ ("Select a commit first."));
+            return MC_PPR_SKIPPED;
+        }
+
+        if (action == GIT_COOLE_REWORD)
+        {
+            char *argv[] = { (char *) "git",           (char *) "-C",
+                             data->repo_root,          (char *) "merge-base",
+                             (char *) "--is-ancestor", (char *) sha,
+                             (char *) "HEAD",          NULL };
+
+            if (!git_run_simple (argv, NULL))
+            {
+                git_show_error (data, _ ("Git panel"),
+                                _ ("Reword is available only for commits on the current branch."));
+                return MC_PPR_SKIPPED;
+            }
+        }
+    }
+
+    executable = g_find_program_in_path (data->coole_executable);
+    if (executable == NULL)
+    {
+        char *msg =
+            g_strdup_printf (_ ("Cannot find coole executable: %s"), data->coole_executable);
+
+        git_show_error (data, _ ("Git panel"), msg);
+        g_free (msg);
+        return MC_PPR_SKIPPED;
+    }
+
+    switch (action)
+    {
+    case GIT_COOLE_WINDOW:
+        if ((git_view_t) data->view == GIT_VIEW_COMMITS)
+            option = g_strdup ("--git-log");
+        break;
+    case GIT_COOLE_COMMIT:
+        /* Keep the full Git workspace open after a commit. Its message window is ready in -G. */
+        break;
+    case GIT_COOLE_AMEND:
+        option = g_strdup ("--git-amend");
+        break;
+    case GIT_COOLE_SHOW:
+        option = g_strdup_printf ("--git-show=%s", sha);
+        break;
+    case GIT_COOLE_REWORD:
+        option = g_strdup_printf ("--git-reword=%s", sha);
+        break;
+    default:
+        g_free (executable);
+        return MC_PPR_FAILED;
+    }
+
+    quoted_executable = g_shell_quote (executable);
+    quoted_root = g_shell_quote (data->repo_root);
+    command = g_strdup_printf ("%s -G %s%s%s", quoted_executable, quoted_root,
+                               option != NULL ? " " : "", option != NULL ? option : "");
+    if (action == GIT_COOLE_REWORD)
+        head_before = git_read_head (data);
+    data->host->run_command (data->host, command, EXECUTE_INTERNAL);
+
+    if (head_before != NULL)
+    {
+        char *head_after = git_read_head (data);
+
+        if (head_after != NULL && strcmp (head_before, head_after) != 0)
+        {
+            /* The old commit object still exists, but is no longer in the rewritten branch. */
+            data->view = GIT_VIEW_COMMITS;
+            g_clear_pointer (&data->selected_commit, g_free);
+            g_clear_pointer (&data->selected_commit_name, g_free);
+            g_clear_pointer (&data->selected_commit_list_name, g_free);
+            g_clear_pointer (&data->selected_branch, g_free);
+            g_clear_pointer (&data->selected_remote, g_free);
+            data->selected_branch_scope = GIT_BRANCH_SCOPE_NONE;
+            git_commit_stack_clear (data);
+            git_set_pending_focus (data, NULL);
+            git_update_title (data);
+        }
+        g_free (head_after);
+    }
+
+    g_free (head_before);
+    g_free (command);
+    g_free (quoted_root);
+    g_free (quoted_executable);
+    g_free (option);
+    g_free (executable);
+    return MC_PPR_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static GPtrArray *
 git_favorites_load (void)
 {
@@ -2006,6 +2187,7 @@ git_open (mc_panel_host_t *host, const char *open_path)
         git_load_hotkey (GIT_PANEL_KEY_RESET, GIT_PANEL_KEY_RESET_DEFAULT, KEY_F (18));
     data->key_fav_add =
         git_load_hotkey (GIT_PANEL_KEY_FAV_ADD, GIT_PANEL_KEY_FAV_ADD_DEFAULT, XCTRL ('b'));
+    git_load_coole_settings (data);
     data->view = GIT_VIEW_STATUS;
     data->selected_commit = NULL;
     data->current_branch = git_detect_current_branch (data);
@@ -2038,6 +2220,7 @@ git_close (void *plugin_data)
     g_free (data->help_filename);
     g_free (data->repo_root);
     g_free (data->default_format);
+    g_free (data->coole_executable);
     g_free (data->selected_commit);
     g_free (data->current_branch);
     g_free (data->selected_branch);
@@ -2062,6 +2245,11 @@ git_get_items (void *plugin_data, void *list_ptr)
     gboolean ok = FALSE;
 
     g_hash_table_remove_all (data->display_to_info);
+    if (data->repo_root != NULL)
+    {
+        g_free (data->current_branch);
+        data->current_branch = git_detect_current_branch (data);
+    }
 
     if ((git_view_t) data->view == GIT_VIEW_STATUS)
     {
@@ -2072,8 +2260,6 @@ git_get_items (void *plugin_data, void *list_ptr)
                          (char *) "--porcelain=v1",
                          NULL };
 
-        g_free (data->current_branch);
-        data->current_branch = git_detect_current_branch (data);
         git_update_title (data);
         git_add_virtual_dir (data, list, GIT_BRANCHES_DIR_NAME, GIT_ITEM_BRANCHES_DIR, NULL, "",
                              time (NULL));
@@ -2391,6 +2577,7 @@ git_chdir (void *plugin_data, const char *path)
             git_load_hotkey (GIT_PANEL_KEY_DIFF_ALT, GIT_PANEL_KEY_DIFF_ALT_DEFAULT, KEY_F (13));
         data->key_reset =
             git_load_hotkey (GIT_PANEL_KEY_RESET, GIT_PANEL_KEY_RESET_DEFAULT, KEY_F (18));
+        git_load_coole_settings (data);
         git_update_title (data);
 
         if (data->host->add_history != NULL)
@@ -2834,9 +3021,13 @@ git_handle_key (void *plugin_data, int key)
 {
     git_data_t *data = (git_data_t *) plugin_data;
     const GString *current = NULL;
+    const git_entry_info_t *info = NULL;
+    const git_view_t view = (git_view_t) data->view;
 
     if (data->host != NULL && data->host->get_current != NULL)
         current = data->host->get_current (data->host);
+    if (current != NULL && current->str != NULL)
+        info = git_lookup_info (data, current->str);
 
     git_debug_log ("git: key=%d view=%s current='%s'", key, git_view_name (data->view),
                    current != NULL && current->str != NULL ? current->str : "(null)");
@@ -2844,11 +3035,31 @@ git_handle_key (void *plugin_data, int key)
     if (key == CK_EditNew && (git_view_t) data->view == GIT_VIEW_FAVORITES)
         return git_create_item (data);
 
+    if (data->repo_root != NULL && data->key_coole != 0 && key == data->key_coole)
+        return git_launch_coole (data, GIT_COOLE_WINDOW, NULL);
+
+    if (data->repo_root != NULL && data->key_commit != 0 && key == data->key_commit)
+        return git_launch_coole (data, GIT_COOLE_COMMIT, NULL);
+
+    if (data->repo_root != NULL && data->key_amend != 0 && key == data->key_amend)
+        return git_launch_coole (data, GIT_COOLE_AMEND, NULL);
+
+    if ((view == GIT_VIEW_COMMITS || view == GIT_VIEW_COMMIT_FILES)
+        && ((data->key_show != 0 && key == data->key_show)
+            || (data->key_reword != 0 && key == data->key_reword)
+            || (view == GIT_VIEW_COMMITS && key == CK_Edit)))
+    {
+        const char *sha = view == GIT_VIEW_COMMIT_FILES         ? data->selected_commit
+            : info != NULL && info->kind == GIT_ITEM_COMMIT_DIR ? info->commit_sha
+                                                                : NULL;
+
+        return git_launch_coole (data, key == data->key_show ? GIT_COOLE_SHOW : GIT_COOLE_REWORD,
+                                 sha);
+    }
+
     if ((data->key_diff != 0 && key == data->key_diff)
         || (data->key_diff_alt != 0 && key == data->key_diff_alt))
     {
-        const git_view_t view = (git_view_t) data->view;
-
         /* Only these two views list files; elsewhere the selection is a commit or a branch. */
         if ((view == GIT_VIEW_STATUS || view == GIT_VIEW_COMMIT_FILES)
             && git_show_diff_selected (data))
