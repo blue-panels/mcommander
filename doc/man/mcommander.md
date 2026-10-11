@@ -410,16 +410,10 @@ is). The directory hotlist, which was Ctrl-\\, moves to Alt-\\.
 pattern, as they do without the mode). A terminal sends them only when it
 reports modified keys, see below.
 
-**Alt with a character, Alt-Shift with a character**
-: the fast find of Far: the panel goes to the file whose name begins with the
-characters typed while Alt is held down, and Ctrl-Enter and Ctrl-Shift-Enter go
-on to the next and to the previous file that matches. The search ends with Esc
-or with a key that is not a character, as the quick search of M-Commander does.
-Every Alt key that has an action in M-Commander keeps it (Alt-h, Alt-a and so
-on), and so does every Alt key of the command line editing while there is text
-in the command line, but once the search has begun all Alt keys go to it; the
-Alt-Shift keys of the same letters are free for it when the Alt keys are
-taken. The quick search of M-Commander (Ctrl-s and Alt-s) works as before.
+**Ctrl-Enter, Ctrl-Shift-Enter**
+: in the quick search (Ctrl-s, Alt-s), go on to the next and to the previous
+file that matches, as in the fast find of Far. Alt with a character keeps the
+actions of M-Commander: it does not start a search.
 
 **Ctrl-G, Alt-X g**
 : applies a command to the files: it asks for a command and runs it for every

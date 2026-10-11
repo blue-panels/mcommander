@@ -17,8 +17,8 @@ The releases of this fork, newest first.
 - Far mode goes on to the dialogs and the Windows-minded workflows: Ctrl-Enter
   does the default action of a dialog and the plus and the minus turn a check
   box on and off; Ctrl-\\ goes to the root directory (the hotlist moves to
-  Alt-\\), Alt with a character is the fast find, with Ctrl-Enter and
-  Ctrl-Shift-Enter for the next and the previous match; Ctrl-F7, Ctrl-F8
+  Alt-\\), Ctrl-Enter and Ctrl-Shift-Enter go to the next and the previous
+  match of the quick search; Ctrl-F7, Ctrl-F8
   and Ctrl-F9 sort by nothing, by the time of change and by the time of
   access; Ctrl-G or Alt-X g applies a command to the files (new action
   ApplyCommand), and Alt-F6, Alt-F10, Shift-F9 and Shift-F10 create a hard

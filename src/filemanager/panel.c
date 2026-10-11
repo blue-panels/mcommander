@@ -4053,41 +4053,6 @@ search_previous (WPanel *panel)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/**
- * The character that Alt, or Alt-Shift, with a key stands for in the fast find of Far mode, or
- * 0 when the key is not one for the fast find. An Alt key that an action is bound to keeps the
- * action, as does one of the edit line of the command line while there is text in it; once the
- * search has begun, the keys go to it, since Far keeps the Alt down while it types.
- */
-
-static int
-panel_far_find_char (const WPanel *panel, int key)
-{
-    int c;
-
-    if (!keymap_far_mode || (key & KEY_M_ALT) == 0 || (key & KEY_M_CTRL) != 0)
-        return 0;
-
-    c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
-    if (c <= ' ' || c > 255)
-        return 0;
-
-    if (panel->quick_search.active)
-        return c;
-
-    if (keybind_lookup_keymap_command (panel_map, key) != CK_IgnoreKey
-        || keybind_lookup_keymap_command (filemanager_map, key) != CK_IgnoreKey)
-        return 0;
-
-    if (!mcterm_overlay_cmdline_is_empty ()
-        && keybind_lookup_keymap_command (input_map, key) != CK_IgnoreKey)
-        return 0;
-
-    return c;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 static void
 start_quick_filter (WPanel *panel)
 {
@@ -5455,7 +5420,6 @@ static cb_ret_t
 panel_key (WPanel *panel, int key)
 {
     long command;
-    int far_find_char;
 
     if (is_abort_char (key))
     {
@@ -5467,23 +5431,8 @@ panel_key (WPanel *panel, int key)
         return MSG_HANDLED;
     }
 
-    // Far mode: Alt with a character is the fast find; Ctrl-Enter and Ctrl-Shift-Enter go on to
-    // the next and to the previous file that matches
-    far_find_char = panel_far_find_char (panel, key);
-    if (far_find_char != 0)
-    {
-        if (!panel->quick_search.active)
-            start_search (panel);
-        if (panel->quick_search.active)
-        {
-            if (panel->quick_search.filtering)
-                do_quick_filter (panel, far_find_char);
-            else
-                do_search (panel, far_find_char);
-        }
-        return MSG_HANDLED;
-    }
-
+    // Far mode: in the quick search, Ctrl-Enter and Ctrl-Shift-Enter go on to the next and to the
+    // previous file that matches
     if (keymap_far_mode && panel->quick_search.active && !panel->quick_search.filtering
         && (key == (KEY_M_CTRL | '\n') || key == (KEY_M_CTRL | KEY_M_SHIFT | '\n')))
     {
