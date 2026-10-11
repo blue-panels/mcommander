@@ -810,6 +810,8 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
     // Shift-F9: save the setup; Shift-F10: the menu item chosen last. Ctrl-\ goes to the root
     // directory (see the panel), so the hotlist moves to Alt and the backslash
     { "ApplyCommand", "ctrl-g" },
+    // Esc clears the command line, when no dialog is up
+    { "CmdlineClear", "esc" },
     { "Link", "alt-f6" },
     { "Tree", "alt-f10" },
     { "SaveSetup", "f21" },

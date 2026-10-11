@@ -431,6 +431,13 @@ with the kitty keyboard protocol or the Win32 input mode (kitty, WezTerm, foot,
 Windows Terminal): in the others it is the interrupt key of the terminal and
 never reaches M-Commander. Alt-X g works in every terminal.
 
+**Esc**
+: clears the command line when no dialog is open and the file list has the
+focus. If the quick search is running, Esc ends it first, and the next Esc
+clears the line. In a terminal that
+sends keys the old way, M-Commander knows a lone Esc only after a short wait, so
+the line is cleared with a delay.
+
 **Alt-F6, Alt-F10, Shift-F9, Shift-F10**
 : create a hard link, show the tree of directories, save the setup and choose
 the menu item chosen last (Shift-F7, which was it, still does).

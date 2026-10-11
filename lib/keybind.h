@@ -209,6 +209,8 @@ enum
 #endif
     // Far mode: Ctrl-G of Far Manager
     CK_ApplyCommand,
+    // Far mode: Esc of Far Manager
+    CK_CmdlineClear,
 
     // panels
     CK_PanelOtherCd = 200L,

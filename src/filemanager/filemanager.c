@@ -131,6 +131,7 @@ char *mc_prompt = NULL;
 /*** forward declarations (file scope functions) *************************************************/
 
 static gboolean plugin_show_file (const vfs_path_t *vpath, const char *hint);
+static gboolean is_cmdline_mute (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -1294,6 +1295,10 @@ midnight_execute_cmd (Widget *sender, long command)
         break;
     case CK_ApplyCommand:
         apply_cmd (current_panel);
+        break;
+    case CK_CmdlineClear:
+        if (command_prompt && !is_cmdline_mute ())
+            mcterm_overlay_cmdline_clear ();
         break;
     case CK_ChangeOwn:
         chown_cmd (current_panel);

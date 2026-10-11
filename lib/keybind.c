@@ -224,6 +224,7 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (PanelToggleRight, N_ ("Toggle right panel in terminal mode")),
 #endif
     ADD_KEYMAP_NAME_DESC (ApplyCommand, N_ ("Apply command to the files")),
+    ADD_KEYMAP_NAME_DESC (CmdlineClear, N_ ("Clear the command line")),
     ADD_KEYMAP_NAME_DESC_FLAGS (Select, N_ ("Select files by pattern"), PANEL_FILTER_SELECTION),
     ADD_KEYMAP_NAME_DESC_FLAGS (Unselect, N_ ("Unselect files by pattern"), PANEL_FILTER_SELECTION),
 

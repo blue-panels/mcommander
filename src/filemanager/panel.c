@@ -5459,6 +5459,10 @@ panel_key (WPanel *panel, int key)
 
     if (is_abort_char (key))
     {
+        // an Esc with no search going on is the file manager's, when its keymap has Esc
+        if (key == ESC_CHAR && !panel->quick_search.active
+            && keybind_lookup_keymap_command (filemanager_map, ESC_CHAR) != CK_IgnoreKey)
+            return MSG_NOT_HANDLED;
         stop_search (panel);
         return MSG_HANDLED;
     }
