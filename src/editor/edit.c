@@ -2800,6 +2800,8 @@ edit_reload_line (WEdit *edit, const edit_arg_t *arg)
     edit_clean_internal (edit, FALSE);
     memcpy (edit, e, sizeof (*edit));
     g_free (e);
+    // the highlighting read the text of the temporary one
+    syntax_scanner_set_data (edit->syntax, edit);
     edit->runtime_revision =
         previous_runtime_revision < G_MAXUINT64 ? previous_runtime_revision + 1 : G_MAXUINT64;
     runtime_host_set_current_editor (edit);

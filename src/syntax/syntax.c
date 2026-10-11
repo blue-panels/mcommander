@@ -3367,6 +3367,19 @@ syntax_scanner_set_size (syntax_scanner_t *sc, off_t size)
 
 /* --------------------------------------------------------------------------------------------- */
 
+void
+syntax_scanner_set_data (syntax_scanner_t *sc, void *data)
+{
+    if (sc == NULL)
+        return;
+
+    sc->data = data;
+    // the host reads through the scanner itself, the layer again through @data
+    syntax_scanner_set_data (sc->mask, data);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 const syntax_rules_t *
 syntax_scanner_rules (const syntax_scanner_t *sc)
 {
