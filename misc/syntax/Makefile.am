@@ -38,6 +38,7 @@ SYNTAXFILES =			\
 	f90.syntax		\
 	filehighlight.syntax	\
 	fortran.syntax		\
+	gitcommit.syntax	\
 	glsl.syntax		\
 	go.syntax		\
 	haskell.syntax		\
@@ -48,6 +49,9 @@ SYNTAXFILES =			\
 	j.syntax		\
 	jal.syntax		\
 	java.syntax		\
+	jinja2-expression.syntax	\
+	jinja2-statement.syntax	\
+	jinja2.syntax		\
 	js.syntax		\
 	json.syntax		\
 	kotlin.syntax		\
@@ -60,6 +64,7 @@ SYNTAXFILES =			\
 	mail.syntax		\
 	makefile.syntax		\
 	markdown.syntax		\
+	mermaid.syntax		\
 	ml.syntax		\
 	meson.syntax		\
 	muttrc.syntax		\
@@ -83,6 +88,9 @@ SYNTAXFILES =			\
 	r.syntax		\
 	ruby.syntax		\
 	rust.syntax		\
+	sh-parameter.syntax	\
+	smarty-tag.syntax	\
+	smarty.syntax		\
 	turtle.syntax		\
 	sh.syntax		\
 	slang.syntax		\

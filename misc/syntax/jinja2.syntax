@@ -1,0 +1,49 @@
+# Jinja2 template syntax highlighting
+#
+# Reference:
+#   https://jinja.palletsprojects.com/en/stable/templates/
+#
+# Highlights the Jinja2 template constructs:
+#   {{ ... }}    output / expression tags
+#   {% ... %}    statement / block tags (if / for / set / block / macro / ...)
+#   {# ... #}    comments
+#   {% raw %}    text left as it stands up to {% endraw %}
+#   numbers
+#
+# What stands inside a tag is read by jinja2-statement.syntax and
+# jinja2-expression.syntax, which color strings, numbers, operators and
+# literals, and every builtin filter, test and global function as a builtin
+# name.  The text around the tags belongs to whatever language the template
+# makes, which the rules do not know: its strings and comments are left
+# alone, so that a tag inside them is seen.
+
+context default
+    # numbers in the template body (engine takes the first matching rule at a
+    # position, so most specific forms go first: decimal+exp, exp, decimal, int)
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{\+-\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\{eE\}\{\+-\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\{eE\}\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\]\.\{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\}\[0123456789\] cyan
+    keyword whole \{0123456789\} cyan
+
+    # the tags of a raw block, which is exclusive and leaves them to this context
+    keyword {%\[\s-\]raw\[\s-\]%} brightcyan
+    keyword {%\[\s-\]endraw\[\s-\]%} brightcyan
+
+
+# raw block: {% raw %} ... {% endraw %}, and {%- raw -%} alike; before {% %},
+# which would take it.  The tags are colored as a tag, the text between is not
+context exclusive {%\[\s-\]raw\[\s-\]%} {%\[\s-\]endraw\[\s-\]%}
+
+# jinja2 statement / block tag: {% ... %}
+context {% %} brightcyan
+    embed soft Jinja2\sStatement
+
+# jinja2 expression tag: {{ ... }}
+context {{ }} brightred
+    embed soft Jinja2\sExpression
+
+# jinja2 comment: {# ... #}
+context {# #} brown

@@ -14,7 +14,6 @@ context default
     keyword ` brightred
     keyword ; brightcyan
     keyword $(*) brightgreen
-    keyword ${*} brightgreen
     keyword { brightcyan
     keyword } brightcyan
 
@@ -27,7 +26,7 @@ context default
     keyword $- brightred
     keyword $$ brightred
     keyword $! brightred
-    keyword $_ brightred
+    keyword wholeright $_ brightred
 
     keyword whole 2>&1 brightred
     keyword whole 1>&2 brightred
@@ -1089,6 +1088,32 @@ wholechars abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._
 
 wholechars abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_
 
+# A program that reads a language of its own is read by the rules of that
+# language: the script awk is given in single quotes, the code python is
+# given with -c or in a here-document, the statements an SQL client reads
+# from a here-document.  The quote and the EOF line end it.
+context wholeleft awk*' ' green
+    embed AWK\sFile
+context wholeleft gawk*' ' green
+    embed AWK\sFile
+context wholeleft python\[0123456789.\]\s-c\s' ' green
+    embed Python\sProgram
+context wholeleft python\[0123456789.\]\s<<*EOF*\n linestart EOF green
+    embed Python\sProgram
+context wholeleft python\[0123456789.\]\s-\s<<*EOF*\n linestart EOF green
+    embed Python\sProgram
+context wholeleft sqlite3*<<*EOF*\n linestart EOF green
+    embed SQL\sProgram
+context wholeleft psql*<<*EOF*\n linestart EOF green
+    embed SQL\sProgram
+context wholeleft mysql*<<*EOF*\n linestart EOF green
+    embed SQL\sProgram
+
+# a parameter expansion, which can hold strings and expansions of its own:
+# ${X="${Y}"}, ${a:-${b}}
+context ${ } brightgreen
+    embed soft Shell\sParameter
+
 context # \n brown
     spellcheck
 
@@ -1121,7 +1146,7 @@ context " " green
     keyword $- brightred
     keyword $$ brightred
     keyword $! brightred
-    keyword $_ brightred
+    keyword wholeright $_ brightred
     keyword wholeright $\[0123456789\] brightred
 
     keyword wholeright $+ brightgreen
@@ -1145,7 +1170,7 @@ context exclusive whole <<\[\s\]\[-\]\[\s\]EOF EOF green
     keyword $- brightred
     keyword $$ brightred
     keyword $! brightred
-    keyword $_ brightred
+    keyword wholeright $_ brightred
     keyword wholeright $\[0123456789\] brightred
 
     keyword wholeright $+ brightgreen
@@ -1168,7 +1193,7 @@ context exclusive whole <<\[\s\]\[-\]\[\s\]END END green
     keyword $- brightred
     keyword $$ brightred
     keyword $! brightred
-    keyword $_ brightred
+    keyword wholeright $_ brightred
     keyword wholeright $\[0123456789\] brightred
 
     keyword wholeright $+ brightgreen
@@ -1192,7 +1217,7 @@ context exclusive ` ` lightgray black
     keyword $- brightred
     keyword $$ brightred
     keyword $! brightred
-    keyword $_ brightred
+    keyword wholeright $_ brightred
 
     keyword whole 2>&1 brightred
     keyword whole 2> brightred

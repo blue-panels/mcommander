@@ -45,7 +45,10 @@ include filehighlight.syntax
 file ..\*\\.e$ Eiffel\sSource\sFile
 include eiffel.syntax
 
-file ..\*\\.(diff|rej|patch)|COMMIT_EDITMSG$ Diff\sOutput ^(diff|Index:)\s
+file .\*/(COMMIT_EDITMSG|MERGE_MSG|TAG_EDITMSG)$ Git\scommit\smessage
+include gitcommit.syntax
+
+file ..\*\\.(diff|rej|patch)$ Diff\sOutput ^(diff|Index:)\s
 include diff.syntax
 
 file ..\*\\.lsm$ LSM\sFile
@@ -53,6 +56,10 @@ include lsm.syntax
 
 file .\*(bash(_completion|rc)|profile|\\.(sh|bash(rc|_(completion|profile|log(in|out)|aliases|exports|history))|profile|zlog(in|out)|zprofile|zsh(env|rc)?))$ Shell\sScript ^#!\s\*/(.\*/|usr/bin/env\s)([a-z]?|ba|pdk)sh
 include sh.syntax
+
+# what stands inside ${...} of a shell script, embedded by sh.syntax
+file ^$ Shell\sParameter
+include sh-parameter.syntax
 
 # Since openrc scripts have no extension "by definition", use an empty pattern
 # that doesn't match any file name, and therefore only the shebang is used to detect
@@ -80,6 +87,13 @@ include nroff.syntax
 
 file ..\*\\.(?i:html?)$ HTML\sFile
 include html.syntax
+
+file ..\*\\.(?i:tpl)$ Smarty\sTemplate
+include smarty.syntax
+
+# what stands inside the braces of a Smarty tag, embedded by smarty.syntax
+file ^$ Smarty\sTag
+include smarty-tag.syntax
 
 file ..\*\\.((?i:xml|xsd|xslt?|dtd)|qpg|qpg\\.in)$ XML\sdocument (\\?xml\sversion|!DOCTYPE\s)
 include xml.syntax
@@ -303,6 +317,16 @@ include yxx.syntax
 file ..\*\\.dlink\\.sw$ D-Link\sSwitch\sCommands
 include dlink.syntax
 
+file (?i)\\.j2$|\\.jinja$|\\.jinja2$ Jinja2\sTemplate
+include jinja2.syntax
+
+# what stands inside the tags of a Jinja2 template, embedded by jinja2.syntax
+file ^$ Jinja2\sStatement
+include jinja2-statement.syntax
+
+file ^$ Jinja2\sExpression
+include jinja2-expression.syntax
+
 file ..\*\\.(?i:jalt?)$ Jal\ssource
 include jal.syntax
 
@@ -332,6 +356,9 @@ include r.syntax
 
 file ..\*\\.(?i:md)$ Markdown
 include markdown.syntax
+
+file ..\*\\.(?i:mmd|mermaid)$ Mermaid\sDiagram
+include mermaid.syntax
 
 file ..\*\\.proto$ Protobuf\sFile
 include protobuf.syntax
