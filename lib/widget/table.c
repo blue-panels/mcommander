@@ -50,6 +50,8 @@
 
 /*** forward declarations (file scope functions) *************************************************/
 
+static int table_max_first_col (const WTable *t);
+
 /*** file scope variables ************************************************************************/
 
 /* --------------------------------------------------------------------------------------------- */
@@ -70,6 +72,104 @@ static int
 table_col_width (const WTable *t, int c)
 {
     return t->widths != NULL ? t->widths[c] : t->col_defs[c].width;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Left, Right and the space act on one cell of the row. */
+static gboolean
+table_has_col_cursor (const WTable *t)
+{
+    return t->has_choice_cols || (t->check_cursor && t->has_check_cols);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The last column that has a width: no separator after it. */
+static int
+table_last_col (const WTable *t)
+{
+    int last_col = t->ncols - 1;
+
+    while (last_col > 0 && table_col_width (t, last_col) <= 0)
+        last_col--;
+    return last_col;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The x after the last cell: the scrollbar has the last column of the widget. */
+static int
+table_cells_right (const WTable *t)
+{
+    return CONST_WIDGET (t)->rect.cols - ((t->scrollbar || t->scrollbar_on_frame) ? 1 : 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Step from the cell @c at @x to the next one that is drawn, with its width clipped at the
+   right edge.  Start with @c = first_col - 1, @x = 1 and @width = 0. */
+static gboolean
+table_next_cell (const WTable *t, int *c, int *x, int *width)
+{
+    int right = table_cells_right (t);
+
+    if (*c >= t->first_col)
+        *x += *width + (*c < table_last_col (t) ? 1 : 0);
+
+    for ((*c)++; *c < t->ncols && *x < right; (*c)++)
+    {
+        int w = table_col_width (t, *c);
+
+        if (w > 0)
+        {
+            *width = MIN (w, right - *x);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The column under x of the widget, or -1. */
+static int
+table_col_at (const WTable *t, int x)
+{
+    int c = t->first_col - 1, col_x = 1, width = 0;
+
+    while (table_next_cell (t, &c, &col_x, &width))
+        if (x >= col_x && x < col_x + width)
+            return c;
+    return -1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Whether column @col is drawn whole. */
+static gboolean
+table_col_shown (const WTable *t, int col)
+{
+    int c = t->first_col - 1, col_x = 1, width = 0;
+
+    while (table_next_cell (t, &c, &col_x, &width))
+        if (c == col)
+            return width == table_col_width (t, c);
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Scroll the columns so that the cell the column cursor is on is drawn. */
+static void
+table_show_current_col (WTable *t)
+{
+    if (!t->scroll_columns)
+        return;
+    if (t->current_col < t->first_col)
+        t->first_col = t->current_col;
+    while (t->first_col < table_max_first_col (t) && !table_col_shown (t, t->current_col))
+        t->first_col++;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -108,28 +208,14 @@ static void
 table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gboolean focused,
                   gboolean disabled)
 {
-    const WRect *w = &CONST_WIDGET (t)->rect;
-    /* the scrollbar has the last column of cells */
-    int right = w->cols - ((t->scrollbar || t->scrollbar_on_frame) ? 1 : 0);
-    int col_x = 1;
-    int last_col = t->ncols - 1;
-    int c;
+    int right = table_cells_right (t);
+    int last_col = table_last_col (t);
+    int c = t->first_col - 1, col_x = 1, width = 0;
 
-    /* separators only between columns that are drawn */
-    while (last_col > 0 && table_col_width (t, last_col) <= 0)
-        last_col--;
-
-    for (c = t->first_col; c < t->ncols && col_x < right; c++)
+    while (table_next_cell (t, &c, &col_x, &width))
     {
-        int width = table_col_width (t, c);
-        int room = right - col_x;
         int cell_color = row_color;
 
-        /* a zero width column is not there: no cell, no separator */
-        if (width <= 0)
-            continue;
-        if (width > room)
-            width = room;
         if (row_idx >= 0 && row_idx != t->current && t->cell_color != NULL)
         {
             int color = t->cell_color (t->datasource.data, row_idx, c);
@@ -148,6 +234,10 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
         {
             gboolean checked = t->datasource.get_checked (t->datasource.data, row_idx, c);
 
+            /* the box the space acts on */
+            if (t->check_cursor && focused && !disabled && row_idx == t->current
+                && c == t->current_col)
+                tty_setcolor (DIALOG_CELL_FOCUS_COLOR);
             tty_print_string (str_fit_to_term (checked ? "[x]" : "[ ]", width, J_LEFT));
         }
         else
@@ -172,15 +262,12 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
             tty_print_string (str_fit_to_term (cell_text, text_width, t->col_defs[c].align));
         }
 
-        col_x += width;
-
         /* draw column separator except after last column */
-        if (c < last_col && col_x < right)
+        if (c < last_col && col_x + width < right)
         {
             tty_setcolor (row_color);
-            widget_gotoyx (t, y, col_x);
+            widget_gotoyx (t, y, col_x + width);
             tty_print_one_vline (TRUE);
-            col_x++;
         }
     }
 }
@@ -316,6 +403,13 @@ table_draw (WTable *t, gboolean focused)
     {
         tty_setcolor (scrollbarc);
         table_drawscroll (t, nrows);
+        /* the header row above the scrollbar is still the frame */
+        if (t->scrollbar_on_frame)
+            for (i = 0; i < table_row_y (t, 0); i++)
+            {
+                widget_gotoyx (t, i, w->cols - 1);
+                tty_print_one_vline (TRUE);
+            }
     }
     else if (t->scrollbar_on_frame)
     {
@@ -411,17 +505,22 @@ table_key (WTable *t, int key)
     int lines = table_data_lines (t);
     int nrows = table_get_nrows (t);
 
-    /* the columns scroll even over an empty table */
-    if (t->scroll_columns && !t->has_choice_cols)
+    /* the columns scroll even over an empty table; with a column cursor Left and Right
+       move the cursor and the columns follow it */
+    if (t->scroll_columns)
     {
         int page = MAX (t->ncols / 2, 1);
 
         switch (key)
         {
         case KEY_LEFT:
+            if (table_has_col_cursor (t))
+                break;
             table_scroll_columns (t, -1);
             return MSG_HANDLED;
         case KEY_RIGHT:
+            if (table_has_col_cursor (t))
+                break;
             table_scroll_columns (t, 1);
             return MSG_HANDLED;
         case KEY_M_CTRL | KEY_LEFT:
@@ -463,23 +562,28 @@ table_key (WTable *t, int key)
         /* unhandled by the owner, the key falls through to the default button */
         return send_message (WIDGET (t)->owner, t, MSG_NOTIFY, CK_Enter, NULL);
     case KEY_LEFT:
-        if (!t->has_choice_cols)
+        if (!table_has_col_cursor (t))
             return MSG_NOT_HANDLED;
         t->current_col = table_next_active_col (t, t->current_col, -1);
+        table_show_current_col (t);
         return MSG_HANDLED;
     case KEY_RIGHT:
-        if (!t->has_choice_cols)
+        if (!table_has_col_cursor (t))
             return MSG_NOT_HANDLED;
         t->current_col = table_next_active_col (t, t->current_col, 1);
+        table_show_current_col (t);
         return MSG_HANDLED;
     case ' ':
         if (t->current >= nrows)
             return MSG_NOT_HANDLED;
 
         /* with a column cursor the space acts on the cell it points at */
-        if (t->has_choice_cols)
+        if (table_has_col_cursor (t))
         {
             int c = t->current_col;
+
+            /* Ctrl-Left and Ctrl-Right may have scrolled the cell away: show what changes */
+            table_show_current_col (t);
 
             if (c >= 0 && c < t->ncols)
             {
@@ -610,10 +714,11 @@ static void
 table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
 {
     WTable *t = TABLE (w);
-    int old_current;
+    int old_current, old_col;
     int nrows = table_get_nrows (t);
 
     old_current = t->current;
+    old_col = t->current_col;
 
     switch (msg)
     {
@@ -621,6 +726,15 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
         widget_select (w);
         if (nrows > 0 && event->y >= table_row_y (t, 0))
             table_set_current (t, MIN (t->top + event->y - table_row_y (t, 0), nrows - 1));
+        if (table_has_col_cursor (t))
+        {
+            int c = table_col_at (t, event->x);
+
+            if (c >= 0
+                && (t->col_defs[c].type == TABLE_COL_CHECK
+                    || t->col_defs[c].type == TABLE_COL_CHOICE))
+                t->current_col = c;
+        }
         break;
 
     case MSG_MOUSE_SCROLL_UP:
@@ -632,9 +746,24 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
         break;
 
     case MSG_MOUSE_CLICK:
-        if (event->count == GPM_DOUBLE)
+    {
+        int row = t->top + event->y - table_row_y (t, 0);
+        int c = table_col_at (t, event->x);
+
+        /* a click on a box switches it, also as the second click of a double one */
+        if (t->check_cursor && event->y >= table_row_y (t, 0) && row < nrows && c >= 0
+            && t->col_defs[c].type == TABLE_COL_CHECK && t->datasource.get_checked != NULL
+            && t->datasource.set_checked != NULL)
+        {
+            gboolean val = t->datasource.get_checked (t->datasource.data, row, c);
+
+            t->datasource.set_checked (t->datasource.data, row, c, !val);
+            table_on_change (t);
+        }
+        else if (event->count == GPM_DOUBLE)
             table_execute_cmd (t, CK_Enter);
         break;
+    }
 
     case MSG_MOUSE_DRAG:
         event->result.repeat = TRUE;
@@ -646,12 +775,27 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
         break;
     }
 
-    if (t->current != old_current)
+    if (t->current != old_current || t->current_col != old_col)
         table_on_change (t);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Let Left, Right and the space walk and switch the check columns one cell at a
+ * time, and a click switch a box.  The current box gets the foreground of the
+ * skin's [dialog] dcellfocus on the background of its row.
+ */
+void
+table_set_check_cursor (WTable *t, gboolean on)
+{
+    t->check_cursor = on;
+    if (table_has_col_cursor (t))
+        t->current_col = table_next_active_col (t, -1, 1);
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 WTable *
@@ -698,7 +842,7 @@ table_new (int y, int x, int height, int width, int ncols, const table_column_de
         }
     }
 
-    if (t->has_choice_cols)
+    if (table_has_col_cursor (t))
         t->current_col = table_next_active_col (t, -1, 1);
 
     return t;

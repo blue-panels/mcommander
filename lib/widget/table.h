@@ -82,6 +82,7 @@ typedef struct
     int first_col;           /* first visible column */
     void (*prefetch) (void *data, int first, int count); /* before the rows are drawn */
     int (*cell_color) (void *data, int row, int col);    /* a color, or -1 for the row's */
+    gboolean check_cursor; /* the column cursor walks the check columns as well */
 } WTable;
 
 /*** global variables defined in .c file *********************************************************/
@@ -102,6 +103,7 @@ void table_set_column_sizing (WTable *t, int col, int min_width, gboolean expand
 void table_set_scroll_columns (WTable *t, gboolean enable);
 void table_set_prefetch (WTable *t, void (*prefetch) (void *data, int first, int count));
 void table_set_cell_color (WTable *t, int (*cell_color) (void *data, int row, int col));
+void table_set_check_cursor (WTable *t, gboolean on);
 /* Recompute the effective widths for the current size; done on resize too. */
 void table_layout (WTable *t);
 int table_get_first_column (const WTable *t);
