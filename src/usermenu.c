@@ -591,23 +591,8 @@ execute_menu_command (const Widget *edit_widget, const char *commands, gboolean 
         shell_execute (cmd, EXECUTE_HIDE);
     else
     {
-        gboolean ok;
-
-        /* Prepare the terminal by setting its flag to the initial ones. This will cause \r
-         * to work as expected, instead of being ignored. */
-        tty_reset_shell_mode ();
-
-        ok = (system (cmd) != -1);
-
-        // Restore terminal configuration.
-        tty_raw_mode ();
-
-        // Redraw the original screen's contents.
-        tty_clear_screen ();
-        repaint_screen ();
-
-        if (!ok)
-            message (D_ERROR, MSG_ERROR, "%s", _ ("Error calling program"));
+        // Hand the physical terminal to the program, then restore mc's keyboard and mouse modes.
+        shell_execute (cmd, EXECUTE_INTERNAL);
     }
 
     g_free (cmd);
