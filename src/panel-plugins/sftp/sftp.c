@@ -731,6 +731,112 @@ sftp_auth_agent (sftp_data_t *data, const char *user)
     return FALSE;
 }
 
+/* Answer keyboard-interactive challenges one by one.  Responses are owned by
+ * libssh2 after the callback returns, so use libc allocation here. */
+static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC (sftp_keyboard_interactive_cb)
+{
+    int i;
+
+    (void) name;
+    (void) name_len;
+    (void) abstract;
+
+    for (i = 0; i < num_prompts; i++)
+    {
+        char *prompt;
+        char *response;
+
+        responses[i].text = NULL;
+        responses[i].length = 0;
+
+        if (i == 0 && instruction != NULL && instruction_len > 0)
+            prompt = g_strdup_printf ("%.*s\n%.*s", instruction_len, instruction,
+                                      (int) prompts[i].length, prompts[i].text);
+        else
+            prompt = g_strndup ((const char *) prompts[i].text, prompts[i].length);
+
+        response = input_dialog (_ ("SFTP authentication"), prompt, "sftp-kbdint",
+                                 prompts[i].echo != 0 ? INPUT_COMPLETE_NONE : INPUT_PASSWORD,
+                                 INPUT_COMPLETE_NONE);
+        g_free (prompt);
+
+        if (response == NULL)
+            return;
+
+        responses[i].text = strdup (response);
+        responses[i].length = strlen (response);
+        g_free (response);
+    }
+}
+
+static gboolean
+sftp_auth_keyboard_interactive (sftp_data_t *data, const char *user)
+{
+    return libssh2_userauth_keyboard_interactive (data->session, user, sftp_keyboard_interactive_cb)
+        == 0;
+}
+
+static gboolean
+sftp_auth_publickey_file (sftp_data_t *data, const char *user, const char *privkey,
+                          const char *pubkey, const char *passphrase)
+{
+    return libssh2_userauth_publickey_fromfile (data->session, user, pubkey, privkey, passphrase)
+        == 0;
+}
+
+static gboolean
+sftp_auth_default_keys (sftp_data_t *data, const char *user, char **used_key)
+{
+    static const char *const key_names[] = { "id_ed25519", "id_ecdsa", "id_rsa", "id_dsa", NULL };
+    const char *home;
+    int i;
+
+    home = g_get_home_dir ();
+    if (home == NULL)
+        return FALSE;
+
+    for (i = 0; key_names[i] != NULL; i++)
+    {
+        char *privkey = g_build_filename (home, ".ssh", key_names[i], NULL);
+
+        if (g_file_test (privkey, G_FILE_TEST_IS_REGULAR))
+        {
+            if (sftp_auth_publickey_file (data, user, privkey, NULL, NULL))
+            {
+                if (used_key != NULL)
+                    *used_key = privkey;
+                else
+                    g_free (privkey);
+                return TRUE;
+            }
+
+            {
+                char *prompt = g_strdup_printf (_ ("Enter passphrase for key %s"), privkey);
+                char *passphrase =
+                    input_dialog (_ ("SFTP key passphrase"), prompt, "sftp-passphrase",
+                                  INPUT_PASSWORD, INPUT_COMPLETE_NONE);
+
+                g_free (prompt);
+                if (passphrase != NULL && passphrase[0] != '\0'
+                    && sftp_auth_publickey_file (data, user, privkey, NULL, passphrase))
+                {
+                    g_free (passphrase);
+                    if (used_key != NULL)
+                        *used_key = privkey;
+                    else
+                        g_free (privkey);
+                    return TRUE;
+                }
+                g_free (passphrase);
+            }
+        }
+
+        g_free (privkey);
+    }
+
+    return FALSE;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /* Connection status dialog                                                                      */
 /* --------------------------------------------------------------------------------------------- */
@@ -1019,6 +1125,27 @@ sftp_connect (sftp_data_t *data, sftp_connection_t *conn)
         }
 
         g_free (pubkey_auto);
+    }
+
+    /* Match OpenSSH's usual identity filenames when no key was configured. */
+    if ((conn->privkey == NULL || conn->privkey[0] == '\0')
+        && sftp_auth_has_method (auth_list, "publickey"))
+    {
+        if (!sftp_connect_status_set_stage (&status, _ ("Authenticating with a default key...")))
+            goto fail;
+
+        if (sftp_auth_default_keys (data, user, NULL))
+            goto auth_ok;
+    }
+
+    if (sftp_auth_has_method (auth_list, "keyboard-interactive"))
+    {
+        if (!sftp_connect_status_set_stage (&status,
+                                            _ ("Authenticating with keyboard-interactive...")))
+            goto fail;
+
+        if (sftp_auth_keyboard_interactive (data, user))
+            goto auth_ok;
     }
 
     if (conn->password != NULL && conn->password[0] != '\0'
