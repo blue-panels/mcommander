@@ -143,6 +143,37 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Large 32-bit offsets must not wrap when a descriptor is parsed on 32-bit hosts. */
+START_TEST (test_parse_large_offsets)
+{
+    static const guint8 huge_offset[4] = { 0xfc, 0xff, 0xff, 0xff };
+    guint8 data[sizeof (sd_cifs)];
+    guint i;
+
+    for (i = 0; i < 4; i++)
+    {
+        acl_nt_sd_t *sd;
+
+        memcpy (data, sd_cifs, sizeof (data));
+        memcpy (data + 4 + 4 * i, huge_offset, sizeof (huge_offset));
+        if (i == 2)
+            data[2] |= 0x10; /* SE_SACL_PRESENT */
+
+        sd = acl_nt_parse (data, sizeof (data));
+        if (i < 2)
+        {
+            ck_assert (sd != NULL);
+            ck_assert (i == 0 ? sd->owner == NULL : sd->group == NULL);
+            acl_nt_free (sd);
+        }
+        else
+            ck_assert (sd == NULL);
+    }
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_sid_names)
 {
     char *s;
@@ -264,6 +295,139 @@ START_TEST (test_build_with_object_ace)
     acl_nt_free (back);
     g_free (built);
     acl_nt_free (sd);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* An audit ACL is outside the editor, but must survive a DACL write. */
+START_TEST (test_build_with_sacl)
+{
+    static const guint8 empty_sacl[8] = { 2, 0, 8, 0, 0, 0, 0, 0 };
+    static const guint8 sacl_only[28] = {
+        1, 0, 0x10, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0,
+        0, 0, 0, 0, 2, 0, 8, 0, 0, 0, 0, 0,
+    };
+    guint8 with_dacl[sizeof (sd_cifs) + sizeof (empty_sacl)];
+    acl_nt_sd_t *sd, *back;
+    guint8 *built;
+    gsize size;
+
+    sd = acl_nt_parse (sacl_only, sizeof (sacl_only));
+    ck_assert (sd != NULL);
+    ck_assert (sd->sacl != NULL);
+    built = acl_nt_build (sd, &size);
+    ck_assert (built != NULL);
+    ck_assert_uint_eq (size, sizeof (sacl_only));
+    ck_assert (memcmp (built, sacl_only, size) == 0);
+    g_free (built);
+    acl_nt_free (sd);
+
+    memcpy (with_dacl, sd_cifs, sizeof (sd_cifs));
+    memcpy (with_dacl + sizeof (sd_cifs), empty_sacl, sizeof (empty_sacl));
+    with_dacl[2] |= 0x10; /* SE_SACL_PRESENT */
+    with_dacl[12] = (guint8) sizeof (sd_cifs);
+
+    sd = acl_nt_parse (with_dacl, sizeof (with_dacl));
+    ck_assert (sd != NULL);
+    ck_assert (sd->sacl != NULL);
+    built = acl_nt_build (sd, &size);
+    ck_assert (built != NULL);
+    back = acl_nt_parse (built, size);
+    ck_assert (back != NULL);
+    ck_assert (back->sacl != NULL);
+    ck_assert (g_bytes_equal (sd->sacl, back->sacl));
+    ck_assert (acl_nt_dacl_equal (sd, back));
+
+    acl_nt_free (back);
+    g_free (built);
+    acl_nt_free (sd);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Changes outside the DACL made while the dialog is open must survive Set. */
+START_TEST (test_build_update_keeps_current_metadata)
+{
+    static const guint8 old_sacl[8] = { 2, 0, 8, 0, 0, 0, 0, 0 };
+    static const guint8 current_sacl[8] = { 2, 0, 8, 0, 0, 0, 0, 1 };
+    acl_nt_sd_t *edited = acl_nt_parse (sd_cifs, sizeof (sd_cifs));
+    acl_nt_sd_t *before = acl_nt_parse (sd_cifs, sizeof (sd_cifs));
+    acl_nt_sd_t *back;
+    guint8 *built;
+    gsize size;
+
+    ck_assert (edited != NULL);
+    ck_assert (before != NULL);
+    edited->control |= 0x0010; /* SE_SACL_PRESENT */
+    edited->sacl = g_bytes_new_static (old_sacl, sizeof (old_sacl));
+    before->control |= 0x0010;
+    before->sacl = g_bytes_new_static (current_sacl, sizeof (current_sacl));
+    g_free (before->owner);
+    before->owner = g_strdup ("S-1-1-0");
+    ((acl_nt_ace_t *) g_ptr_array_index (edited->aces, 0))->mask ^= 1;
+
+    built = acl_nt_build_update (before, edited, &size);
+    ck_assert (built != NULL);
+    back = acl_nt_parse (built, size);
+    ck_assert (back != NULL);
+    ck_assert_str_eq (back->owner, before->owner);
+    ck_assert (back->sacl != NULL);
+    ck_assert (g_bytes_equal (back->sacl, before->sacl));
+    ck_assert (acl_nt_dacl_equal (back, edited));
+    acl_nt_free (back);
+    g_free (built);
+
+    g_bytes_unref (before->sacl);
+    before->sacl = NULL;
+    before->control &= ~0x0010;
+    built = acl_nt_build_update (before, edited, &size);
+    ck_assert (built != NULL);
+    back = acl_nt_parse (built, size);
+    ck_assert (back != NULL);
+    ck_assert (back->sacl == NULL);
+    ck_assert ((back->control & 0x0010) == 0);
+    ck_assert (acl_nt_dacl_equal (back, edited));
+
+    acl_nt_free (back);
+    g_free (built);
+    acl_nt_free (before);
+    acl_nt_free (edited);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The original DACL remains available for conflict checks after dialog edits. */
+START_TEST (test_dacl_copy_snapshot)
+{
+    static const guint8 raw_ace[8] = { 5, 0, 8, 0, 1, 0, 0, 0 };
+    acl_nt_sd_t *sd = acl_nt_parse (sd_cifs, sizeof (sd_cifs));
+    acl_nt_sd_t *original;
+    acl_nt_ace_t *entry;
+    guint32 mask;
+
+    ck_assert (sd != NULL);
+    entry = acl_nt_ace_new (5, 0, 1, NULL);
+    entry->raw = g_bytes_new_static (raw_ace, sizeof (raw_ace));
+    g_ptr_array_add (sd->aces, entry);
+    original = acl_nt_dacl_copy (sd);
+    ck_assert (acl_nt_dacl_equal (original, sd));
+
+    entry = g_ptr_array_index (sd->aces, 0);
+    mask = entry->mask;
+    entry->mask ^= 1;
+    ck_assert (!acl_nt_dacl_equal (original, sd));
+    entry->mask = mask;
+    ck_assert (acl_nt_dacl_equal (original, sd));
+
+    acl_nt_free (sd);
+    entry = g_ptr_array_index (original->aces, 5);
+    ck_assert (entry->raw != NULL);
+    ck_assert_uint_eq (g_bytes_get_size (entry->raw), sizeof (raw_ace));
+    ck_assert (memcmp (g_bytes_get_data (entry->raw, NULL), raw_ace, sizeof (raw_ace)) == 0);
+    acl_nt_free (original);
 }
 END_TEST
 
@@ -481,10 +645,14 @@ main (void)
     tcase_add_test (tc_core, test_parse_cifs);
     tcase_add_test (tc_core, test_parse_ntfs);
     tcase_add_test (tc_core, test_parse_truncated);
+    tcase_add_test (tc_core, test_parse_large_offsets);
     tcase_add_test (tc_core, test_sid_names);
     tcase_add_test (tc_core, test_rights);
     tcase_add_test (tc_core, test_build);
     tcase_add_test (tc_core, test_build_with_object_ace);
+    tcase_add_test (tc_core, test_build_with_sacl);
+    tcase_add_test (tc_core, test_build_update_keeps_current_metadata);
+    tcase_add_test (tc_core, test_dacl_copy_snapshot);
     tcase_add_test (tc_core, test_build_dacl_states);
     tcase_add_test (tc_core, test_sid_for);
     tcase_add_test (tc_core, test_insert_order);

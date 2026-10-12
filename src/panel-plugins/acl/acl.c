@@ -126,6 +126,22 @@ acl_report (const char *what, const char *path, int err)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static acl_step_t
+acl_report_changed (const char *path)
+{
+    char *text;
+    int r;
+
+    text = g_strdup_printf (_ ("%s\nThe access control list changed while the dialog was open.\n"
+                              "Open it again before saving."),
+                            path);
+    r = query_dialog (MSG_ERROR, text, D_ERROR, 2, _ ("&Skip"), _ ("&Abort"));
+    g_free (text);
+    return r == 0 ? ACL_SKIP : ACL_ABORT;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /**
  * Prefer a Windows security descriptor when one is exposed. libacl can return
  * a three-entry ACL made from the mode even on a file system without POSIX
@@ -168,6 +184,13 @@ acl_file_load (const char *dir, const char *name, acl_step_t *step)
 
     f->nt_sd = acl_nt_read (f->path, &f->nt_attr, NULL);
     if (f->nt_sd != NULL)
+        return f;
+
+    /* libacl may synthesize an access ACL from the mode when the file system
+       has no POSIX ACLs. The xattr query distinguishes that from an ACL-capable
+       file with no extended entries (ENODATA). */
+    if (getxattr (f->path, "system.posix_acl_access", NULL, 0) < 0
+        && (errno == ENOTSUP || errno == EOPNOTSUPP || errno == ENOSYS))
         return f;
 
     f->lists[ACLM_ACCESS] = aclm_read (f->path, ACLM_ACCESS, &err);
@@ -254,6 +277,7 @@ acl_other_kind (const acl_file_t *f, int index, int count)
 
     if (sd != NULL)
     {
+        acl_nt_sd_t *original = acl_nt_dacl_copy (sd);
         char *source;
         acl_dlg_result_t r;
 
@@ -270,27 +294,39 @@ acl_other_kind (const acl_file_t *f, int index, int count)
                                sd);
         if (r == ACL_DLG_CANCEL)
             step = ACL_ABORT;
-        else
+        else if (!acl_nt_dacl_equal (original, sd))
         {
-            acl_nt_sd_t *before = acl_nt_read (f->path, NULL, NULL);
+            acl_nt_sd_t *before;
             int err = 0;
 
-            switch (acl_nt_write (f->path, attr, before, sd, &err))
+            before = acl_nt_read (f->path, NULL, &err);
+            if (before == NULL)
+                step = acl_report (_ ("Cannot read the access control list of"), f->path, err);
+            else if (!acl_nt_dacl_equal (before, sd))
             {
-            case ACL_NT_WRITE_OK:
-                break;
-            case ACL_NT_WRITE_CHANGED:
-                message (D_NORMAL, _ ("Access control list"),
-                         _ ("%s\nThe server stored the list in a form of its own.\n"
-                            "Open the dialog again to see it."),
-                         f->shown_path);
-                break;
-            default:
-                step = acl_report (_ ("Cannot set the access control list of"), f->path, err);
-                break;
+                if (!acl_nt_dacl_equal (before, original))
+                    step = acl_report_changed (f->shown_path);
+                else
+                {
+                    switch (acl_nt_write (f->path, attr, before, sd, &err))
+                    {
+                    case ACL_NT_WRITE_OK:
+                        break;
+                    case ACL_NT_WRITE_CHANGED:
+                        message (D_NORMAL, _ ("Access control list"),
+                                 _ ("%s\nThe server stored the list in a form of its own.\n"
+                                    "Open the dialog again to see it."),
+                                 f->shown_path);
+                        break;
+                    default:
+                        step = acl_report (_ ("Cannot set the access control list of"), f->path, err);
+                        break;
+                    }
+                }
             }
             acl_nt_free (before);
         }
+        acl_nt_free (original);
         g_free (source);
     }
     else if ((n = getxattr (f->path, "system.nfs4_acl", NULL, 0)) > 0)

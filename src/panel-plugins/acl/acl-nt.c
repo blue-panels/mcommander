@@ -138,6 +138,14 @@ le32 (const guint8 *p)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+acl_nt_range_fits (gsize size, gsize off, gsize length)
+{
+    return off <= size && length <= size - off;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The SID at @off as "S-1-5-21-...", or NULL when it does not fit in @size. */
 static char *
 acl_nt_sid_at (const guint8 *data, gsize size, gsize off)
@@ -146,10 +154,10 @@ acl_nt_sid_at (const guint8 *data, gsize size, gsize off)
     guint64 auth = 0;
     guint n, i;
 
-    if (off + 8 > size)
+    if (!acl_nt_range_fits (size, off, 8))
         return NULL;
     n = data[off + 1];
-    if (n > 15 || off + 8 + 4 * (gsize) n > size)
+    if (n > 15 || !acl_nt_range_fits (size, off, 8 + 4 * (gsize) n))
         return NULL;
 
     for (i = 2; i < 8; i++)
@@ -206,7 +214,7 @@ acl_nt_sd_t *
 acl_nt_parse (const guint8 *data, gsize size)
 {
     acl_nt_sd_t *sd;
-    guint32 off_owner, off_group, off_dacl;
+    guint32 off_owner, off_group, off_sacl, off_dacl;
 
     if (data == NULL || size < 20 || data[0] != 1)
         return NULL;
@@ -216,6 +224,7 @@ acl_nt_parse (const guint8 *data, gsize size)
     sd->control = le16 (data + 2);
     off_owner = le32 (data + 4);
     off_group = le32 (data + 8);
+    off_sacl = le32 (data + 12);
     off_dacl = le32 (data + 16);
 
     if (off_owner != 0)
@@ -223,19 +232,31 @@ acl_nt_parse (const guint8 *data, gsize size)
     if (off_group != 0)
         sd->group = acl_nt_sid_at (data, size, off_group);
 
+    if ((sd->control & SE_SACL_PRESENT) != 0 && off_sacl != 0)
+    {
+        gsize acl_size;
+
+        if (!acl_nt_range_fits (size, off_sacl, 8))
+            goto bad;
+        acl_size = le16 (data + off_sacl + 2);
+        if (acl_size < 8 || !acl_nt_range_fits (size, off_sacl, acl_size))
+            goto bad;
+        sd->sacl = g_bytes_new (data + off_sacl, acl_size);
+    }
+
     sd->has_dacl = (sd->control & SE_DACL_PRESENT) != 0 && off_dacl != 0;
     if (sd->has_dacl)
     {
         gsize acl_size, end, p;
         guint count, i;
 
-        if ((gsize) off_dacl + 8 > size)
+        if (!acl_nt_range_fits (size, off_dacl, 8))
             goto bad;
         acl_size = le16 (data + off_dacl + 2);
         count = le16 (data + off_dacl + 4);
-        end = (gsize) off_dacl + acl_size;
-        if (acl_size < 8 || end > size)
+        if (acl_size < 8 || !acl_nt_range_fits (size, off_dacl, acl_size))
             goto bad;
+        end = (gsize) off_dacl + acl_size;
         sd->dacl_revision = data[off_dacl];
 
         p = (gsize) off_dacl + 8;
@@ -244,10 +265,10 @@ acl_nt_parse (const guint8 *data, gsize size)
             acl_nt_ace_t *ace;
             gsize ace_size;
 
-            if (p + 8 > end)
+            if (!acl_nt_range_fits (end, p, 8))
                 goto bad;
             ace_size = le16 (data + p + 2);
-            if (ace_size < 8 || p + ace_size > end)
+            if (ace_size < 8 || !acl_nt_range_fits (end, p, ace_size))
                 goto bad;
 
             ace = g_new0 (acl_nt_ace_t, 1);
@@ -283,8 +304,40 @@ acl_nt_free (acl_nt_sd_t *sd)
         return;
     g_free (sd->owner);
     g_free (sd->group);
+    if (sd->sacl != NULL)
+        g_bytes_unref (sd->sacl);
     g_ptr_array_free (sd->aces, TRUE);
     g_free (sd);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Take a snapshot of the editable part before the dialog changes it. */
+acl_nt_sd_t *
+acl_nt_dacl_copy (const acl_nt_sd_t *sd)
+{
+    acl_nt_sd_t *copy = g_new0 (acl_nt_sd_t, 1);
+    guint i;
+
+    copy->control = sd->control;
+    copy->has_dacl = sd->has_dacl;
+    copy->dacl_revision = sd->dacl_revision;
+    copy->aces = g_ptr_array_new_with_free_func (acl_nt_ace_free);
+    for (i = 0; i < sd->aces->len; i++)
+    {
+        const acl_nt_ace_t *ace = g_ptr_array_index (sd->aces, i);
+        acl_nt_ace_t *entry = g_new0 (acl_nt_ace_t, 1);
+
+        entry->type = ace->type;
+        entry->flags = ace->flags;
+        entry->mask = ace->mask;
+        entry->sid = g_strdup (ace->sid);
+        if (ace->raw != NULL)
+            entry->raw = g_bytes_ref (ace->raw);
+        g_ptr_array_add (copy->aces, entry);
+    }
+
+    return copy;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -557,14 +610,14 @@ out:
 
 /**
  * A self-relative security descriptor of the owner, the group and the DACL of
- * @sd.  No SACL: reading one needs a privilege, and writing one back unread
- * would drop it.  NULL when a SID does not parse.
+ * @sd. A SACL included in the read descriptor is copied without interpreting
+ * its entries. NULL when a SID does not parse.
  */
 guint8 *
 acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
 {
     GByteArray *b;
-    guint32 off_owner = 0, off_group = 0, off_dacl = 0;
+    guint32 off_owner = 0, off_group = 0, off_sacl = 0, off_dacl = 0;
     guint16 control;
     gsize dacl_start;
     guint i;
@@ -583,6 +636,15 @@ acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
         off_group = b->len;
         if (!put_sid (b, sd->group))
             goto bad;
+    }
+
+    if (sd->sacl != NULL)
+    {
+        gsize sacl_size;
+        const guint8 *sacl = g_bytes_get_data (sd->sacl, &sacl_size);
+
+        off_sacl = b->len;
+        g_byte_array_append (b, sacl, sacl_size);
     }
 
     if (sd->has_dacl)
@@ -626,7 +688,9 @@ acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
         set16 (b->data + dacl_start + 6, 0);
     }
 
-    control = (guint16) ((sd->control & ~SE_SACL_PRESENT) | SE_SELF_RELATIVE);
+    control = (guint16) (sd->control | SE_SELF_RELATIVE);
+    if (sd->sacl != NULL)
+        control |= SE_SACL_PRESENT;
     if (sd->has_dacl)
         control |= SE_DACL_PRESENT;
     b->data[0] = 1;
@@ -634,7 +698,7 @@ acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
     set16 (b->data + 2, control);
     set32 (b->data + 4, off_owner);
     set32 (b->data + 8, off_group);
-    set32 (b->data + 12, 0);
+    set32 (b->data + 12, off_sacl);
     set32 (b->data + 16, off_dacl);
 
     *size = b->len;
@@ -643,6 +707,27 @@ acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
 bad:
     g_byte_array_free (b, TRUE);
     return NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Keep the freshly read fields outside the editor; only its DACL is changed. */
+guint8 *
+acl_nt_build_update (const acl_nt_sd_t *before, const acl_nt_sd_t *edited, gsize *size)
+{
+    acl_nt_sd_t updated;
+
+    if (before == NULL || edited == NULL)
+        return NULL;
+
+    updated = *before;
+    updated.control = (guint16) ((before->control & ~SE_DACL_PRESENT)
+                                 | (edited->control & SE_DACL_PRESENT));
+    updated.has_dacl = edited->has_dacl;
+    updated.dacl_revision = edited->dacl_revision;
+    updated.aces = edited->aces;
+
+    return acl_nt_build (&updated, size);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -717,8 +802,9 @@ acl_nt_dacl_same_entries (const acl_nt_sd_t *a, const acl_nt_sd_t *b)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * Write @sd into @attr of @path.  cifs answers EACCES when Samba refuses the
- * owner and group that go along with the DACL, after the DACL is set.  A
+ * Write the edited DACL and the freshly read other fields into @attr of @path.
+ * cifs answers EACCES when Samba refuses the owner and group that go along
+ * with the DACL, after the DACL is set.  A
  * refused write is therefore read back: the entries written, in any order,
  * mean it went through; the list of @before still there means it did not;
  * anything else is the server's own form of the list.
@@ -732,7 +818,7 @@ acl_nt_write (const char *path, const char *attr, const acl_nt_sd_t *before, con
     int saved;
     acl_nt_write_t result = ACL_NT_WRITE_FAILED;
 
-    data = acl_nt_build (sd, &size);
+    data = acl_nt_build_update (before, sd, &size);
     if (data == NULL)
     {
         if (err != NULL)

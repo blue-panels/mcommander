@@ -86,6 +86,7 @@ typedef struct
     guint16 control;
     char *owner; /* SID, or NULL */
     char *group; /* SID, or NULL */
+    GBytes *sacl; /* original audit ACL, if present and not NULL */
     gboolean has_dacl;
     guint8 dacl_revision; /* 2 for ordinary ACEs, 4 for object ACEs */
     GPtrArray *aces; /* acl_nt_ace_t of the DACL */
@@ -98,6 +99,7 @@ extern const acl_nt_right_t acl_nt_rights[ACL_NT_RIGHT_COUNT];
 
 acl_nt_sd_t *acl_nt_parse (const guint8 *data, gsize size);
 void acl_nt_free (acl_nt_sd_t *sd);
+acl_nt_sd_t *acl_nt_dacl_copy (const acl_nt_sd_t *sd);
 
 acl_nt_sd_t *acl_nt_read (const char *path, const char **attr, int *err);
 
@@ -109,6 +111,7 @@ GPtrArray *acl_nt_rights_list (guint32 mask, gboolean directory);
 const char *acl_nt_applies_to (guint8 flags);
 
 guint8 *acl_nt_build (const acl_nt_sd_t *sd, gsize *size);
+guint8 *acl_nt_build_update (const acl_nt_sd_t *before, const acl_nt_sd_t *edited, gsize *size);
 acl_nt_write_t acl_nt_write (const char *path, const char *attr, const acl_nt_sd_t *before,
                              const acl_nt_sd_t *sd, int *err);
 gboolean acl_nt_dacl_equal (const acl_nt_sd_t *a, const acl_nt_sd_t *b);
