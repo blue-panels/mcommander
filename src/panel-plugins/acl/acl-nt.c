@@ -146,9 +146,10 @@ acl_nt_range_fits (gsize size, gsize off, gsize length)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The SID at @off as "S-1-5-21-...", or NULL when it does not fit in @size. */
+/* The SID at @off as "S-1-5-21-...", or NULL when it does not fit in @size.
+   @len gets its size in bytes. */
 static char *
-acl_nt_sid_at (const guint8 *data, gsize size, gsize off)
+acl_nt_sid_at (const guint8 *data, gsize size, gsize off, gsize *len)
 {
     GString *s;
     guint64 auth = 0;
@@ -159,6 +160,8 @@ acl_nt_sid_at (const guint8 *data, gsize size, gsize off)
     n = data[off + 1];
     if (data[off] != 1 || n > 15 || !acl_nt_range_fits (size, off, 8 + 4 * (gsize) n))
         return NULL;
+    if (len != NULL)
+        *len = 8 + 4 * (gsize) n;
 
     for (i = 2; i < 8; i++)
         auth = (auth << 8) | data[off + i];
@@ -229,13 +232,13 @@ acl_nt_parse (const guint8 *data, gsize size)
 
     if (off_owner != 0)
     {
-        sd->owner = acl_nt_sid_at (data, size, off_owner);
+        sd->owner = acl_nt_sid_at (data, size, off_owner, NULL);
         if (sd->owner == NULL)
             goto bad;
     }
     if (off_group != 0)
     {
-        sd->group = acl_nt_sid_at (data, size, off_group);
+        sd->group = acl_nt_sid_at (data, size, off_group, NULL);
         if (sd->group == NULL)
             goto bad;
     }
@@ -284,16 +287,20 @@ acl_nt_parse (const guint8 *data, gsize size)
             ace->flags = data[p + 1];
             ace->mask = le32 (data + p + 4);
             /* Allowed, denied and audit ACEs start with a SID after the mask.
-               Keep other ACE formats whole so editing another entry can
-               round-trip them without losing their object or callback data. */
+               Only allowed and denied ones with nothing after the SID are
+               edited; the rest is kept whole for the round-trip. */
             if (ace->type <= 2)
             {
-                ace->sid = acl_nt_sid_at (data, p + ace_size, p + 8);
+                gsize sid_len;
+
+                ace->sid = acl_nt_sid_at (data, p + ace_size, p + 8, &sid_len);
                 if (ace->sid == NULL)
                 {
                     acl_nt_ace_free (ace);
                     goto bad;
                 }
+                if (ace->type == ACL_NT_ACE_AUDIT || ace_size != 8 + sid_len)
+                    ace->raw = g_bytes_new (data + p, ace_size);
             }
             else
                 ace->raw = g_bytes_new (data + p, ace_size);

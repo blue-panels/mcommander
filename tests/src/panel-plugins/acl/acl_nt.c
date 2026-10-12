@@ -268,6 +268,41 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* An ACE with bytes after its SID and an audit ACE are valid; they are kept whole. */
+START_TEST (test_parse_kept_aces)
+{
+    guint8 data[sizeof (sd_cifs)];
+    acl_nt_sd_t *sd;
+    guint8 *built;
+    gsize size;
+
+    memcpy (data, sd_cifs, sizeof (data));
+    data[81] = 4; /* the first ACE keeps room for five subauthorities */
+    sd = acl_nt_parse (data, sizeof (data));
+    ck_assert (sd != NULL);
+    ck_assert (ace (sd, 0)->raw != NULL);
+    ck_assert_str_eq (ace (sd, 0)->sid, "S-1-5-21-4020774748-3557323758-3819414303");
+    ck_assert (ace (sd, 1)->raw == NULL);
+    built = acl_nt_build (sd, &size);
+    ck_assert (built != NULL);
+    ck_assert_uint_eq (size, sizeof (data));
+    ck_assert (memcmp (built, data, size) == 0);
+    g_free (built);
+    acl_nt_free (sd);
+
+    memcpy (data, sd_cifs, sizeof (data));
+    data[72] = ACL_NT_ACE_AUDIT;
+    sd = acl_nt_parse (data, sizeof (data));
+    ck_assert (sd != NULL);
+    ck_assert_uint_eq (ace (sd, 0)->type, ACL_NT_ACE_AUDIT);
+    ck_assert (ace (sd, 0)->raw != NULL);
+    ck_assert (ace (sd, 0)->sid != NULL);
+    acl_nt_free (sd);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* An object ACE carries fields before its SID. Keep those bytes when another
    entry in the same DACL is edited. */
 START_TEST (test_build_with_object_ace)
@@ -317,8 +352,7 @@ START_TEST (test_build_with_sacl)
 {
     static const guint8 empty_sacl[8] = { 2, 0, 8, 0, 0, 0, 0, 0 };
     static const guint8 sacl_only[28] = {
-        1, 0, 0x10, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0,
-        0, 0, 0, 0, 2, 0, 8, 0, 0, 0, 0, 0,
+        1, 0, 0x10, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 2, 0, 8, 0, 0, 0, 0, 0,
     };
     guint8 with_dacl[sizeof (sd_cifs) + sizeof (empty_sacl)];
     acl_nt_sd_t *sd, *back;
@@ -659,6 +693,7 @@ main (void)
     tcase_add_test (tc_core, test_parse_truncated);
     tcase_add_test (tc_core, test_parse_large_offsets);
     tcase_add_test (tc_core, test_parse_invalid_sids);
+    tcase_add_test (tc_core, test_parse_kept_aces);
     tcase_add_test (tc_core, test_sid_names);
     tcase_add_test (tc_core, test_rights);
     tcase_add_test (tc_core, test_build);

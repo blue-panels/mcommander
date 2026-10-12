@@ -35,6 +35,7 @@
 /* ACE types (MS-DTYP 2.4.4.1) */
 #define ACL_NT_ACE_ALLOWED 0
 #define ACL_NT_ACE_DENIED  1
+#define ACL_NT_ACE_AUDIT   2
 
 /* ACE flags (MS-DTYP 2.4.4.1) */
 #define ACL_NT_OBJECT_INHERIT       0x01
