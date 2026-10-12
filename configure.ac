@@ -837,6 +837,34 @@ fi
 
 AM_CONDITIONAL([ENABLE_PANEL_PLUGIN_SAMBA], [test x"$have_panel_plugin_samba" = xyes])
 
+dnl Optional libacl for the access control list plugin
+have_panel_plugin_acl=no
+
+AC_ARG_ENABLE([panel-plugin-acl],
+    AS_HELP_STRING([--enable-panel-plugin-acl@<:@=auto/yes/no@:>@],
+                   [Build the access control list plugin (default: auto)]),
+    [enable_panel_plugin_acl="$enableval"],
+    [enable_panel_plugin_acl=auto])
+
+AS_CASE([$enable_panel_plugin_acl],
+    [yes|no|auto], [],
+    [AC_MSG_ERROR([bad value '$enable_panel_plugin_acl' for --enable-panel-plugin-acl (use auto, yes, or no)])])
+
+if test "x$enable_panel_plugin_acl" != xno; then
+    PKG_CHECK_MODULES([LIBACL], [libacl], [have_panel_plugin_acl=yes], [:])
+fi
+
+if test "x$enable_panel_plugin_acl" = xyes && test "x$have_panel_plugin_acl" != xyes; then
+    AC_MSG_ERROR([Access control list plugin requested but libacl was not found.
+Install the libacl development package (for example: libacl1-dev) or use --enable-panel-plugin-acl=auto/no.])
+fi
+
+if test "x$enable_panel_plugin_acl" = xauto && test "x$have_panel_plugin_acl" != xyes; then
+    AC_MSG_WARN([Access control list plugin disabled: libacl was not found.])
+fi
+
+AM_CONDITIONAL([ENABLE_PANEL_PLUGIN_ACL], [test x"$have_panel_plugin_acl" = xyes])
+
 dnl Shell link panel plugin (sh:// connection manager)
 AC_ARG_ENABLE([panel-plugin-shell-link],
     AS_HELP_STRING([--enable-panel-plugin-shell-link@<:@=auto/yes/no@:>@],
@@ -1216,6 +1244,7 @@ src/panel-plugins/mcstruct/Makefile
 src/panel-plugins/skineditor/Makefile
 src/panel-plugins/mcpeek/Makefile
 src/panel-plugins/samba/Makefile
+src/panel-plugins/acl/Makefile
 src/panel-plugins/ftp/Makefile
 src/panel-plugins/systemd/Makefile
 src/panel-plugins/sftp/Makefile
@@ -1344,6 +1373,7 @@ tests/src/panel-plugins/arcmc/Makefile
 tests/src/panel-plugins/mcstruct/Makefile
 tests/src/panel-plugins/skineditor/Makefile
 tests/src/panel-plugins/samba/Makefile
+tests/src/panel-plugins/acl/Makefile
 tests/src/panel-plugins/docker/Makefile
 tests/src/panel-plugins/mongo/Makefile
 tests/src/panel-plugins/sqlite/Makefile

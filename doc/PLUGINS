@@ -121,6 +121,9 @@ API 19 adds MC_PP_ENTRY_DIR_SIZE_COMPUTED (see 3.4).  A plugin that
 counts the size of its directories on Ctrl-Space handles CK_DirSize in
 handle_key() (see 6) and lists them with that flag.
 
+API 20 adds MC_PP_MENU_ATTRIBUTES: a plugin can put an entry into the
+Attributes menu, after Advanced chown.
+
 
 3.2 Capability Flags (mc_pp_flags_t)
 
@@ -327,8 +330,10 @@ Each entry sets:
     action_index     index into actions[]
     shortcut         display string for the shortcut column
     key              key code, or 0
-    menu_name        MC_PP_MENU_COMMAND or MC_PP_MENU_PANEL.  NULL
-                     defaults to MC_PP_MENU_COMMAND.
+    menu_name        MC_PP_MENU_COMMAND, MC_PP_MENU_PANEL,
+                     MC_PP_MENU_FILE, MC_PP_MENU_OPTIONS or
+                     MC_PP_MENU_ATTRIBUTES.  NULL defaults to
+                     MC_PP_MENU_COMMAND.
 
 Core scans the registry per menu and appends entries via
 panel_plugin_collect_menu_entries(); the menu builders carry no

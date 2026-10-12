@@ -11,6 +11,7 @@ Build-Depends: debhelper-compat (= 13),
                libssh2-1-dev,
                libmagic-dev,
                libsmbclient-dev,
+               libacl1-dev [linux-any],
                libcurl4-openssl-dev,
                libarchive-dev,
                libsqlite3-dev,
@@ -68,7 +69,7 @@ Description: archive and remote system panels for M-Commander
  which have to be installed separately.
  .
  The package also installs mcstruct, which shows a binary file as a tree of
- named fields.
+ named fields, and the access control list editor in the Attributes menu.
 
 Package: mcommander-lua
 Architecture: any

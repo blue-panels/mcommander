@@ -8,7 +8,7 @@ arch=('x86_64' 'aarch64')
 url='https://blue-panels.github.io/mcommander/'
 license=('GPL-3.0-or-later')
 makedepends=('make' 'pkgconf' 'gettext'
-             'glib2' 'slang' 'gpm' 'e2fsprogs' 'libssh2' 'curl' 'samba'
+             'glib2' 'slang' 'gpm' 'e2fsprogs' 'libssh2' 'curl' 'samba' 'acl'
              'libarchive' 'file' 'mongo-c-driver' 'lua' 'sqlite' 'libx11'
              'chafa')
 options=('!emptydirs')
@@ -31,6 +31,7 @@ build() {
     --enable-lua-plugin=yes \
     --enable-mctree-magic=yes \
     --enable-panel-plugin-samba=yes \
+    --enable-panel-plugin-acl=yes \
     --enable-panel-plugin-ftp=yes \
     --enable-panel-plugin-arcmc=yes \
     --enable-panel-plugin-s3=yes \
@@ -86,7 +87,7 @@ package_mcommander() {
 
 package_mcommander-plugins() {
   pkgdesc='Archive and remote system panels for M-Commander'
-  depends=("mcommander=${pkgver}-${pkgrel}" 'glib2' 'libssh2' 'curl' 'samba'
+  depends=("mcommander=${pkgver}-${pkgrel}" 'glib2' 'libssh2' 'curl' 'samba' 'acl'
            'libarchive' 'file' 'mongo-c-driver' 'sqlite')
   optdepends=('git: the Git panel'
               'docker: the Docker panel'

@@ -15,17 +15,18 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-#define MC_PANEL_PLUGIN_API_VERSION 19
+#define MC_PANEL_PLUGIN_API_VERSION 20
 #define MC_PANEL_PLUGIN_ENTRY       "mc_panel_plugin_register"
 
 /* Well-known target menu names for mc_pp_cmd_menu_entry_t.menu_name.
    Plugins set .menu_name = MC_PP_MENU_* to publish their entries into
    the corresponding menu. NULL menu_name defaults to "Command" for
    backward compatibility with plugins built before this field existed. */
-#define MC_PP_MENU_COMMAND "Command"
-#define MC_PP_MENU_PANEL   "Panel"
-#define MC_PP_MENU_FILE    "File"
-#define MC_PP_MENU_OPTIONS "Options"
+#define MC_PP_MENU_COMMAND    "Command"
+#define MC_PP_MENU_PANEL      "Panel"
+#define MC_PP_MENU_FILE       "File"
+#define MC_PP_MENU_OPTIONS    "Options"
+#define MC_PP_MENU_ATTRIBUTES "Attributes"
 
 /*** enums ***************************************************************************************/
 

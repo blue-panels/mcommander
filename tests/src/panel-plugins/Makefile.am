@@ -11,3 +11,7 @@ endif
 if ENABLE_PANEL_PLUGIN_SHELL_LINK
 SUBDIRS += shell-link
 endif
+
+if ENABLE_PANEL_PLUGIN_ACL
+SUBDIRS += acl
+endif

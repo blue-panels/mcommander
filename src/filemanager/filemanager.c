@@ -278,6 +278,16 @@ create_attributes_menu (void)
     entries = g_list_prepend (entries, menu_entry_new (_ ("Ch&own..."), CK_ChangeOwn));
     entries =
         g_list_prepend (entries, menu_entry_new (_ ("&Advanced chown..."), CK_ChangeOwnAdvanced));
+
+    {
+        GList *plugin_entries = panel_plugin_collect_menu_entries (MC_PP_MENU_ATTRIBUTES);
+        GList *p;
+
+        for (p = plugin_entries; p != NULL; p = g_list_next (p))
+            entries = g_list_prepend (entries, p->data);
+        g_list_free (plugin_entries);
+    }
+
 #ifdef ENABLE_EXT2FS_ATTR
     entries =
         g_list_prepend (entries, menu_entry_new (_ ("Cha&ttr flags..."), CK_ChangeAttributes));

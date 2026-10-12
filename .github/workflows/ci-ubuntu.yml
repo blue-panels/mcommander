@@ -21,7 +21,7 @@ jobs:
           echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries
           apt-get update
           apt-get install -y git autoconf automake autopoint build-essential gettext libtool pkg-config
-          apt-get install -y e2fslibs-dev libglib2.0-dev libgpm-dev libncurses-dev libslang2-dev libssh2-1-dev libx11-dev libarchive-dev libcurl4-openssl-dev libsmbclient-dev libmongoc-dev libbson-dev unzip
+          apt-get install -y e2fslibs-dev libglib2.0-dev libgpm-dev libncurses-dev libslang2-dev libssh2-1-dev libx11-dev libarchive-dev libcurl4-openssl-dev libsmbclient-dev libacl1-dev libmongoc-dev libbson-dev unzip
 
       - uses: actions/checkout@v7
 

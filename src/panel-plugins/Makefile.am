@@ -13,6 +13,10 @@ if ENABLE_PANEL_PLUGIN_SAMBA
 SUBDIRS += samba
 endif
 
+if ENABLE_PANEL_PLUGIN_ACL
+SUBDIRS += acl
+endif
+
 if ENABLE_PANEL_PLUGIN_FTP
 SUBDIRS += ftp
 endif
@@ -40,4 +44,4 @@ if ENABLE_PANEL_PLUGIN_SHELL_LINK
 SUBDIRS += shell-link
 endif
 
-DIST_SUBDIRS = systemd hello panelize mcstruct skineditor mcpeek sftp samba ftp arcmc s3 mongo sqlite docker git k8s shell-link
+DIST_SUBDIRS = systemd hello panelize mcstruct skineditor mcpeek sftp samba acl ftp arcmc s3 mongo sqlite docker git k8s shell-link
