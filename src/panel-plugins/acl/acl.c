@@ -134,7 +134,7 @@ acl_report_changed (const char *path)
     int r;
 
     text = g_strdup_printf (_ ("%s\nThe access control list changed while the dialog was open.\n"
-                              "Open it again before saving."),
+                               "Open it again before saving."),
                             path);
     r = query_dialog (MSG_ERROR, text, D_ERROR, 2, _ ("&Skip"), _ ("&Abort"));
     g_free (text);
@@ -320,7 +320,8 @@ acl_other_kind (const acl_file_t *f, int index, int count)
                                  f->shown_path);
                         break;
                     default:
-                        step = acl_report (_ ("Cannot set the access control list of"), f->path, err);
+                        step =
+                            acl_report (_ ("Cannot set the access control list of"), f->path, err);
                         break;
                     }
                 }

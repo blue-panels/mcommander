@@ -85,12 +85,12 @@ typedef struct
 typedef struct
 {
     guint16 control;
-    char *owner; /* SID, or NULL */
-    char *group; /* SID, or NULL */
+    char *owner;  /* SID, or NULL */
+    char *group;  /* SID, or NULL */
     GBytes *sacl; /* original audit ACL, if present and not NULL */
     gboolean has_dacl;
     guint8 dacl_revision; /* 2 for ordinary ACEs, 4 for object ACEs */
-    GPtrArray *aces; /* acl_nt_ace_t of the DACL */
+    GPtrArray *aces;      /* acl_nt_ace_t of the DACL */
 } acl_nt_sd_t;
 
 /*** declarations of public functions ************************************************************/

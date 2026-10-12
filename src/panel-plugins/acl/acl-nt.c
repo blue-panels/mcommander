@@ -746,8 +746,8 @@ acl_nt_build_update (const acl_nt_sd_t *before, const acl_nt_sd_t *edited, gsize
         return NULL;
 
     updated = *before;
-    updated.control = (guint16) ((before->control & ~SE_DACL_PRESENT)
-                                 | (edited->control & SE_DACL_PRESENT));
+    updated.control =
+        (guint16) ((before->control & ~SE_DACL_PRESENT) | (edited->control & SE_DACL_PRESENT));
     updated.has_dacl = edited->has_dacl;
     updated.dacl_revision = edited->dacl_revision;
     updated.aces = edited->aces;
