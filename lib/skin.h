@@ -34,6 +34,7 @@
 #define DIALOG_SELECTED_FOCUS_COLOR  mc_skin_color__cache[16]
 #define DIALOG_TITLE_COLOR           mc_skin_color__cache[17]
 #define DIALOG_FRAME_COLOR           mc_skin_color__cache[18]
+#define DIALOG_CELL_FOCUS_COLOR      mc_skin_color__cache[91]
 
 /* Error dialog colors */
 #define ERROR_NORMAL_COLOR     mc_skin_color__cache[19]
@@ -136,7 +137,7 @@
 #define CORE_PERM_SPECIAL_COLOR   mc_skin_color__cache[87]
 #define CORE_PERM_NONE_COLOR      mc_skin_color__cache[88]
 
-#define MC_SKIN_COLOR_CACHE_COUNT 91
+#define MC_SKIN_COLOR_CACHE_COUNT 92
 
 /*** enums ***************************************************************************************/
 
@@ -163,7 +164,8 @@ gboolean mc_skin_init (const gchar *skin_override, GError **error);
 /* replace the loaded skin by @config, the engine's from here on; @name NULL keeps the current */
 gboolean mc_skin_load_from_config (mc_config_t *config, const char *name, GError **error);
 
-/* keys filled in when a skin does not name them: @fg on the group's bg, or @src_group/@src_key */
+/* keys filled in when a skin does not name them: @fg on the group's bg, or @src_group/@src_key
+   with @attrs, when given, in place of its attributes */
 typedef struct
 {
     const char *group;
@@ -171,6 +173,7 @@ typedef struct
     const char *fg;
     const char *src_group;
     const char *src_key;
+    const char *attrs;
 } mc_skin_fallback_t;
 
 const mc_skin_fallback_t *mc_skin_fallbacks (size_t *count);

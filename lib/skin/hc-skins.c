@@ -60,6 +60,7 @@ mc_skin_hardcoded_blackwhite_colors (mc_skin_t *mc_skin)
     mc_config_set_string (mc_skin->config, "dialog", "dhotfocus", ";;bold");
     mc_config_set_string (mc_skin->config, "dialog", "dselnormal", ";;none");
     mc_config_set_string (mc_skin->config, "dialog", "dselfocus", ";;bold");
+    mc_config_set_string (mc_skin->config, "dialog", "dcellfocus", ";;bold");
     mc_config_set_string (mc_skin->config, "error", "_default_", ";;bold");
     mc_config_set_string (mc_skin->config, "error", "errdfocus", ";;reverse+bold");
     mc_config_set_string (mc_skin->config, "error", "errdhotnormal", ";;reverse");
