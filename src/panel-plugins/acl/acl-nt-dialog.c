@@ -426,7 +426,10 @@ nt_entry_dialog (const char *title, acl_nt_ace_t *ace, gboolean is_new, GPtrArra
         else
         {
             ace->type = type == 1 ? ACL_NT_ACE_DENIED : ACL_NT_ACE_ALLOWED;
-            ace->mask = rights < ACL_NT_PRESET_COUNT ? acl_nt_presets[rights].mask : nt_edit_mask;
+            /* a mask that already means the chosen preset keeps its own form */
+            ace->mask = rights < ACL_NT_PRESET_COUNT && rights != acl_nt_preset_index (nt_edit_mask)
+                ? acl_nt_presets[rights].mask
+                : nt_edit_mask;
             ace->flags = (guint8) ((ace->flags
                                     & ~(ACL_NT_OBJECT_INHERIT | ACL_NT_CONTAINER_INHERIT
                                         | ACL_NT_INHERIT_ONLY))
