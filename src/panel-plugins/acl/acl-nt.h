@@ -78,6 +78,7 @@ typedef struct
     guint8 flags; /* ACL_NT_* inheritance flags */
     guint32 mask; /* access mask */
     char *sid;    /* "S-1-5-32-544", or NULL for an ACE that carries none */
+    GBytes *raw;  /* original bytes of an ACE whose format we do not edit */
 } acl_nt_ace_t;
 
 typedef struct
@@ -86,6 +87,7 @@ typedef struct
     char *owner; /* SID, or NULL */
     char *group; /* SID, or NULL */
     gboolean has_dacl;
+    guint8 dacl_revision; /* 2 for ordinary ACEs, 4 for object ACEs */
     GPtrArray *aces; /* acl_nt_ace_t of the DACL */
 } acl_nt_sd_t;
 

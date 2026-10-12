@@ -225,6 +225,50 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* An object ACE carries fields before its SID. Keep those bytes when another
+   entry in the same DACL is edited. */
+START_TEST (test_build_with_object_ace)
+{
+    guint8 data[sizeof (sd_cifs) + 4];
+    acl_nt_sd_t *sd, *back;
+    guint8 *built;
+    gsize size;
+
+    memcpy (data, sd_cifs, 80);
+    memset (data + 80, 0, 4); /* object flags: no GUIDs */
+    memcpy (data + 84, sd_cifs + 80, sizeof (sd_cifs) - 80);
+    data[64] = 4;    /* ACL revision for object ACEs */
+    data[66] = 0x98; /* ACL size: 152 */
+    data[72] = 5;    /* ACCESS_ALLOWED_OBJECT_ACE_TYPE */
+    data[74] = 40;   /* first ACE size */
+
+    sd = acl_nt_parse (data, sizeof (data));
+    ck_assert (sd != NULL);
+    ck_assert_uint_eq (sd->dacl_revision, 4);
+    ck_assert (ace (sd, 0)->raw != NULL);
+
+    built = acl_nt_build (sd, &size);
+    ck_assert (built != NULL);
+    ck_assert_uint_eq (size, sizeof (data));
+    ck_assert (memcmp (built, data, size) == 0);
+    g_free (built);
+
+    ((acl_nt_ace_t *) g_ptr_array_index (sd->aces, 1))->mask ^= 1;
+    built = acl_nt_build (sd, &size);
+    ck_assert (built != NULL);
+    back = acl_nt_parse (built, size);
+    ck_assert (back != NULL);
+    ck_assert (acl_nt_dacl_equal (sd, back));
+    ck_assert (memcmp (g_bytes_get_data (ace (back, 0)->raw, NULL), data + 72, 40) == 0);
+
+    acl_nt_free (back);
+    g_free (built);
+    acl_nt_free (sd);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Absent, NULL and empty DACLs have different access semantics. */
 START_TEST (test_build_dacl_states)
 {
@@ -440,6 +484,7 @@ main (void)
     tcase_add_test (tc_core, test_sid_names);
     tcase_add_test (tc_core, test_rights);
     tcase_add_test (tc_core, test_build);
+    tcase_add_test (tc_core, test_build_with_object_ace);
     tcase_add_test (tc_core, test_build_dacl_states);
     tcase_add_test (tc_core, test_sid_for);
     tcase_add_test (tc_core, test_insert_order);

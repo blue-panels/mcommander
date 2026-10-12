@@ -48,6 +48,8 @@ typedef struct
     char *shown_path; /* what the dialog shows */
     struct stat st;   /* of the file a symbolic link points to */
     aclm_list_t *lists[2];
+    acl_nt_sd_t *nt_sd;
+    const char *nt_attr;
 } acl_file_t;
 
 typedef enum
@@ -95,6 +97,7 @@ acl_file_free (acl_file_t *f)
     g_free (f->shown_path);
     aclm_list_free (f->lists[ACLM_ACCESS]);
     aclm_list_free (f->lists[ACLM_DEFAULT]);
+    acl_nt_free (f->nt_sd);
     g_free (f);
 }
 
@@ -124,8 +127,9 @@ acl_report (const char *what, const char *path, int err)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * Read the POSIX lists. An unsupported access ACL leaves the file loaded so
- * the caller can look for a Windows or NFSv4 list.
+ * Prefer a Windows security descriptor when one is exposed. libacl can return
+ * a three-entry ACL made from the mode even on a file system without POSIX
+ * ACLs, so its success alone does not identify the ACL kind.
  */
 static acl_file_t *
 acl_file_load (const char *dir, const char *name, acl_step_t *step)
@@ -161,6 +165,10 @@ acl_file_load (const char *dir, const char *name, acl_step_t *step)
     }
     else
         f->shown_path = g_strdup (f->path);
+
+    f->nt_sd = acl_nt_read (f->path, &f->nt_attr, NULL);
+    if (f->nt_sd != NULL)
+        return f;
 
     f->lists[ACLM_ACCESS] = aclm_read (f->path, ACLM_ACCESS, &err);
     if (f->lists[ACLM_ACCESS] == NULL)
@@ -230,22 +238,20 @@ acl_fs_name (const char *path)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * A file with no POSIX ACL: show the Windows list it has, say that it has an
- * NFSv4 one, or say that the file system has none.  An attribute counts only
- * when its value can be read.
+ * Show a Windows list when its attribute was read, report an NFSv4 list, or
+ * say that the file system has no supported ACL kind.
  */
 static acl_step_t
 acl_other_kind (const acl_file_t *f, int index, int count)
 {
-    acl_nt_sd_t *sd;
-    const char *attr = NULL;
+    acl_nt_sd_t *sd = f->nt_sd;
+    const char *attr = f->nt_attr;
     char *fs;
     acl_step_t step = ACL_GO_ON;
     ssize_t n;
 
     fs = acl_fs_name (f->path);
 
-    sd = acl_nt_read (f->path, &attr, NULL);
     if (sd != NULL)
     {
         char *source;
@@ -286,7 +292,6 @@ acl_other_kind (const acl_file_t *f, int index, int count)
             acl_nt_free (before);
         }
         g_free (source);
-        acl_nt_free (sd);
     }
     else if ((n = getxattr (f->path, "system.nfs4_acl", NULL, 0)) > 0)
         message (D_NORMAL, _ ("Access control list"),

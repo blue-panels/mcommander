@@ -61,7 +61,9 @@ replaces its rights.
 **Del**, **F8**
 : Remove the marked named users and groups, or the entry under the cursor if
 none are marked. The owner, the group of the file and other cannot be removed
-from the access list. See *Default ACLs* below for removing a default list.
+from the access list. A mask with no named entries can be removed explicitly;
+until then it can still limit the group of the file. See *Default ACLs* below
+for removing a default list.
 
 **r**, **w**, **x**
 : Switch read, write or execute. If the current entry is marked, set that
@@ -75,6 +77,8 @@ These changes also apply to all marked entries when the current one is marked.
 *Mask*
 : The button in the header shows the mask and opens its dialog. The existing
 mask is kept when the ACL is opened or when switching between its two lists.
+It is also kept when the last named entry is removed, since a mask on its own
+can still restrict the group of the file.
 With *Set it from the entries* on, changing entries recalculates the mask from
 the rights of the group of the file and all named users and groups. Changing
 a box in the mask dialog sets the mask by hand and turns recalculation off.
@@ -151,6 +155,8 @@ An inherited entry cannot be edited or removed here; change it in the folder
 it came from. New deny entries go before allow entries, and new explicit
 entries go before inherited ones. Changing an entry between *Allow* and *Deny*
 also moves it to the appropriate position.
+Other Windows ACE formats are kept intact when editing the entries this dialog
+understands. They cannot be edited here.
 
 *Set* writes the list and opens the next marked file. *Cancel* discards the
 current changes and stops. Windows ACLs do not have *Set all* or *Changes to

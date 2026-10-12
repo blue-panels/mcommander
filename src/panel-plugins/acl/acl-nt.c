@@ -171,6 +171,8 @@ acl_nt_ace_free (gpointer p)
     acl_nt_ace_t *ace = (acl_nt_ace_t *) p;
 
     g_free (ace->sid);
+    if (ace->raw != NULL)
+        g_bytes_unref (ace->raw);
     g_free (ace);
 }
 
@@ -234,6 +236,7 @@ acl_nt_parse (const guint8 *data, gsize size)
         end = (gsize) off_dacl + acl_size;
         if (acl_size < 8 || end > size)
             goto bad;
+        sd->dacl_revision = data[off_dacl];
 
         p = (gsize) off_dacl + 8;
         for (i = 0; i < count; i++)
@@ -251,9 +254,13 @@ acl_nt_parse (const guint8 *data, gsize size)
             ace->type = data[p];
             ace->flags = data[p + 1];
             ace->mask = le32 (data + p + 4);
-            /* allowed, denied and audit ACEs end with a SID */
+            /* Allowed, denied and audit ACEs start with a SID after the mask.
+               Keep other ACE formats whole so editing another entry can
+               round-trip them without losing their object or callback data. */
             if (ace->type <= 2)
                 ace->sid = acl_nt_sid_at (data, p + ace_size, p + 8);
+            else
+                ace->raw = g_bytes_new (data + p, ace_size);
             g_ptr_array_add (sd->aces, ace);
 
             p += ace_size;
@@ -591,6 +598,15 @@ acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
             gsize start = b->len;
             guint16 ace_size;
 
+            if (ace->raw != NULL)
+            {
+                gsize raw_size;
+                const guint8 *raw = g_bytes_get_data (ace->raw, &raw_size);
+
+                g_byte_array_append (b, raw, raw_size);
+                continue;
+            }
+
             g_byte_array_set_size (b, b->len + 4);
             put32 (b, ace->mask);
             if (!put_sid (b, ace->sid))
@@ -600,8 +616,10 @@ acl_nt_build (const acl_nt_sd_t *sd, gsize *size)
             b->data[start + 1] = ace->flags;
             set16 (b->data + start + 2, ace_size);
         }
+        if (b->len - dacl_start > G_MAXUINT16 || sd->aces->len > G_MAXUINT16)
+            goto bad;
         acl_size = (guint16) (b->len - dacl_start);
-        b->data[dacl_start] = 2;
+        b->data[dacl_start] = sd->dacl_revision != 0 ? sd->dacl_revision : 2;
         b->data[dacl_start + 1] = 0;
         set16 (b->data + dacl_start + 2, acl_size);
         set16 (b->data + dacl_start + 4, (guint16) sd->aces->len);
@@ -636,6 +654,8 @@ acl_nt_dacl_equal (const acl_nt_sd_t *a, const acl_nt_sd_t *b)
 
     if (a->has_dacl != b->has_dacl || ((a->control ^ b->control) & SE_DACL_PRESENT) != 0)
         return FALSE;
+    if (a->has_dacl && a->dacl_revision != b->dacl_revision)
+        return FALSE;
     if (a->aces->len != b->aces->len)
         return FALSE;
 
@@ -646,6 +666,9 @@ acl_nt_dacl_equal (const acl_nt_sd_t *a, const acl_nt_sd_t *b)
 
         if (x->type != y->type || x->flags != y->flags || x->mask != y->mask
             || g_strcmp0 (x->sid, y->sid) != 0)
+            return FALSE;
+        if ((x->raw == NULL) != (y->raw == NULL)
+            || (x->raw != NULL && !g_bytes_equal (x->raw, y->raw)))
             return FALSE;
     }
 
@@ -664,7 +687,8 @@ acl_nt_has_ace (const acl_nt_sd_t *sd, const acl_nt_ace_t *x)
         const acl_nt_ace_t *y = g_ptr_array_index (sd->aces, k);
 
         if (x->type == y->type && x->flags == y->flags && x->mask == y->mask
-            && g_strcmp0 (x->sid, y->sid) == 0)
+            && g_strcmp0 (x->sid, y->sid) == 0 && (x->raw == NULL) == (y->raw == NULL)
+            && (x->raw == NULL || g_bytes_equal (x->raw, y->raw)))
             return TRUE;
     }
     return FALSE;
@@ -780,6 +804,8 @@ acl_nt_insert_ace (acl_nt_sd_t *sd, acl_nt_ace_t *ace)
 
     g_ptr_array_insert (sd->aces, (gint) i, ace);
     sd->has_dacl = TRUE;
+    if (sd->dacl_revision == 0)
+        sd->dacl_revision = 2;
     sd->control |= SE_DACL_PRESENT;
 }
 

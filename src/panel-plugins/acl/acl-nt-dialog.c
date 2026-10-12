@@ -445,7 +445,7 @@ nt_entry_dialog (const char *title, acl_nt_ace_t *ace, gboolean is_new, GPtrArra
 static void
 nt_do_add (void)
 {
-    acl_nt_ace_t proto = { ACL_NT_ACE_ALLOWED, 0, acl_nt_presets[2].mask, NULL };
+    acl_nt_ace_t proto = { ACL_NT_ACE_ALLOWED, 0, acl_nt_presets[2].mask, NULL, NULL };
     GPtrArray *sids = g_ptr_array_new_with_free_func (g_free);
     guint i;
 
@@ -486,6 +486,13 @@ nt_do_edit (void)
 
     if (ace == NULL || nt_refuse_inherited (ace))
         return;
+    if (ace->raw != NULL)
+    {
+        message (D_ERROR, MSG_ERROR, "%s",
+                 _ ("This kind of entry cannot be edited here.\n"
+                    "Its data is kept when other entries change."));
+        return;
+    }
 
     copy = *ace;
     sids = g_ptr_array_new_with_free_func (g_free);

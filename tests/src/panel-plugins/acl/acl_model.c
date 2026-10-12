@@ -26,6 +26,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/acl.h>
 #include <unistd.h>
 
 #include "src/panel-plugins/acl/acl-model.h"
@@ -76,7 +77,7 @@ START_TEST (test_calc_mask)
     aclm_list_remove (l, ACLM_USER, 1001);
     aclm_list_remove (l, ACLM_GROUP, 50);
     aclm_calc_mask (l);
-    ck_assert (aclm_list_find (l, ACLM_MASK, 0) == NULL);
+    ck_assert_uint_eq (perm_of (l, ACLM_MASK, 0), R | W | X);
 
     aclm_list_free (l);
 }
@@ -124,7 +125,34 @@ START_TEST (test_mask_by_hand)
 
     aclm_list_remove (l, ACLM_USER, 1001);
     aclm_drop_unused_mask (l);
-    ck_assert (aclm_list_find (l, ACLM_MASK, 0) == NULL);
+    ck_assert_uint_eq (perm_of (l, ACLM_MASK, 0), R);
+
+    aclm_list_free (l);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A mask can restrict the owning group even without named entries. */
+START_TEST (test_mask_without_named_entries)
+{
+    aclm_list_t *l = base (R | W | X, R | W | X, 0);
+    const aclm_entry_t *group;
+    acl_t posix = acl_from_text ("user::rwx\ngroup::rwx\nmask::r--\nother::---\n");
+
+    ck_assert (posix != NULL);
+    ck_assert_int_eq (acl_valid (posix), 0);
+    acl_free (posix);
+
+    aclm_list_set (l, ACLM_MASK, 0, R);
+    group = aclm_list_find (l, ACLM_GROUP_OBJ, 0);
+    ck_assert_uint_eq (aclm_effective (l, group), R);
+
+    aclm_list_set (l, ACLM_OWNER, 0, R | W);
+    aclm_calc_mask (l);
+    ck_assert_uint_eq (perm_of (l, ACLM_MASK, 0), R);
+    aclm_drop_unused_mask (l);
+    ck_assert_uint_eq (aclm_effective (l, group), R);
 
     aclm_list_free (l);
 }
@@ -337,6 +365,7 @@ main (void)
     tcase_add_test (tc_core, test_calc_mask);
     tcase_add_test (tc_core, test_effective);
     tcase_add_test (tc_core, test_mask_by_hand);
+    tcase_add_test (tc_core, test_mask_without_named_entries);
     tcase_add_test (tc_core, test_list_order);
     tcase_add_test (tc_core, test_changes_to_all);
     tcase_add_test (tc_core, test_default_removed);

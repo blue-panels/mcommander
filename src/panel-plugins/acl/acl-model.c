@@ -257,8 +257,8 @@ aclm_list_sort (aclm_list_t *list)
 
 /**
  * The mask becomes the union of what the named entries and the group of the
- * file are given, as setfacl does.  A list without named entries needs no
- * mask, and keeping one would leave the file looking as if it had an ACL.
+ * file are given, as setfacl does. A mask without named entries is valid and
+ * can restrict the group of the file, so keep an existing one in that case.
  */
 void
 aclm_calc_mask (aclm_list_t *list)
@@ -267,10 +267,7 @@ aclm_calc_mask (aclm_list_t *list)
     guint i;
 
     if (!aclm_has_named (list))
-    {
-        aclm_list_remove (list, ACLM_MASK, 0);
         return;
-    }
 
     for (i = 0; i < list->entries->len; i++)
     {
@@ -286,15 +283,13 @@ aclm_calc_mask (aclm_list_t *list)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * With the mask kept by hand: a named entry cannot live without a mask, and a
- * mask without named entries is dropped.
+ * With the mask kept by hand: a named entry cannot live without a mask. A
+ * mask without named entries may still restrict the group of the file.
  */
 void
 aclm_drop_unused_mask (aclm_list_t *list)
 {
-    if (!aclm_has_named (list))
-        aclm_list_remove (list, ACLM_MASK, 0);
-    else if (aclm_list_find (list, ACLM_MASK, 0) == NULL)
+    if (aclm_has_named (list) && aclm_list_find (list, ACLM_MASK, 0) == NULL)
         aclm_calc_mask (list);
 }
 

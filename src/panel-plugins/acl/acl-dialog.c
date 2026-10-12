@@ -1112,6 +1112,16 @@ acl_do_delete (void)
 
     if (aclm_is_named (cur->kind))
         aclm_list_remove (list, cur->kind, cur->id);
+    else if (cur->kind == ACLM_MASK)
+    {
+        if (aclm_has_named (list))
+        {
+            message (D_ERROR, MSG_ERROR, "%s",
+                     _ ("Remove the user and group entries before removing the mask."));
+            return;
+        }
+        aclm_list_remove (list, ACLM_MASK, 0);
+    }
     else if (acl_type == ACLM_ACCESS)
     {
         message (D_ERROR, MSG_ERROR, "%s",
