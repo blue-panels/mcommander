@@ -147,6 +147,10 @@ applies individually to each of these three properties.
             Selected item in focused dropdown lists, e.g. in Find File results
             or skin selector
 
+        dcellfocus
+            Check box under the cursor in the selected row of a focused
+            table. A skin that leaves it out gets dselfocus with reverse
+
         dtitle
             Title
 

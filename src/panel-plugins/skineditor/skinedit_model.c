@@ -358,7 +358,9 @@ entry_resolve_part (const skinedit_model_t *m, skinedit_entry_t *e, int i)
                 else
                 {
                     d = skinedit_model_find (m, fb[k].src_group, fb[k].src_key);
-                    if (d != NULL && d->effective[i] != NULL)
+                    if (i == SKINEDIT_PART_ATTRS && fb[k].attrs != NULL)
+                        e->effective[i] = g_strdup (fb[k].attrs);
+                    else if (d != NULL && d->effective[i] != NULL)
                         e->effective[i] = g_strdup (d->effective[i]);
                 }
                 e->src[i] = SKINEDIT_SRC_FALLBACK;

@@ -47,14 +47,16 @@ int mc_skin_color__cache[MC_SKIN_COLOR_CACHE_COUNT];
 
 /* what a skin gets for a key it does not name; see mc_skin_fallback_t */
 static const mc_skin_fallback_t fallbacks[] = {
-    { "core", "permread", "yellow", NULL, NULL },
-    { "core", "permwrite", "brightred", NULL, NULL },
-    { "core", "permexec", "brightgreen", NULL, NULL },
-    { "core", "permspecial", "brightmagenta", NULL, NULL },
-    { "core", "permnone", "gray", NULL, NULL },
+    { "core", "permread", "yellow", NULL, NULL, NULL },
+    { "core", "permwrite", "brightred", NULL, NULL, NULL },
+    { "core", "permexec", "brightgreen", NULL, NULL, NULL },
+    { "core", "permspecial", "brightmagenta", NULL, NULL, NULL },
+    { "core", "permnone", "gray", NULL, NULL, NULL },
+    // the selected row turned inside out is visible on any skin
+    { "dialog", "dcellfocus", NULL, "dialog", "dselfocus", "reverse" },
     // skins written before these keys existed keep the viewer colors here
-    { "mctree", "marker", NULL, "viewer", "_default_" },
-    { "mctree", "selected", NULL, "viewer", "viewselected" },
+    { "mctree", "marker", NULL, "viewer", "_default_", NULL },
+    { "mctree", "selected", NULL, "viewer", "viewselected", NULL },
 };
 
 /* --------------------------------------------------------------------------------------------- */
@@ -281,7 +283,7 @@ mc_skin_color_add_fallback (mc_skin_t *mc_skin, const gchar *group, const gchar 
 
 static void
 mc_skin_color_add_fallback_from (mc_skin_t *mc_skin, const gchar *group, const gchar *key,
-                                 const gchar *src_group, const gchar *src_key)
+                                 const gchar *src_group, const gchar *src_key, const gchar *attrs)
 {
     tty_color_pair_t *mc_skin_color, *src;
 
@@ -297,7 +299,7 @@ mc_skin_color_add_fallback_from (mc_skin_t *mc_skin, const gchar *group, const g
 
     mc_skin_color->fg = g_strdup (src->fg);
     mc_skin_color->bg = g_strdup (src->bg);
-    mc_skin_color->attrs = g_strdup (src->attrs);
+    mc_skin_color->attrs = g_strdup (attrs != NULL ? attrs : src->attrs);
     mc_skin_color->pair_index = tty_try_alloc_color_pair (mc_skin_color, FALSE);
     mc_skin_color_add_to_hash (mc_skin, group, key, mc_skin_color);
 }
@@ -332,6 +334,7 @@ mc_skin_color_cache_init (void)
     DIALOG_SELECTED_FOCUS_COLOR = mc_skin_color_get ("dialog", "dselfocus");
     DIALOG_TITLE_COLOR = mc_skin_color_get ("dialog", "dtitle");
     DIALOG_FRAME_COLOR = mc_skin_color_get ("dialog", "dframe");
+    DIALOG_CELL_FOCUS_COLOR = mc_skin_color_get ("dialog", "dcellfocus");
 
     ERROR_NORMAL_COLOR = mc_skin_color_get ("error", "_default_");
     ERROR_FOCUS_COLOR = mc_skin_color_get ("error", "errdfocus");
@@ -495,7 +498,8 @@ mc_skin_color_parse_ini_file (mc_skin_t *mc_skin)
                                         fallbacks[i].fg);
         else
             mc_skin_color_add_fallback_from (mc_skin, fallbacks[i].group, fallbacks[i].key,
-                                             fallbacks[i].src_group, fallbacks[i].src_key);
+                                             fallbacks[i].src_group, fallbacks[i].src_key,
+                                             fallbacks[i].attrs);
     }
 
     mc_skin_color_cache_init ();

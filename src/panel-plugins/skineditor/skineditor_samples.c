@@ -214,6 +214,7 @@ dialog_like (WSkinSample *s, const WRect *r, const char *g, const char *k_frame,
     if (strcmp (g, "dialog") == 0)
     {
         line (s, 6, 4, w - 4, g, "dselfocus", " item one, list focused");
+        T (6, 4 + w - 8, g, "dcellfocus", "[x]");
         line (s, 7, 4, w - 4, g, "dselnormal", " item two, list not focused");
     }
     H (h - 1, 6, g, k_focus, k_hotfocus, ok);
