@@ -119,6 +119,8 @@ static const skinedit_table_row_t rows_dialog[] = {
        N_ ("Selected item of a list that does not have the focus, e.g. Find File results after Tab")),
     C ("dialog", "dselfocus", N_ ("Selected item, list focused"),
        N_ ("Selected item of the focused list, e.g. Find File results or the skin list")),
+    C ("dialog", "dcellfocus", N_ ("Check box under the cursor"),
+       N_ ("Check box under the cursor in the selected row of a table")),
     C ("dialog", "dtitle", N_ ("Title"), NULL),
     C ("dialog", "dframe", N_ ("Frame"), NULL),
 };
