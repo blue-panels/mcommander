@@ -152,22 +152,34 @@ START_TEST (test_parse_large_offsets)
 
     for (i = 0; i < 4; i++)
     {
-        acl_nt_sd_t *sd;
-
         memcpy (data, sd_cifs, sizeof (data));
         memcpy (data + 4 + 4 * i, huge_offset, sizeof (huge_offset));
         if (i == 2)
             data[2] |= 0x10; /* SE_SACL_PRESENT */
 
-        sd = acl_nt_parse (data, sizeof (data));
-        if (i < 2)
-        {
-            ck_assert (sd != NULL);
-            ck_assert (i == 0 ? sd->owner == NULL : sd->group == NULL);
-            acl_nt_free (sd);
-        }
-        else
-            ck_assert (sd == NULL);
+        ck_assert (acl_nt_parse (data, sizeof (data)) == NULL);
+    }
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A present SID must be complete and use the revision the writer can encode. */
+START_TEST (test_parse_invalid_sids)
+{
+    static const guint sid_offsets[] = { 20, 48, 80 }; /* owner, group, first ACE */
+    guint8 data[sizeof (sd_cifs)];
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (sid_offsets); i++)
+    {
+        memcpy (data, sd_cifs, sizeof (data));
+        data[sid_offsets[i]] = 2; /* unsupported SID revision */
+        ck_assert (acl_nt_parse (data, sizeof (data)) == NULL);
+
+        memcpy (data, sd_cifs, sizeof (data));
+        data[sid_offsets[i] + 1] = 16; /* too many subauthorities */
+        ck_assert (acl_nt_parse (data, sizeof (data)) == NULL);
     }
 }
 END_TEST
@@ -646,6 +658,7 @@ main (void)
     tcase_add_test (tc_core, test_parse_ntfs);
     tcase_add_test (tc_core, test_parse_truncated);
     tcase_add_test (tc_core, test_parse_large_offsets);
+    tcase_add_test (tc_core, test_parse_invalid_sids);
     tcase_add_test (tc_core, test_sid_names);
     tcase_add_test (tc_core, test_rights);
     tcase_add_test (tc_core, test_build);

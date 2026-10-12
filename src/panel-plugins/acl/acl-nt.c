@@ -157,7 +157,7 @@ acl_nt_sid_at (const guint8 *data, gsize size, gsize off)
     if (!acl_nt_range_fits (size, off, 8))
         return NULL;
     n = data[off + 1];
-    if (n > 15 || !acl_nt_range_fits (size, off, 8 + 4 * (gsize) n))
+    if (data[off] != 1 || n > 15 || !acl_nt_range_fits (size, off, 8 + 4 * (gsize) n))
         return NULL;
 
     for (i = 2; i < 8; i++)
@@ -228,9 +228,17 @@ acl_nt_parse (const guint8 *data, gsize size)
     off_dacl = le32 (data + 16);
 
     if (off_owner != 0)
+    {
         sd->owner = acl_nt_sid_at (data, size, off_owner);
+        if (sd->owner == NULL)
+            goto bad;
+    }
     if (off_group != 0)
+    {
         sd->group = acl_nt_sid_at (data, size, off_group);
+        if (sd->group == NULL)
+            goto bad;
+    }
 
     if ((sd->control & SE_SACL_PRESENT) != 0 && off_sacl != 0)
     {
@@ -279,7 +287,14 @@ acl_nt_parse (const guint8 *data, gsize size)
                Keep other ACE formats whole so editing another entry can
                round-trip them without losing their object or callback data. */
             if (ace->type <= 2)
+            {
                 ace->sid = acl_nt_sid_at (data, p + ace_size, p + 8);
+                if (ace->sid == NULL)
+                {
+                    acl_nt_ace_free (ace);
+                    goto bad;
+                }
+            }
             else
                 ace->raw = g_bytes_new (data + p, ace_size);
             g_ptr_array_add (sd->aces, ace);
