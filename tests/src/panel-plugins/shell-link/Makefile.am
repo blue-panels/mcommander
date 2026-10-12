@@ -21,6 +21,7 @@ TESTS = \
 	shfs_parse_ls \
 	helpers_ls.sh \
 	helpers_get.sh \
+	helpers_transfer.sh \
 	helpers_builtin.sh
 
 check_PROGRAMS = shfs_parse_ls builtin_helper
@@ -42,4 +43,4 @@ TEST_EXTENSIONS = .sh
 SH_LOG_COMPILER = $(SHELL)
 AM_TESTS_ENVIRONMENT = srcdir='$(srcdir)'; export srcdir;
 
-EXTRA_DIST = helpers_ls.sh helpers_get.sh helpers_builtin.sh
+EXTRA_DIST = helpers_ls.sh helpers_get.sh helpers_transfer.sh helpers_builtin.sh
