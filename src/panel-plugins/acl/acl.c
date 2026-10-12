@@ -50,6 +50,7 @@ typedef struct
     aclm_list_t *lists[2];
     acl_nt_sd_t *nt_sd;
     const char *nt_attr;
+    int nt_err; /* why nt_sd is NULL */
 } acl_file_t;
 
 typedef enum
@@ -182,7 +183,7 @@ acl_file_load (const char *dir, const char *name, acl_step_t *step)
     else
         f->shown_path = g_strdup (f->path);
 
-    f->nt_sd = acl_nt_read (f->path, &f->nt_attr, NULL);
+    f->nt_sd = acl_nt_read (f->path, &f->nt_attr, &f->nt_err);
     if (f->nt_sd != NULL)
         return f;
 
@@ -329,6 +330,8 @@ acl_other_kind (const acl_file_t *f, int index, int count)
         acl_nt_free (original);
         g_free (source);
     }
+    else if (f->nt_err == EINVAL)
+        step = acl_report (_ ("Cannot read the access control list of"), f->path, f->nt_err);
     else if ((n = getxattr (f->path, "system.nfs4_acl", NULL, 0)) > 0)
         message (D_NORMAL, _ ("Access control list"),
                  _ ("%s\nhas an NFSv4 access control list (%s).\n"

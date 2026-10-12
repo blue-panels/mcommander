@@ -368,7 +368,8 @@ acl_nt_dacl_copy (const acl_nt_sd_t *sd)
  * The security descriptor of @path from the first attribute that has one.  An
  * attribute counts only when its value is read: FUSE answers ENODATA for any
  * name.  The size is asked for first, since ntfs-3g answers a short buffer
- * with EIO instead of ERANGE.  @attr gets the name of the attribute.
+ * with EIO instead of ERANGE.  @attr gets the name of the attribute; @err gets
+ * EINVAL when a value is read but is not a valid descriptor.
  */
 acl_nt_sd_t *
 acl_nt_read (const char *path, const char **attr, int *err)
@@ -395,6 +396,8 @@ acl_nt_read (const char *path, const char **attr, int *err)
         sd = n > 0 ? acl_nt_parse (buf, (gsize) n) : NULL;
         if (n < 0)
             last = errno;
+        else if (sd == NULL)
+            last = EINVAL;
         g_free (buf);
 
         if (sd != NULL)
