@@ -190,9 +190,9 @@ zostaje przy tych, z którymi je otwarto.
 
 .PP
 \fIAlgorytm porównania.\fP
-Zwykły porównuje pliki takimi, jakie są. Najszybszy zakłada duże pliki i
-zadowala się zgrubnym wynikiem. Najmniejszy poświęca więcej czasu, aby
-znaleźć mniejszy zbiór zmian.
+Zwykły porównuje pliki takimi, jakie są. Najszybszy używa algorytmu
+histogram, który pozostaje szybki, gdy pliki bardzo się różnią. Najmniejszy
+poświęca więcej czasu, aby znaleźć mniejszy zbiór zmian.
 
 .PP
 \fIPomijaj wielkość liter.\fP

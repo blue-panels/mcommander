@@ -197,9 +197,9 @@ takes them when it starts, so a view already on the screen keeps the ones it
 was opened with.
 
 *Diff algorithm.*
-Normal compares the files as they are. Fastest assumes large files and
-settles for a coarser result. Minimal spends more time to find a smaller set
-of changes.
+Normal compares the files as they are. Fastest uses the histogram
+algorithm, which stays fast when the files differ a lot. Minimal spends more
+time to find a smaller set of changes.
 
 *Ignore case.*
 Upper and lower case letters count as the same character.

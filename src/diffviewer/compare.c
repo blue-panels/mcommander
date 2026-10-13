@@ -217,7 +217,9 @@ dview_compare_files (const diff_options_t *opt, const char *file1, const char *f
     }
 
     memset (&xpp, 0, sizeof (xpp));
-    if (opt->quality == 2)
+    if (opt->quality == 1)
+        xpp.flags |= XDF_HISTOGRAM_DIFF;
+    else if (opt->quality == 2)
         xpp.flags |= XDF_NEED_MINIMAL;
     if (opt->strip_trailing_cr)
         xpp.flags |= XDF_IGNORE_CR_AT_EOL;

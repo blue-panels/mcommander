@@ -152,9 +152,9 @@ tétel nyit meg. Az összehasonlító az indulásakor veszi át őket, így a m�
 megnyitott összevetés azokkal dolgozik tovább, amelyekkel elindult.
 
 *Összehasonlító algoritmus.*
-A Normál a fájlokat úgy veti össze, ahogy vannak. A Leggyorsabb nagy
-fájlokat feltételez, és durvább eredménnyel is beéri. A Legkisebb több időt
-tölt azzal, hogy kevesebb változást találjon.
+A Normál a fájlokat úgy veti össze, ahogy vannak. A Leggyorsabb a histogram
+algoritmust használja, amely akkor is gyors marad, ha a fájlok nagyon
+eltérnek. A Legkisebb több időt tölt azzal, hogy kevesebb változást találjon.
 
 *Kis- és nagybetű mellőzése.*
 A kis- és a nagybetű ugyanannak a betűnek számít.

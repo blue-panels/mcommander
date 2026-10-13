@@ -152,9 +152,9 @@ menu Opcje. Podgląd bierze je przy starcie, więc porównanie już otwarte
 zostaje przy tych, z którymi je otwarto.
 
 *Algorytm porównania.*
-Zwykły porównuje pliki takimi, jakie są. Najszybszy zakłada duże pliki i
-zadowala się zgrubnym wynikiem. Najmniejszy poświęca więcej czasu, aby
-znaleźć mniejszy zbiór zmian.
+Zwykły porównuje pliki takimi, jakie są. Najszybszy używa algorytmu
+histogram, który pozostaje szybki, gdy pliki bardzo się różnią. Najmniejszy
+poświęca więcej czasu, aby znaleźć mniejszy zbiór zmian.
 
 *Pomijaj wielkość liter.*
 Duże i małe litery liczą się jako ten sam znak.

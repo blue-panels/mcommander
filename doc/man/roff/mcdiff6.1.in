@@ -245,9 +245,9 @@ was opened with.
 
 .PP
 \fIDiff algorithm.\fP
-Normal compares the files as they are. Fastest assumes large files and
-settles for a coarser result. Minimal spends more time to find a smaller set
-of changes.
+Normal compares the files as they are. Fastest uses the histogram
+algorithm, which stays fast when the files differ a lot. Minimal spends more
+time to find a smaller set of changes.
 
 .PP
 \fIIgnore case.\fP

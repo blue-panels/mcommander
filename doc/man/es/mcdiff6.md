@@ -143,9 +143,9 @@ del menú Opciones del gestor de archivos. La comparación toma sus ajustes al
 arrancar, así que una ventana ya abierta conserva los que tenía.
 
 *Algoritmo de comparación.*
-El normal compara los archivos tal como son. El rápido da por supuesto que son
-grandes y se conforma con un resultado más grueso. El mínimo dedica más tiempo
-a encontrar un conjunto de diferencias más pequeño.
+El normal compara los archivos tal como son. El rápido usa el algoritmo
+histogram, que sigue siendo rápido cuando los archivos difieren mucho. El
+mínimo dedica más tiempo a encontrar un conjunto de diferencias más pequeño.
 
 *Ignorar mayúsculas.*
 Mayúsculas y minúsculas cuentan como el mismo carácter.

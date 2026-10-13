@@ -215,6 +215,8 @@ START_TEST (test_options)
     check (&opt, "a\r\nb\r\n", "a\nb\n", "");
     opt.strip_trailing_cr = FALSE;
 
+    opt.quality = 1;
+    check (&opt, "a\nb\nc\n", "a\nX\nc\n", "2c2");
     opt.quality = 2;
     check (&opt, "a\nb\nc\n", "a\nX\nc\n", "2c2");
 }
