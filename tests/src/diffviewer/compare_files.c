@@ -195,6 +195,8 @@ START_TEST (test_options)
     opt.ignore_case = TRUE;
     check (&opt, "Hello\nWORLD\n", "hello\nworld\n", "");
     check (&opt, "\xd0\x9f\xd0\xa0\xd0\x98\n", "\xd0\xbf\xd1\x80\xd0\xb8\n", "");
+    /* a bad byte in one line of one file does not change how the other lines fold */
+    check (&opt, "\xd0\x9f\xd0\xa0\xd0\x98\nx\n", "\xd0\x9f\xd0\xa0\xd0\x98\n\xff\n", "2c2");
     opt.ignore_case = FALSE;
 
     opt.ignore_tab_expansion = TRUE;

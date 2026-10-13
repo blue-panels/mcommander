@@ -113,6 +113,45 @@ dff_expand_tabs (const char *text, gsize len, char *out)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* @text case folded line by line: a valid UTF-8 line as UTF-8, any other line as ASCII,
+   so a line folds the same in both files.  g_utf8_validate() refuses a NUL, so a line
+   with NUL bytes folds as ASCII and keeps them. */
+static char *
+dff_fold_case (const char *text, gsize len, gsize *out_len)
+{
+    GString *out;
+    const char *p = text;
+    const char *end = text + len;
+
+    out = g_string_sized_new (len);
+    while (p < end)
+    {
+        const char *eol = memchr (p, '\n', (size_t) (end - p));
+        gsize n = (eol != NULL ? (gsize) (eol - p) + 1 : (gsize) (end - p));
+
+        if (g_utf8_validate (p, (gssize) n, NULL))
+        {
+            char *line = g_utf8_casefold (p, (gssize) n);
+
+            g_string_append (out, line);
+            g_free (line);
+        }
+        else
+        {
+            gsize i;
+
+            for (i = 0; i < n; i++)
+                g_string_append_c (out, g_ascii_tolower (p[i]));
+        }
+        p += n;
+    }
+
+    *out_len = out->len;
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* @text as diff -i and -E compared it: case folded, tabs expanded to stops of 8.  Bytes,
    NUL among them, are kept as they are; the lines stay where they were.  NULL when there
    is no memory for it. */
@@ -122,25 +161,11 @@ dff_normalize (const char *text, gsize len, gboolean fold_case, gboolean expand_
 {
     char *folded = NULL;
     char *out;
-    gsize i, n;
+    gsize n;
 
     if (fold_case)
     {
-        /* g_utf8_validate() refuses a NUL inside @len, so such text folds as ASCII */
-        if (g_utf8_validate (text, (gssize) len, NULL))
-        {
-            folded = g_utf8_casefold (text, (gssize) len);
-            len = strlen (folded);
-        }
-        else
-        {
-            folded = g_try_malloc (len + 1);
-            if (folded == NULL)
-                return NULL;
-            for (i = 0; i < len; i++)
-                folded[i] = g_ascii_tolower (text[i]);
-            folded[len] = '\0';
-        }
+        folded = dff_fold_case (text, len, &len);
         text = folded;
     }
 
