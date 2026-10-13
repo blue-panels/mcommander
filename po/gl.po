@@ -11,13 +11,14 @@
 # Yury V. Zaytsev <yury@shurup.com>, 2025
 # Anonymous <anonymous@noreply.codeberg.org>, 2026.
 # GitHub webhook <noreply-webhook-github@weblate.org>, 2026.
+# mbouzada <mbouzada@noreply.codeberg.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-09-25 22:53+0000\n"
-"Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
+"PO-Revision-Date: 2026-10-14 09:27+0000\n"
+"Last-Translator: mbouzada <mbouzada@noreply.codeberg.org>\n"
 "Language-Team: Galician <https://translate.codeberg.org/projects/mc6/mc6/gl/>"
 "\n"
 "Language: gl\n"
@@ -25,11 +26,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.9.1\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 # "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 msgid "No translation"
-msgstr ""
+msgstr "Sen tradución"
 
 msgid "Warning: cannot load codepages list"
 msgstr "Aviso: non é posíbel cargar a lista de codificacións"
@@ -45,7 +46,7 @@ msgid "Event system already initialized"
 msgstr "O sistema de accións xa foi iniciado"
 
 msgid "Failed to initialize event system"
-msgstr "Non foi posíbel iniciar o sistema de accións"
+msgstr "Produciuse un fallo ao iniciar o sistema de eventos"
 
 msgid "Event system not initialized"
 msgstr "O sistema de accións non foi iniciado"
@@ -55,11 +56,11 @@ msgstr "Verifique os datos de entrada! Hai parámetros nulos!"
 
 #, c-format
 msgid "Unable to create group '%s' for events!"
-msgstr "Non foi posíbel crear o grupo «%s» para accións!"
+msgstr "Non é posíbel crear o grupo «%s» para accións!"
 
 #, c-format
 msgid "Unable to create event '%s'!"
-msgstr "Non foi posíbel crear a acción «%s»!"
+msgstr "Non é posíbel crear o evento «%s»!"
 
 #, c-format
 msgid "Copyright (C) 1996-%zu the Free Software Foundation"
@@ -352,10 +353,8 @@ msgstr "Escoller o idioma"
 msgid "Toggle navigate/browse mode"
 msgstr ""
 
-#, fuzzy
-#| msgid "Sort order"
 msgid "Sort order..."
-msgstr "Ordenar"
+msgstr "Ordenar…"
 
 #, fuzzy
 #| msgid "Panel options"
@@ -1222,10 +1221,9 @@ msgstr ""
 msgid "Warning: import of %s to %s is incomplete\n"
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "Cannot translate from %s to %s"
+#, c-format
 msgid "Renamed %s to %s\n"
-msgstr "Non é posíbel converter de %s a %s"
+msgstr "Nome cambiado de %s a %s\n"
 
 msgid "FATAL: not a directory:"
 msgstr "FATAL! Non é un directorio:"
@@ -1286,7 +1284,7 @@ msgid ""
 "Unable to parse '%s' skin.\n"
 "Default skin has been loaded"
 msgstr ""
-"Non foi posíbel analizar o tema «%s».\n"
+"Non é posíbel analizar o tema «%s».\n"
 "Cargouse o tema predeterminado."
 
 #, c-format
@@ -1298,7 +1296,7 @@ msgstr ""
 "Non é posíbel empregar o tema «%s» con compatibilidade para cores "
 "verdadeiros:\n"
 "%s\n"
-"Cargouse o tema predeterminado"
+"Cargouse o tema predeterminado."
 
 #, c-format
 msgid ""
@@ -1306,14 +1304,17 @@ msgid ""
 "%s\n"
 "Default skin has been loaded"
 msgstr ""
+"Non é posíbel empregar o tema «%s» con compatibilidade para 256 cores:\n"
+"%s\n"
+"Cargouse o tema predeterminado."
 
 #, c-format
 msgid ""
 "Unable to load '%s' skin.\n"
 "Default skin has been loaded"
 msgstr ""
-"Non foi posíbel cargar o tema «%s».\n"
-"Cargouse o tema predeterminado."
+"Non é posíbel cargar o tema «%s».\n"
+"cargouse o tema predeterminado."
 
 msgid ""
 "\n"
@@ -1684,7 +1685,7 @@ msgid "GiB"
 msgstr "GiB"
 
 msgid "Cannot create pipe descriptor"
-msgstr "Non foi posíbel crear o descritor da canalización"
+msgstr "Non é posíbel crear o descritor da canalización"
 
 msgid "Cannot create pipe streams"
 msgstr "Non é posíbel crear a canalización de fluxos"
@@ -2093,10 +2094,8 @@ msgstr ""
 msgid "Spell backend is unavailable."
 msgstr ""
 
-#, fuzzy
-#| msgid "&Configuration..."
 msgid "Ctags Configuration"
-msgstr "&Configuración..."
+msgstr "Configuración de Ctags"
 
 msgid "Ctags executable:"
 msgstr ""
@@ -2138,37 +2137,25 @@ msgstr "Buscar &Declaración"
 msgid "No word at cursor."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "'%s' is not a symbolic link"
+#, c-format
 msgid "'%s' is not a known symbol."
-msgstr "«%s» non é unha ligazón simbólica"
+msgstr "«%s» non é un símbolo coñecido."
 
-#, fuzzy
-#| msgid "Unable to save to file"
 msgid "Failed to create temporary file."
-msgstr "Non foi posíbel gardar o ficheiro"
+msgstr "Produciuse un fallo ao crear o ficheiro temporal."
 
-#, fuzzy
-#| msgid "Unable to save to file"
 msgid "Failed to open temporary file."
-msgstr "Non foi posíbel gardar o ficheiro"
+msgstr "Produciuse un fallo ao abrir o ficheiro temporal."
 
 msgid "No indexed files found."
 msgstr ""
 
-#, fuzzy
-#| msgid ""
-#| "Failed to run:\n"
-#| "%s\n"
 msgid "Failed to run grep."
-msgstr ""
-"Non foi posíbel executar:\n"
-"%s\n"
+msgstr "Produciuse un fallo ao executar grep."
 
-#, fuzzy, c-format
-#| msgid "No suitable entries found in %s"
+#, c-format
 msgid "No references found for '%s'."
-msgstr "Non se atopan entradas apropiadas en %s"
+msgstr "Non se atopan referencias para «%s»"
 
 msgid "Find References"
 msgstr ""
@@ -2239,10 +2226,9 @@ msgstr ""
 msgid "Project root directory to index:"
 msgstr "Directorio do perfil raíz:"
 
-#, fuzzy, c-format
-#| msgid "Unable to create event '%s'!"
+#, c-format
 msgid "Failed to create index in %s"
-msgstr "Non foi posíbel crear a acción «%s»!"
+msgstr "Produciuse un fallo ao crear o índice en %s"
 
 #, c-format
 msgid "Indexed: %u symbols"
@@ -2505,10 +2491,8 @@ msgstr ""
 msgid "Language:"
 msgstr "Idioma"
 
-#, fuzzy
-#| msgid "Select"
 msgid "&Select..."
-msgstr "Seleccionar"
+msgstr "&Seleccionar…"
 
 msgid "Spell plugin settings"
 msgstr ""
@@ -2722,7 +2706,7 @@ msgid "This function is not implemented"
 msgstr "Esa función non está implementada"
 
 msgid "Unable to save to file"
-msgstr "Non foi posíbel gardar o ficheiro"
+msgstr "Non é posíbel gardar no ficheiro"
 
 msgid "Goto line"
 msgstr "Ir á liña"
@@ -2852,10 +2836,8 @@ msgstr "&Desfacer"
 msgid "&Redo"
 msgstr "&Refacer"
 
-#, fuzzy
-#| msgid "Command &history"
 msgid "Undo &History..."
-msgstr "&Historial de ordes"
+msgstr "Desfacer o &historial…"
 
 msgid "&Toggle ins/overw"
 msgstr "Alternar &Inserción"
@@ -2928,7 +2910,7 @@ msgid "&Flush bookmarks"
 msgstr "Limpar &Todos os marcadores"
 
 msgid "&Go to line..."
-msgstr "&Ir á liña "
+msgstr "&Ir á liña…"
 
 msgid "&Toggle line state"
 msgstr "Alternar &Liña de estado"
@@ -2996,7 +2978,7 @@ msgid "Learn &keys..."
 msgstr "Redefinir &Teclas..."
 
 msgid "Syntax &highlighting..."
-msgstr "Sintaxe de &Resalte"
+msgstr "Sintaxe de &resalte…"
 
 msgid "Pl&ugin info..."
 msgstr ""
@@ -3152,7 +3134,7 @@ msgstr "Confirmar cambios"
 
 #, c-format
 msgid "%ld replacements made"
-msgstr " %ld substitucións feitas"
+msgstr "%ld substitucións feitas"
 
 msgid "Plugin"
 msgstr ""
@@ -3913,6 +3895,8 @@ msgid ""
 "Edit symlink, unable to remove\n"
 "%s"
 msgstr ""
+"Editar a ligazón simbólica, non é posíbel eliminala\n"
+"%s"
 
 #, c-format
 msgid ""
@@ -3932,7 +3916,7 @@ msgstr "Configuración gardada en %s"
 
 #, c-format
 msgid "Unable to save setup to %s"
-msgstr "Non foi posíbel gardar a configuración en %s"
+msgstr "Non é posíbel gardar a configuración en %s"
 
 msgid "Cannot execute commands on non-local filesystems"
 msgstr "Non é posíbel executar ordes desde sistemas de ficheiros non locais"
@@ -3944,7 +3928,7 @@ msgid "Cannot create temporary command file"
 msgstr ""
 
 msgid "Pipe failed"
-msgstr "Fallo na canalización"
+msgstr "Produciuse un fallo na canalización"
 
 #, c-format
 msgid ""
@@ -4200,7 +4184,7 @@ msgid ""
 msgstr ""
 
 msgid "Reget failed, about to overwrite file"
-msgstr "Fallou o reintento, vaise a sobrescribir o ficheiro"
+msgstr "Produciuse un fallo de reget, a piques de sobrescribir o ficheiro"
 
 #, c-format
 msgid ""
@@ -4539,17 +4523,15 @@ msgstr "&Saír"
 #, fuzzy
 #| msgid "C&hmod"
 msgid "C&hmod..."
-msgstr "c&Hmod"
+msgstr "C&hmod..."
 
 #, fuzzy
 #| msgid "Ch&own"
 msgid "Ch&own..."
-msgstr "ch&Own"
+msgstr "Ch&own..."
 
-#, fuzzy
-#| msgid "&Advanced chown"
 msgid "&Advanced chown..."
-msgstr "c&Ambiar propietario e permisos"
+msgstr "Funcións &avanzadas de chown..."
 
 msgid "Cha&ttr flags..."
 msgstr ""
@@ -4614,10 +4596,8 @@ msgstr "&Presentación..."
 msgid "&Panel options..."
 msgstr "Opcións dos &Paneis..."
 
-#, fuzzy
-#| msgid "Use panel sort mo&de"
 msgid "File panel m&odes..."
-msgstr "Usar o m&Odo de orden do panel"
+msgstr "M&odos do panel de ficheiros..."
 
 msgid "C&onfirmation..."
 msgstr "c&Onfirmación..."
@@ -4806,8 +4786,8 @@ msgstr "Rematado"
 #, c-format
 msgid "Finished (ignored %zu directory)"
 msgid_plural "Finished (ignored %zu directories)"
-msgstr[0] "Rematado (%zu directorio ignorado) "
-msgstr[1] "Rematado (%zu directorios ignorados) "
+msgstr[0] "Rematado (%zu directorio ignorado)"
+msgstr[1] "Rematado (%zu directorios ignorados)"
 
 #, c-format
 msgid "Matches in %s (%u)"
@@ -5180,13 +5160,11 @@ msgstr "[disp]"
 msgid "UP--DIR"
 msgstr "DIR--ANT"
 
-#, fuzzy
-#| msgid "Filter"
 msgid "Filter: "
-msgstr "Filtro"
+msgstr "Filtro: "
 
 msgid "<readlink failed>"
-msgstr "<fallou readlink>"
+msgstr "<produciuse un fallo ao ler a ligazón>"
 
 #, c-format
 msgid "%d marked (+%d more)"
@@ -5735,7 +5713,7 @@ msgid ""
 "Failed to run:\n"
 "%s\n"
 msgstr ""
-"Non foi posíbel executar:\n"
+"Produciuse un fallo ao executar:\n"
 "%s\n"
 
 msgid "Home directory path is not absolute"
@@ -5748,16 +5726,14 @@ msgid ""
 "%s\n"
 msgstr ""
 "\n"
-"Non foi posíbel pechar:\n"
+"Produciuse un fallo ao pechar:\n"
 "%s\n"
 
 msgid "unspecified"
 msgstr ""
 
-#, fuzzy
-#| msgid "VFS plugins and scripts:"
 msgid "Lua scripts"
-msgstr "Engadidos e scripts VFS"
+msgstr "Scripts de Lua"
 
 msgid "This script has no entry file."
 msgstr ""
@@ -5784,10 +5760,8 @@ msgstr ""
 msgid "&Settings"
 msgstr "A&Plicar"
 
-#, fuzzy
-#| msgid "Reading failed"
 msgid "Lua action failed"
-msgstr "Produciuse un fallo na lectura"
+msgstr "Produciuse un fallo na acción de Lua"
 
 msgid "The selected script has no runnable actions."
 msgstr ""
@@ -5891,10 +5865,8 @@ msgstr ""
 msgid "expected a name"
 msgstr ""
 
-#, fuzzy
-#| msgid "Unexpected EOF on archive file"
 msgid "expected a quoted attribute value"
-msgstr "Fin de ficheiro (EOF) inesperado"
+msgstr "agardábase un valor de atributo entre comiñas"
 
 msgid "'<' is not allowed in an attribute value"
 msgstr ""
@@ -6055,10 +6027,8 @@ msgstr "Gardar ficheiro"
 msgid "File not found: %s"
 msgstr "Ficheiro: %s"
 
-#, fuzzy
-#| msgid "Unable to create event '%s'!"
 msgid "Failed to create archive"
-msgstr "Non foi posíbel crear a acción «%s»!"
+msgstr "Produciuse un fallo ao crear o ficheiro"
 
 msgid "Extract"
 msgstr ""
@@ -6068,14 +6038,9 @@ msgstr ""
 msgid "Destination directory:"
 msgstr "Directorio de datos:"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Failed to run:\n"
-#| "%s\n"
+#, c-format
 msgid "Failed to extract: %s"
-msgstr ""
-"Non foi posíbel executar:\n"
-"%s\n"
+msgstr "Produciuse un fallo ao extraer: %s"
 
 msgid "Test"
 msgstr ""
@@ -6281,10 +6246,8 @@ msgstr ""
 msgid " Builtin (libarchive) "
 msgstr ""
 
-#, fuzzy
-#| msgid "External panelize"
 msgid " External archivers "
-msgstr "Paneis externos"
+msgstr " Arquivadores externos "
 
 msgid " Hint "
 msgstr ""
@@ -6300,10 +6263,8 @@ msgstr ""
 msgid "Abort current operation?"
 msgstr "&Operación detallada"
 
-#, fuzzy
-#| msgid "ftpfs: Reading FTP directory %s... %s%s"
 msgid "Reading directory listing..."
-msgstr "ftpfs: lendo vía FTP o directorio %s... %s%s"
+msgstr "Lendo o listado do directorio..."
 
 #, fuzzy
 #| msgid ""
@@ -6610,10 +6571,9 @@ msgstr ""
 msgid "Connecting to %s:%d..."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "sftp: Enter password for %s "
+#, c-format
 msgid "Enter password for %s@%s"
-msgstr "sftp: introduza o contrasinal para %s "
+msgstr "Introduza o contrasinal para %s@%s"
 
 #, fuzzy
 #| msgid "Password:"
@@ -6910,14 +6870,8 @@ msgstr ""
 msgid "Struct look settings"
 msgstr ""
 
-#, fuzzy
-#| msgid ""
-#| "Cannot write to the %s file:\n"
-#| "%s\n"
 msgid "Cannot write the settings file"
-msgstr ""
-"Non é posíbel escribir no ficheiro %s:\n"
-"%s\n"
+msgstr "Non é posíbel escribir o ficheiro de axustes"
 
 msgid "Struct loo&k"
 msgstr ""
@@ -7377,10 +7331,8 @@ msgstr ""
 msgid "Numeric fields must be valid; leaf size > 0, fanout >= 2."
 msgstr ""
 
-#, fuzzy
-#| msgid "Unable to save setup to %s"
 msgid "Failed to save settings."
-msgstr "Non foi posíbel gardar a configuración en %s"
+msgstr "Produciuse un fallo ao gardar os axustes."
 
 msgid "== Equals ($eq)"
 msgstr ""
@@ -7685,10 +7637,9 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "sftp: Enter passphrase for %s "
+#, c-format
 msgid "Enter passphrase for key %s"
-msgstr "sftp: introduza a frase de paso para %s "
+msgstr "Introduza a frase de paso para a chave %s"
 
 msgid "SFTP key passphrase"
 msgstr ""
@@ -8159,14 +8110,8 @@ msgstr ""
 msgid "shell: the transfer failed"
 msgstr ""
 
-#, fuzzy
-#| msgid ""
-#| "Cannot write to the %s file:\n"
-#| "%s\n"
 msgid "shell: cannot write the remote file"
-msgstr ""
-"Non é posíbel escribir no ficheiro %s:\n"
-"%s\n"
+msgstr "shell: non é posíbel escribir o ficheiro remoto"
 
 msgid "shell: fewer bytes were sent than announced"
 msgstr ""
@@ -8362,10 +8307,8 @@ msgstr "Ligazóns simbólicas e&Stábeis"
 msgid "A symbolic link whose target is gone"
 msgstr ""
 
-#, fuzzy
-#| msgid "Device:     %s"
 msgid "Device"
-msgstr "Dispositivo:  %s"
+msgstr "Dispositivo"
 
 #, fuzzy
 #| msgid "Save file"
@@ -9187,10 +9130,9 @@ msgstr ""
 msgid "inherited"
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "Modified:   %s"
+#, c-format
 msgid "Copied: %s"
-msgstr "Modificado:   %s"
+msgstr "Copiado: %s"
 
 #, fuzzy
 #| msgid "Searching"
@@ -9332,7 +9274,7 @@ msgid " (using %s)\n"
 msgstr ""
 
 msgid "Virtual File Systems:"
-msgstr "(VFS) Sistema de ficheiros virtual:"
+msgstr "Sistema de ficheiros virtuais:"
 
 msgid "Data types:"
 msgstr "Tipos de datos:"
@@ -9376,10 +9318,8 @@ msgstr "Opcións do editor"
 msgid "Runtime plugins:"
 msgstr ""
 
-#, fuzzy
-#| msgid "VFS plugins and scripts:"
 msgid "Lua scripts:"
-msgstr "Engadidos e scripts VFS"
+msgstr "Scripts de Lua:"
 
 msgid "Lua modules:"
 msgstr ""
@@ -9665,7 +9605,7 @@ msgid "ButtonBar|Text"
 msgstr "ButtonBar|Hexa"
 
 msgid "ButtonBar|Ascii"
-msgstr "ButtonBar|ASCII"
+msgstr "BarraDeBotóns|Ascii"
 
 msgid "ButtonBar|HxSrch"
 msgstr "ButtonBar|BuscaHexa"
@@ -9842,10 +9782,8 @@ msgstr ""
 "Non é posíbel abrir arquivos de tipo tar\n"
 "%s"
 
-#, fuzzy
-#| msgid "Cannot execute sort command"
 msgid "Cannot open source command."
-msgstr "Non foi posíbel executar «ordenar»"
+msgstr "Non é posíbel executar «ordenar»"
 
 #, fuzzy, c-format
 #| msgid "Cannot open file %s"
