@@ -1,4 +1,4 @@
-# shfs-helper: info 2
+# shfs-helper: info 3
 LC_TIME=C
 export LC_TIME
 #SHELL_HAVE_HEAD         1
@@ -11,6 +11,7 @@ export LC_TIME
 #SHELL_HAVE_SHA256     128
 #SHELL_HAVE_MD5        256
 #SHELL_HAVE_NOTRUNC    512
+#SHELL_HAVE_DD        1024
 res=0
 if `echo yes| head -c 1 > /dev/null 2>&1` ; then
     res=`expr $res + 1`
@@ -52,6 +53,9 @@ if `echo yes| md5sum > /dev/null 2>&1` ; then
 fi
 if `dd if=/dev/null of=/dev/null conv=notrunc > /dev/null 2>&1` ; then
     res=`expr $res + 512`
+fi
+if dd if=/dev/null > /dev/null 2>&1; then
+    res=`expr $res + 1024`
 fi
 echo $res
 echo "### 200"

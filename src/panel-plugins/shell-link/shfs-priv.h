@@ -61,6 +61,7 @@
 #define SHELL_HAVE_SHA256    128
 #define SHELL_HAVE_MD5       256
 #define SHELL_HAVE_NOTRUNC   512
+#define SHELL_HAVE_DD        1024
 
 /* Reply classes, as produced by shfs_decode_reply(). Same meaning as the FTP
    reply classes the protocol borrowed them from. */

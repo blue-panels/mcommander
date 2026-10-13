@@ -98,7 +98,7 @@ printf 'two levels down\n' > 05-upload/source/tree/deep/deeper.txt
 
 cat > 05-upload/cases.tsv <<'EOF'
 file	key	expect	why	transports
-source	key Tab,cd /work/local/fileops/05-upload/source,on plain.txt,F5,Enter,key Tab,on plain.txt,F3	text: a file of its own	a file goes into the plugin panel	ftp
+source	key Tab,cd /work/local/fileops/05-upload/source,on plain.txt,F5,Enter,key Tab,on plain.txt,F3	text: a file of its own	a file goes into the plugin panel	ftp,sh
 source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F5,Enter,key Tab,on tree,Enter	text: inner.txt	a directory goes in with what is in it	ftp
 source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F5,Enter,key Tab,on tree,Enter,on deep,Enter	text: deeper.txt	and with the directories below it	ftp
 source	key Tab,cd /work/local/fileops/05-upload/source,on empty,F5,Enter,key Tab,on empty,Enter	text: 05-upload/empty	an empty directory is made, not skipped	ftp
@@ -129,6 +129,7 @@ doomed	F8,Enter	no text: /doomed	F8 takes a directory with everything in it	ftp
 doomed	F8,Enter	no text: Delete failed	and says nothing went wrong	ftp
 moved	F6,Enter	no text: delete from plugin failed	F6 out of a plugin panel removes the directory it took	ftp
 stuck	F8,Enter	text: Delete failed	a name the server will not remove is an error	ftp
+stuck	F8,Enter	text: Cannot delete stuck	a name the server will not remove is an error	sh
 stuck	F8,Enter,Enter,on stuck,Enter	no text: first.txt	and everything it will remove is gone all the same	ftp
 stuck	F8,Enter,Enter,on stuck,Enter	no text: last.txt	whichever side of the refusal it was listed on	ftp
 stuck	F8,Enter,Enter,on stuck,Enter,on a-locked,Enter	text: kept.txt	while what it refused is still there	ftp

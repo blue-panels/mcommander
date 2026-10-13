@@ -1816,6 +1816,8 @@ shfs_conn_set_env (shfs_conn_t *conn, int host_flags)
         g_string_append (env, "SHELL_HAVE_DATE_MDYT=1 export SHELL_HAVE_DATE_MDYT; ");
     if ((host_flags & SHELL_HAVE_TAIL) != 0)
         g_string_append (env, "SHELL_HAVE_TAIL=1 export SHELL_HAVE_TAIL; ");
+    if ((host_flags & SHELL_HAVE_DD) != 0)
+        g_string_append (env, "SHELL_HAVE_DD=1 export SHELL_HAVE_DD; ");
 }
 
 /* --------------------------------------------------------------------------------------------- */
