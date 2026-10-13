@@ -3453,6 +3453,30 @@ dview_fini (WDiff *dview)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Whether the column of state symbols shows: asked for, or needed in syntax mode when the
+   skin gives some state of a line the background of the normal text. */
+static gboolean
+dview_shows_symbols (const WDiff *dview)
+{
+    int states[4];
+    size_t n = 0;
+
+    if (dview->display_symbols)
+        return TRUE;
+    if (!dview->syntax)
+        return FALSE;
+
+    states[n++] = dview_pair_on_terminal_ground (DIFFVIEWER_ADDED_COLOR, LINE_DISTANCE);
+    states[n++] = dview_pair_on_terminal_ground (DIFFVIEWER_REMOVED_COLOR, LINE_DISTANCE);
+    states[n++] = dview_pair_on_terminal_ground (DIFFVIEWER_CHANGEDLINE_COLOR, LINE_DISTANCE);
+    if (dview->nfiles == 3)
+        states[n++] = dview_pair_on_terminal_ground (DIFFVIEWER_CONFLICT_COLOR, LINE_DISTANCE);
+
+    return dview_state_needs_gutter (states, n);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static int
 dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int height, int width)
 {
@@ -3461,7 +3485,7 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
     char buf[BUFSIZ];
     FBUF *f = dview->f[ord];
     int skip = dview->skip_cols;
-    gboolean display_symbols = dview->display_symbols;
+    gboolean display_symbols = dview_shows_symbols (dview);
     int display_numbers = dview->display_numbers;
     gboolean show_cr = dview->show_cr;
     int tab_size = 8;
@@ -3479,13 +3503,8 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
         dview_pair_on_terminal_ground (DIFFVIEWER_CHANGEDLINE_COLOR, LINE_DISTANCE);
     const int c_chgnew = dview_pair_on_terminal_ground (DIFFVIEWER_CHANGEDNEW_COLOR, WORD_DISTANCE);
     const int c_conflict = dview_pair_on_terminal_ground (DIFFVIEWER_CONFLICT_COLOR, LINE_DISTANCE);
-    const int states[] = { c_added, c_removed, c_chgline, c_conflict };
     run_walk_t w;
     const gboolean word_mark = dview->syntax && dview_word_needs_mark (c_chgnew, c_chgline);
-
-    if (dview->syntax && !display_symbols
-        && dview_state_needs_gutter (states, G_N_ELEMENTS (states)))
-        display_symbols = TRUE;
 
     xwidth = display_numbers;
     if (display_symbols)
@@ -3871,7 +3890,7 @@ dview_update (WDiff *dview)
 
         tty_setcolor (CORE_FRAME_COLOR);
         xwidth = dview->display_numbers;
-        if (dview->display_symbols)
+        if (dview_shows_symbols (dview))
             xwidth++;
         if (xwidth != 0)
             xwidth++;
