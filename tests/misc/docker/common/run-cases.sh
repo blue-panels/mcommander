@@ -86,6 +86,16 @@ shift $((OPTIND - 1))
 
 [ -x "$MC" ] || { echo "run-cases.sh: no mc at $MC, run build first" >&2; exit 2; }
 
+# The shell-link helper protocol is exercised once per run that includes the
+# shell transport.  Keep this outside cases.tsv: it talks directly to the
+# sandbox SSH host and does not need a panel session.
+case ",$transports," in
+*,sh,*)
+    sh "$SRC/common/shell-link-helpers.sh" \
+        || { echo "run-cases.sh: shell-link helper checks failed" >&2; exit 1; }
+    ;;
+esac
+
 shell_env=
 shell_path=
 if [ -n "$shell" ]; then
