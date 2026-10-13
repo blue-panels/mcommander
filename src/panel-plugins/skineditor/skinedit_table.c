@@ -213,6 +213,8 @@ static const skinedit_table_row_t rows_diffviewer[] = {
     C ("diffviewer", "changed", N_ ("Changed line, filler"),
        N_ ("The rest of a changed line and its counterpart")),
     C ("diffviewer", "error", N_ ("Error"), NULL),
+    C ("diffviewer", "conflict", N_ ("Conflict"),
+       N_ ("Lines both sides of a merge changed; the removed color when absent")),
 };
 
 static const skinedit_table_row_t rows_mctree[] = {

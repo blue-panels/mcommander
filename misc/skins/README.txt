@@ -363,6 +363,10 @@ applies individually to each of these three properties.
         error
             According to what happens to a line of text
 
+        conflict
+            Lines both sides of a merge of three files changed, each its
+            own way. Without it the removed color is used.
+
 
 Character sections
 ==================
