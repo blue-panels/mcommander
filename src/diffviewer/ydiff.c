@@ -3766,35 +3766,36 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
 static void
 dview_status (const WDiff *dview, diff_place_t ord, int width, int c)
 {
-    const char *buf;
-    int filename_width;
+    /* the frame below has the name of the file; this line has where the view stands */
     int linenum, lineofs;
-    vfs_path_t *vpath;
-    char *path;
+    const char *what;
+    int count;
+    char buf[BUF_MEDIUM];
 
-    tty_setcolor (STATUSBAR_COLOR);
-
-    tty_gotoyx (0, c);
     get_line_numbers (dview->a[ord], dview->skip_rows, &linenum, &lineofs);
 
-    filename_width = width - 24;
-    if (filename_width < 8)
-        filename_width = 8;
-
-    vpath = vfs_path_from_str (dview->label[ord]);
-    path = vfs_path_to_str_flags (vpath, 0, VPF_STRIP_HOME | VPF_STRIP_PASSWORD);
-    vfs_path_free (vpath, TRUE);
-    buf = str_term_trim (path, filename_width);
     if (ord == DIFF_LEFT)
-        tty_printf ("%s%-*s %6d+%-4d Col %-4d ", dview->merged[ord] ? "* " : "  ", filename_width,
-                    buf, linenum, lineofs, dview->skip_cols);
+    {
+        what = "Col";
+        count = dview->skip_cols;
+    }
     else if (ord == DIFF_MERGED)
-        tty_printf ("%s%-*s %6d+%-4d Cnf %-4d ", dview->merged[ord] ? "* " : "  ", filename_width,
-                    buf, linenum, lineofs, dview->nconflicts);
+    {
+        what = "Cnf";
+        count = dview->nconflicts;
+    }
     else
-        tty_printf ("%s%-*s %6d+%-4d Dif %-4d ", dview->merged[ord] ? "* " : "  ", filename_width,
-                    buf, linenum, lineofs, dview->ndiff);
-    g_free (path);
+    {
+        what = "Dif";
+        count = dview->ndiff;
+    }
+
+    g_snprintf (buf, sizeof (buf), "%s Line %d+%d  %s %d", dview->merged[ord] ? "*" : " ", linenum,
+                lineofs, what, count);
+
+    tty_setcolor (STATUSBAR_COLOR);
+    tty_gotoyx (0, c);
+    tty_print_string (str_fit_to_term (buf, width, J_LEFT_FIT));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3897,16 +3898,38 @@ dview_update (WDiff *dview)
 
         for (i = 0, x = 0; i < ncols; x += widths[i], i++)
         {
+            /* in a merge only the result has the double frame; the sides are for reading */
+            const gboolean single = dview->nfiles == 3 && ords[i] != DIFF_MERGED;
+
             if (widths[i] > 1)
-                tty_draw_box (1, x, height, widths[i], FALSE);
+                tty_draw_box (1, x, height, widths[i], single);
 
             if (xwidth != 0 && xwidth < widths[i] - 1)
             {
                 tty_gotoyx (1, x + xwidth);
-                tty_print_char (mc_tty_frm[MC_TTY_FRM_DTOPMIDDLE]);
+                tty_print_char (mc_tty_frm[single ? MC_TTY_FRM_TOPMIDDLE : MC_TTY_FRM_DTOPMIDDLE]);
                 tty_gotoyx (height, x + xwidth);
-                tty_print_char (mc_tty_frm[MC_TTY_FRM_DBOTTOMMIDDLE]);
+                tty_print_char (
+                    mc_tty_frm[single ? MC_TTY_FRM_BOTTOMMIDDLE : MC_TTY_FRM_DBOTTOMMIDDLE]);
                 tty_draw_vline (2, x + xwidth, mc_tty_frm[MC_TTY_FRM_VERT], height - 2);
+            }
+
+            // the name of the file on the top line, as a panel has it, clear of the separator
+            if (widths[i] - xwidth > 8)
+            {
+                vfs_path_t *vpath;
+                char *path;
+                const char *title;
+                int tx;
+
+                vpath = vfs_path_from_str (dview->label[ords[i]]);
+                path = vfs_path_to_str_flags (vpath, 0, VPF_STRIP_HOME | VPF_STRIP_PASSWORD);
+                vfs_path_free (vpath, TRUE);
+                title = str_term_trim (path, widths[i] - xwidth - 6);
+                tx = MAX (x + xwidth + 1, x + (widths[i] - str_term_width1 (title) - 2) / 2);
+                tty_gotoyx (1, tx);
+                tty_printf (" %s ", title);
+                g_free (path);
             }
         }
         dview->new_frame = FALSE;
