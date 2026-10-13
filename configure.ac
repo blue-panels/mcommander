@@ -1235,6 +1235,7 @@ src/mctree/Makefile
 src/viewer/Makefile
 src/mcterm/Makefile
 src/diffviewer/Makefile
+src/diffviewer/xdiff/Makefile
 src/filemanager/Makefile
 
 src/panel-plugins/Makefile

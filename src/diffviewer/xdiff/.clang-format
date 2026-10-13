@@ -1,0 +1,3 @@
+# Code taken from git as it is: make indent must not touch it.
+DisableFormat: true
+SortIncludes: Never
