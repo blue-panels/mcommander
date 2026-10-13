@@ -124,6 +124,11 @@ handle_key() (see 6) and lists them with that flag.
 API 20 adds MC_PP_MENU_ATTRIBUTES: a plugin can put an entry into the
 Attributes menu, after Advanced chown.
 
+API 21 adds host->open_merge(): the merge of three files in the diff
+viewer, for a conflict of a version control system; and
+host->open_diff_labeled(), open_diff() with the names to show for the
+files, so temporary copies are not shown by their own names.
+
 
 3.2 Capability Flags (mc_pp_flags_t)
 
@@ -164,6 +169,15 @@ What mc provides to the plugin while the panel is active:
                               terminal
   open_diff(host, left, right)
                               two-file diff via the integrated viewer
+  open_diff_labeled(host, left, left_label, right, right_label, read_only)
+                              open_diff() with the names to show; the
+                              sides in read_only (MC_PP_DIFF_LEFT_READ_ONLY,
+                              MC_PP_DIFF_RIGHT_READ_ONLY) are copies that
+                              the view does not let the user change
+  open_merge(host, local, local_label, base, remote, remote_label, output)
+                              merge of three files via the integrated
+                              viewer; returns 1 when the merge was
+                              saved into output, 0 when not, -1 on error
   close_plugin(host, dir_path)
                               ask the host to tear down the plugin and
                               optionally cd to dir_path

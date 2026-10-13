@@ -148,6 +148,7 @@ typedef struct WDiff
     FBUF *f[DIFF_COUNT];
     const char *backup_sufix;
     gboolean merged[DIFF_COUNT];
+    gboolean read_only[DIFF_COUNT];  // a copy to look at: no edit, nothing merged into it
     GArray *a[DIFF_COUNT];
     GPtrArray *hdiff;
     gboolean syntax;                         // color the text by syntax instead of by diff state

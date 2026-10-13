@@ -120,6 +120,57 @@ host_open_diff_impl (mc_panel_host_t *host, const char *left_path, const char *r
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+host_open_diff_labeled_impl (mc_panel_host_t *host, const char *left_path, const char *left_label,
+                             const char *right_path, const char *right_label, int read_only)
+{
+    (void) host;
+
+    if (left_path == NULL || right_path == NULL || *left_path == '\0' || *right_path == '\0')
+        return FALSE;
+
+#ifdef USE_DIFF_VIEW
+    return (diff_view_ex (left_path, right_path, left_label != NULL ? left_label : left_path,
+                          right_label != NULL ? right_label : right_path,
+                          (read_only & MC_PP_DIFF_LEFT_READ_ONLY) != 0,
+                          (read_only & MC_PP_DIFF_RIGHT_READ_ONLY) != 0)
+            != 0);
+#else
+    (void) left_label;
+    (void) right_label;
+    (void) read_only;
+    return FALSE;
+#endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+host_open_merge_impl (mc_panel_host_t *host, const char *local, const char *local_label,
+                      const char *base, const char *remote, const char *remote_label,
+                      const char *output)
+{
+    WPanel *panel = (WPanel *) host->host_data;
+
+    if (local == NULL || base == NULL || remote == NULL || output == NULL)
+        return -1;
+
+    // the plugin acts on the result before it returns, so the reload waits until then
+    if (panel != NULL)
+        panel->plugin_reload_wanted = TRUE;
+
+#ifdef USE_DIFF_VIEW
+    return merge_view (local, local_label != NULL ? local_label : local, base, remote,
+                       remote_label != NULL ? remote_label : remote, output);
+#else
+    (void) local_label;
+    (void) remote_label;
+    return -1;
+#endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 host_close_plugin_impl (mc_panel_host_t *host, const char *dir_path)
 {
@@ -256,6 +307,8 @@ panel_plugin_init_host (mc_panel_host_t *host, WPanel *panel)
     host->message = host_message_impl;
     host->run_command = host_run_command_impl;
     host->open_diff = host_open_diff_impl;
+    host->open_merge = host_open_merge_impl;
+    host->open_diff_labeled = host_open_diff_labeled_impl;
     host->close_plugin = host_close_plugin_impl;
     host->add_history = host_add_history_impl;
     host->get_marked_count = host_get_marked_count_impl;

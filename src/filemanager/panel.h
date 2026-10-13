@@ -102,6 +102,7 @@ typedef struct
     gboolean is_plugin_panel;               // TRUE when driven by a panel plugin
     const mc_panel_plugin_t *plugin;        // active plugin descriptor, or NULL
     void *plugin_data;                      // instance handle from plugin->open()
+    gboolean plugin_reload_wanted;          // a merge may have changed files: reload after the key
     mc_panel_host_t *plugin_host;           // host interface given to the plugin
     list_format_t plugin_base_list_format;  // list format active before plugin custom columns
     vfs_path_t *plugin_pre_cwd_vpath;       // panel cwd captured at activation; restored on close

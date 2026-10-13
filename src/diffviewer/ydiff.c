@@ -2736,6 +2736,13 @@ do_merge_hunk (WDiff *dview, action_direction_t merge_direction)
     else
         hunk = get_current_hunk (dview, &from1, &to1, &from2, &to2);
 
+    if (hunk > 0 && dview->read_only[n_merge])
+    {
+        message (D_NORMAL, _ ("Merge"), "%s",
+                 _ ("This side is a copy to look at:\nchanges to it would be lost."));
+        return;
+    }
+
     if (hunk > 0)
     {
         int merge_file_fd;
@@ -3952,6 +3959,13 @@ dview_edit (WDiff *dview, diff_place_t ord)
     gboolean h_modal;
     int linenum, lineofs;
 
+    if (dview->read_only[ord])
+    {
+        message (D_NORMAL, _ ("Edit"), "%s",
+                 _ ("This side is a copy to look at:\nchanges to it would be lost."));
+        return;
+    }
+
     if (dview->dsrc == DATA_SRC_TMP)
     {
         error_dialog (_ ("Edit"), _ ("Edit is disabled"));
@@ -4650,6 +4664,15 @@ merge3_init (WDiff *dview, const char *base, const char *out)
 int
 diff_view (const char *file1, const char *file2, const char *label1, const char *label2)
 {
+    return diff_view_ex (file1, file2, label1, label2, FALSE, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+int
+diff_view_ex (const char *file1, const char *file2, const char *label1, const char *label2,
+              gboolean read_only1, gboolean read_only2)
+{
     int error;
     WDiff *dview;
     Widget *dw;
@@ -4658,6 +4681,8 @@ diff_view (const char *file1, const char *file2, const char *label1, const char 
     dw = WIDGET (WIDGET (dview)->owner);
 
     error = dview_init (dview, file1, file2, label1, label2, DATA_SRC_MEM);
+    dview->read_only[DIFF_LEFT] = read_only1;
+    dview->read_only[DIFF_RIGHT] = read_only2;
     if (error >= 0)
         error = redo_diff (dview);
     if (error >= 0)
@@ -4680,8 +4705,9 @@ diff_view (const char *file1, const char *file2, const char *label1, const char 
 
 /* The merge view: @local and @remote at the sides, their merge against @base in the middle.
    Returns 1 when the merge was saved into @out, 0 when it was not, -1 on an error. */
-static int
-merge_view (const char *local, const char *base, const char *remote, const char *out)
+int
+merge_view (const char *local, const char *local_label, const char *base, const char *remote,
+            const char *remote_label, const char *out)
 {
     int error;
     gboolean saved = FALSE;
@@ -4691,7 +4717,7 @@ merge_view (const char *local, const char *base, const char *remote, const char 
     dview = dview_dialog_new ();
     dw = WIDGET (WIDGET (dview)->owner);
 
-    error = dview_init (dview, local, remote, local, remote, DATA_SRC_MEM);
+    error = dview_init (dview, local, remote, local_label, remote_label, DATA_SRC_MEM);
     if (error >= 0)
         error = merge3_init (dview, base, out);
     if (error >= 0)
@@ -4939,7 +4965,7 @@ dview_merge_cmd (const char *local, const char *base, const char *remote, const 
         }
     }
 
-    return merge_view (local, base, remote, out != NULL ? out : base) > 0;
+    return merge_view (local, local, base, remote, remote, out != NULL ? out : base) > 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
