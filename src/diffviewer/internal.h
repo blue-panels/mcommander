@@ -29,7 +29,8 @@ typedef enum
 {
     DIFF_LEFT = 0,
     DIFF_RIGHT = 1,
-    DIFF_COUNT = 2
+    DIFF_MERGED = 2,  // the middle column of a merge of three files
+    DIFF_COUNT = 3
 } diff_place_t;
 
 typedef enum
@@ -39,6 +40,15 @@ typedef enum
     DIFF_DEL = 2,
     DIFF_CHG = 3
 } DiffState;
+
+/* What a chunk of a merge of three files is, seen from the middle */
+typedef enum
+{
+    MERGE3_LEFT = 0,  // only the left file differs
+    MERGE3_RIGHT,     // only the right file differs
+    MERGE3_SAME,      // both differ, with the same text
+    MERGE3_CONFLICT   // both differ, each its own way
+} merge3_kind_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
 
@@ -101,6 +111,19 @@ typedef struct
     GArray *line_off;
 } PRINTER_CTX;
 
+/* Lines that differ in a merge of three files; lines are counted from 0 */
+typedef struct
+{
+    int start[DIFF_COUNT];
+    int count[DIFF_COUNT];
+    int first_row;  // row of the view where the chunk begins
+    int rows;
+    merge3_kind_t kind;
+} MERGE3_CHUNK;
+
+typedef gboolean (*merge3_same_fn) (void *ctx, int left_start, int left_count, int right_start,
+                                    int right_count);
+
 /* A run of bytes sharing one color of the rule set; pass the color to
    dview_syntax_color() to get something to draw with. */
 typedef struct dview_syntax_t dview_syntax_t;
@@ -147,6 +170,14 @@ typedef struct WDiff
     diff_options_t opt;
     gboolean opt_changed;  // the user changed the options in this view
 
+    // merge of three files: left, merged and right columns
+    int nfiles;       // 2, or 3 for a merge
+    char *merge_tmp;  // the middle column lives in this temporary file
+    char *merge_out;  // where Save writes the middle column
+    GArray *chunks;   // MERGE3_CHUNK
+    int nconflicts;
+    gboolean merge_saved;  // the result was written at least once
+
     // Search variables
     struct
     {
@@ -161,6 +192,10 @@ typedef struct WDiff
 /*** global variables defined in .c file *********************************************************/
 
 /*** declarations of public functions ************************************************************/
+
+/* align3.c */
+void dview_align3 (const GArray *ops_left, const GArray *ops_right, merge3_same_fn same, void *ctx,
+                   GArray *chunks);
 
 /* compare.c */
 int dview_compare_files (const diff_options_t *opt, const char *file1, const char *file2,

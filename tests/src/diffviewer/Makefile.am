@@ -14,9 +14,13 @@ LIBS += $(GLIB_LIBS)
 endif
 
 TESTS = \
+	align3 \
 	compare_files
 
 check_PROGRAMS = $(TESTS)
+
+align3_SOURCES = \
+	align3.c
 
 compare_files_SOURCES = \
 	compare_files.c
