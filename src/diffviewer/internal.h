@@ -109,7 +109,6 @@ typedef struct WDiff
 {
     Widget widget;
 
-    const char *args;              // Args passed to diff
     const char *file[DIFF_COUNT];  // filenames
     char *label[DIFF_COUNT];
     FBUF *f[DIFF_COUNT];
@@ -162,6 +161,10 @@ typedef struct WDiff
 /*** global variables defined in .c file *********************************************************/
 
 /*** declarations of public functions ************************************************************/
+
+/* compare.c */
+int dview_compare_files (const diff_options_t *opt, const char *file1, const char *file2,
+                         GArray *ops);
 
 /* search.c */
 void dview_search_cmd (WDiff *dview);

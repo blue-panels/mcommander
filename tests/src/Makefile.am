@@ -6,6 +6,10 @@ if USE_INTERNAL_EDIT
 SUBDIRS += editor
 endif
 
+if USE_DIFF
+SUBDIRS += diffviewer
+endif
+
 AM_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
 	-I$(top_srcdir) \

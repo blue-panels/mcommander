@@ -1,0 +1,17 @@
+The xdiff library of git, used by the diff viewer to compare files.
+
+Source: https://github.com/git/git, tag v2.56.0
+        (commit a018953688f1b10bddf91bff8747068f5f4746a4), directory xdiff/.
+
+The .c and .h files are copied without changes, except git-compat-util.h,
+which is written for this tree: git's version pulls in the whole of git.
+
+Licenses: LibXDiff by Davide Libenzi and the git changes to it are under the
+GNU LGPL 2.1 or later; xhistogram.c is under the Eclipse Distribution License
+1.0 (BSD-3-Clause). The notices are in the files.
+
+Allocation failures make xdl_diff() fail. An internal check of xdiff that
+fails (BUG() in git) still ends mc through g_error(), as it ends git.
+
+To update: copy xdiff/*.[ch] of a newer git tag over these files, keep
+git-compat-util.h, and fix it if the new files need more from git.

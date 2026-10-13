@@ -1235,6 +1235,7 @@ src/mctree/Makefile
 src/viewer/Makefile
 src/mcterm/Makefile
 src/diffviewer/Makefile
+src/diffviewer/xdiff/Makefile
 src/filemanager/Makefile
 
 src/panel-plugins/Makefile
@@ -1360,6 +1361,7 @@ tests/lib/widget/Makefile
 tests/src/Makefile
 tests/src/filemanager/Makefile
 tests/src/viewer/Makefile
+tests/src/diffviewer/Makefile
 tests/src/editor/Makefile
 tests/src/editor/edit_complete_word_cmd_test_data.txt
 tests/src/vfs/Makefile

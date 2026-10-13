@@ -153,9 +153,9 @@ del menu Opzioni. Il visualizzatore le prende quando parte, quindi un
 confronto già sullo schermo mantiene quelle con cui è stato aperto.
 
 *Algoritmo di confronto.*
-Normale confronta i file come sono. Il più veloce presume file grandi e si
-accontenta di un risultato più grossolano. Minimo impiega più tempo per
-trovare un insieme più piccolo di differenze.
+Normale confronta i file come sono. Il più veloce usa l'algoritmo histogram,
+che resta veloce anche quando i file differiscono molto. Minimo impiega più
+tempo per trovare un insieme più piccolo di differenze.
 
 *Ignora maiuscole.*
 Maiuscole e minuscole contano come lo stesso carattere.
