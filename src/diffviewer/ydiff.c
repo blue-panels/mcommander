@@ -37,7 +37,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 
 #include "lib/global.h"
 #include "lib/tty/tty.h"
@@ -534,71 +533,6 @@ dview_fclose (FBUF *fs)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * Create pipe stream to process.
- *
- * @param cmd shell command line
- * @param flags open mode, either O_RDONLY or O_WRONLY
- *
- * @return file structure
- */
-
-static FBUF *
-dview_popen (const char *cmd, int flags)
-{
-    FILE *f;
-    FBUF *fs;
-    const char *type = NULL;
-
-    if (flags == O_RDONLY)
-        type = "r";
-    else if (flags == O_WRONLY)
-        type = "w";
-
-    if (type == NULL)
-        return NULL;
-
-    fs = dview_fdopen (0);
-    if (fs == NULL)
-        return NULL;
-
-    f = popen (cmd, type);
-    if (f == NULL)
-    {
-        dview_ffree (fs);
-        return NULL;
-    }
-
-    fs->fd = fileno (f);
-    fs->data = f;
-    return fs;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
- * Close pipe stream.
- *
- * @param fs structure
- * @return 0 on success, non-zero on error
- */
-
-static int
-dview_pclose (FBUF *fs)
-{
-    int rv = -1;
-
-    if (fs != NULL)
-    {
-        rv = pclose (fs->data);
-        dview_ffree (fs);
-    }
-
-    return rv;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
  * Get one character (byte) from string at given position
  *
  * @param str string
@@ -718,169 +652,6 @@ scan_deci (const char **str, int *n)
         return -1;
     *str = q;
     return 0;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
- * Parse line for diff statement.
- *
- * @param p string to parse
- * @param ops list of diff statements
- * @return 0 if success, otherwise non-zero
- */
-
-static int
-scan_line (const char *p, GArray *ops)
-{
-    DIFFCMD op;
-
-    int f1, f2;
-    int t1, t2;
-    int cmd;
-    gboolean range = FALSE;
-
-    /* handle the following cases:
-     *  NUMaNUM[,NUM]
-     *  NUM[,NUM]cNUM[,NUM]
-     *  NUM[,NUM]dNUM
-     * where NUM is a positive integer
-     */
-
-    if (scan_deci (&p, &f1) != 0 || f1 < 0)
-        return -1;
-
-    f2 = f1;
-    if (*p == ',')
-    {
-        p++;
-        if (scan_deci (&p, &f2) != 0 || f2 < f1)
-            return -1;
-
-        range = TRUE;
-    }
-
-    cmd = *p++;
-    if (cmd == 'a')
-    {
-        if (range)
-            return -1;
-    }
-    else if (cmd != 'c' && cmd != 'd')
-        return -1;
-
-    if (scan_deci (&p, &t1) != 0 || t1 < 0)
-        return -1;
-
-    t2 = t1;
-    range = FALSE;
-    if (*p == ',')
-    {
-        p++;
-        if (scan_deci (&p, &t2) != 0 || t2 < t1)
-            return -1;
-
-        range = TRUE;
-    }
-
-    if (cmd == 'd' && range)
-        return -1;
-
-    op.a[0][0] = f1;
-    op.a[0][1] = f2;
-    op.cmd = cmd;
-    op.a[1][0] = t1;
-    op.a[1][1] = t2;
-    g_array_append_val (ops, op);
-    return 0;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
- * Parse diff output and extract diff statements.
- *
- * @param f stream to read from
- * @param ops list of diff statements to fill
- * @return positive number indicating number of hunks, otherwise negative
- */
-
-static int
-scan_diff (FBUF *f, GArray *ops)
-{
-    int sz;
-    char buf[BUFSIZ];
-
-    while ((sz = dview_fgets (buf, sizeof (buf) - 1, f)) != 0)
-    {
-        if (isdigit (buf[0]))
-        {
-            if (buf[sz - 1] != '\n')
-                return -1;
-
-            buf[sz] = '\0';
-            if (scan_line (buf, ops) != 0)
-                return -1;
-        }
-        else
-            while (buf[sz - 1] != '\n' && (sz = dview_fgets (buf, sizeof (buf), f)) != 0)
-                ;
-    }
-
-    return ops->len;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/**
- * Invoke diff and extract diff statements.
- *
- * @param args extra arguments to be passed to diff
- * @param extra more arguments to be passed to diff
- * @param file1 first file to compare
- * @param file2 second file to compare
- * @param ops list of diff statements to fill
- *
- * @return positive number indicating number of hunks, otherwise negative
- */
-
-static int
-dff_execute (const char *args, const char *extra, const char *file1, const char *file2, GArray *ops)
-{
-    static const char *opt = " --old-group-format='%df%(f=l?:,%dl)d%dE\n'"
-                             " --new-group-format='%dea%dF%(F=L?:,%dL)\n'"
-                             " --changed-group-format='%df%(f=l?:,%dl)c%dF%(F=L?:,%dL)\n'"
-                             " --unchanged-group-format=''";
-
-    int rv;
-    FBUF *f;
-    char *cmd;
-    int code;
-    char *file1_esc, *file2_esc;
-
-    // escape potential $ to avoid shell variable substitutions in popen()
-    file1_esc = str_shell_escape (file1);
-    file2_esc = str_shell_escape (file2);
-    cmd = g_strdup_printf ("diff %s %s %s %s %s", args, extra, opt, file1_esc, file2_esc);
-    g_free (file1_esc);
-    g_free (file2_esc);
-
-    if (cmd == NULL)
-        return -1;
-
-    f = dview_popen (cmd, O_RDONLY);
-    g_free (cmd);
-
-    if (f == NULL)
-        return -1;
-
-    rv = scan_diff (f, ops);
-    code = dview_pclose (f);
-
-    if (rv < 0 || code == -1 || !WIFEXITED (code) || WEXITSTATUS (code) == 2)
-        rv = -1;
-
-    return rv;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2175,23 +1946,6 @@ redo_diff (WDiff *dview)
     GArray *ops;
     int ndiff;
     int rv = 0;
-    char extra[BUF_MEDIUM];
-
-    extra[0] = '\0';
-    if (dview->opt.quality == 2)
-        strcat (extra, " -d");
-    if (dview->opt.quality == 1)
-        strcat (extra, " --speed-large-files");
-    if (dview->opt.strip_trailing_cr)
-        strcat (extra, " --strip-trailing-cr");
-    if (dview->opt.ignore_tab_expansion)
-        strcat (extra, " -E");
-    if (dview->opt.ignore_space_change)
-        strcat (extra, " -b");
-    if (dview->opt.ignore_all_space)
-        strcat (extra, " -w");
-    if (dview->opt.ignore_case)
-        strcat (extra, " -i");
 
     if (dview->dsrc != DATA_SRC_MEM)
     {
@@ -2200,7 +1954,7 @@ redo_diff (WDiff *dview)
     }
 
     ops = g_array_new (FALSE, FALSE, sizeof (DIFFCMD));
-    ndiff = dff_execute (dview->args, extra, dview->file[DIFF_LEFT], dview->file[DIFF_RIGHT], ops);
+    ndiff = dview_compare_files (&dview->opt, dview->file[DIFF_LEFT], dview->file[DIFF_RIGHT], ops);
     if (ndiff < 0)
     {
         if (ops != NULL)
@@ -2928,8 +2682,8 @@ dview_diff_options (WDiff *dview)
 /* --------------------------------------------------------------------------------------------- */
 
 static int
-dview_init (WDiff *dview, const char *args, const char *file1, const char *file2,
-            const char *label1, const char *label2, DSRC dsrc)
+dview_init (WDiff *dview, const char *file1, const char *file2, const char *label1,
+            const char *label2, DSRC dsrc)
 {
     FBUF *f[DIFF_COUNT];
 
@@ -2983,7 +2737,6 @@ dview_init (WDiff *dview, const char *args, const char *file1, const char *file2
 
     dview_load_options (dview);
 
-    dview->args = args;
     dview->file[DIFF_LEFT] = file1;
     dview->file[DIFF_RIGHT] = file2;
     dview->label[DIFF_LEFT] = g_strdup (label1);
@@ -4025,8 +3778,7 @@ diff_view (const char *file1, const char *file2, const char *label1, const char 
 
     dview_dlg->get_title = dview_get_title;
 
-    error =
-        dview_init (dview, "-a", file1, file2, label1, label2, DATA_SRC_MEM);  // XXX binary diff?
+    error = dview_init (dview, file1, file2, label1, label2, DATA_SRC_MEM);
     if (error >= 0)
         error = redo_diff (dview);
     if (error >= 0)
