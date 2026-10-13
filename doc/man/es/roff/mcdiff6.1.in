@@ -11,6 +11,10 @@ mcdiff6 \- Comparador de Archivos Interno.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] arch
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o salida] local base remoto
+
 
 .SH Comparador de Archivos Interno
 .PP
@@ -164,6 +168,90 @@ Va al comienzo del archivo.
 .TP
 \fBCtrl\-Fin\fP
 Va al final del archivo.
+
+
+.SH Fusión de tres archivos
+.PP
+Con tres archivos, el comparador muestra tres columnas: el archivo local a
+la izquierda, el resultado de la fusión en el centro y el archivo remoto a la
+derecha. Los archivos de los lados no cambian nunca; solo se guarda la
+columna central.
+
+.PP
+Al empezar, la columna central es el archivo base con todos los cambios de
+un solo lado ya tomados. Donde los dos lados cambiaron las mismas líneas,
+cada uno a su manera, el centro conserva las líneas de la base: es un
+conflicto, se muestra con el color de conflicto y se cuenta tras "Cnf" en la
+línea de estado de la columna central.
+
+.PP
+Las diferencias se calculan de nuevo tras cada cambio de la columna central.
+Una pantalla de menos de 120 columnas muestra el centro y un solo lado.
+
+.TP
+\fBF5\fP
+Añadir las líneas del archivo izquierdo al bloque actual de la columna
+central, tras lo que ya tiene. El bloque actual es el de la línea superior,
+o el primero en la pantalla.
+
+.TP
+\fBShift\-F5\fP
+Quitar de nuevo las líneas del archivo izquierdo del bloque. Si no queda
+ningún lado, el bloque tiene las líneas de la base: un conflicto vuelve a
+ser conflicto.
+
+.TP
+\fBF6\fP
+Añadir las líneas del archivo derecho al bloque. Con los dos lados
+añadidos, las líneas siguen el orden en que se añadieron.
+
+.TP
+\fBShift\-F6\fP
+Quitar de nuevo las líneas del archivo derecho.
+
+.TP
+\fBN, P\fP
+Ir al conflicto siguiente o anterior.
+
+.TP
+\fBEnter, Space, n; Backspace, p\fP
+Ir al bloque siguiente o anterior.
+
+.TP
+\fBF4\fP
+Editar la columna central en el editor. Un bloque editado allí cuenta como
+resuelto.
+
+.TP
+\fBF2\fP
+Guardar la columna central. Si quedan conflictos, primero pregunta.
+
+.TP
+\fBC\-u\fP
+En una pantalla estrecha, mostrar el otro lado.
+
+.TP
+\fBF10\fP
+Salir. Si la columna central se cambió y no está guardada, pregunta si
+guardarla. Salir sin cambios deja los archivos como están.
+
+.PP
+El programa termina con el código 0 si la fusión se guardó y con 1 si no,
+así que sirve como herramienta de fusión de git:
+
+.EX
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
+    trustExitCode = true
+
+.EE
+
+.PP
+Sin la opción
+\fI\-o\fP
+la fusión se guarda en el archivo base.
 
 
 .SH Opciones de la comparación

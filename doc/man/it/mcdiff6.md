@@ -12,6 +12,9 @@ mcdiff6 - Visualizzatore di differenze interno.
 **mcdiff6**
 [-bcCdfhstVx?] file1 file2
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o uscita] locale base remoto
+
 # DESCRIZIONE
 
 mcdiff6 è un collegamento a
@@ -140,6 +143,73 @@ separatamente da quella dell'editor.
 
 **C-Fine**
 : Va alla fine del file.
+
+# Unione di tre file <a id="merge"></a>
+
+Con tre file, il visualizzatore mostra tre colonne: il file locale a
+sinistra, il risultato dell'unione al centro e il file remoto a destra. I
+file ai lati non vengono mai modificati; si salva solo la colonna centrale.
+
+All'avvio la colonna centrale è il file base con già incluse tutte le
+modifiche fatte da un solo lato. Dove entrambi i lati hanno cambiato le
+stesse righe, ognuno a modo suo, il centro mantiene le righe della base: è
+un conflitto, mostrato con il colore dei conflitti e contato dopo "Cnf" nella
+riga di stato della colonna centrale.
+
+Le differenze vengono ricalcolate dopo ogni modifica della colonna centrale.
+Uno schermo più stretto di 120 colonne mostra il centro e un solo lato.
+
+**F5**
+: Aggiungere le righe del file di sinistra al blocco corrente della colonna
+centrale, dopo ciò che già contiene. Il blocco corrente è quello sulla riga
+in alto, oppure il primo sullo schermo.
+
+**Shift-F5**
+: Togliere di nuovo dal blocco le righe del file di sinistra. Se non resta
+nessun lato, il blocco ha le righe della base: un conflitto torna a essere
+un conflitto.
+
+**F6**
+: Aggiungere al blocco le righe del file di destra. Con entrambi i lati
+aggiunti, le righe seguono l'ordine in cui sono state aggiunte.
+
+**Shift-F6**
+: Togliere di nuovo le righe del file di destra.
+
+**N, P**
+: Andare al conflitto successivo o precedente.
+
+**Enter, Space, n; Backspace, p**
+: Andare al blocco successivo o precedente.
+
+**F4**
+: Modificare la colonna centrale nell'editor. Un blocco modificato lì conta
+come risolto.
+
+**F2**
+: Salvare la colonna centrale. Se restano conflitti, prima chiede.
+
+**C-u**
+: Su uno schermo stretto, mostrare l'altro lato.
+
+**F10**
+: Uscire. Se la colonna centrale è stata cambiata e non salvata, chiede se
+salvarla. Uscire senza modifiche lascia i file come sono.
+
+Il programma termina con lo stato 0 se l'unione è stata salvata e 1 se no,
+quindi può fare da strumento di unione per git:
+
+```
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" -o "$MERGED"
+    trustExitCode = true
+```
+
+Senza l'opzione
+*-o*
+l'unione viene salvata nel file base.
 
 # Opzioni del confronto <a id="diff-options"></a>
 

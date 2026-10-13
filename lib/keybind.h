@@ -420,7 +420,11 @@ enum
     CK_HunkPrev,
     CK_EditOther,
     CK_Merge,
-    CK_MergeOther
+    CK_MergeOther,
+    CK_MergeRight,
+    CK_MergeRightOff,
+    CK_ConflictNext,
+    CK_ConflictPrev
 };
 
 /*** structures declarations (and typedefs of structures)*****************************************/

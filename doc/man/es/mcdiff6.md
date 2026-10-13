@@ -12,6 +12,9 @@ mcdiff6 - Comparador de Archivos Interno.
 **mcdiff6**
 [-bcCdfhstVx?] arch
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o salida] local base remoto
+
 # Comparador de Archivos Interno <a id="diff-viewer"></a>
 
 mcdiff6 es una herramienta visual de comparación. Permite comparar dos
@@ -130,6 +133,74 @@ aparte del mismo ajuste del editor.
 **Ctrl-Fin**
 : Va al final del archivo.
 
+
+# Fusión de tres archivos <a id="merge"></a>
+
+Con tres archivos, el comparador muestra tres columnas: el archivo local a
+la izquierda, el resultado de la fusión en el centro y el archivo remoto a la
+derecha. Los archivos de los lados no cambian nunca; solo se guarda la
+columna central.
+
+Al empezar, la columna central es el archivo base con todos los cambios de
+un solo lado ya tomados. Donde los dos lados cambiaron las mismas líneas,
+cada uno a su manera, el centro conserva las líneas de la base: es un
+conflicto, se muestra con el color de conflicto y se cuenta tras "Cnf" en la
+línea de estado de la columna central.
+
+Las diferencias se calculan de nuevo tras cada cambio de la columna central.
+Una pantalla de menos de 120 columnas muestra el centro y un solo lado.
+
+**F5**
+: Añadir las líneas del archivo izquierdo al bloque actual de la columna
+central, tras lo que ya tiene. El bloque actual es el de la línea superior,
+o el primero en la pantalla.
+
+**Shift-F5**
+: Quitar de nuevo las líneas del archivo izquierdo del bloque. Si no queda
+ningún lado, el bloque tiene las líneas de la base: un conflicto vuelve a
+ser conflicto.
+
+**F6**
+: Añadir las líneas del archivo derecho al bloque. Con los dos lados
+añadidos, las líneas siguen el orden en que se añadieron.
+
+**Shift-F6**
+: Quitar de nuevo las líneas del archivo derecho.
+
+**N, P**
+: Ir al conflicto siguiente o anterior.
+
+**Enter, Space, n; Backspace, p**
+: Ir al bloque siguiente o anterior.
+
+**F4**
+: Editar la columna central en el editor. Un bloque editado allí cuenta como
+resuelto.
+
+**F2**
+: Guardar la columna central. Si quedan conflictos, primero pregunta.
+
+**C-u**
+: En una pantalla estrecha, mostrar el otro lado.
+
+**F10**
+: Salir. Si la columna central se cambió y no está guardada, pregunta si
+guardarla. Salir sin cambios deja los archivos como están.
+
+El programa termina con el código 0 si la fusión se guardó y con 1 si no,
+así que sirve como herramienta de fusión de git:
+
+```
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" -o "$MERGED"
+    trustExitCode = true
+```
+
+Sin la opción
+*-o*
+la fusión se guarda en el archivo base.
 
 # Opciones de la comparación <a id="diff-options"></a>
 

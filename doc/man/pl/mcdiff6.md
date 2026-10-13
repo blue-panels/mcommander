@@ -12,6 +12,9 @@ mcdiff6 - Wbudowany podgląd różnic.
 **mcdiff6**
 [-bcCdfhstVx?] plik1 plik2
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o wynik] lokalny baza zdalny
+
 # OPIS
 
 mcdiff6 to dowiązanie do
@@ -139,6 +142,72 @@ Ustawienie jest zapamiętywane osobno od tego samego ustawienia edytora.
 
 **C-End**
 : Idzie na koniec pliku.
+
+# Scalanie trzech plików <a id="merge"></a>
+
+Uruchomiony z trzema plikami podgląd różnic pokazuje trzy kolumny: plik
+lokalny po lewej, wynik scalania pośrodku i plik zdalny po prawej. Pliki po
+bokach nigdy nie są zmieniane; zapisywana jest tylko środkowa kolumna.
+
+Na początku środkowa kolumna to plik bazowy z przyjętymi już wszystkimi
+zmianami, które zrobiła tylko jedna strona. Tam, gdzie obie strony zmieniły
+te same wiersze, każda po swojemu, środek zachowuje wiersze bazy: to
+konflikt, pokazany kolorem konfliktu i liczony po "Cnf" w wierszu stanu
+środkowej kolumny.
+
+Różnice są liczone na nowo po każdej zmianie środkowej kolumny. Ekran
+węższy niż 120 kolumn pokazuje środek i jedną stronę.
+
+**F5**
+: Dodać wiersze lewego pliku do bieżącego bloku środkowej kolumny, za tym,
+co już w nim jest. Bieżący blok to ten w górnym wierszu albo pierwszy na
+ekranie.
+
+**Shift-F5**
+: Usunąć z bloku z powrotem wiersze lewego pliku. Gdy nie zostaje żadna
+strona, blok ma wiersze bazy: konflikt znów jest konfliktem.
+
+**F6**
+: Dodać do bloku wiersze prawego pliku. Gdy dodano obie strony, wiersze są w
+kolejności dodawania.
+
+**Shift-F6**
+: Usunąć z powrotem wiersze prawego pliku.
+
+**N, P**
+: Przejść do następnego lub poprzedniego konfliktu.
+
+**Enter, Space, n; Backspace, p**
+: Przejść do następnego lub poprzedniego bloku.
+
+**F4**
+: Edytować środkową kolumnę w edytorze. Blok zmieniony tam liczy się jako
+rozwiązany.
+
+**F2**
+: Zapisać środkową kolumnę. Gdy zostały konflikty, najpierw pyta.
+
+**C-u**
+: Na wąskim ekranie pokazać drugą stronę.
+
+**F10**
+: Wyjść. Gdy środkowa kolumna została zmieniona i nie jest zapisana, pyta,
+czy ją zapisać. Wyjście bez zmian zostawia pliki bez zmian.
+
+Program kończy się kodem 0, gdy scalanie zostało zapisane, i kodem 1, gdy
+nie, więc może służyć jako narzędzie scalania git:
+
+```
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" -o "$MERGED"
+    trustExitCode = true
+```
+
+Bez opcji
+*-o*
+scalanie jest zapisywane do pliku bazowego.
 
 # Opcje porównania <a id="diff-options"></a>
 

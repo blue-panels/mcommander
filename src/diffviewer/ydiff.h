@@ -18,5 +18,6 @@ int diff_view (const char *file1, const char *file2, const char *label1, const c
 /* The comparison options, also reachable from the Options menu of the file manager. */
 void dview_options_box (void);
 gboolean dview_diff_cmd (const void *f0, const void *f1);
+gboolean dview_merge_cmd (const char *local, const char *base, const char *remote, const char *out);
 
 #endif

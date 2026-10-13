@@ -77,10 +77,14 @@
 #define DEL_CH         '-'
 #define CHG_CH         '*'
 #define EQU_CH         ' '
+#define CNF_CH         '!'
 
 #define HDIFF_ENABLE   1
 #define HDIFF_MINCTX   5
 #define HDIFF_DEPTH    10
+
+/* below this width a merge shows the middle and one side */
+#define MERGE3_MIN_COLS 120
 
 #define FILE_DIRTY(fs)                                                                             \
     do                                                                                             \
@@ -115,9 +119,18 @@ typedef enum
     FROM_RIGHT_TO_LEFT
 } action_direction_t;
 
+/* A file read whole, with where each line starts */
+typedef struct
+{
+    char *data;
+    gsize len;
+    GArray *start;  // gsize, one per line and one more for the end
+} text_lines_t;
+
 /*** forward declarations (file scope functions) *************************************************/
 
 static int dview_frame_keep (int pair);
+static int merge3_base_chunk_at (const WDiff *dview, int s, int e);
 
 /*** file scope variables ************************************************************************/
 
@@ -1937,6 +1950,343 @@ dview_build_syntax_runs (WDiff *dview, diff_place_t ord, const GArray *line_off)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* merge of three files ***************************************************** */
+
+static gboolean
+text_lines_load (text_lines_t *t, const char *filename)
+{
+    gsize i, pos;
+
+    t->data = NULL;
+    t->start = NULL;
+    if (!g_file_get_contents (filename, &t->data, &t->len, NULL))
+        return FALSE;
+
+    t->start = g_array_new (FALSE, FALSE, sizeof (gsize));
+    pos = 0;
+    for (i = 0; i < t->len; i++)
+        if (t->data[i] == '\n')
+        {
+            g_array_append_val (t->start, pos);
+            pos = i + 1;
+        }
+    if (pos < t->len)
+        g_array_append_val (t->start, pos);
+    g_array_append_val (t->start, t->len);
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+text_lines_free (text_lines_t *t)
+{
+    g_free (t->data);
+    t->data = NULL;
+    if (t->start != NULL)
+        g_array_free (t->start, TRUE);
+    t->start = NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+text_lines_count (const text_lines_t *t)
+{
+    return (int) t->start->len - 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The bytes of @count lines from @first */
+static const char *
+text_lines_range (const text_lines_t *t, int first, int count, gsize *len)
+{
+    gsize from, to;
+
+    from = g_array_index (t->start, gsize, first);
+    to = g_array_index (t->start, gsize, first + count);
+    *len = to - from;
+    return t->data + from;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+put_lines (FILE *f, const text_lines_t *t, int first, int count)
+{
+    const char *p;
+    gsize len;
+
+    if (count <= 0)
+        return TRUE;
+    p = text_lines_range (t, first, count, &len);
+    return fwrite (p, 1, len, f) == len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+typedef struct
+{
+    const text_lines_t *left;
+    const text_lines_t *right;
+} merge3_pair_t;
+
+static gboolean
+merge3_same (void *ctx, int left_start, int left_count, int right_start, int right_count)
+{
+    const merge3_pair_t *pair = (const merge3_pair_t *) ctx;
+    const char *l, *r;
+    gsize ll, rl;
+
+    l = text_lines_range (pair->left, left_start, left_count, &ll);
+    r = text_lines_range (pair->right, right_start, right_count, &rl);
+    return ll == rl && memcmp (l, r, ll) == 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Line up the left and right files against @middle into @chunks */
+static gboolean
+merge3_align (const diff_options_t *opt, const char *left, const char *middle, const char *right,
+              GArray *chunks)
+{
+    GArray *ops_l, *ops_r;
+    text_lines_t tl, tr;
+    merge3_pair_t pair = { &tl, &tr };
+    gboolean ok = FALSE;
+
+    ops_l = g_array_new (FALSE, FALSE, sizeof (DIFFCMD));
+    ops_r = g_array_new (FALSE, FALSE, sizeof (DIFFCMD));
+    tl.data = tr.data = NULL;
+    tl.start = tr.start = NULL;
+
+    g_array_set_size (chunks, 0);
+    if (dview_compare_files (opt, left, middle, ops_l) >= 0
+        && dview_compare_files (opt, right, middle, ops_r) >= 0 && text_lines_load (&tl, left)
+        && text_lines_load (&tr, right))
+    {
+        dview_align3 (ops_l, ops_r, merge3_same, &pair, chunks);
+        ok = TRUE;
+    }
+
+    text_lines_free (&tl);
+    text_lines_free (&tr);
+    g_array_free (ops_l, TRUE);
+    g_array_free (ops_r, TRUE);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The lines the middle column has for a chunk of the base */
+static gboolean
+merge3_put_chunk (FILE *f, const text_lines_t *tl, const text_lines_t *tb, const text_lines_t *tr,
+                  const MERGE3_CHUNK *c, const MERGE3_CHOICE *ch, int *count)
+{
+    gboolean ok = TRUE;
+    int i;
+
+    *count = 0;
+    if (ch->nparts == 0)
+    {
+        *count = c->count[DIFF_MERGED];
+        return put_lines (f, tb, c->start[DIFF_MERGED], c->count[DIFF_MERGED]);
+    }
+
+    for (i = 0; ok && i < ch->nparts; i++)
+    {
+        const diff_place_t side = ch->part[i];
+
+        ok = put_lines (f, side == DIFF_LEFT ? tl : tr, c->start[side], c->count[side]);
+        *count += c->count[side];
+    }
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The start of the merge: the sides against the base, and the middle made of the base with
+   every chunk one side changed taken from that side, both sides when they agree.  A conflict
+   keeps the lines of the base. */
+static gboolean
+merge3_build (WDiff *dview)
+{
+    text_lines_t tl, tb, tr;
+    FILE *f = NULL;
+    gboolean ok = FALSE;
+
+    tl.data = tb.data = tr.data = NULL;
+    tl.start = tb.start = tr.start = NULL;
+
+    if (merge3_align (&dview->opt, dview->file[DIFF_LEFT], dview->merge_base,
+                      dview->file[DIFF_RIGHT], dview->bchunks)
+        && text_lines_load (&tl, dview->file[DIFF_LEFT]) && text_lines_load (&tb, dview->merge_base)
+        && text_lines_load (&tr, dview->file[DIFF_RIGHT])
+        && (f = fopen (dview->merge_tmp, "w")) != NULL)
+    {
+        int done = 0, mid = 0;
+        guint i;
+
+        ok = TRUE;
+        g_array_set_size (dview->choices, dview->bchunks->len);
+        for (i = 0; ok && i < dview->bchunks->len; i++)
+        {
+            const MERGE3_CHUNK *c = &g_array_index (dview->bchunks, MERGE3_CHUNK, i);
+            MERGE3_CHOICE *ch = &g_array_index (dview->choices, MERGE3_CHOICE, i);
+            const int gap = c->start[DIFF_MERGED] - done;
+
+            memset (ch, 0, sizeof (*ch));
+            if (c->kind == MERGE3_RIGHT)
+                ch->part[ch->nparts++] = DIFF_RIGHT;
+            else if (c->kind != MERGE3_CONFLICT)
+                ch->part[ch->nparts++] = DIFF_LEFT;
+
+            ok = put_lines (f, &tb, done, gap);
+            mid += gap;
+            ch->mid_start = mid;
+            ok = ok && merge3_put_chunk (f, &tl, &tb, &tr, c, ch, &ch->mid_count);
+            mid += ch->mid_count;
+            done = c->start[DIFF_MERGED] + c->count[DIFF_MERGED];
+        }
+        ok = ok && put_lines (f, &tb, done, text_lines_count (&tb) - done);
+    }
+
+    if (f != NULL && fclose (f) != 0)
+        ok = FALSE;
+    text_lines_free (&tl);
+    text_lines_free (&tb);
+    text_lines_free (&tr);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+merge3_ch (merge3_kind_t kind, diff_place_t ord)
+{
+    switch (kind)
+    {
+    case MERGE3_CONFLICT:
+        return CNF_CH;
+    case MERGE3_LEFT:
+        return ord == DIFF_RIGHT ? EQU_CH : CHG_CH;
+    case MERGE3_RIGHT:
+        return ord == DIFF_LEFT ? EQU_CH : CHG_CH;
+    default:
+        return CHG_CH;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* dff_reparse() for a merge: the rows of one column by the chunks */
+static int
+dff_reparse3 (diff_place_t ord, const char *filename, const GArray *chunks, DFUNC print, void *ctx)
+{
+    FBUF *f;
+    int line = 0;
+    off_t off = 0;
+    guint i;
+
+    f = dview_fopen (filename, O_RDONLY);
+    if (f == NULL)
+        return -1;
+
+    for (i = 0; i < chunks->len; i++)
+    {
+        const MERGE3_CHUNK *c = &g_array_index (chunks, MERGE3_CHUNK, i);
+        int ch = merge3_ch (c->kind, ord);
+        int n;
+
+        while (line < c->start[ord] && printer_for (EQU_CH, print, ctx, f, &line, &off))
+            ;
+        if (line != c->start[ord])
+            goto err;
+
+        for (n = 0; n < c->count[ord]; n++)
+            if (!printer_for (ch, print, ctx, f, &line, &off))
+                goto err;
+        for (; n < c->rows; n++)
+            print (ctx, ch, 0, 0, 1, "\n");
+    }
+
+    while (printer_for (EQU_CH, print, ctx, f, &line, &off))
+        ;
+
+    dview_fclose (f);
+    return 0;
+
+err:
+    dview_fclose (f);
+    return -1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+redo_diff3 (WDiff *dview)
+{
+    static const diff_place_t ords[] = { DIFF_LEFT, DIFF_MERGED, DIFF_RIGHT };
+    PRINTER_CTX ctx;
+    int rv = 0;
+    guint i;
+
+    if (!merge3_align (&dview->opt, dview->file[DIFF_LEFT], dview->file[DIFF_MERGED],
+                       dview->file[DIFF_RIGHT], dview->chunks))
+        return -1;
+
+    /* a conflict the user resolved, by taking a side or by editing it, is a change now */
+    dview->nconflicts = 0;
+    for (i = 0; i < dview->chunks->len; i++)
+    {
+        MERGE3_CHUNK *c = &g_array_index (dview->chunks, MERGE3_CHUNK, i);
+
+        if (c->kind != MERGE3_CONFLICT)
+            continue;
+        if (dview->choices != NULL)
+        {
+            const int idx = merge3_base_chunk_at (dview, c->start[DIFF_MERGED],
+                                                  c->start[DIFF_MERGED] + c->count[DIFF_MERGED]);
+
+            if (idx >= 0)
+            {
+                const MERGE3_CHOICE *ch = &g_array_index (dview->choices, MERGE3_CHOICE, idx);
+
+                if (ch->nparts > 0 || ch->by_hand)
+                {
+                    c->kind = MERGE3_SAME;
+                    continue;
+                }
+            }
+        }
+        dview->nconflicts++;
+    }
+
+    ctx.dsrc = dview->dsrc;
+    ctx.f = NULL;
+    ctx.line_off = g_array_new (FALSE, FALSE, sizeof (off_t));
+
+    for (i = 0; i < G_N_ELEMENTS (ords) && rv == 0; i++)
+    {
+        g_array_set_size (ctx.line_off, 0);
+        ctx.a = dview->a[ords[i]];
+        rv = dff_reparse3 (ords[i], dview->file[ords[i]], dview->chunks, printer, &ctx);
+        if (rv == 0)
+            dview_build_syntax_runs (dview, ords[i], ctx.line_off);
+    }
+
+    g_array_free (ctx.line_off, TRUE);
+
+    if (rv != 0 || dview->a[DIFF_LEFT]->len != dview->a[DIFF_MERGED]->len
+        || dview->a[DIFF_RIGHT]->len != dview->a[DIFF_MERGED]->len)
+        return -1;
+
+    return (int) dview->chunks->len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static int
 redo_diff (WDiff *dview)
@@ -1946,6 +2296,9 @@ redo_diff (WDiff *dview)
     GArray *ops;
     int ndiff;
     int rv = 0;
+
+    if (dview->nfiles == 3)
+        return redo_diff3 (dview);
 
     if (dview->dsrc != DATA_SRC_MEM)
     {
@@ -2107,16 +2460,19 @@ get_line_numbers (const GArray *a, size_t pos, int *linenum, int *lineofs)
 /* --------------------------------------------------------------------------------------------- */
 
 static int
-calc_nwidth (const GArray *const *a)
+calc_nwidth (const WDiff *dview)
 {
-    int l1, o1;
-    int l2, o2;
+    int top = 0;
+    int ord;
 
-    get_line_numbers (a[DIFF_LEFT], a[DIFF_LEFT]->len - 1, &l1, &o1);
-    get_line_numbers (a[DIFF_RIGHT], a[DIFF_RIGHT]->len - 1, &l2, &o2);
-    if (l1 < l2)
-        l1 = l2;
-    return get_digits (l1);
+    for (ord = 0; ord < dview->nfiles; ord++)
+    {
+        int l, o;
+
+        get_line_numbers (dview->a[ord], dview->a[ord]->len - 1, &l, &o);
+        top = MAX (top, l);
+    }
+    return get_digits (top);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2439,6 +2795,288 @@ do_merge_hunk (WDiff *dview, action_direction_t merge_direction)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* The chunk at the top row of the view, or else the first one that starts on the screen */
+static const MERGE3_CHUNK *
+merge3_current_chunk (const WDiff *dview)
+{
+    guint i;
+
+    for (i = 0; i < dview->chunks->len; i++)
+    {
+        const MERGE3_CHUNK *c = &g_array_index (dview->chunks, MERGE3_CHUNK, i);
+
+        if (c->first_row + c->rows <= dview->skip_rows)
+            continue;
+        if (c->first_row <= dview->skip_rows || c->first_row < dview->skip_rows + dview->height - 2)
+            return c;
+        break;
+    }
+    return NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+merge3_find_chunk (const WDiff *dview, gboolean forward, gboolean conflicts_only)
+{
+    guint i;
+
+    for (i = 0; i < dview->chunks->len; i++)
+    {
+        const MERGE3_CHUNK *c;
+
+        c = &g_array_index (dview->chunks, MERGE3_CHUNK, forward ? i : dview->chunks->len - 1 - i);
+        if (conflicts_only && c->kind != MERGE3_CONFLICT)
+            continue;
+        if (forward ? c->first_row > dview->skip_rows : c->first_row < dview->skip_rows)
+            return c->first_row;
+    }
+    return dview->skip_rows;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The chunk of the base that has lines in @s .. @e of the middle file, or -1 */
+static int
+merge3_base_chunk_at (const WDiff *dview, int s, int e)
+{
+    guint i;
+
+    for (i = 0; i < dview->choices->len; i++)
+    {
+        const MERGE3_CHOICE *ch = &g_array_index (dview->choices, MERGE3_CHOICE, i);
+        const int cs = ch->mid_start;
+        const int ce = ch->mid_start + ch->mid_count;
+
+        if ((s < ce && cs < e) || (s == e && cs <= s && s <= ce)
+            || (cs == ce && s <= cs && cs <= e))
+            return (int) i;
+    }
+    return -1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Write the lines of chunk @idx of the base, as its choice says, over its place in the middle
+   file; the chunks after it move by the change of its length */
+static gboolean
+merge3_splice (WDiff *dview, guint idx)
+{
+    text_lines_t tl, tb, tr, tm;
+    FILE *f = NULL;
+    gboolean ok = FALSE;
+    MERGE3_CHOICE *ch = &g_array_index (dview->choices, MERGE3_CHOICE, idx);
+    const MERGE3_CHUNK *c = &g_array_index (dview->bchunks, MERGE3_CHUNK, idx);
+    const int old_count = ch->mid_count;
+
+    tl.data = tb.data = tr.data = tm.data = NULL;
+    tl.start = tb.start = tr.start = tm.start = NULL;
+
+    if (text_lines_load (&tl, dview->file[DIFF_LEFT]) && text_lines_load (&tb, dview->merge_base)
+        && text_lines_load (&tr, dview->file[DIFF_RIGHT])
+        && text_lines_load (&tm, dview->file[DIFF_MERGED])
+        && ch->mid_start + old_count <= text_lines_count (&tm)
+        && (f = fopen (dview->file[DIFF_MERGED], "w")) != NULL)
+    {
+        const int end = ch->mid_start + old_count;
+        guint i;
+
+        ok = put_lines (f, &tm, 0, ch->mid_start);
+        ok = ok && merge3_put_chunk (f, &tl, &tb, &tr, c, ch, &ch->mid_count);
+        ok = ok && put_lines (f, &tm, end, text_lines_count (&tm) - end);
+
+        for (i = idx + 1; i < dview->choices->len; i++)
+            g_array_index (dview->choices, MERGE3_CHOICE, i).mid_start += ch->mid_count - old_count;
+    }
+
+    if (f != NULL && fclose (f) != 0)
+        ok = FALSE;
+    if (!ok)
+        file_error_message (_ ("Cannot write the merge result\n%s"), dview->file[DIFF_MERGED]);
+
+    text_lines_free (&tl);
+    text_lines_free (&tb);
+    text_lines_free (&tr);
+    text_lines_free (&tm);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Take the lines of @side into the current chunk of the middle, after what it has, or take
+   them out again.  With no side left the chunk has the lines of the base. */
+static void
+merge3_toggle (WDiff *dview, diff_place_t side, gboolean add)
+{
+    const MERGE3_CHUNK *c;
+    MERGE3_CHOICE *ch;
+    int idx, i, n;
+
+    c = merge3_current_chunk (dview);
+    if (c == NULL)
+        return;
+    idx = merge3_base_chunk_at (dview, c->start[DIFF_MERGED],
+                                c->start[DIFF_MERGED] + c->count[DIFF_MERGED]);
+    if (idx < 0)
+        return;
+
+    ch = &g_array_index (dview->choices, MERGE3_CHOICE, idx);
+    for (i = 0; i < ch->nparts && ch->part[i] != side; i++)
+        ;
+    if (add == (i < ch->nparts) && !ch->by_hand)
+        return;
+
+    if (add && i == ch->nparts)
+        ch->part[ch->nparts++] = side;
+    else if (!add && i < ch->nparts)
+    {
+        for (n = i; n + 1 < ch->nparts; n++)
+            ch->part[n] = ch->part[n + 1];
+        ch->nparts--;
+    }
+    ch->by_hand = FALSE;
+
+    if (merge3_splice (dview, (guint) idx))
+        dview->merged[DIFF_MERGED] = TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Where boundary @x of the old middle file is in the new one, by @ops from the old to the new;
+   inside a changed part a start goes to its start and an end to its end */
+static int
+merge3_map_line (const GArray *ops, int x, gboolean is_end)
+{
+    int delta = 0;
+    guint i;
+
+    for (i = 0; i < ops->len; i++)
+    {
+        const DIFFCMD *op = &g_array_index (ops, DIFFCMD, i);
+        int os, oc, ns, nc;
+
+        os = op->cmd == 'a' ? op->a[0][0] : op->a[0][0] - 1;
+        oc = op->cmd == 'a' ? 0 : op->a[0][1] - op->a[0][0] + 1;
+        ns = op->cmd == 'd' ? op->a[1][0] : op->a[1][0] - 1;
+        nc = op->cmd == 'd' ? 0 : op->a[1][1] - op->a[1][0] + 1;
+
+        if (os + oc <= x && !(oc == 0 && os == x))
+            delta = ns + nc - (os + oc);
+        else if (os < x)
+            return is_end ? ns + nc : ns;
+        else
+            break;
+    }
+    return x + delta;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Whether @ops change anything in lines @s .. @e of the old file */
+static gboolean
+merge3_touched (const GArray *ops, int s, int e)
+{
+    guint i;
+
+    for (i = 0; i < ops->len; i++)
+    {
+        const DIFFCMD *op = &g_array_index (ops, DIFFCMD, i);
+        const int os = op->cmd == 'a' ? op->a[0][0] : op->a[0][0] - 1;
+        const int oc = op->cmd == 'a' ? 0 : op->a[0][1] - op->a[0][0] + 1;
+
+        if (oc > 0 ? (os < e && s < os + oc) : ((s < os && os < e) || (s == e && os == s)))
+            return TRUE;
+    }
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The middle was edited by hand, from @old_text: find the chunks in the new text again; a
+   chunk the edit touched counts as resolved */
+static void
+merge3_remap (WDiff *dview, const char *old_text, gsize old_len)
+{
+    diff_options_t opt;
+    GArray *ops;
+    char *old_path = NULL;
+    int fd;
+    guint i;
+
+    fd = g_file_open_tmp ("mcmerge-old-XXXXXX", &old_path, NULL);
+    if (fd < 0)
+        return;
+    close (fd);
+
+    memset (&opt, 0, sizeof (opt));
+    ops = g_array_new (FALSE, FALSE, sizeof (DIFFCMD));
+    if (g_file_set_contents (old_path, old_text, (gssize) old_len, NULL)
+        && dview_compare_files (&opt, old_path, dview->file[DIFF_MERGED], ops) >= 0)
+        for (i = 0; i < dview->choices->len; i++)
+        {
+            MERGE3_CHOICE *ch = &g_array_index (dview->choices, MERGE3_CHOICE, i);
+            const int s = ch->mid_start;
+            const int e = ch->mid_start + ch->mid_count;
+            const int ns = merge3_map_line (ops, s, FALSE);
+            const int ne = merge3_map_line (ops, e, TRUE);
+
+            if (merge3_touched (ops, s, e))
+                ch->by_hand = TRUE;
+            ch->mid_start = ns;
+            ch->mid_count = MAX (ne - ns, 0);
+        }
+
+    g_array_free (ops, TRUE);
+    unlink (old_path);
+    g_free (old_path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+merge3_save (WDiff *dview)
+{
+    char *text = NULL;
+    gsize len = 0;
+    FILE *f;
+    gboolean ok;
+
+    if (dview->nconflicts > 0)
+    {
+        char *msg;
+        int act;
+
+        msg = g_strdup_printf (ngettext ("%d conflict is left.\nSave the merge anyway?",
+                                         "%d conflicts are left.\nSave the merge anyway?",
+                                         dview->nconflicts),
+                               dview->nconflicts);
+        act = query_dialog (_ ("Save"), msg, D_NORMAL, 2, _ ("&Yes"), _ ("&No"));
+        g_free (msg);
+        if (act != 0)
+            return FALSE;
+    }
+
+    ok = g_file_get_contents (dview->file[DIFF_MERGED], &text, &len, NULL);
+    /* written in place, so the file keeps its owner and mode */
+    f = ok ? fopen (dview->merge_out, "w") : NULL;
+    ok = f != NULL && fwrite (text, 1, len, f) == len;
+    if (f != NULL && fclose (f) != 0)
+        ok = FALSE;
+    g_free (text);
+
+    if (!ok)
+    {
+        file_error_message (_ ("Cannot save the merge result\n%s"), dview->merge_out);
+        return FALSE;
+    }
+
+    dview->merged[DIFF_MERGED] = FALSE;
+    dview->merge_saved = TRUE;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* view routines and callbacks ********************************************** */
 
 static void
@@ -2490,18 +3128,17 @@ static void
 dview_reread (WDiff *dview)
 {
     int ndiff;
+    int ord;
 
     destroy_hdiff (dview);
     dview_free_syntax_runs (dview);
-    if (dview->a[DIFF_LEFT] != NULL)
-        g_array_free (dview->a[DIFF_LEFT], TRUE);
-    if (dview->a[DIFF_RIGHT] != NULL)
-        g_array_free (dview->a[DIFF_RIGHT], TRUE);
-
-    dview->a[DIFF_LEFT] = g_array_new (FALSE, FALSE, sizeof (DIFFLN));
-    g_array_set_clear_func (dview->a[DIFF_LEFT], cc_free_elt);
-    dview->a[DIFF_RIGHT] = g_array_new (FALSE, FALSE, sizeof (DIFFLN));
-    g_array_set_clear_func (dview->a[DIFF_RIGHT], cc_free_elt);
+    for (ord = 0; ord < dview->nfiles; ord++)
+    {
+        if (dview->a[ord] != NULL)
+            g_array_free (dview->a[ord], TRUE);
+        dview->a[ord] = g_array_new (FALSE, FALSE, sizeof (DIFFLN));
+        g_array_set_clear_func (dview->a[ord], cc_free_elt);
+    }
 
     ndiff = redo_diff (dview);
     if (ndiff >= 0)
@@ -2718,6 +3355,7 @@ dview_init (WDiff *dview, const char *file1, const char *file2, const char *labe
     }
 
     dview->view_quit = FALSE;
+    dview->nfiles = 2;
 
     dview->bias = 0;
     dview->new_frame = TRUE;
@@ -2787,9 +3425,30 @@ dview_fini (WDiff *dview)
         g_array_free (dview->a[DIFF_RIGHT], TRUE);
         dview->a[DIFF_RIGHT] = NULL;
     }
+    if (dview->a[DIFF_MERGED] != NULL)
+    {
+        g_array_free (dview->a[DIFF_MERGED], TRUE);
+        dview->a[DIFF_MERGED] = NULL;
+    }
 
     g_free (dview->label[DIFF_LEFT]);
     g_free (dview->label[DIFF_RIGHT]);
+    g_free (dview->label[DIFF_MERGED]);
+
+    if (dview->chunks != NULL)
+        g_array_free (dview->chunks, TRUE);
+    dview->chunks = NULL;
+    if (dview->bchunks != NULL)
+        g_array_free (dview->bchunks, TRUE);
+    dview->bchunks = NULL;
+    if (dview->choices != NULL)
+        g_array_free (dview->choices, TRUE);
+    dview->choices = NULL;
+    MC_PTR_FREE (dview->merge_base);
+    if (dview->merge_tmp != NULL)
+        unlink (dview->merge_tmp);
+    MC_PTR_FREE (dview->merge_tmp);
+    MC_PTR_FREE (dview->merge_out);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2819,7 +3478,8 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
     const int c_chgline =
         dview_pair_on_terminal_ground (DIFFVIEWER_CHANGEDLINE_COLOR, LINE_DISTANCE);
     const int c_chgnew = dview_pair_on_terminal_ground (DIFFVIEWER_CHANGEDNEW_COLOR, WORD_DISTANCE);
-    const int states[] = { c_added, c_removed, c_chgline };
+    const int c_conflict = dview_pair_on_terminal_ground (DIFFVIEWER_CONFLICT_COLOR, LINE_DISTANCE);
+    const int states[] = { c_added, c_removed, c_chgline, c_conflict };
     run_walk_t w;
     const gboolean word_mark = dview->syntax && dview_word_needs_mark (c_chgnew, c_chgline);
 
@@ -2886,6 +3546,9 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
                 case CHG_CH:
                     gutter = c_chgline;
                     break;
+                case CNF_CH:
+                    gutter = c_conflict;
+                    break;
                 default:
                     break;
                 }
@@ -2907,6 +3570,8 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
                 line_color = c_added;
             if (ch == CHG_CH)
                 line_color = c_chgline;
+            if (ch == CNF_CH)
+                line_color = c_conflict;
             tty_setcolor (line_color);
             if (f == NULL)
             {
@@ -2982,7 +3647,8 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
                     continue;
                 }
 
-                if (ch == CHG_CH)
+                /* a merge has no changed words to show, the whole line is the change */
+                if (ch == CHG_CH && dview->nfiles == 2)
                 {
                     line_color = c_chgnew;
                     tty_setcolor (line_color);
@@ -3014,6 +3680,8 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
                 line_color = c_removed;
             if (ch == CHG_CH)
                 line_color = c_changed;
+            if (ch == CNF_CH)
+                line_color = c_conflict;
             tty_setcolor (line_color);
             memset (scol, -1, sizeof (scol));
             fill_by_space (buf, width, TRUE);
@@ -3101,6 +3769,9 @@ dview_status (const WDiff *dview, diff_place_t ord, int width, int c)
     if (ord == DIFF_LEFT)
         tty_printf ("%s%-*s %6d+%-4d Col %-4d ", dview->merged[ord] ? "* " : "  ", filename_width,
                     buf, linenum, lineofs, dview->skip_cols);
+    else if (ord == DIFF_MERGED)
+        tty_printf ("%s%-*s %6d+%-4d Cnf %-4d ", dview->merged[ord] ? "* " : "  ", filename_width,
+                    buf, linenum, lineofs, dview->nconflicts);
     else
         tty_printf ("%s%-*s %6d+%-4d Dif %-4d ", dview->merged[ord] ? "* " : "  ", filename_width,
                     buf, linenum, lineofs, dview->ndiff);
@@ -3117,7 +3788,7 @@ dview_redo (WDiff *dview)
         int old;
 
         old = dview->display_numbers;
-        dview->display_numbers = calc_nwidth ((const GArray *const *) dview->a);
+        dview->display_numbers = calc_nwidth (dview);
         dview->new_frame = (old != dview->display_numbers);
     }
     dview_reread (dview);
@@ -3129,8 +3800,11 @@ static void
 dview_update (WDiff *dview)
 {
     int height = dview->height;
-    int width1, width2;
+    diff_place_t ords[DIFF_COUNT];
+    int widths[DIFF_COUNT];
+    int ncols = 0;
     int last;
+    int i, x;
 
     last = dview->a[DIFF_LEFT]->len - 1;
 
@@ -3146,19 +3820,49 @@ dview_update (WDiff *dview)
 
     /* Composed pairs live for the frame only, so a skin change cannot leave stale
        indices behind, and the pairs go back to the terminal when the frame does.
-       Both halves are drawn below, and they share what they compose. */
+       All columns are drawn below, and they share what they compose. */
     dview_frame_colors_drop ();
 
     // use an actual length of dview->a
     if (dview->display_numbers != 0)
-        dview->display_numbers = calc_nwidth ((const GArray *const *) dview->a);
+        dview->display_numbers = calc_nwidth (dview);
 
-    width1 = dview->half1 + dview->bias;
-    width2 = dview->half2 - dview->bias;
-    if (dview->full)
+    if (dview->nfiles == 3)
     {
-        width1 = COLS;
-        width2 = 0;
+        /* the middle column always shows; a narrow screen shows one side with it */
+        if (dview->full)
+        {
+            ords[ncols] = DIFF_MERGED;
+            widths[ncols++] = COLS;
+        }
+        else if (COLS >= MERGE3_MIN_COLS)
+        {
+            ords[ncols] = DIFF_LEFT;
+            widths[ncols++] = COLS / 3;
+            ords[ncols] = DIFF_MERGED;
+            widths[ncols++] = COLS / 3;
+            ords[ncols] = DIFF_RIGHT;
+            widths[ncols++] = COLS - 2 * (COLS / 3);
+        }
+        else
+        {
+            ords[ncols] = dview->ord == DIFF_RIGHT ? DIFF_MERGED : DIFF_LEFT;
+            widths[ncols++] = COLS / 2;
+            ords[ncols] = dview->ord == DIFF_RIGHT ? DIFF_RIGHT : DIFF_MERGED;
+            widths[ncols++] = COLS - COLS / 2;
+        }
+    }
+    else
+    {
+        ords[ncols] = dview->ord;
+        widths[ncols++] = dview->half1 + dview->bias;
+        ords[ncols] = dview->ord == DIFF_LEFT ? DIFF_RIGHT : DIFF_LEFT;
+        widths[ncols++] = dview->half2 - dview->bias;
+        if (dview->full)
+        {
+            widths[0] = COLS;
+            widths[1] = 0;
+        }
     }
 
     if (dview->new_frame)
@@ -3169,47 +3873,32 @@ dview_update (WDiff *dview)
         xwidth = dview->display_numbers;
         if (dview->display_symbols)
             xwidth++;
-        if (width1 > 1)
-            tty_draw_box (1, 0, height, width1, FALSE);
-        if (width2 > 1)
-            tty_draw_box (1, width1, height, width2, FALSE);
-
         if (xwidth != 0)
-        {
             xwidth++;
-            if (xwidth < width1 - 1)
+
+        for (i = 0, x = 0; i < ncols; x += widths[i], i++)
+        {
+            if (widths[i] > 1)
+                tty_draw_box (1, x, height, widths[i], FALSE);
+
+            if (xwidth != 0 && xwidth < widths[i] - 1)
             {
-                tty_gotoyx (1, xwidth);
+                tty_gotoyx (1, x + xwidth);
                 tty_print_char (mc_tty_frm[MC_TTY_FRM_DTOPMIDDLE]);
-                tty_gotoyx (height, xwidth);
+                tty_gotoyx (height, x + xwidth);
                 tty_print_char (mc_tty_frm[MC_TTY_FRM_DBOTTOMMIDDLE]);
-                tty_draw_vline (2, xwidth, mc_tty_frm[MC_TTY_FRM_VERT], height - 2);
-            }
-            if (xwidth < width2 - 1)
-            {
-                tty_gotoyx (1, width1 + xwidth);
-                tty_print_char (mc_tty_frm[MC_TTY_FRM_DTOPMIDDLE]);
-                tty_gotoyx (height, width1 + xwidth);
-                tty_print_char (mc_tty_frm[MC_TTY_FRM_DBOTTOMMIDDLE]);
-                tty_draw_vline (2, width1 + xwidth, mc_tty_frm[MC_TTY_FRM_VERT], height - 2);
+                tty_draw_vline (2, x + xwidth, mc_tty_frm[MC_TTY_FRM_VERT], height - 2);
             }
         }
         dview->new_frame = FALSE;
     }
 
-    if (width1 > 2)
-    {
-        dview_status (dview, dview->ord, width1, 0);
-        dview_display_file (dview, dview->ord, 2, 1, height - 2, width1 - 2);
-    }
-    if (width2 > 2)
-    {
-        diff_place_t ord;
-
-        ord = dview->ord == DIFF_LEFT ? DIFF_RIGHT : DIFF_LEFT;
-        dview_status (dview, ord, width2, width1);
-        dview_display_file (dview, ord, 2, width1 + 1, height - 2, width2 - 2);
-    }
+    for (i = 0, x = 0; i < ncols; x += widths[i], i++)
+        if (widths[i] > 2)
+        {
+            dview_status (dview, ords[i], widths[i], x);
+            dview_display_file (dview, ords[i], 2, x + 1, height - 2, widths[i] - 2);
+        }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3237,10 +3926,30 @@ dview_edit (WDiff *dview, diff_place_t ord)
 
     {
         vfs_path_t *tmp_vpath;
+        char *before = NULL;
+        char *after = NULL;
+        gsize before_len = 0, after_len = 0;
+
+        if (ord == DIFF_MERGED)
+            (void) g_file_get_contents (dview->file[ord], &before, &before_len, NULL);
 
         tmp_vpath = vfs_path_from_str (dview->file[ord]);
         edit_file_at_line (tmp_vpath, use_internal_edit, linenum);
         vfs_path_free (tmp_vpath, TRUE);
+
+        if (ord == DIFF_MERGED)
+        {
+            (void) g_file_get_contents (dview->file[ord], &after, &after_len, NULL);
+            if (before == NULL || after == NULL || before_len != after_len
+                || memcmp (before, after, before_len) != 0)
+            {
+                dview->merged[DIFF_MERGED] = TRUE;
+                if (before != NULL && dview->choices != NULL)
+                    merge3_remap (dview, before, before_len);
+            }
+            g_free (before);
+            g_free (after);
+        }
     }
 
     widget_set_state (h, WST_MODAL, h_modal);
@@ -3255,9 +3964,10 @@ dview_goto_cmd (WDiff *dview, diff_place_t ord)
 {
     static gboolean first_run = TRUE;
 
-    const char *title[2] = {
+    const char *title[DIFF_COUNT] = {
         _ ("Goto line (left)"),
         _ ("Goto line (right)"),
+        _ ("Goto line (merged)"),
     };
 
     int newline;
@@ -3303,6 +4013,13 @@ dview_labels (WDiff *dview)
         { CK_SearchContinue, N_ ("ButtonBar|Next") },
         { CK_IgnoreKey, NULL },
     };
+    // Shift-F5 and Shift-F6 take a side out of the middle of a merge again
+    static const buttonbar_command_label_t merge_mod_labels[] = {
+        { CK_MergeOther, N_ ("ButtonBar|-Left") },
+        { CK_MergeRightOff, N_ ("ButtonBar|-Right") },
+        { CK_SearchContinue, N_ ("ButtonBar|Next") },
+        { CK_IgnoreKey, NULL },
+    };
     Widget *d = WIDGET (dview);
     WButtonBar *b;
 
@@ -3311,11 +4028,18 @@ dview_labels (WDiff *dview)
     buttonbar_set_label (b, 1, Q_ ("ButtonBar|Help"), d->keymap, d);
     buttonbar_set_label (b, 2, Q_ ("ButtonBar|Save"), d->keymap, d);
     buttonbar_set_label (b, 4, Q_ ("ButtonBar|Edit"), d->keymap, d);
-    buttonbar_set_label (b, 5, Q_ ("ButtonBar|Merge"), d->keymap, d);
+    if (dview->nfiles == 3)
+    {
+        buttonbar_set_label (b, 5, Q_ ("ButtonBar|+Left"), d->keymap, d);
+        buttonbar_set_label (b, 6, Q_ ("ButtonBar|+Right"), d->keymap, d);
+    }
+    else
+        buttonbar_set_label (b, 5, Q_ ("ButtonBar|Merge"), d->keymap, d);
     buttonbar_set_label (b, 7, Q_ ("ButtonBar|Search"), d->keymap, d);
     buttonbar_set_label (b, 9, Q_ ("ButtonBar|Options"), d->keymap, d);
     buttonbar_set_label (b, 10, Q_ ("ButtonBar|Quit"), d->keymap, d);
-    buttonbar_set_modifier_labels (b, &diff_map, NULL, mod_labels, d);
+    buttonbar_set_modifier_labels (b, &diff_map, NULL,
+                                   dview->nfiles == 3 ? merge_mod_labels : mod_labels, d);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3343,7 +4067,10 @@ dview_save (WDiff *dview)
 static void
 dview_do_save (WDiff *dview)
 {
-    (void) dview_save (dview);
+    if (dview->nfiles == 3)
+        (void) merge3_save (dview);
+    else
+        (void) dview_save (dview);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3358,6 +4085,18 @@ dview_ok_to_exit (WDiff *dview)
     gboolean res = TRUE;
     int act;
     char *text;
+
+    if (dview->nfiles == 3)
+    {
+        if (!dview->merged[DIFF_MERGED] || mc_global.midnight_shutdown)
+            return TRUE;
+
+        act = query_dialog (_ ("Quit"), _ ("The merge result is not saved. Save it?"), D_NORMAL, 3,
+                            _ ("&Yes"), _ ("&No"), _ ("&Cancel"));
+        if (act == 0)
+            return merge3_save (dview);
+        return act == 1;
+    }
 
     if (!dview->merged[DIFF_LEFT] && !dview->merged[DIFF_RIGHT])
         return res;
@@ -3436,7 +4175,7 @@ dview_execute_cmd (WDiff *dview, long command)
         dview->new_frame = TRUE;
         break;
     case CK_ShowNumbers:
-        dview->display_numbers ^= calc_nwidth ((const GArray *const *) dview->a);
+        dview->display_numbers ^= calc_nwidth (dview);
         dview->new_frame = TRUE;
         break;
     case CK_SplitFull:
@@ -3484,29 +4223,48 @@ dview_execute_cmd (WDiff *dview, long command)
         dview_redo (dview);
         break;
     case CK_HunkNext:
-        dview->skip_rows = dview->search.last_accessed_num_line =
-            find_next_hunk (dview->a[DIFF_LEFT], dview->skip_rows);
+    case CK_ConflictNext:
+        if (dview->nfiles == 3)
+            dview->skip_rows = merge3_find_chunk (dview, TRUE, command == CK_ConflictNext);
+        else
+            dview->skip_rows = find_next_hunk (dview->a[DIFF_LEFT], dview->skip_rows);
+        dview->search.last_accessed_num_line = dview->skip_rows;
         break;
     case CK_HunkPrev:
-        dview->skip_rows = dview->search.last_accessed_num_line =
-            find_prev_hunk (dview->a[DIFF_LEFT], dview->skip_rows);
+    case CK_ConflictPrev:
+        if (dview->nfiles == 3)
+            dview->skip_rows = merge3_find_chunk (dview, FALSE, command == CK_ConflictPrev);
+        else
+            dview->skip_rows = find_prev_hunk (dview->a[DIFF_LEFT], dview->skip_rows);
+        dview->search.last_accessed_num_line = dview->skip_rows;
         break;
     case CK_Goto:
-        dview_goto_cmd (dview, DIFF_RIGHT);
+        dview_goto_cmd (dview, dview->nfiles == 3 ? DIFF_MERGED : DIFF_RIGHT);
         break;
     case CK_Edit:
-        dview_edit (dview, dview->ord);
+        /* the sides of a merge are not changed, the result is edited */
+        dview_edit (dview, dview->nfiles == 3 ? DIFF_MERGED : dview->ord);
         break;
     case CK_Merge:
-        do_merge_hunk (dview, FROM_LEFT_TO_RIGHT);
+    case CK_MergeOther:
+        if (dview->nfiles == 3)
+            /* in a merge F5 adds the left lines to the middle and Shift-F5 takes them out */
+            merge3_toggle (dview, DIFF_LEFT, command == CK_Merge);
+        else
+            do_merge_hunk (dview, command == CK_Merge ? FROM_LEFT_TO_RIGHT : FROM_RIGHT_TO_LEFT);
         dview_redo (dview);
         break;
-    case CK_MergeOther:
-        do_merge_hunk (dview, FROM_RIGHT_TO_LEFT);
-        dview_redo (dview);
+    case CK_MergeRight:
+    case CK_MergeRightOff:
+        if (dview->nfiles == 3)
+        {
+            merge3_toggle (dview, DIFF_RIGHT, command == CK_MergeRight);
+            dview_redo (dview);
+        }
         break;
     case CK_EditOther:
-        dview_edit (dview, dview->ord ^ 1);
+        if (dview->nfiles != 3)
+            dview_edit (dview, dview->ord ^ 1);
         break;
     case CK_Search:
         dview_search_cmd (dview);
@@ -3703,6 +4461,9 @@ dview_dialog_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, vo
         widget_set_state (w, WST_ACTIVE, TRUE);
         if (dview_ok_to_exit (dview))
             dlg_close (h);
+        else
+            // staying is an answer too: the next key must not try to leave again
+            dview->view_quit = FALSE;
         return MSG_HANDLED;
 
     default:
@@ -3722,6 +4483,25 @@ dview_get_title (const WDialog *h, const ssize_t width)
     GString *title;
 
     dview = (const WDiff *) widget_find_by_type (CONST_WIDGET (h), dview_callback);
+
+    if (dview->nfiles == 3)
+    {
+        width1 = (width - str_term_width1 (_ ("Merge:")) - strlen (modified) - 6) / 3;
+        if (width1 < 0)
+            width1 = width / 3;
+
+        title = g_string_sized_new (width);
+        g_string_append (title, _ ("Merge:"));
+        g_string_append_c (title, ' ');
+        g_string_append (title, str_term_trim (dview->label[DIFF_LEFT], width1));
+        g_string_append (title, " |");
+        g_string_append (title, dview->merged[DIFF_MERGED] ? modified : notmodified);
+        g_string_append (title, str_term_trim (dview->label[DIFF_MERGED], width1));
+        g_string_append (title, " | ");
+        g_string_append (title, str_term_trim (dview->label[DIFF_RIGHT], width1));
+        return g_string_free (title, FALSE);
+    }
+
     width1 = (width - str_term_width1 (_ ("Diff:")) - strlen (modified) - 3) / 2;
     if (width1 < 0)
     {
@@ -3744,10 +4524,9 @@ dview_get_title (const WDialog *h, const ssize_t width)
 
 /* --------------------------------------------------------------------------------------------- */
 
-int
-diff_view (const char *file1, const char *file2, const char *label1, const char *label2)
+static WDiff *
+dview_dialog_new (void)
 {
-    int error;
     WDiff *dview;
     Widget *w;
     WDialog *dview_dlg;
@@ -3778,6 +4557,64 @@ diff_view (const char *file1, const char *file2, const char *label1, const char 
 
     dview_dlg->get_title = dview_get_title;
 
+    return dview;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Make @dview a merge: the middle column is a temporary file that starts as the automatic
+   merge of the two sides against @base. */
+static int
+merge3_init (WDiff *dview, const char *base, const char *out)
+{
+    vfs_path_t *vpath = NULL;
+    const char *suffix;
+    int fd;
+
+    /* the extension of the result picks the syntax of the middle column */
+    suffix = strrchr (x_basename (out), '.');
+    fd = mc_mkstemps (&vpath, "mcmerge", suffix);
+    if (fd == -1)
+    {
+        file_error_message (_ ("Cannot create temporary merge file"), NULL);
+        return -1;
+    }
+    close (fd);
+
+    dview->merge_tmp = g_strdup (vfs_path_as_str (vpath));
+    vfs_path_free (vpath, TRUE);
+    dview->merge_out = g_strdup (out);
+    dview->nfiles = 3;
+    dview->file[DIFF_MERGED] = dview->merge_tmp;
+    dview->label[DIFF_MERGED] = g_strdup (out);
+    dview->chunks = g_array_new (FALSE, FALSE, sizeof (MERGE3_CHUNK));
+    dview->a[DIFF_MERGED] = g_array_new (FALSE, FALSE, sizeof (DIFFLN));
+    g_array_set_clear_func (dview->a[DIFF_MERGED], cc_free_elt);
+
+    dview->merge_base = g_strdup (base);
+    dview->bchunks = g_array_new (FALSE, FALSE, sizeof (MERGE3_CHUNK));
+    dview->choices = g_array_new (FALSE, TRUE, sizeof (MERGE3_CHOICE));
+    if (!merge3_build (dview))
+    {
+        file_error_message (_ ("Cannot merge the files into\n%s"), dview->merge_tmp);
+        return -1;
+    }
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+int
+diff_view (const char *file1, const char *file2, const char *label1, const char *label2)
+{
+    int error;
+    WDiff *dview;
+    Widget *dw;
+
+    dview = dview_dialog_new ();
+    dw = WIDGET (WIDGET (dview)->owner);
+
     error = dview_init (dview, file1, file2, label1, label2, DATA_SRC_MEM);
     if (error >= 0)
         error = redo_diff (dview);
@@ -3789,12 +4626,57 @@ diff_view (const char *file1, const char *file2, const char *label1, const char 
     }
 
     if (error == 0)
-        dlg_run (dview_dlg);
+        dlg_run (DIALOG (dw));
 
     if (error != 0 || widget_get_state (dw, WST_CLOSED))
         widget_destroy (dw);
 
     return error == 0 ? 1 : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The merge view: @local and @remote at the sides, their merge against @base in the middle.
+   Returns 1 when the merge was saved into @out, 0 when it was not, -1 on an error. */
+static int
+merge_view (const char *local, const char *base, const char *remote, const char *out)
+{
+    int error;
+    gboolean saved = FALSE;
+    WDiff *dview;
+    Widget *dw;
+
+    dview = dview_dialog_new ();
+    dw = WIDGET (WIDGET (dview)->owner);
+
+    error = dview_init (dview, local, remote, local, remote, DATA_SRC_MEM);
+    if (error >= 0)
+        error = merge3_init (dview, base, out);
+    if (error >= 0)
+    {
+        error = redo_diff (dview);
+        if (error < 0)
+            message (D_ERROR, MSG_ERROR, _ ("Cannot compare the files to merge"));
+    }
+    if (error >= 0)
+    {
+        dview->ndiff = error;
+        dview_compute_areas (dview);
+        error = 0;
+    }
+
+    if (error == 0)
+    {
+        dlg_run (DIALOG (dw));
+        saved = dview->merge_saved;
+    }
+
+    if (error != 0 || widget_get_state (dw, WST_CLOSED))
+        widget_destroy (dw);
+
+    if (error != 0)
+        return -1;
+    return saved ? 1 : 0;
 }
 
 /*** public functions ****************************************************************************/
@@ -3982,5 +4864,40 @@ ret:
 
 #undef GET_FILE_AND_STAMP
 #undef UNGET_FILE
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Merge of three files, as git mergetool runs it: mcdiff6 LOCAL BASE REMOTE [-o MERGED].
+ *
+ * @param out where the merge is saved; the base file when NULL
+ *
+ * @return TRUE when the merge was saved
+ */
+
+gboolean
+dview_merge_cmd (const char *local, const char *base, const char *remote, const char *out)
+{
+    const char *files[] = { local, base, remote };
+    size_t i;
+
+    for (i = 0; i < G_N_ELEMENTS (files); i++)
+    {
+        struct stat st;
+
+        if (stat (files[i], &st) != 0)
+        {
+            file_error_message (_ ("Cannot stat\n%s"), files[i]);
+            return FALSE;
+        }
+        if (S_ISDIR (st.st_mode))
+        {
+            message (D_ERROR, MSG_ERROR, _ ("%s\nis a directory"), files[i]);
+            return FALSE;
+        }
+    }
+
+    return merge_view (local, base, remote, out != NULL ? out : base) > 0;
+}
 
 /* --------------------------------------------------------------------------------------------- */

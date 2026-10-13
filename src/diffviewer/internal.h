@@ -121,6 +121,17 @@ typedef struct
     merge3_kind_t kind;
 } MERGE3_CHUNK;
 
+/* What the middle column has for a chunk of the base: the sides taken in, in the order they
+   were, or the lines of the base when none; and where that stands in the middle file */
+typedef struct
+{
+    int nparts;
+    diff_place_t part[2];
+    int mid_start;
+    int mid_count;
+    gboolean by_hand;  // edited in the middle by the user: resolved whatever the parts say
+} MERGE3_CHOICE;
+
 typedef gboolean (*merge3_same_fn) (void *ctx, int left_start, int left_count, int right_start,
                                     int right_count);
 
@@ -171,10 +182,13 @@ typedef struct WDiff
     gboolean opt_changed;  // the user changed the options in this view
 
     // merge of three files: left, merged and right columns
-    int nfiles;       // 2, or 3 for a merge
-    char *merge_tmp;  // the middle column lives in this temporary file
-    char *merge_out;  // where Save writes the middle column
-    GArray *chunks;   // MERGE3_CHUNK
+    int nfiles;        // 2, or 3 for a merge
+    char *merge_tmp;   // the middle column lives in this temporary file
+    char *merge_out;   // where Save writes the middle column
+    GArray *chunks;    // MERGE3_CHUNK
+    char *merge_base;  // the common base of the two sides
+    GArray *bchunks;   // MERGE3_CHUNK of the sides against the base
+    GArray *choices;   // MERGE3_CHOICE, one for each of bchunks
     int nconflicts;
     gboolean merge_saved;  // the result was written at least once
 
