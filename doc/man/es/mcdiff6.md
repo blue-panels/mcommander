@@ -187,8 +187,9 @@ resuelto.
 : Salir. Si la columna central se cambió y no está guardada, pregunta si
 guardarla. Salir sin cambios deja los archivos como están.
 
-El programa termina con el código 0 si la fusión se guardó y con 1 si no,
-así que sirve como herramienta de fusión de git:
+El programa termina con el código 0 si la fusión se guardó sin conflictos
+pendientes, y con 1 en otro caso, así que sirve como herramienta de fusión
+de git:
 
 ```
 [merge]

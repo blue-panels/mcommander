@@ -245,8 +245,9 @@ Wyjść. Gdy środkowa kolumna została zmieniona i nie jest zapisana, pyta,
 czy ją zapisać. Wyjście bez zmian zostawia pliki bez zmian.
 
 .PP
-Program kończy się kodem 0, gdy scalanie zostało zapisane, i kodem 1, gdy
-nie, więc może służyć jako narzędzie scalania git:
+Program kończy się kodem 0, gdy scalanie zostało zapisane bez pozostałych
+konfliktów, i kodem 1 w innym przypadku, więc może służyć jako narzędzie
+scalania git:
 
 .EX
 [merge]

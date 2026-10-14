@@ -196,8 +196,9 @@ megoldottnak számít.
 : Kilépés. Ha a középső oszlop megváltozott és nincs mentve, rákérdez,
 hogy mentse-e. Változtatás nélkül kilépve a fájlok nem változnak.
 
-A program 0-s kilépési kóddal ér véget, ha az összefésülés mentésre került,
-és 1-essel, ha nem, így a git összefésülő eszköze lehet:
+A program 0-s kilépési kóddal ér véget, ha az összefésülés ütközés nélkül
+mentésre került, és 1-essel minden más esetben, így a git összefésülő
+eszköze lehet:
 
 ```
 [merge]

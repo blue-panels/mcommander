@@ -191,7 +191,8 @@ typedef struct WDiff
     GArray *bchunks;   // MERGE3_CHUNK of the sides against the base
     GArray *choices;   // MERGE3_CHOICE, one for each of bchunks
     int nconflicts;
-    gboolean merge_saved;  // the result was written at least once
+    gboolean merge_saved;       // the result was written at least once
+    int merge_saved_conflicts;  // the conflicts left when it was written last
 
     // Search variables
     struct

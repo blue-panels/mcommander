@@ -196,8 +196,9 @@ come risolto.
 : Uscire. Se la colonna centrale è stata cambiata e non salvata, chiede se
 salvarla. Uscire senza modifiche lascia i file come sono.
 
-Il programma termina con lo stato 0 se l'unione è stata salvata e 1 se no,
-quindi può fare da strumento di unione per git:
+Il programma termina con lo stato 0 se l'unione è stata salvata senza
+conflitti rimasti, e 1 altrimenti, quindi può fare da strumento di unione
+per git:
 
 ```
 [merge]

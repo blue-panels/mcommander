@@ -196,7 +196,8 @@ typedef struct mc_panel_host_t
 
     /* Merge of three files in the diff viewer: @local and @remote at the sides, their merge
        against @base in the middle, saved into @output.  The labels name the sides on the
-       screen.  1 when the user saved the merge, 0 when not, -1 when it could not open. */
+       screen.  1 when the user saved the merge with no conflict left, 2 when with
+       conflicts left, 0 when the user did not save it, -1 when it could not open. */
     int (*open_merge) (struct mc_panel_host_t *host, const char *local, const char *local_label,
                        const char *base, const char *remote, const char *remote_label,
                        const char *output);

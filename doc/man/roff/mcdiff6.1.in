@@ -312,8 +312,8 @@ Quit. When the middle column was changed and not saved, the view asks
 whether to save it. Leaving without a change keeps the files as they are.
 
 .PP
-The program ends with the exit status 0 when the merge was saved and 1 when
-it was not, so it can serve as the merge tool of git:
+The program ends with the exit status 0 when the merge was saved with no
+conflict left, and 1 otherwise, so it can serve as the merge tool of git:
 
 .EX
 [merge]

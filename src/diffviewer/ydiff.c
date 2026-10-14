@@ -3080,6 +3080,7 @@ merge3_save (WDiff *dview)
 
     dview->merged[DIFF_MERGED] = FALSE;
     dview->merge_saved = TRUE;
+    dview->merge_saved_conflicts = dview->nconflicts;
     return TRUE;
 }
 
@@ -4704,13 +4705,14 @@ diff_view_ex (const char *file1, const char *file2, const char *label1, const ch
 /* --------------------------------------------------------------------------------------------- */
 
 /* The merge view: @local and @remote at the sides, their merge against @base in the middle.
-   Returns 1 when the merge was saved into @out, 0 when it was not, -1 on an error. */
+   Returns 1 when the merge was saved into @out with no conflict left, 2 when it was saved
+   with conflicts left, 0 when it was not saved, -1 on an error. */
 int
 merge_view (const char *local, const char *local_label, const char *base, const char *remote,
             const char *remote_label, const char *out)
 {
     int error;
-    gboolean saved = FALSE;
+    int saved = 0;
     WDiff *dview;
     Widget *dw;
 
@@ -4736,7 +4738,8 @@ merge_view (const char *local, const char *local_label, const char *base, const 
     if (error == 0)
     {
         dlg_run (DIALOG (dw));
-        saved = dview->merge_saved;
+        if (dview->merge_saved)
+            saved = dview->merge_saved_conflicts == 0 ? 1 : 2;
     }
 
     if (error != 0 || widget_get_state (dw, WST_CLOSED))
@@ -4744,7 +4747,7 @@ merge_view (const char *local, const char *local_label, const char *base, const 
 
     if (error != 0)
         return -1;
-    return saved ? 1 : 0;
+    return saved;
 }
 
 /*** public functions ****************************************************************************/
@@ -4940,7 +4943,7 @@ ret:
  *
  * @param out where the merge is saved; the base file when NULL
  *
- * @return TRUE when the merge was saved
+ * @return TRUE when the merge was saved with no conflict left, as git mergetool wants it
  */
 
 gboolean
@@ -4965,7 +4968,7 @@ dview_merge_cmd (const char *local, const char *base, const char *remote, const 
         }
     }
 
-    return merge_view (local, local, base, remote, remote, out != NULL ? out : base) > 0;
+    return merge_view (local, local, base, remote, remote, out != NULL ? out : base) == 1;
 }
 
 /* --------------------------------------------------------------------------------------------- */

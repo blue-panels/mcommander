@@ -177,7 +177,9 @@ What mc provides to the plugin while the panel is active:
   open_merge(host, local, local_label, base, remote, remote_label, output)
                               merge of three files via the integrated
                               viewer; returns 1 when the merge was
-                              saved into output, 0 when not, -1 on error
+                              saved into output with no conflict left,
+                              2 when with conflicts left, 0 when not
+                              saved, -1 on error
   close_plugin(host, dir_path)
                               ask the host to tear down the plugin and
                               optionally cd to dir_path
