@@ -430,6 +430,9 @@ with the kitty keyboard protocol or the Win32 input mode (kitty, WezTerm, foot,
 Windows Terminal): in the others it is the interrupt key of the terminal and
 never reaches M-Commander. Alt-X g works in every terminal.
 
+**Alt-X f**
+: compares the files under the cursors of the two panels.
+
 **Esc**
 : clears the command line when no dialog is open and the file list has the
 focus. If the quick search is running, Esc ends it first, and the next Esc
