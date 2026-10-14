@@ -219,7 +219,7 @@ kolejności dodawania.
 Usunąć z powrotem wiersze prawego pliku.
 
 .TP
-\fBN, P\fP
+\fB], [\fP
 Przejść do następnego lub poprzedniego konfliktu.
 
 .TP

@@ -286,7 +286,7 @@ lines come in the order they were added.
 Take the lines of the right file out again.
 
 .TP
-\fBN, P\fP
+\fB], [\fP
 Go to the next or previous conflict.
 
 .TP

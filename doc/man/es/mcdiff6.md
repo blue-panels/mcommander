@@ -167,7 +167,7 @@ añadidos, las líneas siguen el orden en que se añadieron.
 **Shift-F6**
 : Quitar de nuevo las líneas del archivo derecho.
 
-**N, P**
+**], [**
 : Ir al conflicto siguiente o anterior.
 
 **Enter, Space, n; Backspace, p**

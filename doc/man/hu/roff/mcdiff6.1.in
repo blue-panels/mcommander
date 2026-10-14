@@ -221,7 +221,7 @@ adva, a sorok a hozzáadás sorrendjében követik egymást.
 A jobb oldali fájl sorait újra kiveszi.
 
 .TP
-\fBN, P\fP
+\fB], [\fP
 Ugrás a következő vagy az előző ütközésre.
 
 .TP

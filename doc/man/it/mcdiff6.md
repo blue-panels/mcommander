@@ -176,7 +176,7 @@ aggiunti, le righe seguono l'ordine in cui sono state aggiunte.
 **Shift-F6**
 : Togliere di nuovo le righe del file di destra.
 
-**N, P**
+**], [**
 : Andare al conflitto successivo o precedente.
 
 **Enter, Space, n; Backspace, p**

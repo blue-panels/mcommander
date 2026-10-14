@@ -210,7 +210,7 @@ añadidos, las líneas siguen el orden en que se añadieron.
 Quitar de nuevo las líneas del archivo derecho.
 
 .TP
-\fBN, P\fP
+\fB], [\fP
 Ir al conflicto siguiente o anterior.
 
 .TP

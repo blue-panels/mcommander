@@ -176,7 +176,7 @@ adva, a sorok a hozzáadás sorrendjében követik egymást.
 **Shift-F6**
 : A jobb oldali fájl sorait újra kiveszi.
 
-**N, P**
+**], [**
 : Ugrás a következő vagy az előző ütközésre.
 
 **Enter, Space, n; Backspace, p**

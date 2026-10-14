@@ -174,7 +174,7 @@ kolejności dodawania.
 **Shift-F6**
 : Usunąć z powrotem wiersze prawego pliku.
 
-**N, P**
+**], [**
 : Przejść do następnego lub poprzedniego konfliktu.
 
 **Enter, Space, n; Backspace, p**

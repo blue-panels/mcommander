@@ -230,7 +230,7 @@ lines come in the order they were added.
 **Shift-F6**
 : Take the lines of the right file out again.
 
-**N, P**
+**], [**
 : Go to the next or previous conflict.
 
 **Enter, Space, n; Backspace, p**
