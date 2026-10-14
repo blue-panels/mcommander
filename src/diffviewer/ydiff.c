@@ -2116,12 +2116,16 @@ merge3_build (WDiff *dview)
     text_lines_t tl, tb, tr;
     FILE *f = NULL;
     gboolean ok = FALSE;
+    diff_options_t exact;
 
     tl.data = tb.data = tr.data = NULL;
     tl.start = tb.start = tr.start = NULL;
 
-    if (merge3_align (&dview->opt, dview->file[DIFF_LEFT], dview->merge_base,
-                      dview->file[DIFF_RIGHT], dview->bchunks)
+    /* the chunks of the merge are the lines that changed, by any byte: the options of the
+       comparison are for what the view shows, and may change while the merge goes on */
+    memset (&exact, 0, sizeof (exact));
+    if (merge3_align (&exact, dview->file[DIFF_LEFT], dview->merge_base, dview->file[DIFF_RIGHT],
+                      dview->bchunks)
         && text_lines_load (&tl, dview->file[DIFF_LEFT]) && text_lines_load (&tb, dview->merge_base)
         && text_lines_load (&tr, dview->file[DIFF_RIGHT])
         && (f = fopen (dview->merge_tmp, "w")) != NULL)
@@ -2865,6 +2869,24 @@ merge3_base_chunk_at (const WDiff *dview, int s, int e)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The chunk of the base that has line @line, from 0, of the middle file, or -1 */
+static int
+merge3_base_chunk_of_line (const WDiff *dview, int line)
+{
+    guint i;
+
+    for (i = 0; i < dview->choices->len; i++)
+    {
+        const MERGE3_CHOICE *ch = &g_array_index (dview->choices, MERGE3_CHOICE, i);
+
+        if (ch->mid_start <= line && line < ch->mid_start + ch->mid_count)
+            return (int) i;
+    }
+    return -1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Write the lines of chunk @idx of the base, as its choice says, over its place in the middle
    file; the chunks after it move by the change of its length */
 static gboolean
@@ -2923,8 +2945,20 @@ merge3_toggle (WDiff *dview, diff_place_t side, gboolean add)
     c = merge3_current_chunk (dview);
     if (c == NULL)
         return;
-    idx = merge3_base_chunk_at (dview, c->start[DIFF_MERGED],
-                                c->start[DIFF_MERGED] + c->count[DIFF_MERGED]);
+
+    /* a chunk on the screen may cover more than one chunk of the base: the one with the line
+       the user is at wins, else the first */
+    idx = -1;
+    if (c->first_row <= dview->skip_rows && dview->skip_rows < c->first_row + c->rows)
+    {
+        const int line = g_array_index (dview->a[DIFF_MERGED], DIFFLN, dview->skip_rows).line;
+
+        if (line != 0)
+            idx = merge3_base_chunk_of_line (dview, line - 1);
+    }
+    if (idx < 0)
+        idx = merge3_base_chunk_at (dview, c->start[DIFF_MERGED],
+                                    c->start[DIFF_MERGED] + c->count[DIFF_MERGED]);
     if (idx < 0)
         return;
 
