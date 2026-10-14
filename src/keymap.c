@@ -183,7 +183,7 @@ static const global_keymap_ini_t default_filemanager_keymap[] = {
 static const global_keymap_ini_t default_filemanager_x_keymap[] = {
     { "CompareDirs", "d" },
 #ifdef USE_DIFF_VIEW
-    { "CompareFiles", "ctrl-d" },
+    { "CompareFiles", "f" },
 #endif
     { "PutCurrentPath", "p" },
     { "PutOtherPath", "ctrl-p" },
@@ -537,7 +537,7 @@ static const global_keymap_ini_t default_editor_keymap[] = {
     { "BookmarkNext", "alt-j" },
     { "BookmarkPrev", "alt-i" },
     { "MacroStartStopRecord", "ctrl-r" },
-    { "MacroExecute", "ctrl-a" },
+    { "MarkAll", "ctrl-a" },
     { "ShowNumbers", "alt-n" },
     { "ShowTabTws", "alt-underline" },
     { "SyntaxOnOff", "ctrl-s" },
@@ -825,8 +825,12 @@ static const global_keymap_ini_t far_filemanager_keymap[] = {
 
 /* Dialogs: Ctrl-Enter does the default action (Far), as Enter does outside the buttons */
 /* Alt-X g: the Ctrl-G of Far for a terminal that takes Ctrl-G as the interrupt key */
+/* Alt-X f: compare the files of the two panels */
 static const global_keymap_ini_t far_filemanager_x_keymap[] = {
     { "ApplyCommand", "g" },
+#ifdef USE_DIFF_VIEW
+    { "CompareFiles", "f" },
+#endif
     {
         NULL,
         NULL,

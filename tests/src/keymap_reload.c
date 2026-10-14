@@ -298,6 +298,7 @@ START_TEST (test_keymap_far_mode_editor_viewer)
 #ifdef USE_INTERNAL_EDIT
     ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, KEY_F (4)), CK_Replace);
     ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('u')), CK_Undo);
+    ck_assert_int_eq (keybind_lookup_keymap_command (editor_map, XCTRL ('a')), CK_MarkAll);
 #endif
     ck_assert_int_ne (keybind_lookup_keymap_command (viewer_map, KEY_M_ALT | KEY_F (8)), CK_Goto);
     keymap_free ();
@@ -415,6 +416,11 @@ START_TEST (test_keymap_far_mode_dialogs_and_workflows)
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
                       CK_ApplyCommand);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_x_map, 'g'), CK_ApplyCommand);
+#ifdef USE_DIFF_VIEW
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_x_map, 'f'), CK_CompareFiles);
+    ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_x_map, XCTRL ('d')),
+                      CK_CompareFiles);
+#endif
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (6)),
                       CK_Link);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (10)),
@@ -442,6 +448,9 @@ START_TEST (test_keymap_far_mode_dialogs_and_workflows)
     ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, XCTRL ('g')),
                       CK_ApplyCommand);
     ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_x_map, 'g'), CK_ApplyCommand);
+#ifdef USE_DIFF_VIEW
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_x_map, 'f'), CK_CompareFiles);
+#endif
     ck_assert_int_ne (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (10)),
                       CK_Tree);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_F (19)),
