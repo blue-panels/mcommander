@@ -1,0 +1,4 @@
+# Far mode with the fast find of Far: Alt with a character types into it
+[Midnight-Commander]
+far_mode=true
+far_fast_find=true

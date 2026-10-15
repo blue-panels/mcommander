@@ -59,7 +59,7 @@
 #include "src/history.h"  // MC_HISTORY_ESC_TIMEOUT
 #include "src/execute.h"  // pause_after_run
 #include "src/args.h"     // mc_args__nokeymap
-#include "src/keymap.h"   // keymap_far_mode, keymap_load()
+#include "src/keymap.h"   // keymap_far_mode, keymap_far_fast_find, keymap_load()
 #ifdef ENABLE_BACKGROUND
 #include "src/background.h"  // task_list
 #endif
@@ -93,6 +93,7 @@
 /*** file scope variables ************************************************************************/
 
 static unsigned long configure_old_esc_mode_id, configure_time_out_id;
+static unsigned long configure_far_mode_id, configure_far_fast_find_id;
 
 /* Index in list_formats[] for "brief" */
 static const int panel_list_brief_idx = 1;
@@ -163,6 +164,13 @@ configure_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void 
             ww = widget_find_by_id (w, configure_time_out_id);
             widget_disable (ww, not_single);
 
+            return MSG_HANDLED;
+        }
+        // message from "Far Manager keys" checkbutton: the fast find is a part of Far mode
+        if (sender != NULL && sender->id == configure_far_mode_id)
+        {
+            widget_disable (widget_find_by_id (w, configure_far_fast_find_id),
+                            !CHECK (sender)->state);
             return MSG_HANDLED;
         }
         return MSG_NOT_HANDLED;
@@ -589,7 +597,7 @@ configure_box (void)
     {
         char time_out[BUF_TINY] = "";
         char *time_out_new = NULL;
-        gboolean far_mode_old;
+        gboolean far_mode_old, far_fast_find_old;
 
         quick_widget_t quick_widgets[] = {
             // clang-format off
@@ -628,7 +636,10 @@ configure_box (void)
                     QUICK_CHECKBOX (_ ("Sa&fe delete"), &safe_delete, NULL),
                     QUICK_CHECKBOX (_ ("Safe overwrite"), &safe_overwrite, NULL),       // w/o hotkey
                     QUICK_CHECKBOX (_ ("A&uto save setup"), &auto_save_setup, NULL),
-                    QUICK_CHECKBOX (_ ("Far Manager keys"), &keymap_far_mode, NULL),
+                    QUICK_CHECKBOX (_ ("Far Manager keys"), &keymap_far_mode,
+                                    &configure_far_mode_id),
+                    QUICK_CHECKBOX (_ ("Alt-letter fast find"), &keymap_far_fast_find,
+                                    &configure_far_fast_find_id),
                     QUICK_SEPARATOR (FALSE),
                 QUICK_STOP_GROUPBOX,
             QUICK_STOP_COLUMNS,
@@ -662,7 +673,12 @@ configure_box (void)
         quick_widgets[7].state = WST_DISABLED;
 #endif
 
+        // the fast find works in Far mode only
+        if (!keymap_far_mode)
+            quick_widgets[30].state = WST_DISABLED;
+
         far_mode_old = keymap_far_mode;
+        far_fast_find_old = keymap_far_fast_find;
 
         if (quick_dialog (&qdlg) == B_ENTER)
         {
@@ -672,13 +688,16 @@ configure_box (void)
                 old_esc_mode_timeout = atoi (time_out_new);
         }
         else
+        {
             keymap_far_mode = far_mode_old;
+            keymap_far_fast_find = far_fast_find_old;
+        }
 
         g_free (time_out_new);
 
         // The keys of Far mode are part of the keymap: load it again the way the key bindings
-        // dialog does, so that the mode works at once
-        if (keymap_far_mode != far_mode_old)
+        // dialog does, so that the mode works at once. The fast find takes keys from it too
+        if (keymap_far_mode != far_mode_old || keymap_far_fast_find != far_fast_find_old)
         {
             keymap_save_old_maps ();
             keymap_free ();

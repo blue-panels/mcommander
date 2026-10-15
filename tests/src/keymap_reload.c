@@ -500,6 +500,82 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_keymap_far_fast_find_key)
+{
+    /* Alt or Alt-Shift with a character, the byte of an 8-bit charset or the lead of UTF-8 */
+    ck_assert (keymap_far_fast_find_key (ALT ('a')));
+    ck_assert (keymap_far_fast_find_key (ALT ('A')));
+    ck_assert (keymap_far_fast_find_key (KEY_M_ALT | KEY_M_SHIFT | 'a'));
+    ck_assert (keymap_far_fast_find_key (ALT ('7')));
+    ck_assert (keymap_far_fast_find_key (ALT ('?')));
+    ck_assert (keymap_far_fast_find_key (ALT (0xC6)));
+    ck_assert (keymap_far_fast_find_key (ALT (0xD0)));
+
+    /* not a character, a character without Alt, or with Ctrl too */
+    ck_assert (!keymap_far_fast_find_key ('a'));
+    ck_assert (!keymap_far_fast_find_key (ALT (' ')));
+    ck_assert (!keymap_far_fast_find_key (ALT ('\n')));
+    ck_assert (!keymap_far_fast_find_key (ALT ('\t')));
+    ck_assert (!keymap_far_fast_find_key (ALT (0x7F)));
+    ck_assert (!keymap_far_fast_find_key (KEY_M_ALT | KEY_M_CTRL | 'a'));
+    ck_assert (!keymap_far_fast_find_key (KEY_M_ALT | KEY_F (7)));
+    ck_assert (!keymap_far_fast_find_key (KEY_M_ALT | KEY_BACKSPACE));
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_keymap_far_fast_find)
+{
+    ck_assert (!keymap_far_fast_find);
+
+    /* Far mode alone: the Alt keys with a character keep their actions */
+    keymap_far_mode = TRUE;
+    keymap_load (FALSE);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('?')), CK_Find);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_CdQuick);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_History);
+    keymap_free ();
+
+    /* with the fast find the panels give them all up ... */
+    keymap_far_fast_find = TRUE;
+    keymap_load (FALSE);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('?')), CK_IgnoreKey);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_IgnoreKey);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('h')), CK_IgnoreKey);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('x')), CK_IgnoreKey);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_IgnoreKey);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('s')), CK_IgnoreKey);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('o')), CK_IgnoreKey);
+
+    /* ... and keep the other keys of the same actions */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (7)),
+                      CK_Find);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (8)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_ALT | KEY_F (12)),
+                      CK_History);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, XCTRL ('s')), CK_Search);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('\n')),
+                      CK_PutCurrentSelected);
+
+    /* the edit lines are not the panels: their Alt keys stay */
+    ck_assert_int_eq (keybind_lookup_keymap_command (input_map, ALT ('p')), CK_HistoryPrev);
+    keymap_free ();
+
+    /* without Far mode the fast find does nothing */
+    keymap_far_mode = FALSE;
+    keymap_load (FALSE);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('?')), CK_Find);
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_CdQuick);
+    keymap_free ();
+
+    keymap_far_fast_find = FALSE;
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -521,6 +597,8 @@ main (void)
     tcase_add_test (tc_core, test_keymap_far_mode_command_line);
     tcase_add_test (tc_core, test_keymap_far_mode_dialogs_and_workflows);
     tcase_add_test (tc_core, test_keymap_far_mode_select_all_default_button);
+    tcase_add_test (tc_core, test_keymap_far_fast_find_key);
+    tcase_add_test (tc_core, test_keymap_far_fast_find);
 
     return mctest_run_all (tc_core);
 }
