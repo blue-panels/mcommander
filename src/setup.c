@@ -56,7 +56,7 @@
 
 #include "args.h"
 #include "execute.h"  // pause_after_run
-#include "keymap.h"   // keymap_far_mode
+#include "keymap.h"   // keymap_far_mode, keymap_far_fast_find
 #include "clipboard.h"
 #include "selcodepage.h"
 
@@ -299,6 +299,7 @@ static const struct
     { "shell_patterns", &easy_patterns },
     { "auto_save_setup", &auto_save_setup },
     { "far_mode", &keymap_far_mode },
+    { "far_fast_find", &keymap_far_fast_find },
     { "preallocate_space", &mc_global.vfs.preallocate_space },
     { "auto_menu", &auto_menu },
     { "use_internal_view", &use_internal_view },

@@ -3569,8 +3569,16 @@ panel_do_set_filter (WPanel *panel)
 static mc_search_t *
 panel_quick_search_new_handler (const WPanel *panel)
 {
+    gboolean case_sensitive;
+
+    case_sensitive = panels_qsearch_case_sensitive (panel->sort_info.case_sensitive);
+
+    // the fast find of Far finds a name whatever its case is
+    if (panel->quick_search.far_find && !panel->quick_search.filtering)
+        case_sensitive = FALSE;
+
     return quick_search_new (panel->quick_search.buffer->str, panel->quick_search.filtering,
-                             panels_qsearch_case_sensitive (panel->sort_info.case_sensitive));
+                             case_sensitive);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3984,6 +3992,123 @@ search_previous (WPanel *panel)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * The bytes that Alt (or Alt-Shift) with @key types into the fast find of Far mode, in the charset
+ * of the terminal; 0 when there are none. A terminal that sends keys the old way sends the byte
+ * after an Esc, and the rest of a UTF-8 character after it as plain keys, which the search takes
+ * as typed. A kitty terminal names the key of the base layout instead, and the character of the
+ * layout that was typed with is in its event.
+ */
+
+static int
+panel_far_fast_find_text (int key, char *text, size_t size)
+{
+    tty_key_event_t ev;
+    gunichar c;
+    char utf8[6];
+    gsize len;
+
+    if (!tty_key_event (key, &ev) || ev.final != 'u')
+    {
+        text[0] = (char) (key & 0xFF);
+        return 1;
+    }
+
+    if (ev.text_len > 0)
+        c = ev.text[0];
+    else if ((ev.mods & TTY_KITTY_MOD_SHIFT) != 0 && ev.shifted != 0)
+        c = ev.shifted;
+    else
+        c = ev.key;
+
+    // the functional keys of kitty are in the private use area
+    if (c <= ' ' || c == 0x7F || (c >= 0xE000 && c <= 0xF8FF) || !g_unichar_validate (c))
+        return 0;
+
+    len = (gsize) g_unichar_to_utf8 (c, utf8);
+    if (mc_global.utf8_display)
+    {
+        if (len > size)
+            return 0;
+        memcpy (text, utf8, len);
+    }
+    else
+    {
+        char *bytes;
+
+        bytes = g_locale_from_utf8 (utf8, (gssize) len, NULL, &len, NULL);
+        if (bytes == NULL || len == 0 || len > size)
+        {
+            g_free (bytes);
+            return 0;
+        }
+        memcpy (text, bytes, len);
+        g_free (bytes);
+    }
+
+    return (int) len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * The fast find of Far mode: Alt, or Alt-Shift, with a character starts the quick search and types
+ * the character into it. Once the search runs every such key goes to it. Before that a key keeps
+ * its action when a keymap of the user binds it (Far mode takes the rest of these keys out of the
+ * keymap) or when the plugin of the panel answers to it, as a macro or a plugin of Far would.
+ */
+
+static gboolean
+panel_far_fast_find (WPanel *panel, int key)
+{
+    char text[MB_LEN_MAX];
+    int len, i;
+
+    if (!keymap_far_mode || !keymap_far_fast_find || !keymap_far_fast_find_key (key))
+        return FALSE;
+
+    if (!panel->quick_search.active)
+    {
+        if (keybind_lookup_keymap_command (panel_map, key) != CK_IgnoreKey
+            || keybind_lookup_keymap_command (filemanager_map, key) != CK_IgnoreKey)
+            return FALSE;
+
+        if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
+            && panel->plugin->handle_key != NULL)
+        {
+            const mc_pp_result_t r = panel->plugin->handle_key (panel->plugin_data, key);
+
+            if (r == MC_PPR_OK)
+                panel_plugin_reload (panel);
+            if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+                return TRUE;
+        }
+    }
+
+    len = panel_far_fast_find_text (key, text, sizeof (text));
+    if (len == 0)
+        return FALSE;
+
+    if (!panel->quick_search.active)
+    {
+        start_search (panel);
+        // an empty directory has nothing to find
+        if (!panel->quick_search.active)
+            return TRUE;
+        panel->quick_search.far_find = TRUE;
+    }
+
+    for (i = 0; i < len; i++)
+    {
+        if (panel->quick_search.filtering)
+            do_quick_filter (panel, (unsigned char) text[i]);
+        else
+            do_search (panel, (unsigned char) text[i]);
+    }
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 static void
 start_quick_filter (WPanel *panel)
 {
@@ -4029,6 +4154,7 @@ stop_search (WPanel *panel)
 
     panel_quick_filter_restore (panel);
     panel->quick_search.active = FALSE;
+    panel->quick_search.far_find = FALSE;
 
     /* if user overrdied search string, we need to store it
        to the quick_search.prev_buffer */
@@ -5365,6 +5491,10 @@ panel_key (WPanel *panel, int key)
         return MSG_HANDLED;
     }
 
+    // Far mode: Alt with a character is the fast find of Far
+    if (panel_far_fast_find (panel, key))
+        return MSG_HANDLED;
+
     // Far mode: in the quick search, Ctrl-Enter and Ctrl-Shift-Enter go on to the next and to the
     // previous file that matches
     if (keymap_far_mode && panel->quick_search.active && !panel->quick_search.filtering
@@ -6182,6 +6312,7 @@ panel_clean_dir (WPanel *panel)
     panel->total = 0;
     panel->quick_search.active = FALSE;
     panel->quick_search.filtering = FALSE;
+    panel->quick_search.far_find = FALSE;
     if (panel->quick_search.source.list != NULL)
         dir_list_free_list (&panel->quick_search.source);
     panel->is_panelized = FALSE;

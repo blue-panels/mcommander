@@ -403,9 +403,37 @@ Terminal wysyła te klawisze tylko wtedy, gdy zgłasza klawisze z
 modyfikatorami.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
-: w szybkim wyszukiwaniu (Ctrl-s, Alt-s) przechodzą do następnego i do
-poprzedniego pasującego pliku, jak w szybkim wyszukiwaniu Far. Alt ze znakiem
-zachowuje działania M-Commandera: nie zaczyna wyszukiwania.
+: w szybkim wyszukiwaniu (Ctrl-s, Alt-s) i w wyszukiwaniu z Alt (poniżej)
+przechodzą do następnego i do poprzedniego pasującego pliku, jak w szybkim
+wyszukiwaniu Far.
+
+**Alt ze znakiem, Alt-Shift ze znakiem**
+: szybkie wyszukiwanie Far, gdy włączona jest także opcja
+*Szybkie wyszukiwanie z Alt (Alt-letter fast find)*
+okna dialogowego
+[Konfiguracja](#configuration)
+(**far_fast_find=true**;
+domyślnie jest wyłączona). Panel przechodzi do pierwszego pliku, licząc od
+pliku pod kursorem, którego nazwa zaczyna się od wpisanych znaków, bez względu
+na wielkość liter; \* i ? są symbolami wieloznacznymi, jak w szybkim
+wyszukiwaniu. Gdy wyszukiwanie trwa, znaki można wpisywać z Alt lub bez niego,
+a znak, do którego nie pasuje żadna nazwa, nie jest przyjmowany. Esc kończy
+wyszukiwanie; każdy inny klawisz kończy je, a potem robi to, co zwykle, więc
+Enter otwiera znaleziony plik. Klawisze Alt trafiają do wyszukiwania także
+wtedy, gdy w wierszu poleceń jest tekst, jak w Far. Cyrylica i inne litery
+działają tak samo w locale UTF-8 i w 8-bitowym. Terminal, który wysyła Alt
+jako Esc przed klawiszem, wysyła Alt z cyfrą jako Esc i cyfrę, a to w
+M-Commanderze klawisz funkcyjny (Esc 1 to F1): tam cyfry wpisuje się do
+trwającego już wyszukiwania bez Alt.
+Panele oddają te klawisze: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? i pozostałe
+klawisze Alt ze znakiem nie uruchamiają już tam swoich działań, a Alt-x nie
+jest już przedrostkiem poleceń rozszerzonych. Większość tych działań jest w
+menu, a Alt-F7, Alt-F8, Alt-F11 i Alt-F12 zostają. Klawisz przypisany
+ponownie w pliku
+**mc.keymap**
+użytkownika zachowuje swoje działanie, jak makro w Far, podobnie jak klawisz,
+na który odpowiada wtyczka panelu wtyczki. Gdy opcja jest wyłączona, Alt ze
+znakiem zachowuje działania M-Commandera i nie zaczyna wyszukiwania.
 
 **Ctrl-G, Alt-X g**
 : wykonuje polecenie na plikach: pyta o polecenie i uruchamia je dla każdego
@@ -2047,6 +2075,13 @@ do pliku ~/.config/mc6/ini.
 *Klawisze Far Managera (Far Manager keys).*
 Jeśli ta opcja jest włączona, panele odpowiadają na klawisze Far Managera;
 zobacz
+[Tryb Far](#far-mode).
+Ta opcja jest domyślnie wyłączona.
+
+*Szybkie wyszukiwanie z Alt (Alt-letter fast find).*
+Jeśli ta opcja jest włączona razem z
+*Klawisze Far Managera*,
+Alt ze znakiem zaczyna w panelach szybkie wyszukiwanie Far; zobacz
 [Tryb Far](#far-mode).
 Ta opcja jest domyślnie wyłączona.
 
