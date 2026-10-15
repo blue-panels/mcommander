@@ -416,9 +416,35 @@ cursor, or unselects them when that file is selected; Ctrl-gray minus unselects
 them. A terminal sends these keys only when it reports modified keys.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
-: in the quick search (Ctrl-s, Alt-s), go on to the next and to the previous
-file that matches, as in the fast find of Far. Alt with a character keeps the
-actions of M-Commander: it does not start a search.
+: in the quick search (Ctrl-s, Alt-s) and in the fast find below, go on to the
+next and to the previous file that matches, as in the fast find of Far.
+
+**Alt with a character, Alt-Shift with a character**
+: the fast find of Far, when the
+*Alt-letter fast find*
+check box of the
+[Configuration](#configuration)
+dialog is on as well
+(**far_fast_find=true**;
+it is off by default). The panel goes to the first file, from the one under
+the cursor on, whose name begins with what is typed, whatever its case; \* and ?
+are wildcards, as in the quick search. Once the search runs, the characters go
+on with Alt or without it, and a character that no name matches is not taken.
+Esc ends the search; any other key ends it and then does what it does, so Enter
+opens the file that was found. The Alt keys go to the search even when there is
+text on the command line, as in Far. Cyrillic and other letters work in a
+UTF-8 locale and in an 8-bit one alike. A terminal that sends Alt as an Esc in
+front of the key sends Alt with a digit as Esc and the digit, which is a
+function key in M-Commander (Esc 1 is F1): there the digits go into the search
+without Alt, once it runs.
+The panels give these keys up: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? and the rest of
+the Alt keys with a character no longer run their actions there, and Alt-x is
+no longer the prefix of the extended commands. Most of the actions are in the
+menus, and Alt-F7, Alt-F8, Alt-F11 and Alt-F12 stay. A key that the
+**mc.keymap**
+of the user binds again keeps its action, as a macro does in Far, and so does a
+key that the plugin of a plugin panel answers to. With the check box off, Alt
+with a character keeps the actions of M-Commander and does not start a search.
 
 **Ctrl-G, Alt-X g**
 : applies a command to the files: it asks for a command and runs it for every
@@ -2393,6 +2419,12 @@ configurable options of M-Commander are saved in the
 
 *Far Manager keys.*
 If this option is enabled, the panels answer to the keys of Far Manager; see
+[Far mode](#far-mode). This option is disabled by default.
+
+*Alt-letter fast find.*
+If this option is enabled together with
+*Far Manager keys*,
+Alt with a character starts the fast find of Far in the panels; see
 [Far mode](#far-mode). This option is disabled by default.
 
 ### Layout

@@ -36,6 +36,7 @@
 #include "lib/fileloc.h"
 #include "lib/keybind.h"
 #include "lib/mcconfig.h"  // mc_config_t
+#include "lib/tty/key.h"   // tty_keyname_to_keycode()
 #include "lib/util.h"
 #include "lib/widget.h"  // dialog_map, input_map, listbox_map, menu_map, radio_map
 
@@ -49,6 +50,8 @@
 
 /* Far mode: panel keys of Far Manager, see "Far mode" in the manual */
 gboolean keymap_far_mode = FALSE;
+/* Far mode: Alt with a character is the fast find of Far in the panels, see "Far mode" */
+gboolean keymap_far_fast_find = FALSE;
 
 GArray *filemanager_keymap = NULL;
 GArray *filemanager_x_keymap = NULL;
@@ -1008,6 +1011,55 @@ create_default_keymap (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Take the keys of the fast find of Far out of a section of the keymap: in Far no Alt key with a
+   character runs a command in the panels, they all type into the fast find */
+
+static void
+remove_far_fast_find_keys (mc_config_t *keymap, const char *section)
+{
+    gchar **actions, **action;
+
+    actions = mc_config_get_keys (keymap, section, NULL);
+
+    for (action = actions; *action != NULL; action++)
+    {
+        gchar **values, **value;
+        GString *kept;
+        gboolean removed = FALSE;
+
+        values = mc_config_get_string_list (keymap, section, *action, NULL);
+        if (values == NULL)
+            continue;
+
+        kept = g_string_new (NULL);
+        for (value = values; *value != NULL; value++)
+        {
+            const char *name = g_strstrip (*value);
+
+            if (*name == '\0')
+                continue;
+            if (keymap_far_fast_find_key (tty_keyname_to_keycode (name, NULL)))
+            {
+                removed = TRUE;
+                continue;
+            }
+            if (kept->len != 0)
+                g_string_append (kept, "; ");
+            g_string_append (kept, name);
+        }
+
+        if (removed)
+            mc_config_set_string_raw (keymap, section, *action, kept->str);
+
+        g_string_free (kept, TRUE);
+        g_strfreev (values);
+    }
+
+    g_strfreev (actions);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Put the keys of Far mode over the keymap; does nothing while the mode is off */
 
 static void
@@ -1028,6 +1080,14 @@ apply_far_mode_keymap (mc_config_t *keymap)
     create_default_keymap_section (keymap, KEYMAP_SECTION_EDITOR, far_editor_keymap);
 #endif
     create_default_keymap_section (keymap, KEYMAP_SECTION_VIEWER, far_viewer_keymap);
+
+    /* The fast find takes the Alt keys with a character from the panels here, under the keymaps of
+       the user: a key that the user binds again keeps its action, as a macro of Far does */
+    if (keymap_far_fast_find)
+    {
+        remove_far_fast_find_keys (keymap, KEYMAP_SECTION_FILEMANAGER);
+        remove_far_fast_find_keys (keymap, KEYMAP_SECTION_PANEL);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1238,6 +1298,22 @@ done:
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Is @key one of the keys of the fast find of Far: Alt or Alt-Shift with a character, as the
+ * terminal sends it (a byte of the charset of the terminal, or the first byte of a UTF-8 one)?
+ */
+
+gboolean
+keymap_far_fast_find_key (int key)
+{
+    const int c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+
+    return (key & KEY_M_ALT) != 0 && (key & (KEY_M_CTRL | KEY_M_SUPER)) == 0 && c > ' ' && c != 0x7F
+        && c <= 0xFF;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 void
