@@ -474,9 +474,38 @@ Il terminale invia questi tasti solo se riporta i tasti con modificatori.
 
 .TP
 \fBCtrl\-Enter, Ctrl\-Shift\-Enter\fP
-nella ricerca rapida (Ctrl\-s, Alt\-s), passano al file successivo e al
-precedente che corrispondono, come nella ricerca veloce di Far. Alt con un
-carattere mantiene le azioni di M\-Commander: non avvia una ricerca.
+nella ricerca rapida (Ctrl\-s, Alt\-s) e nella ricerca con Alt (più sotto),
+passano al file successivo e al precedente che corrispondono, come nella
+ricerca veloce di Far.
+
+.TP
+\fBAlt con un carattere, Alt\-Shift con un carattere\fP
+la ricerca veloce di Far, quando è attiva anche l'opzione
+\fIAlt\-letter fast find\fP
+della finestra
+Configurazione
+(\fBfar_fast_find=true\fP;
+è disattivata in modo predefinito). Il pannello passa al primo file, a partire
+da quello sotto il cursore, il cui nome comincia con ciò che è stato digitato,
+senza badare a maiuscole e minuscole; * e ? sono caratteri jolly, come nella
+ricerca rapida. Mentre la ricerca è in corso i caratteri si digitano con Alt o
+senza, e un carattere a cui non corrisponde nessun nome non viene accettato.
+Esc termina la ricerca; ogni altro tasto la termina e poi fa ciò che fa, così
+Enter apre il file trovato. I tasti Alt vanno alla ricerca anche quando nella
+riga di comando c'è del testo, come in Far. Il cirillico e le altre lettere
+funzionano allo stesso modo con una localizzazione UTF\-8 e con una a 8 bit.
+Un terminale che invia Alt come un Esc davanti al tasto invia Alt con una cifra
+come Esc e la cifra, che in M\-Commander è un tasto funzione (Esc 1 è F1): lì le
+cifre si digitano senza Alt nella ricerca già avviata.
+I pannelli cedono questi tasti: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? e gli altri
+tasti Alt con un carattere non eseguono più lì le loro azioni, e Alt\-x non è
+più il prefisso dei comandi estesi. La maggior parte di queste azioni si trova
+nei menu, e Alt\-F7, Alt\-F8, Alt\-F11 e Alt\-F12 restano. Un tasto che il file
+\fBmc.keymap\fP
+dell'utente assegna di nuovo mantiene la sua azione, come una macro in Far, e
+così un tasto a cui risponde il plugin di un pannello di plugin. Con l'opzione
+disattivata, Alt con un carattere mantiene le azioni di M\-Commander e non avvia
+una ricerca.
 
 .TP
 \fBCtrl\-G, Alt\-X g\fP
@@ -2528,6 +2557,13 @@ opzioni configurabili del M\-Commander vengono salvate nel file
 \fIFar Manager keys.\fP
 Se quest'opzione è abilitata, i pannelli rispondono ai tasti di Far Manager;
 vedere
+modalità Far\&. Quest'opzione è disabilitata in modo predefinito.
+
+.PP
+\fIAlt\-letter fast find.\fP
+Se quest'opzione è abilitata insieme a
+\fIFar Manager keys\fP,
+Alt con un carattere avvia nei pannelli la ricerca veloce di Far; vedere
 modalità Far\&. Quest'opzione è disabilitata in modo predefinito.
 
 .PP
