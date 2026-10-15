@@ -21,6 +21,10 @@ on:
         description: comma separated subjects, empty for every one
         type: string
         default: ''
+      locale:
+        description: the locale mc runs in, ru_RU.KOI8-R and ru_RU.CP866 among them
+        type: string
+        default: ru_RU.UTF-8
   # The cases take minutes, so a push does not wait for them: a pull request
   # runs them when it is given the 'sandbox' label.
   pull_request:
@@ -48,6 +52,7 @@ jobs:
             || (github.event_name == 'schedule' && 'local,sftp,ftp,smb,sh')
             || 'local' }}
       SUBJECTS: ${{ inputs.subjects || '' }}
+      LOCALE: ${{ inputs.locale || 'ru_RU.UTF-8' }}
       # A runner is slower than the machine these waits were written on, and a
       # wait that runs out fails a case that would have passed.
       SLOW: 2
@@ -71,7 +76,8 @@ jobs:
           if [ -n "$SUBJECTS" ]; then
             args="$args -c $SUBJECTS"
           fi
-          tests/misc/docker/ci.sh debian-12 $args
+          # what follows -- is handed to the test of every subject
+          tests/misc/docker/ci.sh debian-12 $args -- -l "$LOCALE"
 
       - name: The report
         if: always()
