@@ -53,7 +53,8 @@
 
 #include "src/filemanager/cmd.h"  // edit_file_at_line()
 #include "src/filemanager/panel.h"
-#include "src/filemanager/layout.h"  // Needed for get_current_index and get_other_panel
+#include "src/filemanager/layout.h"       // Needed for get_current_index and get_other_panel
+#include "src/filemanager/filemanager.h"  // current_panel
 
 #include "src/execute.h"                     // toggle_terminal()
 #include "src/filemanager/mcterm_overlay.h"  // mcterm_overlay_show_terminal()
@@ -4281,7 +4282,8 @@ dview_help (const WDiff *dview)
 static void
 dview_merge_base_cmd (WDiff *dview)
 {
-    char *dir, *start, *base;
+    gboolean sort_case = OS_SORT_CASE_SENSITIVE_DEFAULT;
+    char *base;
     struct stat st;
 
     if (dview->nfiles == 3)
@@ -4292,12 +4294,13 @@ dview_merge_base_cmd (WDiff *dview)
         return;
     }
 
-    dir = g_path_get_dirname (dview->file[DIFF_LEFT]);
-    start = g_strconcat (dir, PATH_SEP_STR, (char *) NULL);
-    g_free (dir);
-    base = input_expand_dialog (_ ("Merge"), _ ("The common base of the two files:"),
-                                MC_HISTORY_YDIFF_BASE, start, INPUT_COMPLETE_FILENAMES);
-    g_free (start);
+    if (mc_global.mc_run_mode == MC_RUN_FULL && get_current_type () == view_listing)
+        sort_case = current_panel->sort_info.case_sensitive;
+    base = file_chooser_dialog (
+        _ ("The common base of the two files"), dview->file[DIFF_LEFT], MC_HISTORY_YDIFF_BASE,
+        FILE_CHOOSER_OPEN,
+        (panels_options.show_dot_files ? FILE_CHOOSER_HIDDEN : 0)
+            | (panels_qsearch_case_sensitive (sort_case) ? FILE_CHOOSER_SEARCH_CASE : 0));
     if (base == NULL || *base == '\0')
     {
         g_free (base);
