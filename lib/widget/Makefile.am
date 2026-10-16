@@ -23,6 +23,7 @@ libmcwidget_la_SOURCES = \
 	menu.c menu.h \
 	mouse.c mouse.h \
 	quick.c quick.h \
+	quicksearch.c quicksearch.h \
 	textarea.c textarea.h \
 	radio.c radio.h \
 	rect.c rect.h \

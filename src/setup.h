@@ -149,6 +149,8 @@ const char *setup_init (void);
 void load_setup (void);
 gboolean save_setup (gboolean save_options, gboolean save_panel_options);
 void done_setup (void);
+/* Whether a quick search tells the case, by the option; @sort_case is that of the panel */
+gboolean panels_qsearch_case_sensitive (gboolean sort_case);
 void setup_save_config_show_error (const char *filename, GError **mcerror);
 
 void load_key_defs (void);

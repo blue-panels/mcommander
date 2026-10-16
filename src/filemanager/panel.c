@@ -3569,88 +3569,18 @@ panel_do_set_filter (WPanel *panel)
 static mc_search_t *
 panel_quick_search_new_handler (const WPanel *panel)
 {
-    mc_search_t *search;
-    char *reg_exp, *esc_str;
-
-    if (panel->quick_search.filtering)
-        reg_exp = g_strdup_printf ("*%s*", panel->quick_search.buffer->str);
-    else
-        reg_exp = g_strdup_printf ("%s*", panel->quick_search.buffer->str);
-    esc_str = str_escape (reg_exp, -1, ",|\\{}[]", TRUE);
-    search = mc_search_new (esc_str, NULL);
-    search->search_type = MC_SEARCH_T_GLOB;
-    search->is_entire_line = TRUE;
-
-    switch (panels_options.qsearch_mode)
-    {
-    case QSEARCH_CASE_SENSITIVE:
-        search->is_case_sensitive = TRUE;
-        break;
-    case QSEARCH_CASE_INSENSITIVE:
-        search->is_case_sensitive = FALSE;
-        break;
-    default:
-        search->is_case_sensitive = panel->sort_info.case_sensitive;
-        break;
-    }
-
-    g_free (reg_exp);
-    g_free (esc_str);
-
-    return search;
+    return quick_search_new (panel->quick_search.buffer->str, panel->quick_search.filtering,
+                             panels_qsearch_case_sensitive (panel->sort_info.case_sensitive));
 }
 
 /* --------------------------------------------------------------------------------------------- */
-
-static void panel_quick_search_remove_last_char (WPanel *panel);
 
 static gboolean
 panel_quick_search_change_buffer (WPanel *panel, int c_code)
 {
-    if (c_code == KEY_BACKSPACE)
-    {
-        panel_quick_search_remove_last_char (panel);
-        panel->quick_search.chpoint = 0;
-        return TRUE;
-    }
-
-    if (c_code != 0 && (gsize) panel->quick_search.chpoint < sizeof (panel->quick_search.ch))
-    {
-        panel->quick_search.ch[panel->quick_search.chpoint] = c_code;
-        panel->quick_search.chpoint++;
-    }
-
-    if (panel->quick_search.chpoint == 0)
-        return c_code == 0;
-
-    switch (str_is_valid_char (panel->quick_search.ch, panel->quick_search.chpoint))
-    {
-    case -2:
-        return FALSE;
-    case -1:
-        panel->quick_search.chpoint = 0;
-        return FALSE;
-    default:
-        g_string_append_len (panel->quick_search.buffer, panel->quick_search.ch,
-                             panel->quick_search.chpoint);
-        panel->quick_search.chpoint = 0;
-        return TRUE;
-    }
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static void
-panel_quick_search_remove_last_char (WPanel *panel)
-{
-    char *act;
-
-    if (panel->quick_search.buffer->len == 0)
-        return;
-
-    act = panel->quick_search.buffer->str + panel->quick_search.buffer->len;
-    str_prev_noncomb_char (&act, panel->quick_search.buffer->str);
-    g_string_set_size (panel->quick_search.buffer, act - panel->quick_search.buffer->str);
+    return quick_search_take_key (panel->quick_search.buffer, panel->quick_search.ch,
+                                  sizeof (panel->quick_search.ch), &panel->quick_search.chpoint,
+                                  c_code);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3696,7 +3626,7 @@ do_search (WPanel *panel, int c_code)
         widget_draw (WIDGET (panel));
     }
     else if (c_code != KEY_BACKSPACE)
-        panel_quick_search_remove_last_char (panel);
+        quick_search_drop_char (panel->quick_search.buffer);
     mc_search_free (search);
 }
 
@@ -3955,7 +3885,7 @@ do_quick_filter (WPanel *panel, int c_code)
         return;
 
     if (!panel_quick_filter_apply (panel) && c_code != KEY_BACKSPACE)
-        panel_quick_search_remove_last_char (panel);
+        quick_search_drop_char (panel->quick_search.buffer);
 
     widget_draw (WIDGET (panel));
 }

@@ -835,6 +835,22 @@ save_panel_types (void)
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
+gboolean
+panels_qsearch_case_sensitive (gboolean sort_case)
+{
+    switch (panels_options.qsearch_mode)
+    {
+    case QSEARCH_CASE_SENSITIVE:
+        return TRUE;
+    case QSEARCH_CASE_INSENSITIVE:
+        return FALSE;
+    default:
+        return sort_case;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 const char *
 setup_init (void)
 {
