@@ -63,11 +63,14 @@
 
 #include "src/events_init.h"
 #include "src/history.h"
+#include "src/setup.h"         // panels_options
 #include "src/file_history.h"  // show_file_history()
 #include "src/runtime-host.h"
 #include "src/selcodepage.h"
-#include "src/util.h"       // check_for_default(), file_error_message()
-#include "src/clipboard.h"  // clipboard_info_write()
+#include "src/util.h"                     // check_for_default(), file_error_message()
+#include "src/clipboard.h"                // clipboard_info_write()
+#include "src/filemanager/layout.h"       // get_current_type()
+#include "src/filemanager/filemanager.h"  // current_panel
 
 #include "edit-impl.h"
 #include "editwidget.h"
@@ -1401,6 +1404,19 @@ edit_save_confirm_cmd (WEdit *edit)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* Whether the quick search of the file chooser tells the case: as the quick search of the
+   panels does, from the sort of the current panel when it follows it */
+static gboolean
+edit_load_search_case (void)
+{
+    gboolean sort_case = OS_SORT_CASE_SENSITIVE_DEFAULT;
+
+    if (mc_global.mc_run_mode == MC_RUN_FULL && get_current_type () == view_listing)
+        sort_case = current_panel->sort_info.case_sensitive;
+    return panels_qsearch_case_sensitive (sort_case);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /**
  * Ask file to edit and load it.
  *
@@ -1412,9 +1428,24 @@ edit_load_cmd (WDialog *h)
 {
     char *exp;
     gboolean ret = TRUE;  // possible cancel
+    const WEdit *e = edit_find_editor (h);
+    vfs_path_t *start = NULL;
 
-    exp = input_expand_dialog (_ ("Load"), _ ("Enter file name:"), MC_HISTORY_EDIT_LOAD,
-                               INPUT_LAST_TEXT, INPUT_COMPLETE_FILENAMES | INPUT_COMPLETE_CD);
+    // start where the file of the editor is; its name may be relative to its directory
+    if (e != NULL && e->filename_vpath != NULL)
+    {
+        if (e->filename_vpath->relative && e->dir_vpath != NULL)
+            start = vfs_path_append_vpath_new (e->dir_vpath, e->filename_vpath, NULL);
+        else
+            start = vfs_path_clone (e->filename_vpath);
+    }
+
+    exp = file_chooser_dialog (_ ("Load"), start != NULL ? vfs_path_as_str (start) : NULL,
+                               MC_HISTORY_EDIT_LOAD, FILE_CHOOSER_OPEN,
+                               FILE_CHOOSER_NEW_OK
+                                   | (panels_options.show_dot_files ? FILE_CHOOSER_HIDDEN : 0)
+                                   | (edit_load_search_case () ? FILE_CHOOSER_SEARCH_CASE : 0));
+    vfs_path_free (start, TRUE);
 
     if (exp != NULL && *exp != '\0')
     {
