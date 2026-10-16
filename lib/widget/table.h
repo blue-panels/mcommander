@@ -15,6 +15,7 @@ typedef struct WGroup WGroup;
 
 #include "lib/widget/rect.h"          /* WRect */
 #include "lib/widget/widget-common.h" /* Widget */
+#include "lib/widget/hline.h"         /* WHLine */
 #include "lib/strutil.h"              /* align_crt_t */
 
 /*** typedefs(not structures) and defined constants **********************************************/
@@ -83,6 +84,25 @@ typedef struct
     void (*prefetch) (void *data, int first, int count); /* before the rows are drawn */
     int (*cell_color) (void *data, int row, int col);    /* a color, or -1 for the row's */
     gboolean check_cursor; /* the column cursor walks the check columns as well */
+
+    /* Quick search and quick filter over the text of one column, as in the panels: off until
+       table_set_quick_search(). */
+    gboolean qs_enabled;
+    gboolean qs_letters; /* a letter starts the search too */
+    gboolean qs_case_sensitive;
+    int qs_col; /* the column searched */
+    gboolean qs_active;
+    gboolean qs_filtering; /* the rows that do not match are hidden */
+    GString *qs_text;
+    char qs_ch[MB_LEN_MAX]; /* the bytes of a character not whole yet */
+    int qs_chpoint;
+    GArray *qs_rows; /* int: the data rows shown while filtering, else NULL */
+    /* the text a row is searched by, when it is not the text shown in qs_col */
+    const char *(*qs_text_of) (void *data, int row);
+    gboolean qs_fuzzy;          /* the filter is fuzzy and ranks the rows by how well they match */
+    gboolean qs_letters_filter; /* a letter starts the filter, not the search */
+    int (*qs_group_of) (void *data, int row); /* rows rank within groups, lower groups first */
+    WHLine *qs_label; /* shows the text of a quick search instead of the last line */
 } WTable;
 
 /*** global variables defined in .c file *********************************************************/
@@ -104,6 +124,22 @@ void table_set_scroll_columns (WTable *t, gboolean enable);
 void table_set_prefetch (WTable *t, void (*prefetch) (void *data, int first, int count));
 void table_set_cell_color (WTable *t, int (*cell_color) (void *data, int row, int col));
 void table_set_check_cursor (WTable *t, gboolean on);
+/* Ctrl-S searches the text of column col, Alt-Shift-S filters the rows by it; with letters a
+   letter starts the search too.  The rows given to and taken from the table stay the rows of
+   the data source while a filter hides some of them. */
+void table_set_quick_search (WTable *t, int col, gboolean letters, gboolean case_sensitive);
+/* End a quick search or filter, as when the rows of the data source change */
+void table_quick_search_stop (WTable *t);
+/* A fuzzy filter: the letters typed are in the text in their order, anywhere, and the rows
+   rank by how well they match, inside the groups group_of gives (NULL: one group); a row of
+   a group below 0 stays whatever is typed; with letters_filter a letter starts the filter */
+void table_set_quick_filter_fuzzy (WTable *t, gboolean letters_filter,
+                                   int (*group_of) (void *data, int row));
+/* Show the text of a quick search on @label, a line of the dialog, instead of the last line
+   of the table */
+void table_set_quick_search_label (WTable *t, WHLine *label);
+/* Search the rows by this text instead of the text shown, a name without its decoration */
+void table_set_quick_search_text (WTable *t, const char *(*text_of) (void *data, int row));
 /* Recompute the effective widths for the current size; done on resize too. */
 void table_layout (WTable *t);
 int table_get_first_column (const WTable *t);

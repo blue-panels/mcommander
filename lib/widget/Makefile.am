@@ -8,6 +8,7 @@ libmcwidget_la_SOURCES = \
 	check.c check.h \
 	dialog.c dialog.h \
 	dialog-switch.c dialog-switch.h \
+	filechooser.c filechooser.h \
 	frame.c frame.h \
 	gauge.c gauge.h \
 	group.c group.h \
@@ -23,6 +24,7 @@ libmcwidget_la_SOURCES = \
 	menu.c menu.h \
 	mouse.c mouse.h \
 	quick.c quick.h \
+	quicksearch.c quicksearch.h \
 	textarea.c textarea.h \
 	radio.c radio.h \
 	rect.c rect.h \

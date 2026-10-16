@@ -39,6 +39,7 @@
 #include "lib/skin.h"
 #include "lib/strutil.h"
 #include "lib/widget.h"
+#include "lib/widget/quicksearch.h"
 
 #include "table.h"
 
@@ -50,6 +51,8 @@
 
 /*** forward declarations (file scope functions) *************************************************/
 
+static void table_go (WTable *t, int pos);
+
 static int table_max_first_col (const WTable *t);
 
 /*** file scope variables ************************************************************************/
@@ -59,11 +62,33 @@ static int table_max_first_col (const WTable *t);
 /* --------------------------------------------------------------------------------------------- */
 
 static int
-table_get_nrows (const WTable *t)
+table_source_nrows (const WTable *t)
 {
     if (t->datasource.get_nrows == NULL)
         return 0;
     return t->datasource.get_nrows (t->datasource.data);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The rows the table shows: all the rows of the data source, or those a filter left */
+static int
+table_get_nrows (const WTable *t)
+{
+    if (t->qs_rows != NULL)
+        return (int) t->qs_rows->len;
+    return table_source_nrows (t);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The row of the data source that row @row of the table shows */
+static int
+table_data_row (const WTable *t, int row)
+{
+    if (t->qs_rows == NULL || row < 0 || (guint) row >= t->qs_rows->len)
+        return row;
+    return g_array_index (t->qs_rows, int, row);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -218,7 +243,7 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
 
         if (row_idx >= 0 && row_idx != t->current && t->cell_color != NULL)
         {
-            int color = t->cell_color (t->datasource.data, row_idx, c);
+            int color = t->cell_color (t->datasource.data, table_data_row (t, row_idx), c);
 
             if (color >= 0)
                 cell_color = color;
@@ -232,7 +257,8 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
         else if (t->col_defs[c].type == TABLE_COL_CHECK && row_idx < nrows
                  && t->datasource.get_checked != NULL)
         {
-            gboolean checked = t->datasource.get_checked (t->datasource.data, row_idx, c);
+            gboolean checked =
+                t->datasource.get_checked (t->datasource.data, table_data_row (t, row_idx), c);
 
             /* the box the space acts on */
             if (t->check_cursor && focused && !disabled && row_idx == t->current
@@ -246,7 +272,8 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
             int text_width = width;
 
             if (row_idx < nrows && t->datasource.get_text != NULL)
-                cell_text = t->datasource.get_text (t->datasource.data, row_idx, c);
+                cell_text =
+                    t->datasource.get_text (t->datasource.data, table_data_row (t, row_idx), c);
 
             /* mark the cell space acts on; a character, not a color: the current
                cell and the current row may share it */
@@ -280,7 +307,7 @@ table_drawscroll (const WTable *t, int nrows)
     const WRect *w = &CONST_WIDGET (t)->rect;
     int first = table_row_y (t, 0);
     int lines = table_data_lines (t);
-    int max_line = w->lines - 1;
+    int max_line = first + lines - 1; /* the line of the quick search is below it */
     int line = first;
     int i;
 
@@ -362,7 +389,14 @@ table_draw (WTable *t, gboolean focused)
                                   : colors[DLG_COLOR_FRAME];
 
     if (t->prefetch != NULL && nrows > 0 && t->top < nrows)
-        t->prefetch (t->datasource.data, t->top, MIN (lines, nrows - t->top));
+    {
+        if (t->qs_rows == NULL)
+            t->prefetch (t->datasource.data, t->top, MIN (lines, nrows - t->top));
+        else
+            // the rows a filter left are not in one run
+            for (i = t->top; i < MIN (t->top + lines, nrows); i++)
+                t->prefetch (t->datasource.data, table_data_row (t, i), 1);
+    }
 
     if (t->titles != NULL)
     {
@@ -399,17 +433,33 @@ table_draw (WTable *t, gboolean focused)
 
     t->cursor_y = sel_line;
 
+    // the text of a quick search on the last line below the rows, when it has no label
+    if (t->qs_active && t->qs_label == NULL)
+    {
+        char *text;
+
+        if (t->qs_filtering)
+            text = g_strdup_printf ("%s %s", _ ("Filter:"), t->qs_text->str);
+        else
+            text = g_strconcat ("/", t->qs_text->str, (char *) NULL);
+        tty_setcolor (normalc);
+        widget_gotoyx (t, w->lines - 1, 0);
+        tty_print_string (str_fit_to_term (text, w->cols - (t->scrollbar ? 1 : 0), J_LEFT_FIT));
+        g_free (text);
+    }
+
     if (t->scrollbar && nrows > lines)
     {
         tty_setcolor (scrollbarc);
         table_drawscroll (t, nrows);
-        /* the header row above the scrollbar is still the frame */
+        /* the header row above the scrollbar and the search line below it are still the frame */
         if (t->scrollbar_on_frame)
-            for (i = 0; i < table_row_y (t, 0); i++)
-            {
-                widget_gotoyx (t, i, w->cols - 1);
-                tty_print_one_vline (TRUE);
-            }
+            for (i = 0; i < w->lines; i++)
+                if (i < table_row_y (t, 0) || i >= table_row_y (t, 0) + lines)
+                {
+                    widget_gotoyx (t, i, w->cols - 1);
+                    tty_print_one_vline (TRUE);
+                }
     }
     else if (t->scrollbar_on_frame)
     {
@@ -434,9 +484,9 @@ table_fwd (WTable *t, gboolean wrap)
         return;
 
     if (t->current + 1 < nrows)
-        table_set_current (t, t->current + 1);
+        table_go (t, t->current + 1);
     else if (wrap)
-        table_set_current (t, 0);
+        table_go (t, 0);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -450,9 +500,9 @@ table_back (WTable *t, gboolean wrap)
         return;
 
     if (t->current > 0)
-        table_set_current (t, t->current - 1);
+        table_go (t, t->current - 1);
     else if (wrap)
-        table_set_current (t, nrows - 1);
+        table_go (t, nrows - 1);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -476,16 +526,16 @@ table_execute_cmd (WTable *t, long command)
         table_fwd (t, TRUE);
         break;
     case CK_Top:
-        table_set_current (t, 0);
+        table_go (t, 0);
         break;
     case CK_Bottom:
-        table_set_current (t, nrows - 1);
+        table_go (t, nrows - 1);
         break;
     case CK_PageUp:
-        table_set_current (t, MAX (t->current - (lines - 1), 0));
+        table_go (t, MAX (t->current - (lines - 1), 0));
         break;
     case CK_PageDown:
-        table_set_current (t, MIN (t->current + (lines - 1), nrows - 1));
+        table_go (t, MIN (t->current + (lines - 1), nrows - 1));
         break;
     case CK_Enter:
         ret = send_message (WIDGET (t)->owner, t, MSG_NOTIFY, command, NULL);
@@ -546,16 +596,16 @@ table_key (WTable *t, int key)
         table_fwd (t, TRUE);
         return MSG_HANDLED;
     case KEY_HOME:
-        table_set_current (t, 0);
+        table_go (t, 0);
         return MSG_HANDLED;
     case KEY_END:
-        table_set_current (t, nrows - 1);
+        table_go (t, nrows - 1);
         return MSG_HANDLED;
     case KEY_PPAGE:
-        table_set_current (t, MAX (t->current - (lines - 1), 0));
+        table_go (t, MAX (t->current - (lines - 1), 0));
         return MSG_HANDLED;
     case KEY_NPAGE:
-        table_set_current (t, MIN (t->current + (lines - 1), nrows - 1));
+        table_go (t, MIN (t->current + (lines - 1), nrows - 1));
         return MSG_HANDLED;
     case '\n':
     case KEY_ENTER:
@@ -589,16 +639,19 @@ table_key (WTable *t, int key)
             {
                 if (t->col_defs[c].type == TABLE_COL_CHOICE && t->datasource.cycle_choice != NULL)
                 {
-                    t->datasource.cycle_choice (t->datasource.data, t->current, c, 1);
+                    t->datasource.cycle_choice (t->datasource.data, table_data_row (t, t->current),
+                                                c, 1);
                     return MSG_HANDLED;
                 }
 
                 if (t->col_defs[c].type == TABLE_COL_CHECK && t->datasource.get_checked != NULL
                     && t->datasource.set_checked != NULL)
                 {
-                    gboolean val = t->datasource.get_checked (t->datasource.data, t->current, c);
+                    gboolean val = t->datasource.get_checked (t->datasource.data,
+                                                              table_data_row (t, t->current), c);
 
-                    t->datasource.set_checked (t->datasource.data, t->current, c, !val);
+                    t->datasource.set_checked (t->datasource.data, table_data_row (t, t->current),
+                                               c, !val);
                     return MSG_HANDLED;
                 }
             }
@@ -613,8 +666,10 @@ table_key (WTable *t, int key)
             for (c = 0; c < t->ncols; c++)
                 if (t->col_defs[c].type == TABLE_COL_CHECK)
                 {
-                    gboolean val = t->datasource.get_checked (t->datasource.data, t->current, c);
-                    t->datasource.set_checked (t->datasource.data, t->current, c, !val);
+                    gboolean val = t->datasource.get_checked (t->datasource.data,
+                                                              table_data_row (t, t->current), c);
+                    t->datasource.set_checked (t->datasource.data, table_data_row (t, t->current),
+                                               c, !val);
                     break;
                 }
             return MSG_HANDLED;
@@ -626,10 +681,294 @@ table_key (WTable *t, int key)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* quick search and quick filter, as in the panels */
+
+/* The text of data row @row for the quick search */
+static const char *
+table_qs_text (const WTable *t, int row)
+{
+    if (t->qs_text_of != NULL)
+        return t->qs_text_of (t->datasource.data, row);
+    if (t->datasource.get_text != NULL)
+        return t->datasource.get_text (t->datasource.data, row, t->qs_col);
+    return NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+table_qs_matches (const WTable *t, mc_search_t *search, int data_row)
+{
+    const char *text;
+
+    text = table_qs_text (t, data_row);
+    return text != NULL && mc_search_run (search, text, 0, strlen (text), NULL);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+typedef struct
+{
+    int row;
+    int group;
+    int score;
+} table_rank_t;
+
+static gint
+table_rank_compare (gconstpointer a, gconstpointer b)
+{
+    const table_rank_t *x = (const table_rank_t *) a;
+    const table_rank_t *y = (const table_rank_t *) b;
+
+    if (x->group != y->group)
+        return x->group < y->group ? -1 : 1;
+    if (x->score != y->score)
+        return x->score > y->score ? -1 : 1;
+    return x->row - y->row;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A fuzzy filter: the rows that have the letters in their order, best match first in each
+   group; the cursor goes to the best one */
+static gboolean
+table_qs_filter_fuzzy (WTable *t)
+{
+    GArray *ranks, *rows;
+    int n = table_source_nrows (t);
+    int i, best = 0, found = 0;
+
+    ranks = g_array_new (FALSE, FALSE, sizeof (table_rank_t));
+    for (i = 0; i < n; i++)
+    {
+        table_rank_t r;
+
+        r.row = i;
+        r.group = t->qs_group_of != NULL ? t->qs_group_of (t->datasource.data, i) : 0;
+        r.score = t->qs_text->len == 0
+            ? 1
+            : quick_search_fuzzy_score (table_qs_text (t, i), t->qs_text->str,
+                                        t->qs_case_sensitive);
+        if (r.score > 0)
+        {
+            g_array_append_val (ranks, r);
+            found++;
+        }
+        else if (r.group < 0)
+            g_array_append_val (ranks, r);
+    }
+
+    if (found == 0)
+    {
+        g_array_free (ranks, TRUE);
+        return FALSE;
+    }
+
+    if (t->qs_text->len != 0)
+        g_array_sort (ranks, table_rank_compare);
+    // the cursor goes to the best match of all the groups
+    rows = g_array_sized_new (FALSE, FALSE, sizeof (int), ranks->len);
+    for (i = 0; i < (int) ranks->len; i++)
+    {
+        const table_rank_t *r = &g_array_index (ranks, table_rank_t, i);
+
+        g_array_append_val (rows, r->row);
+        if (t->qs_text->len != 0 && r->score > g_array_index (ranks, table_rank_t, best).score)
+            best = i;
+    }
+    g_array_free (ranks, TRUE);
+
+    if (t->qs_rows != NULL)
+        g_array_free (t->qs_rows, TRUE);
+    t->qs_rows = rows;
+    t->top = 0;
+    t->current = 0;
+    table_go (t, best);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The rows that have the text, the data row that was current kept current when it is there */
+static gboolean
+table_qs_filter (WTable *t)
+{
+    mc_search_t *search;
+    GArray *rows;
+    int current = table_get_current (t);
+    int n = table_source_nrows (t);
+    int i;
+
+    if (t->qs_fuzzy)
+        return table_qs_filter_fuzzy (t);
+
+    search = quick_search_new (t->qs_text->str, TRUE, t->qs_case_sensitive);
+    rows = g_array_new (FALSE, FALSE, sizeof (int));
+    for (i = 0; i < n; i++)
+        if (t->qs_text->len == 0 || table_qs_matches (t, search, i))
+            g_array_append_val (rows, i);
+    mc_search_free (search);
+
+    if (rows->len == 0)
+    {
+        g_array_free (rows, TRUE);
+        return FALSE;
+    }
+
+    if (t->qs_rows != NULL)
+        g_array_free (t->qs_rows, TRUE);
+    t->qs_rows = rows;
+    t->top = 0;
+    t->current = 0;
+    table_set_current (t, current);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* From row @from on, wrapping around, the first row that begins with the text */
+static gboolean
+table_qs_find (WTable *t, int from)
+{
+    mc_search_t *search;
+    int n = table_get_nrows (t);
+    int i;
+    gboolean found = FALSE;
+
+    if (n == 0)
+        return FALSE;
+
+    search = quick_search_new (t->qs_text->str, FALSE, t->qs_case_sensitive);
+    for (i = 0; i < n && !found; i++)
+    {
+        const int row = (from + i) % n;
+
+        if (table_qs_matches (t, search, table_data_row (t, row)))
+        {
+            table_go (t, row);
+            found = TRUE;
+        }
+    }
+    mc_search_free (search);
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The text of the quick search onto its label, if the table has one */
+static void
+table_qs_show_label (WTable *t)
+{
+    char *text = NULL;
+
+    if (t->qs_label == NULL)
+        return;
+
+    if (t->qs_active && t->qs_filtering)
+        text = g_strdup_printf (" %s %s ", _ ("Filter:"), t->qs_text->str);
+    else if (t->qs_active)
+        text = g_strconcat (" /", t->qs_text->str, " ", (char *) NULL);
+    if (g_strcmp0 (text, t->qs_label->text) != 0)
+        hline_set_text (t->qs_label, text);
+    g_free (text);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+table_qs_start (WTable *t, gboolean filtering)
+{
+    if (t->qs_text == NULL)
+        t->qs_text = g_string_new (NULL);
+    g_string_truncate (t->qs_text, 0);
+    t->qs_chpoint = 0;
+    t->qs_active = TRUE;
+    t->qs_filtering = filtering;
+    // a letter is the text of the search, not the hotkey of a button, as in WListbox
+    widget_set_options (WIDGET (t), WOP_IS_INPUT, TRUE);
+    // the line of the text is taken from the rows
+    table_go (t, t->current);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+table_is_search_key (int key)
+{
+    return key == XCTRL ('s') || key == ALT ('s');
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The keys of a quick search or filter; MSG_NOT_HANDLED for the keys the table handles as
+   usual.  Any such key ends a search, while a filter stays for the keys that move in it. */
+static cb_ret_t
+table_qs_key (WTable *t, int key)
+{
+    const gboolean typed = key == KEY_BACKSPACE || (key >= ' ' && key <= 255);
+
+    if (!t->qs_active)
+    {
+        if (table_is_search_key (key))
+            table_qs_start (t, FALSE);
+        else if (key == ALT ('S'))
+            table_qs_start (t, TRUE);
+        else if (t->qs_letters && typed && key != KEY_BACKSPACE && key != ' ')
+        {
+            table_qs_start (t, t->qs_letters_filter);
+            return table_qs_key (t, key);
+        }
+        else
+            return MSG_NOT_HANDLED;
+        return MSG_HANDLED;
+    }
+
+    if (typed)
+    {
+        if (!quick_search_take_key (t->qs_text, t->qs_ch, sizeof (t->qs_ch), &t->qs_chpoint, key))
+            return MSG_HANDLED;
+
+        // a character that finds nothing is dropped again, as in the panels; the rows and the
+        // cursor stay as they were
+        if ((t->qs_filtering ? !table_qs_filter (t) : !table_qs_find (t, t->current))
+            && key != KEY_BACKSPACE)
+            quick_search_drop_char (t->qs_text);
+        return MSG_HANDLED;
+    }
+
+    if (table_is_search_key (key))
+    {
+        if (!t->qs_filtering)
+            (void) table_qs_find (t, t->current + 1);
+        return MSG_HANDLED;
+    }
+
+    if (key == ALT ('S'))
+    {
+        t->qs_filtering = TRUE;
+        (void) table_qs_filter (t);
+        return MSG_HANDLED;
+    }
+
+    if (key == ESC_CHAR)
+    {
+        table_quick_search_stop (t);
+        return MSG_HANDLED;
+    }
+
+    if (!t->qs_filtering)
+        table_quick_search_stop (t);
+    return MSG_NOT_HANDLED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static void
 table_on_change (WTable *t)
 {
+    // a table no dialog holds is not on the screen yet
+    if (WIDGET (t)->owner == NULL)
+        return;
     table_draw (t, TRUE);
     send_message (WIDGET (t)->owner, t, MSG_NOTIFY, 0, NULL);
 }
@@ -649,6 +988,12 @@ table_destroy (WTable *t)
     t->expands = NULL;
     g_free (t->widths);
     t->widths = NULL;
+    if (t->qs_text != NULL)
+        g_string_free (t->qs_text, TRUE);
+    t->qs_text = NULL;
+    if (t->qs_rows != NULL)
+        g_array_free (t->qs_rows, TRUE);
+    t->qs_rows = NULL;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -662,20 +1007,51 @@ table_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
     {
     case MSG_KEY:
     {
-        cb_ret_t ret_code;
+        cb_ret_t ret_code = MSG_NOT_HANDLED;
+        const gboolean was_active = t->qs_active;
 
-        ret_code = table_key (t, parm);
+        if (t->qs_enabled)
+        {
+            ret_code = table_qs_key (t, parm);
+            table_qs_show_label (t);
+        }
+        // a key that ended the search and goes on unhandled still takes its line away
+        if (ret_code == MSG_NOT_HANDLED && was_active && !t->qs_active)
+            table_on_change (t);
+        if (ret_code == MSG_NOT_HANDLED)
+            ret_code = table_key (t, parm);
+        else
+        {
+            table_on_change (t);
+            return ret_code;
+        }
         if (ret_code != MSG_NOT_HANDLED)
             table_on_change (t);
         return ret_code;
     }
 
+    case MSG_UNFOCUS:
+        // a search typed here ends when the focus goes, as in a panel
+        table_quick_search_stop (t);
+        return widget_default_callback (w, sender, msg, parm, data);
+
     case MSG_HOTKEY:
         /* Enter reaches every widget as a hotkey before the focused one gets it as
            a key, so the default button would grab it */
-        if (parm == '\n' && w->owner != NULL && GROUP (w->owner)->current != NULL
-            && WIDGET (GROUP (w->owner)->current->data) == w)
+        if (w->owner == NULL || GROUP (w->owner)->current == NULL
+            || WIDGET (GROUP (w->owner)->current->data) != w)
+            return MSG_NOT_HANDLED;
+        if (parm == '\n')
             return send_message (w->owner, w, MSG_NOTIFY, CK_Enter, NULL);
+        // Alt-S and Alt-Shift-S as they are, see WOP_WANT_ALT_KEYS
+        if (t->qs_enabled && (table_is_search_key (parm) || parm == ALT ('S')))
+        {
+            const cb_ret_t ret = table_qs_key (t, parm);
+
+            table_qs_show_label (t);
+            table_on_change (t);
+            return ret;
+        }
         return MSG_NOT_HANDLED;
 
     case MSG_ACTION:
@@ -699,7 +1075,7 @@ table_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         cb_ret_t ret = widget_default_callback (w, sender, msg, parm, data);
 
         table_layout (t);
-        table_set_current (t, t->current);
+        table_go (t, t->current);
         return ret;
     }
 
@@ -725,7 +1101,7 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
     case MSG_MOUSE_DOWN:
         widget_select (w);
         if (nrows > 0 && event->y >= table_row_y (t, 0))
-            table_set_current (t, MIN (t->top + event->y - table_row_y (t, 0), nrows - 1));
+            table_go (t, MIN (t->top + event->y - table_row_y (t, 0), nrows - 1));
         if (table_has_col_cursor (t))
         {
             int c = table_col_at (t, event->x);
@@ -755,9 +1131,10 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
             && t->col_defs[c].type == TABLE_COL_CHECK && t->datasource.get_checked != NULL
             && t->datasource.set_checked != NULL)
         {
-            gboolean val = t->datasource.get_checked (t->datasource.data, row, c);
+            gboolean val =
+                t->datasource.get_checked (t->datasource.data, table_data_row (t, row), c);
 
-            t->datasource.set_checked (t->datasource.data, row, c, !val);
+            t->datasource.set_checked (t->datasource.data, table_data_row (t, row), c, !val);
             table_on_change (t);
         }
         else if (event->count == GPM_DOUBLE)
@@ -768,7 +1145,7 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
     case MSG_MOUSE_DRAG:
         event->result.repeat = TRUE;
         if (nrows > 0)
-            table_set_current (t, MIN (t->top + MAX (event->y - table_row_y (t, 0), 0), nrows - 1));
+            table_go (t, MIN (t->top + MAX (event->y - table_row_y (t, 0), 0), nrows - 1));
         break;
 
     default:
@@ -855,6 +1232,8 @@ table_set_datasource (WTable *t, table_datasource_t ds)
 {
     int nrows;
 
+    // new rows: a filter of the old ones means nothing
+    table_quick_search_stop (t);
     t->datasource = ds;
 
     /* clamp selection and viewport to new data bounds */
@@ -865,7 +1244,7 @@ table_set_datasource (WTable *t, table_datasource_t ds)
         t->top = 0;
     }
     else
-        table_set_current (t, MIN (t->current, nrows - 1));
+        table_go (t, MIN (t->current, nrows - 1));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -873,13 +1252,34 @@ table_set_datasource (WTable *t, table_datasource_t ds)
 int
 table_get_current (const WTable *t)
 {
-    return t->current;
+    return table_data_row (t, t->current);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
 void
 table_set_current (WTable *t, int pos)
+{
+    guint i;
+
+    // a row a filter hides cannot be made current; the others are found where it left them
+    if (t->qs_rows != NULL)
+    {
+        for (i = 0; i < t->qs_rows->len; i++)
+            if (g_array_index (t->qs_rows, int, i) == pos)
+            {
+                table_go (t, (int) i);
+                return;
+            }
+        return;
+    }
+    table_go (t, pos);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+table_go (WTable *t, int pos)
 {
     int nrows;
     int lines;
@@ -917,7 +1317,8 @@ table_set_current (WTable *t, int pos)
 int
 table_data_lines (const WTable *t)
 {
-    int lines = CONST_WIDGET (t)->rect.lines - (t->titles != NULL ? 1 : 0);
+    int lines = CONST_WIDGET (t)->rect.lines - (t->titles != NULL ? 1 : 0)
+        - (t->qs_active && t->qs_label == NULL ? 1 : 0);
 
     return MAX (lines, 1);
 }
@@ -938,7 +1339,7 @@ table_set_header (WTable *t, const char *const *titles)
             t->titles[c] = g_strdup (titles[c] != NULL ? titles[c] : "");
     }
     table_layout (t);
-    table_set_current (t, t->current);
+    table_go (t, t->current);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -992,7 +1393,8 @@ table_set_cell_color (WTable *t, int (*cell_color) (void *data, int row, int col
 void
 table_layout (WTable *t)
 {
-    int cols = CONST_WIDGET (t)->rect.cols - 1;
+    // the cells start at x = 1 and end before the scrollbar
+    int cols = table_cells_right (t) - 1;
     int total = 0, spare, nexpand = 0;
     int c;
 
@@ -1055,6 +1457,76 @@ table_scroll_columns (WTable *t, int delta)
     int max_first = table_max_first_col (t);
 
     t->first_col = CLAMP (t->first_col + delta, 0, max_first);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+table_set_quick_search (WTable *t, int col, gboolean letters, gboolean case_sensitive)
+{
+    t->qs_enabled = TRUE;
+    t->qs_col = col;
+    t->qs_letters = letters;
+    t->qs_case_sensitive = case_sensitive;
+    // letters that start a search are no hotkeys of the buttons, nor are Alt-S and Alt-Shift-S
+    widget_set_options (WIDGET (t), WOP_IS_INPUT, letters);
+    widget_set_options (WIDGET (t), WOP_WANT_ALT_KEYS, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+table_quick_search_stop (WTable *t)
+{
+    int current;
+
+    if (!t->qs_active)
+        return;
+
+    current = table_get_current (t);
+    t->qs_active = FALSE;
+    t->qs_filtering = FALSE;
+    widget_set_options (WIDGET (t), WOP_IS_INPUT, t->qs_letters);
+    t->qs_chpoint = 0;
+    if (t->qs_text != NULL)
+        g_string_truncate (t->qs_text, 0);
+    if (t->qs_rows != NULL)
+    {
+        // all the rows are back, the one that was current still is
+        g_array_free (t->qs_rows, TRUE);
+        t->qs_rows = NULL;
+    }
+    table_go (t, current);
+    table_qs_show_label (t);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+table_set_quick_search_text (WTable *t, const char *(*text_of) (void *data, int row))
+{
+    t->qs_text_of = text_of;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+table_set_quick_filter_fuzzy (WTable *t, gboolean letters_filter,
+                              int (*group_of) (void *data, int row))
+{
+    t->qs_fuzzy = TRUE;
+    t->qs_letters_filter = letters_filter;
+    t->qs_group_of = group_of;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+table_set_quick_search_label (WTable *t, WHLine *label)
+{
+    t->qs_label = label;
 }
 
 /* --------------------------------------------------------------------------------------------- */

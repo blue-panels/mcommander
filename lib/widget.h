@@ -37,7 +37,9 @@ typedef struct WGroup WGroup;
 #include "lib/widget/listbox-window.h"
 #include "lib/widget/quick.h"
 #include "lib/widget/wtools.h"
+#include "lib/widget/quicksearch.h"
 #include "lib/widget/table.h"
+#include "lib/widget/filechooser.h"
 #include "lib/widget/hexstrip.h"
 #include "lib/widget/dialog-switch.h"
 

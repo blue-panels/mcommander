@@ -76,7 +76,8 @@ typedef enum
     WOP_WANT_TAB = (1 << 2),  // Should the tab key be sent to the dialog?
     WOP_IS_INPUT = (1 << 3),
     WOP_SELECTABLE = (1 << 4),
-    WOP_TOP_SELECT = (1 << 5)
+    WOP_TOP_SELECT = (1 << 5),
+    WOP_WANT_ALT_KEYS = (1 << 6)  // In focus, gets MSG_HOTKEY with its Alt keys as they are first
 } widget_options_t;
 
 /* Widget state */

@@ -16,12 +16,14 @@ endif
 TESTS = \
 	buttonbar_modifiers \
 	complete_engine \
+	filechooser \
 	hotkey_equal \
 	group_init_destroy \
 	group_set_state \
 	hexstrip \
 	paste \
 	table_datasource \
+	table_quick_search \
 	textarea \
 	widget_find_by_id \
 	widget_make_global_local
@@ -34,6 +36,12 @@ buttonbar_modifiers_SOURCES = \
 complete_engine_SOURCES = \
 	complete_engine.c
 
+filechooser_SOURCES = \
+	filechooser.c
+
+# the local file system it includes needs the flags of ext2
+filechooser_LDADD = @E2P_LIBS@
+
 hotkey_equal_SOURCES = \
 	hotkey_equal.c
 
@@ -45,6 +53,9 @@ group_set_state_SOURCES = \
 
 table_datasource_SOURCES = \
 	table_datasource.c
+
+table_quick_search_SOURCES = \
+	table_quick_search.c
 
 textarea_SOURCES = \
 	textarea.c
