@@ -215,6 +215,10 @@ static const skinedit_table_row_t rows_diffviewer[] = {
     C ("diffviewer", "error", N_ ("Error"), NULL),
     C ("diffviewer", "conflict", N_ ("Conflict"),
        N_ ("Lines both sides of a merge changed; the removed color when absent")),
+    C ("diffviewer", "linemark", N_ ("Line mark"),
+       N_ ("The mark on the frame at the line the keys act on")),
+    C ("diffviewer", "inactiveframe", N_ ("Inactive frame"),
+       N_ ("The frame of the file that is not active")),
 };
 
 static const skinedit_table_row_t rows_mctree[] = {
