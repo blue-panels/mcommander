@@ -219,8 +219,8 @@ alapot.
 
 .PP
 A különbségek a középső oszlop minden változása után újra kiszámolódnak.
-120 oszlopnál keskenyebb képernyőn a középső oszlop és az egyik oldal
-látszik.
+40 oszlopnál keskenyebb képernyőn a két fájl fent egymás mellett, a
+középső oszlop alattuk látszik.
 
 .TP
 \fBF5\fP
@@ -258,10 +258,6 @@ megoldottnak számít.
 .TP
 \fBF2\fP
 A középső oszlop mentése. Ha maradt ütközés, előbb rákérdez.
-
-.TP
-\fBC\-u\fP
-Keskeny képernyőn a másik oldal mutatása.
 
 .TP
 \fBF10\fP

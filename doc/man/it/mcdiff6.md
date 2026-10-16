@@ -176,7 +176,8 @@ La riga superiore della cornice della colonna centrale indica, dopo
 base, dopo "Base:".
 
 Le differenze vengono ricalcolate dopo ogni modifica della colonna centrale.
-Uno schermo più stretto di 120 colonne mostra il centro e un solo lato.
+Uno schermo più stretto di 40 colonne mostra i due file affiancati in alto
+e la colonna centrale sotto.
 
 **F5**
 : Aggiungere le righe del file di sinistra al blocco corrente della colonna
@@ -207,9 +208,6 @@ come risolto.
 
 **F2**
 : Salvare la colonna centrale. Se restano conflitti, prima chiede.
-
-**C-u**
-: Su uno schermo stretto, mostrare l'altro lato.
 
 **F10**
 : Uscire. Se la colonna centrale è stata cambiata e non salvata, chiede se

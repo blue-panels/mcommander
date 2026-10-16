@@ -216,7 +216,8 @@ zapisuje się wynik, a dolna po "Base:" plik bazy.
 
 .PP
 Różnice są liczone na nowo po każdej zmianie środkowej kolumny. Ekran
-węższy niż 120 kolumn pokazuje środek i jedną stronę.
+węższy niż 40 kolumn pokazuje oba pliki obok siebie u góry, a środkową
+kolumnę pod nimi.
 
 .TP
 \fBF5\fP
@@ -254,10 +255,6 @@ rozwiązany.
 .TP
 \fBF2\fP
 Zapisać środkową kolumnę. Gdy zostały konflikty, najpierw pyta.
-
-.TP
-\fBC\-u\fP
-Na wąskim ekranie pokazać drugą stronę.
 
 .TP
 \fBF10\fP

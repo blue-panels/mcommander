@@ -290,7 +290,8 @@ is saved into, after "Result:"; its bottom line names the base, after "Base:".
 
 .PP
 Every difference is computed again after each change of the middle column.
-A screen narrower than 120 columns shows the middle column and one side.
+A screen narrower than 40 columns shows the two files side by side above
+and the middle column below them.
 
 .TP
 \fBF5\fP
@@ -328,10 +329,6 @@ resolved.
 .TP
 \fBF2\fP
 Save the middle column. When conflicts are left, the view asks first.
-
-.TP
-\fBC\-u\fP
-On a narrow screen, show the other side.
 
 .TP
 \fBF10\fP

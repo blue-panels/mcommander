@@ -167,7 +167,8 @@ el archivo donde se guarda el resultado; la inferior nombra la base, tras
 "Base:".
 
 Las diferencias se calculan de nuevo tras cada cambio de la columna central.
-Una pantalla de menos de 120 columnas muestra el centro y un solo lado.
+Una pantalla de menos de 40 columnas muestra los dos archivos uno al lado
+del otro arriba y la columna central debajo.
 
 **F5**
 : Añadir las líneas del archivo izquierdo al bloque actual de la columna
@@ -198,9 +199,6 @@ resuelto.
 
 **F2**
 : Guardar la columna central. Si quedan conflictos, primero pregunta.
-
-**C-u**
-: En una pantalla estrecha, mostrar el otro lado.
 
 **F10**
 : Salir. Si la columna central se cambió y no está guardada, pregunta si

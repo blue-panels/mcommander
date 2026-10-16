@@ -175,8 +175,8 @@ fájlt, ahová az eredmény mentődik, az alsó vonala pedig a "Base:" után az
 alapot.
 
 A különbségek a középső oszlop minden változása után újra kiszámolódnak.
-120 oszlopnál keskenyebb képernyőn a középső oszlop és az egyik oldal
-látszik.
+40 oszlopnál keskenyebb képernyőn a két fájl fent egymás mellett, a
+középső oszlop alattuk látszik.
 
 **F5**
 : A bal oldali fájl sorait hozzáadja a középső oszlop aktuális blokkjához, a
@@ -206,9 +206,6 @@ megoldottnak számít.
 
 **F2**
 : A középső oszlop mentése. Ha maradt ütközés, előbb rákérdez.
-
-**C-u**
-: Keskeny képernyőn a másik oldal mutatása.
 
 **F10**
 : Kilépés. Ha a középső oszlop megváltozott és nincs mentve, rákérdez,

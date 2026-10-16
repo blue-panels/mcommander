@@ -220,7 +220,8 @@ base, dopo "Base:".
 
 .PP
 Le differenze vengono ricalcolate dopo ogni modifica della colonna centrale.
-Uno schermo più stretto di 120 colonne mostra il centro e un solo lato.
+Uno schermo più stretto di 40 colonne mostra i due file affiancati in alto
+e la colonna centrale sotto.
 
 .TP
 \fBF5\fP
@@ -259,10 +260,6 @@ come risolto.
 .TP
 \fBF2\fP
 Salvare la colonna centrale. Se restano conflitti, prima chiede.
-
-.TP
-\fBC\-u\fP
-Su uno schermo stretto, mostrare l'altro lato.
 
 .TP
 \fBF10\fP

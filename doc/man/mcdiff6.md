@@ -234,7 +234,8 @@ The top line of the frame of the middle column names the file the result
 is saved into, after "Result:"; its bottom line names the base, after "Base:".
 
 Every difference is computed again after each change of the middle column.
-A screen narrower than 120 columns shows the middle column and one side.
+A screen narrower than 40 columns shows the two files side by side above
+and the middle column below them.
 
 **F5**
 : Add the lines of the left file to the current chunk of the middle column,
@@ -264,9 +265,6 @@ resolved.
 
 **F2**
 : Save the middle column. When conflicts are left, the view asks first.
-
-**C-u**
-: On a narrow screen, show the other side.
 
 **F10**
 : Quit. When the middle column was changed and not saved, the view asks
