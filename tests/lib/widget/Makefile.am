@@ -16,6 +16,7 @@ endif
 TESTS = \
 	buttonbar_modifiers \
 	complete_engine \
+	filechooser \
 	hotkey_equal \
 	group_init_destroy \
 	group_set_state \
@@ -34,6 +35,12 @@ buttonbar_modifiers_SOURCES = \
 
 complete_engine_SOURCES = \
 	complete_engine.c
+
+filechooser_SOURCES = \
+	filechooser.c
+
+# the local file system it includes needs the flags of ext2
+filechooser_LDADD = @E2P_LIBS@
 
 hotkey_equal_SOURCES = \
 	hotkey_equal.c
