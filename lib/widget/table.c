@@ -992,7 +992,8 @@ table_set_cell_color (WTable *t, int (*cell_color) (void *data, int row, int col
 void
 table_layout (WTable *t)
 {
-    int cols = CONST_WIDGET (t)->rect.cols - 1;
+    // the cells start at x = 1 and end before the scrollbar
+    int cols = table_cells_right (t) - 1;
     int total = 0, spare, nexpand = 0;
     int c;
 
