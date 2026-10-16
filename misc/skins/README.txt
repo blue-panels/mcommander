@@ -367,6 +367,14 @@ applies individually to each of these three properties.
             Lines both sides of a merge of three files changed, each its
             own way. Without it the removed color is used.
 
+        linemark
+            The mark on the frame at the line the keys act on. Without it
+            the mark is yellow.
+
+        inactiveframe
+            The frame of the file that is not active in the compare of two
+            files. Without it the frame is gray.
+
 
 Character sections
 ==================

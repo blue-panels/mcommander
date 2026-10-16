@@ -15,6 +15,9 @@ mcdiff6 - Internal diff viewer of M-Commander.
 **mcdiff6**
 [-bcdfhstVx?] [-o output] local base remote
 
+**mcdiff6**
+[-bcdfhstVx?] [-o output] -B base local remote
+
 # DESCRIPTION
 
 mcdiff6 is a link to
@@ -49,6 +52,10 @@ defaults to black and white.
 
 *-h, -?, --help*
 : Show the options and what they do.
+
+*-B file, --base=file*
+: The common base of the two files: open their merge of three files, as with
+the base given between them.
 
 *-o file, --output=file*
 : Where the merge of three files is saved. Without it, the merge is saved
@@ -95,18 +102,25 @@ M-Commander.
 **F2**
 : Save modified files.
 
+**Tab**
+: Switch the active file. Its frame is double; the frame of the other file is
+single and gray. A mark on the frame of the active file shows the top line,
+the line F5 and F15 act on.
+
 **F4**
-: Edit file of the left panel in the internal editor.
+: Edit the active file in the internal editor.
 
 **F14**
-: Edit file of the right panel in the internal editor.
+: Edit the other file in the internal editor.
 
 **F5**
-: Merge the current hunk into the file on the right. Only the current hunk is
-merged, and the difference is computed again.
+: Copy the current hunk from the active file into the other one. The current
+hunk is the one at the top line. Only the current hunk is copied, and the
+difference is computed again. The key bar shows the direction: "Copy->" or
+"<-Copy".
 
 **F15**
-: Merge the current hunk the other way, into the file on the left.
+: Copy the current hunk the other way, from the other file into the active one.
 
 **Shift-F6**
 : Merge the two files against their common base: the view asks for the base
@@ -144,7 +158,7 @@ is underlined instead. The setting is remembered separately from the editor's
 own.
 
 **f**
-: Maximize left panel.
+: Show only the active file, on the whole screen.
 
 **=**
 : Make panels equal in width.
@@ -216,8 +230,12 @@ own way, the middle keeps the lines of the base: this is a conflict, shown in
 the conflict color and counted after "Cnf" on the status line of the middle
 column. Lines that both sides changed the same way are taken as well.
 
+The top line of the frame of the middle column names the file the result
+is saved into, after "Result:"; its bottom line names the base, after "Base:".
+
 Every difference is computed again after each change of the middle column.
-A screen narrower than 120 columns shows the middle column and one side.
+A screen narrower than 40 columns shows the two files side by side above
+and the middle column below them.
 
 **F5**
 : Add the lines of the left file to the current chunk of the middle column,
@@ -247,9 +265,6 @@ resolved.
 
 **F2**
 : Save the middle column. When conflicts are left, the view asks first.
-
-**C-u**
-: On a narrow screen, show the other side.
 
 **F10**
 : Quit. When the middle column was changed and not saved, the view asks

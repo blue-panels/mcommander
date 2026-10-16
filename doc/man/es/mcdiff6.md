@@ -15,6 +15,9 @@ mcdiff6 - Comparador de Archivos Interno.
 **mcdiff6**
 [-bcCdfhstVx?] [-o salida] local base remoto
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o salida] -B base local remoto
+
 # Comparador de Archivos Interno <a id="diff-viewer"></a>
 
 mcdiff6 es una herramienta visual de comparación. Permite comparar dos
@@ -30,18 +33,25 @@ El comparador ofrece los siguientes atajos de teclado:
 **F2**
 : Guarda los archivos modificados.
 
+**Tab**
+: Cambia el archivo activo. Su marco es doble; el marco del otro archivo es
+simple y gris. Una marca en el marco del archivo activo muestra la línea
+superior, la línea sobre la que actúan F5 y F15.
+
 **F4**
-: Edita el archivo del panel izquierdo en el editor interno.
+: Edita el archivo activo en el editor interno.
 
 **F14**
-: Edita el archivo del panel derecho en el editor interno.
+: Edita el otro archivo en el editor interno.
 
 **F5**
-: Lleva el fragmento actual al archivo de la derecha. Solo se combina el
-fragmento actual y la diferencia se calcula de nuevo.
+: Copia el fragmento actual del archivo activo al otro. El fragmento actual
+es el de la línea superior. Solo se copia ese fragmento y la diferencia se
+calcula de nuevo. La barra de teclas muestra el sentido: "Copy->" o
+"<-Copy".
 
 **F15**
-: Lleva el fragmento actual en sentido contrario, al archivo de la izquierda.
+: Copia el fragmento actual en sentido contrario, del otro archivo al activo.
 
 **Shift-F6**
 : Fusionar los dos archivos según su base común: la vista pide el archivo
@@ -79,7 +89,7 @@ color del texto, la palabra se subraya en su lugar. El ajuste se recuerda
 aparte del mismo ajuste del editor.
 
 **f**
-: Maximizar el panel izquierdo.
+: Muestra solo el archivo activo, en toda la pantalla.
 
 **=**
 : Igualar el ancho de los paneles.
@@ -152,8 +162,13 @@ cada uno a su manera, el centro conserva las líneas de la base: es un
 conflicto, se muestra con el color de conflicto y se cuenta tras "Cnf" en la
 línea de estado de la columna central.
 
+La línea superior del marco de la columna central nombra, tras "Result:",
+el archivo donde se guarda el resultado; la inferior nombra la base, tras
+"Base:".
+
 Las diferencias se calculan de nuevo tras cada cambio de la columna central.
-Una pantalla de menos de 120 columnas muestra el centro y un solo lado.
+Una pantalla de menos de 40 columnas muestra los dos archivos uno al lado
+del otro arriba y la columna central debajo.
 
 **F5**
 : Añadir las líneas del archivo izquierdo al bloque actual de la columna
@@ -184,9 +199,6 @@ resuelto.
 
 **F2**
 : Guardar la columna central. Si quedan conflictos, primero pregunta.
-
-**C-u**
-: En una pantalla estrecha, mostrar el otro lado.
 
 **F10**
 : Salir. Si la columna central se cambió y no está guardada, pregunta si

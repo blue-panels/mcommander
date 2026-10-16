@@ -15,6 +15,10 @@ mcdiff6 \- Wbudowany podgląd różnic.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] [\-o wynik] lokalny baza zdalny
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o wynik] \-B baza lokalny zdalny
+
 
 .SH OPIS
 .PP
@@ -47,21 +51,28 @@ Wywołuje wbudowaną przeglądarkę pomocy.
 Zapisuje zmienione pliki.
 
 .TP
+\fBTab\fP
+Przełącza aktywny plik. Jego ramka jest podwójna; ramka drugiego pliku jest
+pojedyncza i szara. Znacznik na ramce aktywnego pliku pokazuje górny wiersz,
+na którym działają F5 i F15.
+
+.TP
 \fBF4\fP
-Edytuje plik z lewego panelu we wbudowanym edytorze.
+Edytuje aktywny plik we wbudowanym edytorze.
 
 .TP
 \fBF14\fP
-Edytuje plik z prawego panelu we wbudowanym edytorze.
+Edytuje drugi plik we wbudowanym edytorze.
 
 .TP
 \fBF5\fP
-Przenosi bieżącą różnicę do pliku po prawej. Przenoszona jest tylko bieżąca
-różnica, po czym porównanie liczone jest na nowo.
+Kopiuje bieżącą różnicę z aktywnego pliku do drugiego. Bieżąca różnica to
+ta w górnym wierszu. Kopiowana jest tylko ona, po czym porównanie liczone
+jest na nowo. Kierunek widać na pasku klawiszy: "Copy\->" lub "<\-Copy".
 
 .TP
 \fBF15\fP
-Przenosi bieżącą różnicę w drugą stronę, do pliku po lewej.
+Kopiuje bieżącą różnicę w drugą stronę, z drugiego pliku do aktywnego.
 
 .TP
 \fBShift\-F6\fP
@@ -107,7 +118,7 @@ Ustawienie jest zapamiętywane osobno od tego samego ustawienia edytora.
 
 .TP
 \fBf\fP
-Powiększa lewy panel na maksimum.
+Pokazuje tylko aktywny plik, na całym ekranie.
 
 .TP
 \fB=\fP
@@ -200,8 +211,13 @@ konflikt, pokazany kolorem konfliktu i liczony po "Cnf" w wierszu stanu
 środkowej kolumny.
 
 .PP
+Górna linia ramki środkowej kolumny podaje po "Result:" plik, do którego
+zapisuje się wynik, a dolna po "Base:" plik bazy.
+
+.PP
 Różnice są liczone na nowo po każdej zmianie środkowej kolumny. Ekran
-węższy niż 120 kolumn pokazuje środek i jedną stronę.
+węższy niż 40 kolumn pokazuje oba pliki obok siebie u góry, a środkową
+kolumnę pod nimi.
 
 .TP
 \fBF5\fP
@@ -239,10 +255,6 @@ rozwiązany.
 .TP
 \fBF2\fP
 Zapisać środkową kolumnę. Gdy zostały konflikty, najpierw pyta.
-
-.TP
-\fBC\-u\fP
-Na wąskim ekranie pokazać drugą stronę.
 
 .TP
 \fBF10\fP

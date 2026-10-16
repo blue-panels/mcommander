@@ -76,6 +76,7 @@ char *mc_run_param1 = NULL;
 char *mc_run_param2 = NULL;
 
 char *mc_args__merge_output = NULL;
+char *mc_args__merge_base = NULL;
 
 /*** file scope macro definitions ****************************************************************/
 
@@ -230,6 +231,15 @@ static const GOptionEntry argument_main_table[] = {
         G_OPTION_ARG_FILENAME,
         &mc_args__merge_output,
         N_ ("Diff viewer: save the merge of three files into this file"),
+        N_ ("<file>"),
+    },
+    {
+        "base",
+        'B',
+        G_OPTION_FLAG_IN_MAIN,
+        G_OPTION_ARG_FILENAME,
+        &mc_args__merge_base,
+        N_ ("Diff viewer: merge the two files against this common base"),
         N_ ("<file>"),
     },
 #endif
@@ -408,7 +418,8 @@ mc_args_add_usage_info (void)
         break;
 #ifdef USE_DIFF_VIEW
     case MC_RUN_DIFFVIEWER:
-        s = g_strdup_printf ("%s\n%s\n", _ ("file1 file2"), _ ("local base remote [-o output]"));
+        s = g_strdup_printf ("%s\n%s\n%s\n", _ ("file1 file2"), _ ("local base remote [-o output]"),
+                             _ ("local remote -B base [-o output]"));
         break;
 #endif
     case MC_RUN_FULL:
@@ -820,6 +831,19 @@ mc_setup_by_args (int argc, char **argv, GError **mcerror)
             mc_propagate_error (mcerror, 0, "%s\n",
                                 _ ("Two files are required to invoke the diffviewer."));
             return FALSE;
+        }
+        if (mc_args__merge_base != NULL)
+        {
+            if (argc != 3)
+            {
+                mc_propagate_error (mcerror, 0, "%s\n",
+                                    _ ("The -B option needs two files: local remote."));
+                return FALSE;
+            }
+            mc_run_param0 = g_strdup (tmp);
+            mc_run_param1 = g_strdup (mc_args__merge_base);
+            mc_run_param2 = g_strdup (argv[2]);
+            break;
         }
         if (argc > 3)
             mc_run_param2 = g_strdup (argv[3]);

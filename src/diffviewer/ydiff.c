@@ -53,7 +53,8 @@
 
 #include "src/filemanager/cmd.h"  // edit_file_at_line()
 #include "src/filemanager/panel.h"
-#include "src/filemanager/layout.h"  // Needed for get_current_index and get_other_panel
+#include "src/filemanager/layout.h"       // Needed for get_current_index and get_other_panel
+#include "src/filemanager/filemanager.h"  // current_panel
 
 #include "src/execute.h"                     // toggle_terminal()
 #include "src/filemanager/mcterm_overlay.h"  // mcterm_overlay_show_terminal()
@@ -84,7 +85,7 @@
 #define HDIFF_DEPTH    10
 
 /* below this width a merge shows the middle and one side */
-#define MERGE3_MIN_COLS 120
+#define MERGE3_MIN_COLS 40
 
 #define FILE_DIRTY(fs)                                                                             \
     do                                                                                             \
@@ -3434,6 +3435,7 @@ dview_init (WDiff *dview, const char *file1, const char *file2, const char *labe
     dview->show_cr = TRUE;
     dview->tab_size = 8;
     dview->ord = DIFF_LEFT;
+    dview->active = DIFF_LEFT;
     dview->full = FALSE;
 
     dview->search.handle = NULL;
@@ -3842,7 +3844,7 @@ dview_display_file (const WDiff *dview, diff_place_t ord, int r, int c, int heig
 /* --------------------------------------------------------------------------------------------- */
 
 static void
-dview_status (const WDiff *dview, diff_place_t ord, int width, int c)
+dview_status (const WDiff *dview, diff_place_t ord, int width, int y, int c)
 {
     /* the frame below has the name of the file; this line has where the view stands */
     int linenum, lineofs;
@@ -3872,7 +3874,7 @@ dview_status (const WDiff *dview, diff_place_t ord, int width, int c)
                 lineofs, what, count);
 
     tty_setcolor (STATUSBAR_COLOR);
-    tty_gotoyx (0, c);
+    tty_gotoyx (y, c);
     tty_print_string (str_fit_to_term (buf, width, J_LEFT_FIT));
 }
 
@@ -3894,15 +3896,63 @@ dview_redo (WDiff *dview)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A path after @prefix on line @y of a frame, centered and clear of the separator at @xwidth */
+static void
+dview_frame_title (int y, int x, int width, int xwidth, const char *prefix, const char *file)
+{
+    vfs_path_t *vpath;
+    char *path, *text;
+    int room, tx;
+
+    room = width - xwidth - 6;
+    if (prefix != NULL)
+        room -= str_term_width1 (prefix) + 1;
+    if (file == NULL || (room < 3 && (prefix == NULL || room < -1)))
+        return;
+
+    // the path gives way, the prefix stays whole, alone when the path does not fit
+    vpath = vfs_path_from_str (file);
+    path = vfs_path_to_str_flags (vpath, 0, VPF_STRIP_HOME | VPF_STRIP_PASSWORD);
+    vfs_path_free (vpath, TRUE);
+    if (prefix == NULL)
+        text = g_strdup (str_term_trim (path, room));
+    else if (room < 3)
+        text = g_strdup (prefix);
+    else
+        text = g_strconcat (prefix, " ", str_term_trim (path, room), (char *) NULL);
+    tx = MAX (x + xwidth + 1, x + (width - str_term_width1 (text) - 2) / 2);
+    tty_gotoyx (y, tx);
+    tty_printf (" %s ", text);
+    g_free (text);
+    g_free (path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The mark of the line the keys act on, on the left line of the frame at @y, @x */
+static void
+dview_mark_line (int y, int x)
+{
+    tty_setcolor (DIFFVIEWER_LINEMARK_COLOR);
+    tty_gotoyx (y + 1, x);
+    tty_print_char (mc_tty_frm[MC_TTY_FRM_DLEFTMIDDLE]);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 dview_update (WDiff *dview)
 {
     int height = dview->height;
-    diff_place_t ords[DIFF_COUNT];
-    int widths[DIFF_COUNT];
-    int ncols = 0;
+    /* a file in a box: the status line above it, the frame from row y, h rows */
+    struct
+    {
+        diff_place_t ord;
+        int x, y, w, h;
+    } panes[DIFF_COUNT];
+    int npanes = 0;
     int last;
-    int i, x;
+    int i;
 
     last = dview->a[DIFF_LEFT]->len - 1;
 
@@ -3925,100 +3975,109 @@ dview_update (WDiff *dview)
     if (dview->display_numbers != 0)
         dview->display_numbers = calc_nwidth (dview);
 
+#define PANE(o, px, py, pw, ph)                                                                    \
+    do                                                                                             \
+    {                                                                                              \
+        panes[npanes].ord = (o);                                                                   \
+        panes[npanes].x = (px);                                                                    \
+        panes[npanes].y = (py);                                                                    \
+        panes[npanes].w = (pw);                                                                    \
+        panes[npanes++].h = (ph);                                                                  \
+    }                                                                                              \
+    while (FALSE)
+
     if (dview->nfiles == 3)
     {
-        /* the middle column always shows; a narrow screen shows one side with it */
         if (dview->full)
+            PANE (DIFF_MERGED, 0, 1, COLS, height);
+        else if (COLS >= MERGE3_MIN_COLS || height < 9)
         {
-            ords[ncols] = DIFF_MERGED;
-            widths[ncols++] = COLS;
-        }
-        else if (COLS >= MERGE3_MIN_COLS)
-        {
-            ords[ncols] = DIFF_LEFT;
-            widths[ncols++] = COLS / 3;
-            ords[ncols] = DIFF_MERGED;
-            widths[ncols++] = COLS / 3;
-            ords[ncols] = DIFF_RIGHT;
-            widths[ncols++] = COLS - 2 * (COLS / 3);
+            PANE (DIFF_LEFT, 0, 1, COLS / 3, height);
+            PANE (DIFF_MERGED, COLS / 3, 1, COLS / 3, height);
+            PANE (DIFF_RIGHT, 2 * (COLS / 3), 1, COLS - 2 * (COLS / 3), height);
         }
         else
         {
-            ords[ncols] = dview->ord == DIFF_RIGHT ? DIFF_MERGED : DIFF_LEFT;
-            widths[ncols++] = COLS / 2;
-            ords[ncols] = dview->ord == DIFF_RIGHT ? DIFF_RIGHT : DIFF_MERGED;
-            widths[ncols++] = COLS - COLS / 2;
+            /* a narrow screen: the two sides above, the result below them */
+            const int top = (height - 1) / 2;
+
+            PANE (DIFF_LEFT, 0, 1, COLS / 2, top);
+            PANE (DIFF_RIGHT, COLS / 2, 1, COLS - COLS / 2, top);
+            PANE (DIFF_MERGED, 0, top + 2, COLS, height - 1 - top);
         }
     }
+    else if (dview->full)
+        // one file on the whole screen: the active one, which F4 edits
+        PANE (dview->active, 0, 1, COLS, height);
     else
     {
-        ords[ncols] = dview->ord;
-        widths[ncols++] = dview->half1 + dview->bias;
-        ords[ncols] = dview->ord == DIFF_LEFT ? DIFF_RIGHT : DIFF_LEFT;
-        widths[ncols++] = dview->half2 - dview->bias;
-        if (dview->full)
-        {
-            widths[0] = COLS;
-            widths[1] = 0;
-        }
+        PANE (dview->ord, 0, 1, dview->half1 + dview->bias, height);
+        PANE (dview->ord == DIFF_LEFT ? DIFF_RIGHT : DIFF_LEFT, dview->half1 + dview->bias, 1,
+              dview->half2 - dview->bias, height);
     }
+
+#undef PANE
 
     if (dview->new_frame)
     {
         int xwidth;
 
-        tty_setcolor (CORE_FRAME_COLOR);
         xwidth = dview->display_numbers;
         if (dview_shows_symbols (dview))
             xwidth++;
         if (xwidth != 0)
             xwidth++;
 
-        for (i = 0, x = 0; i < ncols; x += widths[i], i++)
+        for (i = 0; i < npanes; i++)
         {
-            /* in a merge only the result has the double frame; the sides are for reading */
-            const gboolean single = dview->nfiles == 3 && ords[i] != DIFF_MERGED;
+            const int x = panes[i].x, y = panes[i].y, w = panes[i].w;
+            const int bottom = y + panes[i].h - 1;
+            /* in a merge only the result has the double frame; the sides are for reading.  Of
+               two files the active one has it, and the other one is grey */
+            const gboolean single =
+                dview->nfiles == 3 ? panes[i].ord != DIFF_MERGED : panes[i].ord != dview->active;
 
-            if (widths[i] > 1)
-                tty_draw_box (1, x, height, widths[i], single);
+            tty_setcolor (dview->nfiles == 2 && single ? DIFFVIEWER_DIMFRAME_COLOR
+                                                       : CORE_FRAME_COLOR);
+            if (w > 1)
+                tty_draw_box (y, x, panes[i].h, w, single);
 
-            if (xwidth != 0 && xwidth < widths[i] - 1)
+            if (xwidth != 0 && xwidth < w - 1)
             {
-                tty_gotoyx (1, x + xwidth);
+                tty_gotoyx (y, x + xwidth);
                 tty_print_char (mc_tty_frm[single ? MC_TTY_FRM_TOPMIDDLE : MC_TTY_FRM_DTOPMIDDLE]);
-                tty_gotoyx (height, x + xwidth);
+                tty_gotoyx (bottom, x + xwidth);
                 tty_print_char (
                     mc_tty_frm[single ? MC_TTY_FRM_BOTTOMMIDDLE : MC_TTY_FRM_DBOTTOMMIDDLE]);
-                tty_draw_vline (2, x + xwidth, mc_tty_frm[MC_TTY_FRM_VERT], height - 2);
+                tty_draw_vline (y + 1, x + xwidth, mc_tty_frm[MC_TTY_FRM_VERT], panes[i].h - 2);
             }
 
-            // the name of the file on the top line, as a panel has it, clear of the separator
-            if (widths[i] - xwidth > 8)
+            // the name of the file on the top line, as a panel has it; the middle of a merge
+            // is the result, and its base goes on the bottom line
+            if (dview->nfiles == 3 && panes[i].ord == DIFF_MERGED)
             {
-                vfs_path_t *vpath;
-                char *path;
-                const char *title;
-                int tx;
-
-                vpath = vfs_path_from_str (dview->label[ords[i]]);
-                path = vfs_path_to_str_flags (vpath, 0, VPF_STRIP_HOME | VPF_STRIP_PASSWORD);
-                vfs_path_free (vpath, TRUE);
-                title = str_term_trim (path, widths[i] - xwidth - 6);
-                tx = MAX (x + xwidth + 1, x + (widths[i] - str_term_width1 (title) - 2) / 2);
-                tty_gotoyx (1, tx);
-                tty_printf (" %s ", title);
-                g_free (path);
+                dview_frame_title (y, x, w, xwidth, _ ("Result:"), dview->label[DIFF_MERGED]);
+                dview_frame_title (bottom, x, w, xwidth, _ ("Base:"), dview->merge_base);
             }
+            else
+                dview_frame_title (y, x, w, xwidth, NULL, dview->label[panes[i].ord]);
         }
         dview->new_frame = FALSE;
     }
 
-    for (i = 0, x = 0; i < ncols; x += widths[i], i++)
-        if (widths[i] > 2)
+    for (i = 0; i < npanes; i++)
+        if (panes[i].w > 2 && panes[i].h > 2)
         {
-            dview_status (dview, ords[i], widths[i], x);
-            dview_display_file (dview, ords[i], 2, x + 1, height - 2, widths[i] - 2);
+            dview_status (dview, panes[i].ord, panes[i].w, panes[i].y - 1, panes[i].x);
+            dview_display_file (dview, panes[i].ord, panes[i].y + 1, panes[i].x + 1, panes[i].h - 2,
+                                panes[i].w - 2);
         }
+
+    // the line F5 and the other keys act on: the top one, marked on the frame of the active side
+    for (i = 0; i < npanes; i++)
+        if (panes[i].w > 2 && panes[i].h > 3
+            && panes[i].ord == (dview->nfiles == 3 ? DIFF_MERGED : dview->active))
+            dview_mark_line (panes[i].y, panes[i].x);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -4134,9 +4193,17 @@ dview_goto_cmd (WDiff *dview, diff_place_t ord)
 static void
 dview_labels (WDiff *dview)
 {
-    static const buttonbar_command_label_t mod_labels[] = {
+    // F5 copies from the active file into the other one, Shift-F5 the other way
+    static const buttonbar_command_label_t mod_labels_left[] = {
         { CK_EditOther, N_ ("ButtonBar|Edit") },
-        { CK_MergeOther, N_ ("ButtonBar|Merge") },
+        { CK_MergeOther, N_ ("ButtonBar|<-Copy") },
+        { CK_MergeRightOff, N_ ("ButtonBar|Base") },
+        { CK_SearchContinue, N_ ("ButtonBar|Next") },
+        { CK_IgnoreKey, NULL },
+    };
+    static const buttonbar_command_label_t mod_labels_right[] = {
+        { CK_EditOther, N_ ("ButtonBar|Edit") },
+        { CK_MergeOther, N_ ("ButtonBar|Copy->") },
         { CK_MergeRightOff, N_ ("ButtonBar|Base") },
         { CK_SearchContinue, N_ ("ButtonBar|Next") },
         { CK_IgnoreKey, NULL },
@@ -4162,12 +4229,17 @@ dview_labels (WDiff *dview)
         buttonbar_set_label (b, 6, Q_ ("ButtonBar|+Right"), d->keymap, d);
     }
     else
-        buttonbar_set_label (b, 5, Q_ ("ButtonBar|Merge"), d->keymap, d);
+        buttonbar_set_label (
+            b, 5, dview->active == DIFF_LEFT ? Q_ ("ButtonBar|Copy->") : Q_ ("ButtonBar|<-Copy"),
+            d->keymap, d);
     buttonbar_set_label (b, 7, Q_ ("ButtonBar|Search"), d->keymap, d);
     buttonbar_set_label (b, 9, Q_ ("ButtonBar|Options"), d->keymap, d);
     buttonbar_set_label (b, 10, Q_ ("ButtonBar|Quit"), d->keymap, d);
     buttonbar_set_modifier_labels (b, &diff_map, NULL,
-                                   dview->nfiles == 3 ? merge_mod_labels : mod_labels, d);
+                                   dview->nfiles == 3               ? merge_mod_labels
+                                       : dview->active == DIFF_LEFT ? mod_labels_left
+                                                                    : mod_labels_right,
+                                   d);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -4281,7 +4353,8 @@ dview_help (const WDiff *dview)
 static void
 dview_merge_base_cmd (WDiff *dview)
 {
-    char *dir, *start, *base;
+    gboolean sort_case = OS_SORT_CASE_SENSITIVE_DEFAULT;
+    char *base;
     struct stat st;
 
     if (dview->nfiles == 3)
@@ -4292,12 +4365,13 @@ dview_merge_base_cmd (WDiff *dview)
         return;
     }
 
-    dir = g_path_get_dirname (dview->file[DIFF_LEFT]);
-    start = g_strconcat (dir, PATH_SEP_STR, (char *) NULL);
-    g_free (dir);
-    base = input_expand_dialog (_ ("Merge"), _ ("The common base of the two files:"),
-                                MC_HISTORY_YDIFF_BASE, start, INPUT_COMPLETE_FILENAMES);
-    g_free (start);
+    if (mc_global.mc_run_mode == MC_RUN_FULL && get_current_type () == view_listing)
+        sort_case = current_panel->sort_info.case_sensitive;
+    base = file_chooser_dialog (
+        _ ("The common base of the two files"), dview->file[DIFF_LEFT], MC_HISTORY_YDIFF_BASE,
+        FILE_CHOOSER_OPEN,
+        (panels_options.show_dot_files ? FILE_CHOOSER_HIDDEN : 0)
+            | (panels_qsearch_case_sensitive (sort_case) ? FILE_CHOOSER_SEARCH_CASE : 0));
     if (base == NULL || *base == '\0')
     {
         g_free (base);
@@ -4402,6 +4476,15 @@ dview_execute_cmd (WDiff *dview, long command)
     case CK_Swap:
         dview->ord ^= 1;
         break;
+    case CK_ChangePanel:
+        if (dview->nfiles == 2)
+        {
+            dview->active ^= 1;
+            dview->new_frame = TRUE;
+            dview_labels (dview);
+            widget_draw (WIDGET (buttonbar_find (DIALOG (WIDGET (dview)->owner))));
+        }
+        break;
     case CK_Redo:
         dview_redo (dview);
         break;
@@ -4426,7 +4509,7 @@ dview_execute_cmd (WDiff *dview, long command)
         break;
     case CK_Edit:
         /* the sides of a merge are not changed, the result is edited */
-        dview_edit (dview, dview->nfiles == 3 ? DIFF_MERGED : dview->ord);
+        dview_edit (dview, dview->nfiles == 3 ? DIFF_MERGED : dview->active);
         break;
     case CK_Merge:
     case CK_MergeOther:
@@ -4434,7 +4517,13 @@ dview_execute_cmd (WDiff *dview, long command)
             /* in a merge F5 adds the left lines to the middle and Shift-F5 takes them out */
             merge3_toggle (dview, DIFF_LEFT, command == CK_Merge);
         else
-            do_merge_hunk (dview, command == CK_Merge ? FROM_LEFT_TO_RIGHT : FROM_RIGHT_TO_LEFT);
+        {
+            /* F5 copies from the active file into the other one; the direction names the file
+               do_merge_hunk() writes */
+            const diff_place_t to = command == CK_Merge ? dview->active ^ 1 : dview->active;
+
+            do_merge_hunk (dview, to == DIFF_LEFT ? FROM_LEFT_TO_RIGHT : FROM_RIGHT_TO_LEFT);
+        }
         dview_redo (dview);
         break;
     case CK_MergeRight:
@@ -4450,7 +4539,7 @@ dview_execute_cmd (WDiff *dview, long command)
         break;
     case CK_EditOther:
         if (dview->nfiles != 3)
-            dview_edit (dview, dview->ord ^ 1);
+            dview_edit (dview, dview->active ^ 1);
         break;
     case CK_Search:
         dview_search_cmd (dview);

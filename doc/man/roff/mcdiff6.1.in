@@ -15,6 +15,10 @@ mcdiff6 \- Internal diff viewer of M\-Commander.
 \fBmcdiff6\fP
 [\-bcdfhstVx?] [\-o output] local base remote
 
+.PP
+\fBmcdiff6\fP
+[\-bcdfhstVx?] [\-o output] \-B base local remote
+
 
 .SH DESCRIPTION
 .PP
@@ -54,6 +58,11 @@ Disable mouse support.
 .TP
 \fI\-h, \-?, \-\-help\fP
 Show the options and what they do.
+
+.TP
+\fI\-B file, \-\-base=file\fP
+The common base of the two files: open their merge of three files, as with
+the base given between them.
 
 .TP
 \fI\-o file, \-\-output=file\fP
@@ -112,21 +121,29 @@ Invoke the built\-in hypertext help viewer.
 Save modified files.
 
 .TP
+\fBTab\fP
+Switch the active file. Its frame is double; the frame of the other file is
+single and gray. A mark on the frame of the active file shows the top line,
+the line F5 and F15 act on.
+
+.TP
 \fBF4\fP
-Edit file of the left panel in the internal editor.
+Edit the active file in the internal editor.
 
 .TP
 \fBF14\fP
-Edit file of the right panel in the internal editor.
+Edit the other file in the internal editor.
 
 .TP
 \fBF5\fP
-Merge the current hunk into the file on the right. Only the current hunk is
-merged, and the difference is computed again.
+Copy the current hunk from the active file into the other one. The current
+hunk is the one at the top line. Only the current hunk is copied, and the
+difference is computed again. The key bar shows the direction: "Copy\->" or
+"<\-Copy".
 
 .TP
 \fBF15\fP
-Merge the current hunk the other way, into the file on the left.
+Copy the current hunk the other way, from the other file into the active one.
 
 .TP
 \fBShift\-F6\fP
@@ -174,7 +191,7 @@ own.
 
 .TP
 \fBf\fP
-Maximize left panel.
+Show only the active file, on the whole screen.
 
 .TP
 \fB=\fP
@@ -268,8 +285,13 @@ the conflict color and counted after "Cnf" on the status line of the middle
 column. Lines that both sides changed the same way are taken as well.
 
 .PP
+The top line of the frame of the middle column names the file the result
+is saved into, after "Result:"; its bottom line names the base, after "Base:".
+
+.PP
 Every difference is computed again after each change of the middle column.
-A screen narrower than 120 columns shows the middle column and one side.
+A screen narrower than 40 columns shows the two files side by side above
+and the middle column below them.
 
 .TP
 \fBF5\fP
@@ -307,10 +329,6 @@ resolved.
 .TP
 \fBF2\fP
 Save the middle column. When conflicts are left, the view asks first.
-
-.TP
-\fBC\-u\fP
-On a narrow screen, show the other side.
 
 .TP
 \fBF10\fP

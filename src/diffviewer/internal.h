@@ -173,6 +173,7 @@ typedef struct WDiff
     gboolean show_cr;
     int tab_size;
     diff_place_t ord;
+    diff_place_t active;  // the side Tab picks: it has the double frame and F4 edits it
     gboolean full;
 
     gboolean utf8;

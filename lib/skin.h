@@ -128,6 +128,8 @@
 #define DIFFVIEWER_REMOVED_COLOR     mc_skin_color__cache[76]
 #define DIFFVIEWER_ERROR_COLOR       mc_skin_color__cache[77]
 #define DIFFVIEWER_CONFLICT_COLOR    mc_skin_color__cache[92]
+#define DIFFVIEWER_LINEMARK_COLOR    mc_skin_color__cache[93]
+#define DIFFVIEWER_DIMFRAME_COLOR    mc_skin_color__cache[94]
 
 #define FILEHIGHLIGHT_DEFAULT_COLOR  mc_skin_color__cache[78]
 
@@ -138,7 +140,7 @@
 #define CORE_PERM_SPECIAL_COLOR   mc_skin_color__cache[87]
 #define CORE_PERM_NONE_COLOR      mc_skin_color__cache[88]
 
-#define MC_SKIN_COLOR_CACHE_COUNT 93
+#define MC_SKIN_COLOR_CACHE_COUNT 95
 
 /*** enums ***************************************************************************************/
 

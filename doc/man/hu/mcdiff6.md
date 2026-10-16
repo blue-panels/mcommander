@@ -15,6 +15,9 @@ mcdiff6 - Belső összehasonlító.
 **mcdiff6**
 [-bcCdfhstVx?] [-o kimenet] helyi alap távoli
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o kimenet] -B alap helyi távoli
+
 # LEÍRÁS
 
 Az mcdiff6 az
@@ -41,18 +44,24 @@ A belső összehasonlítóban a következő billentyűk használhatók:
 **F2**
 : Menti a módosított fájlokat.
 
+**Tab**
+: Átváltja az aktív fájlt. Ennek kerete dupla, a másik fájl kerete szimpla és
+szürke. Az aktív fájl keretén egy jel mutatja a felső sort: ezen dolgozik az
+F5 és az F15.
+
 **F4**
-: A bal oldali fájlt szerkeszti a belső szerkesztőben.
+: Az aktív fájlt szerkeszti a belső szerkesztőben.
 
 **F14**
-: A jobb oldali fájlt szerkeszti a belső szerkesztőben.
+: A másik fájlt szerkeszti a belső szerkesztőben.
 
 **F5**
-: Átviszi az aktuális eltérést a jobb oldali fájlba. Csak az aktuális eltérés
-kerül át, a különbség pedig újra kiszámolódik.
+: Átmásolja az aktuális eltérést az aktív fájlból a másikba. Az aktuális
+eltérés a felső sorban álló. Csak ez kerül át, a különbség pedig újra
+kiszámolódik. Az irányt a billentyűsor mutatja: "Copy->" vagy "<-Copy".
 
 **F15**
-: Átviszi az aktuális eltérést a másik irányba, a bal oldali fájlba.
+: Átmásolja az aktuális eltérést a másik irányba, a másik fájlból az aktívba.
 
 **Shift-F6**
 : A két fájl összefésülése a közös alapjukhoz képest: a nézet bekéri az
@@ -89,7 +98,7 @@ különbözteti meg a sor többi részétől, ott a szó aláhúzva jelenik meg.
 beállítás a szerkesztő ugyanilyen beállításától függetlenül őrződik meg.
 
 **f**
-: Teljes méretűre nyitja a bal oldali panelt.
+: Csak az aktív fájlt mutatja, a teljes képernyőn.
 
 **=**
 : Egyforma szélességűre állítja a paneleket.
@@ -161,9 +170,13 @@ ugyanazokat a sorokat változtatta meg, mindegyik a maga módján, középen az
 alap sorai maradnak: ez ütközés, az ütközés színével látszik, a számuk a
 középső oszlop állapotsorában a "Cnf" után áll.
 
+A középső oszlop keretének felső vonala a "Result:" után megnevezi a
+fájlt, ahová az eredmény mentődik, az alsó vonala pedig a "Base:" után az
+alapot.
+
 A különbségek a középső oszlop minden változása után újra kiszámolódnak.
-120 oszlopnál keskenyebb képernyőn a középső oszlop és az egyik oldal
-látszik.
+40 oszlopnál keskenyebb képernyőn a két fájl fent egymás mellett, a
+középső oszlop alattuk látszik.
 
 **F5**
 : A bal oldali fájl sorait hozzáadja a középső oszlop aktuális blokkjához, a
@@ -193,9 +206,6 @@ megoldottnak számít.
 
 **F2**
 : A középső oszlop mentése. Ha maradt ütközés, előbb rákérdez.
-
-**C-u**
-: Keskeny képernyőn a másik oldal mutatása.
 
 **F10**
 : Kilépés. Ha a középső oszlop megváltozott és nincs mentve, rákérdez,

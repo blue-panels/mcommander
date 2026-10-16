@@ -706,6 +706,7 @@ static const global_keymap_ini_t default_diff_keymap[] = {
     { "Tab4", "4" },
     { "Tab8", "8" },
     { "Swap", "ctrl-u" },
+    { "ChangePanel", "tab" },
     { "Redo", "ctrl-r" },
     { "HunkNext", "n; enter; space" },
     { "HunkPrev", "p; backspace" },

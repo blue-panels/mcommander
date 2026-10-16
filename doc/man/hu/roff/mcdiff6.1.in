@@ -15,6 +15,10 @@ mcdiff6 \- Belső összehasonlító.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] [\-o kimenet] helyi alap távoli
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o kimenet] \-B alap helyi távoli
+
 
 .SH LEÍRÁS
 .PP
@@ -47,21 +51,28 @@ Elindítja a beépített hypertext súgót.
 Menti a módosított fájlokat.
 
 .TP
+\fBTab\fP
+Átváltja az aktív fájlt. Ennek kerete dupla, a másik fájl kerete szimpla és
+szürke. Az aktív fájl keretén egy jel mutatja a felső sort: ezen dolgozik az
+F5 és az F15.
+
+.TP
 \fBF4\fP
-A bal oldali fájlt szerkeszti a belső szerkesztőben.
+Az aktív fájlt szerkeszti a belső szerkesztőben.
 
 .TP
 \fBF14\fP
-A jobb oldali fájlt szerkeszti a belső szerkesztőben.
+A másik fájlt szerkeszti a belső szerkesztőben.
 
 .TP
 \fBF5\fP
-Átviszi az aktuális eltérést a jobb oldali fájlba. Csak az aktuális eltérés
-kerül át, a különbség pedig újra kiszámolódik.
+Átmásolja az aktuális eltérést az aktív fájlból a másikba. Az aktuális
+eltérés a felső sorban álló. Csak ez kerül át, a különbség pedig újra
+kiszámolódik. Az irányt a billentyűsor mutatja: "Copy\->" vagy "<\-Copy".
 
 .TP
 \fBF15\fP
-Átviszi az aktuális eltérést a másik irányba, a bal oldali fájlba.
+Átmásolja az aktuális eltérést a másik irányba, a másik fájlból az aktívba.
 
 .TP
 \fBShift\-F6\fP
@@ -108,7 +119,7 @@ beállítás a szerkesztő ugyanilyen beállításától függetlenül őrződik
 
 .TP
 \fBf\fP
-Teljes méretűre nyitja a bal oldali panelt.
+Csak az aktív fájlt mutatja, a teljes képernyőn.
 
 .TP
 \fB=\fP
@@ -202,9 +213,14 @@ alap sorai maradnak: ez ütközés, az ütközés színével látszik, a számuk
 középső oszlop állapotsorában a "Cnf" után áll.
 
 .PP
+A középső oszlop keretének felső vonala a "Result:" után megnevezi a
+fájlt, ahová az eredmény mentődik, az alsó vonala pedig a "Base:" után az
+alapot.
+
+.PP
 A különbségek a középső oszlop minden változása után újra kiszámolódnak.
-120 oszlopnál keskenyebb képernyőn a középső oszlop és az egyik oldal
-látszik.
+40 oszlopnál keskenyebb képernyőn a két fájl fent egymás mellett, a
+középső oszlop alattuk látszik.
 
 .TP
 \fBF5\fP
@@ -242,10 +258,6 @@ megoldottnak számít.
 .TP
 \fBF2\fP
 A középső oszlop mentése. Ha maradt ütközés, előbb rákérdez.
-
-.TP
-\fBC\-u\fP
-Keskeny képernyőn a másik oldal mutatása.
 
 .TP
 \fBF10\fP

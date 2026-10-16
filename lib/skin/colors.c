@@ -56,6 +56,8 @@ static const mc_skin_fallback_t fallbacks[] = {
     { "dialog", "dcellfocus", NULL, "dialog", "dselfocus", "reverse" },
     // a merge has no removed lines, so their color is free for the conflicts
     { "diffviewer", "conflict", NULL, "diffviewer", "removed", NULL },
+    { "diffviewer", "linemark", "yellow", NULL, NULL, NULL },
+    { "diffviewer", "inactiveframe", "gray", NULL, NULL, NULL },
     // skins written before these keys existed keep the viewer colors here
     { "mctree", "marker", NULL, "viewer", "_default_", NULL },
     { "mctree", "selected", NULL, "viewer", "viewselected", NULL },
@@ -410,6 +412,8 @@ mc_skin_color_cache_init (void)
     DIFFVIEWER_REMOVED_COLOR = mc_skin_color_get ("diffviewer", "removed");
     DIFFVIEWER_ERROR_COLOR = mc_skin_color_get ("diffviewer", "error");
     DIFFVIEWER_CONFLICT_COLOR = mc_skin_color_get ("diffviewer", "conflict");
+    DIFFVIEWER_LINEMARK_COLOR = mc_skin_color_get ("diffviewer", "linemark");
+    DIFFVIEWER_DIMFRAME_COLOR = mc_skin_color_get ("diffviewer", "inactiveframe");
 
     FILEHIGHLIGHT_DEFAULT_COLOR = mc_skin_color_get ("filehighlight", "_default_");
 
