@@ -26,6 +26,9 @@ gboolean quick_search_take_key (GString *text, char *ch, size_t ch_size, int *ch
 void quick_search_drop_char (GString *text);
 /* A search for names that begin with @text, or have it anywhere with @contains */
 mc_search_t *quick_search_new (const char *text, gboolean contains, gboolean case_sensitive);
+/* A fuzzy match: the characters of @query are in @name in their order, not side by side;
+   0 when they are not, else a score that grows when they are side by side and begin words */
+int quick_search_fuzzy_score (const char *name, const char *query, gboolean case_sensitive);
 
 /*** inline functions ****************************************************************************/
 

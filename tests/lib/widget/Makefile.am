@@ -22,6 +22,7 @@ TESTS = \
 	hexstrip \
 	paste \
 	table_datasource \
+	table_quick_search \
 	textarea \
 	widget_find_by_id \
 	widget_make_global_local
@@ -45,6 +46,9 @@ group_set_state_SOURCES = \
 
 table_datasource_SOURCES = \
 	table_datasource.c
+
+table_quick_search_SOURCES = \
+	table_quick_search.c
 
 textarea_SOURCES = \
 	textarea.c

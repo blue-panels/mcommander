@@ -547,6 +547,12 @@ group_handle_hotkey (WGroup *g, int key)
             return MSG_NOT_HANDLED;
     }
 
+    /* Alt-S and Alt-Shift-S are one hotkey below; a widget that tells them apart has them
+       first */
+    if ((key & ALT (0)) != 0 && widget_get_options (w, WOP_WANT_ALT_KEYS)
+        && send_message (w, NULL, MSG_HOTKEY, key, NULL) == MSG_HANDLED)
+        return MSG_HANDLED;
+
     // If it's an alt key, send the message
     c = key & ~ALT (0);
     if (key & ALT (0) && g_ascii_isalpha (c))
