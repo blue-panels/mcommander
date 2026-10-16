@@ -3,6 +3,7 @@ SUBDIRS = xdiff
 noinst_LTLIBRARIES = libdiffviewer.la
 
 libdiffviewer_la_SOURCES = \
+	align3.c \
 	compare.c \
 	internal.h \
 	search.c \

@@ -11,6 +11,10 @@ mcdiff6 \- Wbudowany podgląd różnic.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] plik1 plik2
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o wynik] lokalny baza zdalny
+
 
 .SH OPIS
 .PP
@@ -58,6 +62,11 @@ różnica, po czym porównanie liczone jest na nowo.
 .TP
 \fBF15\fP
 Przenosi bieżącą różnicę w drugą stronę, do pliku po lewej.
+
+.TP
+\fBShift\-F6\fP
+Scalić dwa pliki względem ich wspólnej bazy: widok pyta o plik bazowy i
+pokazuje scalanie trzech plików. Tam F2 najpierw pyta, gdzie zapisać wynik.
 
 .TP
 \fBF7\fP
@@ -175,6 +184,89 @@ Idzie na początek pliku.
 .TP
 \fBC\-End\fP
 Idzie na koniec pliku.
+
+
+.SH Scalanie trzech plików
+.PP
+Uruchomiony z trzema plikami podgląd różnic pokazuje trzy kolumny: plik
+lokalny po lewej, wynik scalania pośrodku i plik zdalny po prawej. Pliki po
+bokach nigdy nie są zmieniane; zapisywana jest tylko środkowa kolumna.
+
+.PP
+Na początku środkowa kolumna to plik bazowy z przyjętymi już wszystkimi
+zmianami, które zrobiła tylko jedna strona. Tam, gdzie obie strony zmieniły
+te same wiersze, każda po swojemu, środek zachowuje wiersze bazy: to
+konflikt, pokazany kolorem konfliktu i liczony po "Cnf" w wierszu stanu
+środkowej kolumny.
+
+.PP
+Różnice są liczone na nowo po każdej zmianie środkowej kolumny. Ekran
+węższy niż 120 kolumn pokazuje środek i jedną stronę.
+
+.TP
+\fBF5\fP
+Dodać wiersze lewego pliku do bieżącego bloku środkowej kolumny, za tym,
+co już w nim jest. Bieżący blok to ten w górnym wierszu albo pierwszy na
+ekranie.
+
+.TP
+\fBShift\-F5\fP
+Usunąć z bloku z powrotem wiersze lewego pliku. Gdy nie zostaje żadna
+strona, blok ma wiersze bazy: konflikt znów jest konfliktem.
+
+.TP
+\fBF6\fP
+Dodać do bloku wiersze prawego pliku. Gdy dodano obie strony, wiersze są w
+kolejności dodawania.
+
+.TP
+\fBShift\-F6\fP
+Usunąć z powrotem wiersze prawego pliku.
+
+.TP
+\fB], [\fP
+Przejść do następnego lub poprzedniego konfliktu.
+
+.TP
+\fBEnter, Space, n; Backspace, p\fP
+Przejść do następnego lub poprzedniego bloku.
+
+.TP
+\fBF4\fP
+Edytować środkową kolumnę w edytorze. Blok zmieniony tam liczy się jako
+rozwiązany.
+
+.TP
+\fBF2\fP
+Zapisać środkową kolumnę. Gdy zostały konflikty, najpierw pyta.
+
+.TP
+\fBC\-u\fP
+Na wąskim ekranie pokazać drugą stronę.
+
+.TP
+\fBF10\fP
+Wyjść. Gdy środkowa kolumna została zmieniona i nie jest zapisana, pyta,
+czy ją zapisać. Wyjście bez zmian zostawia pliki bez zmian.
+
+.PP
+Program kończy się kodem 0, gdy scalanie zostało zapisane bez pozostałych
+konfliktów, i kodem 1 w innym przypadku, więc może służyć jako narzędzie
+scalania git:
+
+.EX
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
+    trustExitCode = true
+
+.EE
+
+.PP
+Bez opcji
+\fI\-o\fP
+scalanie jest zapisywane do pliku bazowego.
 
 
 .SH Opcje porównania

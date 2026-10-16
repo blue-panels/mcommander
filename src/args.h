@@ -34,9 +34,13 @@ extern void *mc_run_param0;
  * MC_RUN_FULL: dir for right panel
  * MC_RUN_EDITOR: unused
  * MC_RUN_VIEWER: unused
- * MC_RUN_DIFFVIEWER: second file to compare
+ * MC_RUN_DIFFVIEWER: second file to compare, the base of a merge
  */
 extern char *mc_run_param1;
+/* MC_RUN_DIFFVIEWER: the third file of a merge */
+extern char *mc_run_param2;
+/* MC_RUN_DIFFVIEWER: where a merge is saved (-o) */
+extern char *mc_args__merge_output;
 
 /*** declarations of public functions ************************************************************/
 

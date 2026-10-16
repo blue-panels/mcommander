@@ -1039,7 +1039,11 @@ mc_maybe_editor_or_viewer (void)
     }
 #ifdef USE_DIFF_VIEW
     case MC_RUN_DIFFVIEWER:
-        ret = dview_diff_cmd (mc_run_param0, mc_run_param1);
+        if (mc_run_param2 != NULL)
+            ret = dview_merge_cmd (mc_run_param0, mc_run_param1, mc_run_param2,
+                                   mc_args__merge_output);
+        else
+            ret = dview_diff_cmd (mc_run_param0, mc_run_param1);
         break;
 #endif
     default:

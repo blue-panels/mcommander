@@ -5403,8 +5403,9 @@ panel_key (WPanel *panel, int key)
             }
             if (r == MC_PPR_OK)
             {
-                if (command != CK_View && command != CK_ViewRaw)
+                if ((command != CK_View && command != CK_ViewRaw) || panel->plugin_reload_wanted)
                     panel_plugin_reload (panel);
+                panel->plugin_reload_wanted = FALSE;
                 return MSG_HANDLED;
             }
             // A cancelled dialog is an answer; a failure of the plugin's own is not.

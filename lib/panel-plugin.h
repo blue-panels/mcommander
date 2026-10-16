@@ -15,8 +15,12 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-#define MC_PANEL_PLUGIN_API_VERSION 20
+#define MC_PANEL_PLUGIN_API_VERSION 21
 #define MC_PANEL_PLUGIN_ENTRY       "mc_panel_plugin_register"
+
+/* Sides of host->open_diff_labeled() that are copies, to look at only */
+#define MC_PP_DIFF_LEFT_READ_ONLY  (1 << 0)
+#define MC_PP_DIFF_RIGHT_READ_ONLY (1 << 1)
 
 /* Well-known target menu names for mc_pp_cmd_menu_entry_t.menu_name.
    Plugins set .menu_name = MC_PP_MENU_* to publish their entries into
@@ -189,6 +193,20 @@ typedef struct mc_panel_host_t
        whose listing carries absolute paths and which need %d/%p tokens and copy
        targets to resolve against "/" or another base. */
     void (*set_cwd) (struct mc_panel_host_t *host, const char *path);
+
+    /* Merge of three files in the diff viewer: @local and @remote at the sides, their merge
+       against @base in the middle, saved into @output.  The labels name the sides on the
+       screen.  1 when the user saved the merge with no conflict left, 2 when with
+       conflicts left, 0 when the user did not save it, -1 when it could not open. */
+    int (*open_merge) (struct mc_panel_host_t *host, const char *local, const char *local_label,
+                       const char *base, const char *remote, const char *remote_label,
+                       const char *output);
+
+    /* open_diff() with the names the view shows for the files, for temporary copies; the
+       sides in @read_only (MC_PP_DIFF_*_READ_ONLY) cannot be edited or merged into */
+    gboolean (*open_diff_labeled) (struct mc_panel_host_t *host, const char *left_path,
+                                   const char *left_label, const char *right_path,
+                                   const char *right_label, int read_only);
 } mc_panel_host_t;
 
 /* What the plugin provides (callback table) */

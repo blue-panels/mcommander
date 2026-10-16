@@ -11,6 +11,10 @@ mcdiff6 \- Visualizzatore di differenze interno.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] file1 file2
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o uscita] locale base remoto
+
 
 .SH DESCRIZIONE
 .PP
@@ -58,6 +62,12 @@ differenza corrente, e il confronto viene rifatto.
 .TP
 \fBF15\fP
 Porta la differenza corrente nel verso opposto, nel file di sinistra.
+
+.TP
+\fBShift\-F6\fP
+Unire i due file rispetto alla loro base comune: la vista chiede il file
+base e mostra l'unione di tre file. Lì F2 chiede prima dove salvare il
+risultato.
 
 .TP
 \fBF7\fP
@@ -176,6 +186,90 @@ Va all'inizio del file.
 .TP
 \fBC\-Fine\fP
 Va alla fine del file.
+
+
+.SH Unione di tre file
+.PP
+Con tre file, il visualizzatore mostra tre colonne: il file locale a
+sinistra, il risultato dell'unione al centro e il file remoto a destra. I
+file ai lati non vengono mai modificati; si salva solo la colonna centrale.
+
+.PP
+All'avvio la colonna centrale è il file base con già incluse tutte le
+modifiche fatte da un solo lato. Dove entrambi i lati hanno cambiato le
+stesse righe, ognuno a modo suo, il centro mantiene le righe della base: è
+un conflitto, mostrato con il colore dei conflitti e contato dopo "Cnf" nella
+riga di stato della colonna centrale.
+
+.PP
+Le differenze vengono ricalcolate dopo ogni modifica della colonna centrale.
+Uno schermo più stretto di 120 colonne mostra il centro e un solo lato.
+
+.TP
+\fBF5\fP
+Aggiungere le righe del file di sinistra al blocco corrente della colonna
+centrale, dopo ciò che già contiene. Il blocco corrente è quello sulla riga
+in alto, oppure il primo sullo schermo.
+
+.TP
+\fBShift\-F5\fP
+Togliere di nuovo dal blocco le righe del file di sinistra. Se non resta
+nessun lato, il blocco ha le righe della base: un conflitto torna a essere
+un conflitto.
+
+.TP
+\fBF6\fP
+Aggiungere al blocco le righe del file di destra. Con entrambi i lati
+aggiunti, le righe seguono l'ordine in cui sono state aggiunte.
+
+.TP
+\fBShift\-F6\fP
+Togliere di nuovo le righe del file di destra.
+
+.TP
+\fB], [\fP
+Andare al conflitto successivo o precedente.
+
+.TP
+\fBEnter, Space, n; Backspace, p\fP
+Andare al blocco successivo o precedente.
+
+.TP
+\fBF4\fP
+Modificare la colonna centrale nell'editor. Un blocco modificato lì conta
+come risolto.
+
+.TP
+\fBF2\fP
+Salvare la colonna centrale. Se restano conflitti, prima chiede.
+
+.TP
+\fBC\-u\fP
+Su uno schermo stretto, mostrare l'altro lato.
+
+.TP
+\fBF10\fP
+Uscire. Se la colonna centrale è stata cambiata e non salvata, chiede se
+salvarla. Uscire senza modifiche lascia i file come sono.
+
+.PP
+Il programma termina con lo stato 0 se l'unione è stata salvata senza
+conflitti rimasti, e 1 altrimenti, quindi può fare da strumento di unione
+per git:
+
+.EX
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
+    trustExitCode = true
+
+.EE
+
+.PP
+Senza l'opzione
+\fI\-o\fP
+l'unione viene salvata nel file base.
 
 
 .SH Opzioni del confronto

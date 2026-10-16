@@ -11,6 +11,10 @@ mcdiff6 \- Internal diff viewer of M\-Commander.
 \fBmcdiff6\fP
 [\-bcdfhstVx?] file1 file2
 
+.PP
+\fBmcdiff6\fP
+[\-bcdfhstVx?] [\-o output] local base remote
+
 
 .SH DESCRIPTION
 .PP
@@ -22,7 +26,14 @@ which compares
 \fIfile1\fP
 and
 \fIfile2\fP
-specified on the command line.
+specified on the command line. Given three files, it merges
+\fIlocal\fP
+and
+\fIremote\fP,
+two changed versions of
+\fIbase\fP;
+see
+Merge of three files\&.
 
 
 .SH OPTIONS
@@ -43,6 +54,11 @@ Disable mouse support.
 .TP
 \fI\-h, \-?, \-\-help\fP
 Show the options and what they do.
+
+.TP
+\fI\-o file, \-\-output=file\fP
+Where the merge of three files is saved. Without it, the merge is saved
+into the base file.
 
 .TP
 \fI\-f\fP
@@ -111,6 +127,12 @@ merged, and the difference is computed again.
 .TP
 \fBF15\fP
 Merge the current hunk the other way, into the file on the left.
+
+.TP
+\fBShift\-F6\fP
+Merge the two files against their common base: the view asks for the base
+file and shows the merge of three files. F2 there asks first where to save
+the result.
 
 .TP
 \fBF7\fP
@@ -229,6 +251,84 @@ Move to the file beginning.
 .TP
 \fBC\-End\fP
 Move to the file end.
+
+
+.SH Merge of three files
+.PP
+Started with three files, the compare view shows three columns: the local
+file on the left, the result of the merge in the middle, and the remote file
+on the right. The two side files are never changed; only the middle column is
+saved.
+
+.PP
+At the start the middle column is the base file with every change of one
+side already taken in. Where both sides changed the same lines, each in its
+own way, the middle keeps the lines of the base: this is a conflict, shown in
+the conflict color and counted after "Cnf" on the status line of the middle
+column. Lines that both sides changed the same way are taken as well.
+
+.PP
+Every difference is computed again after each change of the middle column.
+A screen narrower than 120 columns shows the middle column and one side.
+
+.TP
+\fBF5\fP
+Add the lines of the left file to the current chunk of the middle column,
+after what it has. The current chunk is the one at the top line, or the
+first one on the screen.
+
+.TP
+\fBShift\-F5\fP
+Take the lines of the left file out of the chunk again. With no side left,
+the chunk has the lines of the base: a conflict is a conflict again.
+
+.TP
+\fBF6\fP
+Add the lines of the right file to the chunk. With both sides added, the
+lines come in the order they were added.
+
+.TP
+\fBShift\-F6\fP
+Take the lines of the right file out again.
+
+.TP
+\fB], [\fP
+Go to the next or previous conflict.
+
+.TP
+\fBEnter, Space, n; Backspace, p\fP
+Go to the next or previous chunk.
+
+.TP
+\fBF4\fP
+Edit the middle column in the editor. A chunk edited there counts as
+resolved.
+
+.TP
+\fBF2\fP
+Save the middle column. When conflicts are left, the view asks first.
+
+.TP
+\fBC\-u\fP
+On a narrow screen, show the other side.
+
+.TP
+\fBF10\fP
+Quit. When the middle column was changed and not saved, the view asks
+whether to save it. Leaving without a change keeps the files as they are.
+
+.PP
+The program ends with the exit status 0 when the merge was saved with no
+conflict left, and 1 otherwise, so it can serve as the merge tool of git:
+
+.EX
+[merge]
+    tool = mcdiff
+[mergetool "mcdiff"]
+    cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
+    trustExitCode = true
+
+.EE
 
 
 .SH Diff options
