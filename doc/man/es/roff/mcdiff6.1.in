@@ -15,6 +15,10 @@ mcdiff6 \- Comparador de Archivos Interno.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] [\-o salida] local base remoto
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o salida] \-B base local remoto
+
 
 .SH Comparador de Archivos Interno
 .PP

@@ -15,6 +15,9 @@ mcdiff6 - Wbudowany podgląd różnic.
 **mcdiff6**
 [-bcCdfhstVx?] [-o wynik] lokalny baza zdalny
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o wynik] -B baza lokalny zdalny
+
 # OPIS
 
 mcdiff6 to dowiązanie do

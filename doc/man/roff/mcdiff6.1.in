@@ -15,6 +15,10 @@ mcdiff6 \- Internal diff viewer of M\-Commander.
 \fBmcdiff6\fP
 [\-bcdfhstVx?] [\-o output] local base remote
 
+.PP
+\fBmcdiff6\fP
+[\-bcdfhstVx?] [\-o output] \-B base local remote
+
 
 .SH DESCRIPTION
 .PP
@@ -54,6 +58,11 @@ Disable mouse support.
 .TP
 \fI\-h, \-?, \-\-help\fP
 Show the options and what they do.
+
+.TP
+\fI\-B file, \-\-base=file\fP
+The common base of the two files: open their merge of three files, as with
+the base given between them.
 
 .TP
 \fI\-o file, \-\-output=file\fP

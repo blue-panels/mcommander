@@ -15,6 +15,9 @@ mcdiff6 - Comparador de Archivos Interno.
 **mcdiff6**
 [-bcCdfhstVx?] [-o salida] local base remoto
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o salida] -B base local remoto
+
 # Comparador de Archivos Interno <a id="diff-viewer"></a>
 
 mcdiff6 es una herramienta visual de comparación. Permite comparar dos

@@ -15,6 +15,9 @@ mcdiff6 - Belső összehasonlító.
 **mcdiff6**
 [-bcCdfhstVx?] [-o kimenet] helyi alap távoli
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o kimenet] -B alap helyi távoli
+
 # LEÍRÁS
 
 Az mcdiff6 az

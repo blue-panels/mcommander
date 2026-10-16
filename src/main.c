@@ -543,6 +543,7 @@ main (int argc, char *argv[])
     g_free (mc_run_param1);
     g_free (mc_run_param2);
     g_free (mc_args__merge_output);
+    g_free (mc_args__merge_base);
     g_free (saved_other_dir);
 
     mc_config_deinit_config_paths ();

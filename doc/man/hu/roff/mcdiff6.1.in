@@ -15,6 +15,10 @@ mcdiff6 \- Belső összehasonlító.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] [\-o kimenet] helyi alap távoli
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o kimenet] \-B alap helyi távoli
+
 
 .SH LEÍRÁS
 .PP

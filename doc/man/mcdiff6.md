@@ -15,6 +15,9 @@ mcdiff6 - Internal diff viewer of M-Commander.
 **mcdiff6**
 [-bcdfhstVx?] [-o output] local base remote
 
+**mcdiff6**
+[-bcdfhstVx?] [-o output] -B base local remote
+
 # DESCRIPTION
 
 mcdiff6 is a link to
@@ -49,6 +52,10 @@ defaults to black and white.
 
 *-h, -?, --help*
 : Show the options and what they do.
+
+*-B file, --base=file*
+: The common base of the two files: open their merge of three files, as with
+the base given between them.
 
 *-o file, --output=file*
 : Where the merge of three files is saved. Without it, the merge is saved

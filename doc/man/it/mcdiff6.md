@@ -15,6 +15,9 @@ mcdiff6 - Visualizzatore di differenze interno.
 **mcdiff6**
 [-bcCdfhstVx?] [-o uscita] locale base remoto
 
+**mcdiff6**
+[-bcCdfhstVx?] [-o uscita] -B base locale remoto
+
 # DESCRIZIONE
 
 mcdiff6 è un collegamento a

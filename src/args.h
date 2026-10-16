@@ -41,6 +41,8 @@ extern char *mc_run_param1;
 extern char *mc_run_param2;
 /* MC_RUN_DIFFVIEWER: where a merge is saved (-o) */
 extern char *mc_args__merge_output;
+/* MC_RUN_DIFFVIEWER: the base of a merge of the two files given (-B) */
+extern char *mc_args__merge_base;
 
 /*** declarations of public functions ************************************************************/
 

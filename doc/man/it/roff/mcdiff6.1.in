@@ -15,6 +15,10 @@ mcdiff6 \- Visualizzatore di differenze interno.
 \fBmcdiff6\fP
 [\-bcCdfhstVx?] [\-o uscita] locale base remoto
 
+.PP
+\fBmcdiff6\fP
+[\-bcCdfhstVx?] [\-o uscita] \-B base locale remoto
+
 
 .SH DESCRIZIONE
 .PP
