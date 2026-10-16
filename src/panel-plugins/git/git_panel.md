@@ -15,7 +15,8 @@
     Ctrl-R     - Refresh panel
 
   Keys (Status View):
-    Shift-F3   - Show diff for file (in commit/status view)
+    Shift-F3   - Show diff for file (in commit/status view);
+                 merge a conflict (status view)
     Shift-F5   - Stage file(s)
     Shift-F6   - Unstage file(s)
     Shift-F8   - Discard changes (reset to HEAD)
@@ -34,6 +35,14 @@
     F8         - Remove from favorites
     Ctrl-R     - Refresh panel
 ```
+
+A file with a merge conflict has the mark `!` and the state CONFLICT. Shift-F3
+on it opens the merge of three files: your version (ours) on the left, the
+other one (theirs) on the right, and their merge against the common base in
+the middle. F2 there writes the merge into the file; with no conflict left it
+also adds the file to the index, so the conflict is resolved. A merge saved
+with conflicts left, or left without saving, keeps the file a conflict.
+Shift-F5 also marks a conflict resolved, with the file as it is.
 
 Alt-C runs `coole -G <repository>`: the message editor, status lists and diff
 stay open after a commit. From a status or staged list in coole, F2 moves to the

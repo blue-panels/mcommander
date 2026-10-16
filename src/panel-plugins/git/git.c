@@ -62,6 +62,7 @@ typedef struct
     char *commit_sha;
     gboolean is_deleted;
     gboolean is_staged;
+    gboolean is_conflict;  // unmerged: Show diff opens the merge
 } git_entry_info_t;
 
 typedef struct
@@ -1068,6 +1069,18 @@ git_parse_remotes_and_fill (git_data_t *data, dir_list *list, const char *out)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* An unmerged path of git status: DD, AU, UD, UA, DU, AA, UU */
+static gboolean
+git_status_is_conflict (const char *status)
+{
+    const char x = status[0];
+    const char y = status[1];
+
+    return x == 'U' || y == 'U' || (x == 'A' && y == 'A') || (x == 'D' && y == 'D');
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static const char *
 git_stage_status_from_status (const char *status)
 {
@@ -1157,6 +1170,18 @@ git_parse_status_and_fill (git_data_t *data, dir_list *list, const char *out)
         arrow = strstr (path, " -> ");
         if (arrow != NULL)
             path = arrow + 4;
+
+        if (git_status_is_conflict (status))
+        {
+            git_entry_info_t *info;
+
+            git_add_entry (data, list, '!', "CONFLICT", path, FALSE, FALSE, GIT_ITEM_STATUS_FILE,
+                           NULL, NULL);
+            info = g_hash_table_lookup (data->display_to_info, path);
+            if (info != NULL)
+                info->is_conflict = TRUE;
+            continue;
+        }
 
         stage_status = git_stage_status_from_status (status);
         state_mark = git_type_mark_from_status (status);
@@ -1692,6 +1717,71 @@ git_write_temp_from_git_show (git_data_t *data, const char *object_spec, const c
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The merge of a conflicted file: its stages 2 (ours) and 3 (theirs) at the sides, their merge
+   against stage 1 (the base) in the middle, saved into the file of the work tree.  A merge
+   saved with no conflict left is added to the index, the way git mergetool marks it
+   resolved; with conflicts left the file stays a conflict. */
+static gboolean
+git_merge_conflict (git_data_t *data, const git_entry_info_t *info)
+{
+    char *stage_path[3] = { NULL, NULL, NULL };
+    gboolean ok = TRUE;
+    int rv = -1;
+    int i;
+
+    if (data->host->open_merge == NULL)
+        return FALSE;
+
+    for (i = 0; ok && i < 3; i++)
+    {
+        char *spec;
+
+        /* a stage the file does not have, as when both sides added it, is empty */
+        spec = g_strdup_printf (":%d:%s", i + 1, info->repo_path);
+        if (!git_write_temp_from_git_show (data, spec, info->repo_path, &stage_path[i]))
+            ok = git_write_temp_contents ("", 0, info->repo_path, &stage_path[i]);
+        g_free (spec);
+    }
+
+    if (ok)
+    {
+        char *ours = g_strdup_printf ("%s (ours)", info->repo_path);
+        char *theirs = g_strdup_printf ("%s (theirs)", info->repo_path);
+
+        rv = data->host->open_merge (data->host, stage_path[1], ours, stage_path[0], stage_path[2],
+                                     theirs, info->full_path);
+        g_free (ours);
+        g_free (theirs);
+    }
+
+    if (rv == 1)
+    {
+        char *err = NULL;
+        char *argv[] = {
+            (char *) "git", (char *) "-C", data->repo_root, (char *) "add", (char *) "--",
+            NULL,           NULL
+        };
+
+        argv[5] = info->repo_path;
+        if (!git_run_simple (argv, &err))
+            git_show_error (data, "Git panel", err != NULL ? err : "git add failed.");
+        g_free (err);
+    }
+    else if (rv < 0)
+        git_show_error (data, "Git panel", "Cannot open the merge of the conflict.");
+
+    for (i = 0; i < 3; i++)
+        if (stage_path[i] != NULL)
+        {
+            unlink (stage_path[i]);
+            g_free (stage_path[i]);
+        }
+
+    return rv >= 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static gboolean
 git_show_diff_selected (git_data_t *data)
 {
@@ -1700,6 +1790,8 @@ git_show_diff_selected (git_data_t *data)
     int current = 0;
     char *left_path = NULL;
     char *right_path = NULL;
+    char *left_label = NULL;
+    char *right_label = NULL;
     gboolean left_is_temp = FALSE;
     gboolean right_is_temp = FALSE;
     gboolean ok = FALSE;
@@ -1724,6 +1816,9 @@ git_show_diff_selected (git_data_t *data)
         git_show_error (data, "Git panel", "Cannot resolve selected file for diff.");
         return FALSE;
     }
+
+    if (info->is_conflict)
+        return git_merge_conflict (data, info);
 
     if (info->kind == GIT_ITEM_COMMIT_FILE)
     {
@@ -1803,7 +1898,42 @@ git_show_diff_selected (git_data_t *data)
         left_is_temp = TRUE;
     }
 
-    if (!data->host->open_diff (data->host, left_path, right_path))
+    /* the copies have names made up for them; the view shows what they are */
+    if (info->kind == GIT_ITEM_COMMIT_FILE)
+    {
+        char sha[8];
+        const char *old_path =
+            (info->old_repo_path != NULL) ? info->old_repo_path : info->repo_path;
+
+        g_strlcpy (sha, info->commit_sha != NULL ? info->commit_sha : "", sizeof (sha));
+        if (info->state_mark_text != NULL && info->state_mark_text[0] == '+')
+            left_label = g_strdup_printf ("%s (not in %s^)", info->repo_path, sha);
+        else
+            left_label = g_strdup_printf ("%s (%s^)", old_path, sha);
+        if (info->is_deleted)
+            right_label = g_strdup_printf ("%s (deleted in %s)", info->repo_path, sha);
+        else
+            right_label = g_strdup_printf ("%s (%s)", info->repo_path, sha);
+    }
+    else
+    {
+        left_label = g_strdup_printf ("%s (HEAD)", info->repo_path);
+        if (info->is_deleted)
+            right_label = g_strdup_printf ("%s (deleted)", info->repo_path);
+        else
+            right_label = g_strdup (info->repo_path);
+    }
+
+    if (data->host->open_diff_labeled != NULL)
+        ok = data->host->open_diff_labeled (data->host, left_path, left_label, right_path,
+                                            right_label,
+                                            (left_is_temp ? MC_PP_DIFF_LEFT_READ_ONLY : 0)
+                                                | (right_is_temp ? MC_PP_DIFF_RIGHT_READ_ONLY : 0));
+    else
+        ok = data->host->open_diff (data->host, left_path, right_path);
+    g_free (left_label);
+    g_free (right_label);
+    if (!ok)
     {
         git_show_error (data, "Git panel", "Cannot open internal diff viewer.");
         goto fail;
