@@ -54,6 +54,11 @@ kerül át, a különbség pedig újra kiszámolódik.
 **F15**
 : Átviszi az aktuális eltérést a másik irányba, a bal oldali fájlba.
 
+**Shift-F6**
+: A két fájl összefésülése a közös alapjukhoz képest: a nézet bekéri az
+alapfájlt, és megmutatja a három fájl összefésülését. Ott az F2 előbb
+megkérdezi, hová mentse az eredményt.
+
 **F7**
 : Keresés indítása.
 

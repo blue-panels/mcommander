@@ -129,6 +129,12 @@ merged, and the difference is computed again.
 Merge the current hunk the other way, into the file on the left.
 
 .TP
+\fBShift\-F6\fP
+Merge the two files against their common base: the view asks for the base
+file and shows the merge of three files. F2 there asks first where to save
+the result.
+
+.TP
 \fBF7\fP
 Start search.
 

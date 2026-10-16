@@ -423,6 +423,7 @@ enum
     CK_MergeOther,
     CK_MergeRight,
     CK_MergeRightOff,
+    CK_MergeBase,
     CK_ConflictNext,
     CK_ConflictPrev
 };

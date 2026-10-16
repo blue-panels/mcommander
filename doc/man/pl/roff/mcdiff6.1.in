@@ -64,6 +64,11 @@ różnica, po czym porównanie liczone jest na nowo.
 Przenosi bieżącą różnicę w drugą stronę, do pliku po lewej.
 
 .TP
+\fBShift\-F6\fP
+Scalić dwa pliki względem ich wspólnej bazy: widok pyta o plik bazowy i
+pokazuje scalanie trzech plików. Tam F2 najpierw pyta, gdzie zapisać wynik.
+
+.TP
 \fBF7\fP
 Zaczyna szukanie.
 

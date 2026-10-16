@@ -64,6 +64,12 @@ differenza corrente, e il confronto viene rifatto.
 Porta la differenza corrente nel verso opposto, nel file di sinistra.
 
 .TP
+\fBShift\-F6\fP
+Unire i due file rispetto alla loro base comune: la vista chiede il file
+base e mostra l'unione di tre file. Lì F2 chiede prima dove salvare il
+risultato.
+
+.TP
 \fBF7\fP
 Inizia una ricerca.
 

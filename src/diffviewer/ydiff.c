@@ -130,6 +130,7 @@ typedef struct
 /*** forward declarations (file scope functions) *************************************************/
 
 static int dview_frame_keep (int pair);
+static int merge3_init (WDiff *dview, const char *base, const char *out);
 static int merge3_base_chunk_at (const WDiff *dview, int s, int e);
 
 /*** file scope variables ************************************************************************/
@@ -3098,6 +3099,31 @@ merge3_save (WDiff *dview)
             return FALSE;
     }
 
+    if (dview->merge_out == NULL)
+    {
+        char *out;
+
+        out = input_expand_dialog (_ ("Save"), _ ("Save the merge into:"), MC_HISTORY_YDIFF_BASE,
+                                   dview->merge_base, INPUT_COMPLETE_FILENAMES);
+        if (out == NULL || *out == '\0')
+        {
+            g_free (out);
+            return FALSE;
+        }
+        if (strcmp (out, dview->merge_base) != 0 && g_file_test (out, G_FILE_TEST_EXISTS)
+            && query_dialog (_ ("Save"), _ ("The file exists. Overwrite it?"), D_NORMAL, 2,
+                             _ ("&Yes"), _ ("&No"))
+                != 0)
+        {
+            g_free (out);
+            return FALSE;
+        }
+        dview->merge_out = out;
+        g_free (dview->label[DIFF_MERGED]);
+        dview->label[DIFF_MERGED] = g_strdup (out);
+        dview->new_frame = TRUE;
+    }
+
     ok = g_file_get_contents (dview->file[DIFF_MERGED], &text, &len, NULL);
     /* written in place, so the file keeps its owner and mode */
     f = ok ? fopen (dview->merge_out, "w") : NULL;
@@ -3443,6 +3469,37 @@ dview_init (WDiff *dview, const char *file1, const char *file2, const char *labe
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Take away what makes @dview a merge; the view is one of two files then */
+static void
+merge3_free (WDiff *dview)
+{
+    if (dview->a[DIFF_MERGED] != NULL)
+    {
+        g_array_free (dview->a[DIFF_MERGED], TRUE);
+        dview->a[DIFF_MERGED] = NULL;
+    }
+    MC_PTR_FREE (dview->label[DIFF_MERGED]);
+    if (dview->chunks != NULL)
+        g_array_free (dview->chunks, TRUE);
+    dview->chunks = NULL;
+    if (dview->bchunks != NULL)
+        g_array_free (dview->bchunks, TRUE);
+    dview->bchunks = NULL;
+    if (dview->choices != NULL)
+        g_array_free (dview->choices, TRUE);
+    dview->choices = NULL;
+    MC_PTR_FREE (dview->merge_base);
+    if (dview->merge_tmp != NULL)
+        unlink (dview->merge_tmp);
+    MC_PTR_FREE (dview->merge_tmp);
+    MC_PTR_FREE (dview->merge_out);
+    dview->file[DIFF_MERGED] = NULL;
+    dview->merged[DIFF_MERGED] = FALSE;
+    dview->nfiles = 2;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 dview_fini (WDiff *dview)
 {
@@ -3467,30 +3524,9 @@ dview_fini (WDiff *dview)
         g_array_free (dview->a[DIFF_RIGHT], TRUE);
         dview->a[DIFF_RIGHT] = NULL;
     }
-    if (dview->a[DIFF_MERGED] != NULL)
-    {
-        g_array_free (dview->a[DIFF_MERGED], TRUE);
-        dview->a[DIFF_MERGED] = NULL;
-    }
-
     g_free (dview->label[DIFF_LEFT]);
     g_free (dview->label[DIFF_RIGHT]);
-    g_free (dview->label[DIFF_MERGED]);
-
-    if (dview->chunks != NULL)
-        g_array_free (dview->chunks, TRUE);
-    dview->chunks = NULL;
-    if (dview->bchunks != NULL)
-        g_array_free (dview->bchunks, TRUE);
-    dview->bchunks = NULL;
-    if (dview->choices != NULL)
-        g_array_free (dview->choices, TRUE);
-    dview->choices = NULL;
-    MC_PTR_FREE (dview->merge_base);
-    if (dview->merge_tmp != NULL)
-        unlink (dview->merge_tmp);
-    MC_PTR_FREE (dview->merge_tmp);
-    MC_PTR_FREE (dview->merge_out);
+    merge3_free (dview);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -4101,6 +4137,7 @@ dview_labels (WDiff *dview)
     static const buttonbar_command_label_t mod_labels[] = {
         { CK_EditOther, N_ ("ButtonBar|Edit") },
         { CK_MergeOther, N_ ("ButtonBar|Merge") },
+        { CK_MergeRightOff, N_ ("ButtonBar|Base") },
         { CK_SearchContinue, N_ ("ButtonBar|Next") },
         { CK_IgnoreKey, NULL },
     };
@@ -4239,6 +4276,61 @@ dview_help (const WDiff *dview)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Make the view of two files a merge: ask for the common base of the two and open the middle
+   column; F2 asks where the result goes */
+static void
+dview_merge_base_cmd (WDiff *dview)
+{
+    char *dir, *start, *base;
+    struct stat st;
+
+    if (dview->nfiles == 3)
+        return;
+    if (dview->merged[DIFF_LEFT] || dview->merged[DIFF_RIGHT])
+    {
+        message (D_NORMAL, _ ("Merge"), "%s", _ ("Save the changes of the two files first."));
+        return;
+    }
+
+    dir = g_path_get_dirname (dview->file[DIFF_LEFT]);
+    start = g_strconcat (dir, PATH_SEP_STR, (char *) NULL);
+    g_free (dir);
+    base = input_expand_dialog (_ ("Merge"), _ ("The common base of the two files:"),
+                                MC_HISTORY_YDIFF_BASE, start, INPUT_COMPLETE_FILENAMES);
+    g_free (start);
+    if (base == NULL || *base == '\0')
+    {
+        g_free (base);
+        return;
+    }
+
+    if (stat (base, &st) != 0 || !S_ISREG (st.st_mode))
+        file_error_message (_ ("Cannot read the base file\n%s"), base);
+    else if (merge3_init (dview, base, NULL) == 0)
+    {
+        dview_reread (dview);
+        if (dview->a[DIFF_MERGED] != NULL && dview->a[DIFF_MERGED]->len == dview->a[DIFF_LEFT]->len)
+        {
+            dview->skip_rows = dview->search.last_accessed_num_line = 0;
+            dview_compute_areas (dview);
+            dview_labels (dview);
+            widget_draw (WIDGET (buttonbar_find (DIALOG (WIDGET (dview)->owner))));
+            dview->new_frame = TRUE;
+            g_free (base);
+            return;
+        }
+        message (D_ERROR, MSG_ERROR, _ ("Cannot compare the files to merge"));
+    }
+
+    // the view stays one of two files
+    merge3_free (dview);
+    dview_reread (dview);
+    dview->new_frame = TRUE;
+    g_free (base);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static cb_ret_t
 dview_execute_cmd (WDiff *dview, long command)
 {
@@ -4352,6 +4444,9 @@ dview_execute_cmd (WDiff *dview, long command)
             merge3_toggle (dview, DIFF_RIGHT, command == CK_MergeRight);
             dview_redo (dview);
         }
+        else if (command == CK_MergeRightOff)
+            // Shift-F6 in the view of two files makes it a merge
+            dview_merge_base_cmd (dview);
         break;
     case CK_EditOther:
         if (dview->nfiles != 3)
@@ -4418,6 +4513,9 @@ dview_execute_cmd (WDiff *dview, long command)
         break;
     case CK_Save:
         dview_do_save (dview);
+        break;
+    case CK_MergeBase:
+        dview_merge_base_cmd (dview);
         break;
     case CK_Options:
         dview_diff_options (dview);
@@ -4662,8 +4760,9 @@ merge3_init (WDiff *dview, const char *base, const char *out)
     const char *suffix;
     int fd;
 
-    /* the extension of the result picks the syntax of the middle column */
-    suffix = strrchr (x_basename (out), '.');
+    /* the extension of the result picks the syntax of the middle column; without a result
+       yet, F2 asks for it, the base names the middle */
+    suffix = strrchr (x_basename (out != NULL ? out : base), '.');
     fd = mc_mkstemps (&vpath, "mcmerge", suffix);
     if (fd == -1)
     {
@@ -4677,7 +4776,7 @@ merge3_init (WDiff *dview, const char *base, const char *out)
     dview->merge_out = g_strdup (out);
     dview->nfiles = 3;
     dview->file[DIFF_MERGED] = dview->merge_tmp;
-    dview->label[DIFF_MERGED] = g_strdup (out);
+    dview->label[DIFF_MERGED] = g_strdup (out != NULL ? out : base);
     dview->chunks = g_array_new (FALSE, FALSE, sizeof (MERGE3_CHUNK));
     dview->a[DIFF_MERGED] = g_array_new (FALSE, FALSE, sizeof (DIFFLN));
     g_array_set_clear_func (dview->a[DIFF_MERGED], cc_free_elt);

@@ -64,6 +64,12 @@ kerül át, a különbség pedig újra kiszámolódik.
 Átviszi az aktuális eltérést a másik irányba, a bal oldali fájlba.
 
 .TP
+\fBShift\-F6\fP
+A két fájl összefésülése a közös alapjukhoz képest: a nézet bekéri az
+alapfájlt, és megmutatja a három fájl összefésülését. Ott az F2 előbb
+megkérdezi, hová mentse az eredményt.
+
+.TP
 \fBF7\fP
 Keresés indítása.
 

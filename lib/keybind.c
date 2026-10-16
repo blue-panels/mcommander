@@ -427,6 +427,7 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (MergeOther, N_ ("Merge from other file")),
     ADD_KEYMAP_NAME_DESC (MergeRight, N_ ("Add the right file to the merge")),
     ADD_KEYMAP_NAME_DESC (MergeRightOff, N_ ("Take the right file out of the merge")),
+    ADD_KEYMAP_NAME_DESC (MergeBase, N_ ("Merge the two files against a base file")),
     ADD_KEYMAP_NAME_DESC (ConflictNext, N_ ("Next conflict")),
     ADD_KEYMAP_NAME_DESC (ConflictPrev, N_ ("Previous conflict")),
 #endif

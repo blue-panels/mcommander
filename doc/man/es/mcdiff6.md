@@ -43,6 +43,11 @@ fragmento actual y la diferencia se calcula de nuevo.
 **F15**
 : Lleva el fragmento actual en sentido contrario, al archivo de la izquierda.
 
+**Shift-F6**
+: Fusionar los dos archivos según su base común: la vista pide el archivo
+base y muestra la fusión de tres archivos. Allí F2 pregunta primero dónde
+guardar el resultado.
+
 **F7**
 : Comenzar una búsqueda.
 

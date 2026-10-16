@@ -54,6 +54,11 @@ differenza corrente, e il confronto viene rifatto.
 **F15**
 : Porta la differenza corrente nel verso opposto, nel file di sinistra.
 
+**Shift-F6**
+: Unire i due file rispetto alla loro base comune: la vista chiede il file
+base e mostra l'unione di tre file. Lì F2 chiede prima dove salvare il
+risultato.
+
 **F7**
 : Inizia una ricerca.
 

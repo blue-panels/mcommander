@@ -108,6 +108,11 @@ merged, and the difference is computed again.
 **F15**
 : Merge the current hunk the other way, into the file on the left.
 
+**Shift-F6**
+: Merge the two files against their common base: the view asks for the base
+file and shows the merge of three files. F2 there asks first where to save
+the result.
+
 **F7**
 : Start search.
 

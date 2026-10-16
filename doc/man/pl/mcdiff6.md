@@ -54,6 +54,10 @@ różnica, po czym porównanie liczone jest na nowo.
 **F15**
 : Przenosi bieżącą różnicę w drugą stronę, do pliku po lewej.
 
+**Shift-F6**
+: Scalić dwa pliki względem ich wspólnej bazy: widok pyta o plik bazowy i
+pokazuje scalanie trzech plików. Tam F2 najpierw pyta, gdzie zapisać wynik.
+
 **F7**
 : Zaczyna szukanie.
 

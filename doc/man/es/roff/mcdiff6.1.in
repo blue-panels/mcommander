@@ -52,6 +52,12 @@ fragmento actual y la diferencia se calcula de nuevo.
 Lleva el fragmento actual en sentido contrario, al archivo de la izquierda.
 
 .TP
+\fBShift\-F6\fP
+Fusionar los dos archivos según su base común: la vista pide el archivo
+base y muestra la fusión de tres archivos. Allí F2 pregunta primero dónde
+guardar el resultado.
+
+.TP
 \fBF7\fP
 Comenzar una búsqueda.
 
