@@ -102,18 +102,25 @@ M-Commander.
 **F2**
 : Save modified files.
 
+**Tab**
+: Switch the active file. Its frame is double; the frame of the other file is
+single and gray. A mark on the frame of the active file shows the top line,
+the line F5 and F15 act on.
+
 **F4**
-: Edit file of the left panel in the internal editor.
+: Edit the active file in the internal editor.
 
 **F14**
-: Edit file of the right panel in the internal editor.
+: Edit the other file in the internal editor.
 
 **F5**
-: Merge the current hunk into the file on the right. Only the current hunk is
-merged, and the difference is computed again.
+: Copy the current hunk from the active file into the other one. The current
+hunk is the one at the top line. Only the current hunk is copied, and the
+difference is computed again. The key bar shows the direction: "Copy->" or
+"<-Copy".
 
 **F15**
-: Merge the current hunk the other way, into the file on the left.
+: Copy the current hunk the other way, from the other file into the active one.
 
 **Shift-F6**
 : Merge the two files against their common base: the view asks for the base
@@ -151,7 +158,7 @@ is underlined instead. The setting is remembered separately from the editor's
 own.
 
 **f**
-: Maximize left panel.
+: Show only the active file, on the whole screen.
 
 **=**
 : Make panels equal in width.

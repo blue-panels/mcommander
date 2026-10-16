@@ -51,21 +51,28 @@ Elindítja a beépített hypertext súgót.
 Menti a módosított fájlokat.
 
 .TP
+\fBTab\fP
+Átváltja az aktív fájlt. Ennek kerete dupla, a másik fájl kerete szimpla és
+szürke. Az aktív fájl keretén egy jel mutatja a felső sort: ezen dolgozik az
+F5 és az F15.
+
+.TP
 \fBF4\fP
-A bal oldali fájlt szerkeszti a belső szerkesztőben.
+Az aktív fájlt szerkeszti a belső szerkesztőben.
 
 .TP
 \fBF14\fP
-A jobb oldali fájlt szerkeszti a belső szerkesztőben.
+A másik fájlt szerkeszti a belső szerkesztőben.
 
 .TP
 \fBF5\fP
-Átviszi az aktuális eltérést a jobb oldali fájlba. Csak az aktuális eltérés
-kerül át, a különbség pedig újra kiszámolódik.
+Átmásolja az aktuális eltérést az aktív fájlból a másikba. Az aktuális
+eltérés a felső sorban álló. Csak ez kerül át, a különbség pedig újra
+kiszámolódik. Az irányt a billentyűsor mutatja: "Copy\->" vagy "<\-Copy".
 
 .TP
 \fBF15\fP
-Átviszi az aktuális eltérést a másik irányba, a bal oldali fájlba.
+Átmásolja az aktuális eltérést a másik irányba, a másik fájlból az aktívba.
 
 .TP
 \fBShift\-F6\fP
@@ -112,7 +119,7 @@ beállítás a szerkesztő ugyanilyen beállításától függetlenül őrződik
 
 .TP
 \fBf\fP
-Teljes méretűre nyitja a bal oldali panelt.
+Csak az aktív fájlt mutatja, a teljes képernyőn.
 
 .TP
 \fB=\fP

@@ -51,21 +51,29 @@ Invoca il visualizzatore ipertestuale dell'aiuto.
 Salva i file modificati.
 
 .TP
+\fBTab\fP
+Cambia il file attivo. La sua cornice è doppia; la cornice dell'altro file è
+singola e grigia. Un segno sulla cornice del file attivo indica la riga in
+alto, quella su cui agiscono F5 e F15.
+
+.TP
 \fBF4\fP
-Modifica il file del pannello sinistro nell'editor interno.
+Modifica il file attivo nell'editor interno.
 
 .TP
 \fBF14\fP
-Modifica il file del pannello destro nell'editor interno.
+Modifica l'altro file nell'editor interno.
 
 .TP
 \fBF5\fP
-Porta la differenza corrente nel file di destra. Viene unita solo la
-differenza corrente, e il confronto viene rifatto.
+Copia la differenza corrente dal file attivo nell'altro. La differenza
+corrente è quella della riga in alto. Viene copiata solo questa, e il
+confronto viene rifatto. La barra dei tasti indica il verso: "Copy\->" o
+"<\-Copy".
 
 .TP
 \fBF15\fP
-Porta la differenza corrente nel verso opposto, nel file di sinistra.
+Copia la differenza corrente nel verso opposto, dall'altro file in quello attivo.
 
 .TP
 \fBShift\-F6\fP
@@ -113,7 +121,7 @@ separatamente da quella dell'editor.
 
 .TP
 \fBf\fP
-Ingrandisce al massimo il pannello sinistro.
+Mostra solo il file attivo, a tutto schermo.
 
 .TP
 \fB=\fP

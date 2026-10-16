@@ -44,18 +44,25 @@ Nel visualizzatore di differenze interno sono disponibili i tasti seguenti:
 **F2**
 : Salva i file modificati.
 
+**Tab**
+: Cambia il file attivo. La sua cornice è doppia; la cornice dell'altro file è
+singola e grigia. Un segno sulla cornice del file attivo indica la riga in
+alto, quella su cui agiscono F5 e F15.
+
 **F4**
-: Modifica il file del pannello sinistro nell'editor interno.
+: Modifica il file attivo nell'editor interno.
 
 **F14**
-: Modifica il file del pannello destro nell'editor interno.
+: Modifica l'altro file nell'editor interno.
 
 **F5**
-: Porta la differenza corrente nel file di destra. Viene unita solo la
-differenza corrente, e il confronto viene rifatto.
+: Copia la differenza corrente dal file attivo nell'altro. La differenza
+corrente è quella della riga in alto. Viene copiata solo questa, e il
+confronto viene rifatto. La barra dei tasti indica il verso: "Copy->" o
+"<-Copy".
 
 **F15**
-: Porta la differenza corrente nel verso opposto, nel file di sinistra.
+: Copia la differenza corrente nel verso opposto, dall'altro file in quello attivo.
 
 **Shift-F6**
 : Unire i due file rispetto alla loro base comune: la vista chiede il file
@@ -93,7 +100,7 @@ testo, la parola viene invece sottolineata. L'impostazione viene ricordata
 separatamente da quella dell'editor.
 
 **f**
-: Ingrandisce al massimo il pannello sinistro.
+: Mostra solo il file attivo, a tutto schermo.
 
 **=**
 : Rende i pannelli di uguale larghezza.

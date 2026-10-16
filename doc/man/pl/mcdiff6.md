@@ -44,18 +44,24 @@ We wbudowanym podglądzie różnic dostępne są następujące klawisze:
 **F2**
 : Zapisuje zmienione pliki.
 
+**Tab**
+: Przełącza aktywny plik. Jego ramka jest podwójna; ramka drugiego pliku jest
+pojedyncza i szara. Znacznik na ramce aktywnego pliku pokazuje górny wiersz,
+na którym działają F5 i F15.
+
 **F4**
-: Edytuje plik z lewego panelu we wbudowanym edytorze.
+: Edytuje aktywny plik we wbudowanym edytorze.
 
 **F14**
-: Edytuje plik z prawego panelu we wbudowanym edytorze.
+: Edytuje drugi plik we wbudowanym edytorze.
 
 **F5**
-: Przenosi bieżącą różnicę do pliku po prawej. Przenoszona jest tylko bieżąca
-różnica, po czym porównanie liczone jest na nowo.
+: Kopiuje bieżącą różnicę z aktywnego pliku do drugiego. Bieżąca różnica to
+ta w górnym wierszu. Kopiowana jest tylko ona, po czym porównanie liczone
+jest na nowo. Kierunek widać na pasku klawiszy: "Copy->" lub "<-Copy".
 
 **F15**
-: Przenosi bieżącą różnicę w drugą stronę, do pliku po lewej.
+: Kopiuje bieżącą różnicę w drugą stronę, z drugiego pliku do aktywnego.
 
 **Shift-F6**
 : Scalić dwa pliki względem ich wspólnej bazy: widok pyta o plik bazowy i
@@ -91,7 +97,7 @@ reszty wiersza samym kolorem tekstu, słowo jest zamiast tego podkreślane.
 Ustawienie jest zapamiętywane osobno od tego samego ustawienia edytora.
 
 **f**
-: Powiększa lewy panel na maksimum.
+: Pokazuje tylko aktywny plik, na całym ekranie.
 
 **=**
 : Wyrównuje szerokość paneli.

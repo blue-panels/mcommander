@@ -3435,6 +3435,7 @@ dview_init (WDiff *dview, const char *file1, const char *file2, const char *labe
     dview->show_cr = TRUE;
     dview->tab_size = 8;
     dview->ord = DIFF_LEFT;
+    dview->active = DIFF_LEFT;
     dview->full = FALSE;
 
     dview->search.handle = NULL;
@@ -3924,6 +3925,17 @@ dview_frame_title (int y, int x, int width, int xwidth, const char *prefix, cons
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The mark of the line the keys act on, on the left line of the frame at @x */
+static void
+dview_mark_line (int x)
+{
+    tty_setcolor (DIFFVIEWER_LINEMARK_COLOR);
+    tty_gotoyx (2, x);
+    tty_print_char (mc_tty_frm[MC_TTY_FRM_DLEFTMIDDLE]);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 dview_update (WDiff *dview)
 {
@@ -3988,6 +4000,8 @@ dview_update (WDiff *dview)
         widths[ncols++] = dview->half2 - dview->bias;
         if (dview->full)
         {
+            // one file on the whole screen: the active one, which F4 edits
+            ords[0] = dview->active;
             widths[0] = COLS;
             widths[1] = 0;
         }
@@ -3997,7 +4011,6 @@ dview_update (WDiff *dview)
     {
         int xwidth;
 
-        tty_setcolor (CORE_FRAME_COLOR);
         xwidth = dview->display_numbers;
         if (dview_shows_symbols (dview))
             xwidth++;
@@ -4006,9 +4019,13 @@ dview_update (WDiff *dview)
 
         for (i = 0, x = 0; i < ncols; x += widths[i], i++)
         {
-            /* in a merge only the result has the double frame; the sides are for reading */
-            const gboolean single = dview->nfiles == 3 && ords[i] != DIFF_MERGED;
+            /* in a merge only the result has the double frame; the sides are for reading.  Of
+               two files the active one has it, and the other one is grey */
+            const gboolean single =
+                dview->nfiles == 3 ? ords[i] != DIFF_MERGED : ords[i] != dview->active;
 
+            tty_setcolor (dview->nfiles == 2 && single ? DIFFVIEWER_DIMFRAME_COLOR
+                                                       : CORE_FRAME_COLOR);
             if (widths[i] > 1)
                 tty_draw_box (1, x, height, widths[i], single);
 
@@ -4042,6 +4059,12 @@ dview_update (WDiff *dview)
             dview_status (dview, ords[i], widths[i], x);
             dview_display_file (dview, ords[i], 2, x + 1, height - 2, widths[i] - 2);
         }
+
+    // the line F5 and the other keys act on: the top one, marked on the frame of the active side
+    for (i = 0, x = 0; i < ncols; x += widths[i], i++)
+        if (widths[i] > 2 && height > 3
+            && ords[i] == (dview->nfiles == 3 ? DIFF_MERGED : dview->active))
+            dview_mark_line (x);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -4157,9 +4180,17 @@ dview_goto_cmd (WDiff *dview, diff_place_t ord)
 static void
 dview_labels (WDiff *dview)
 {
-    static const buttonbar_command_label_t mod_labels[] = {
+    // F5 copies from the active file into the other one, Shift-F5 the other way
+    static const buttonbar_command_label_t mod_labels_left[] = {
         { CK_EditOther, N_ ("ButtonBar|Edit") },
-        { CK_MergeOther, N_ ("ButtonBar|Merge") },
+        { CK_MergeOther, N_ ("ButtonBar|<-Copy") },
+        { CK_MergeRightOff, N_ ("ButtonBar|Base") },
+        { CK_SearchContinue, N_ ("ButtonBar|Next") },
+        { CK_IgnoreKey, NULL },
+    };
+    static const buttonbar_command_label_t mod_labels_right[] = {
+        { CK_EditOther, N_ ("ButtonBar|Edit") },
+        { CK_MergeOther, N_ ("ButtonBar|Copy->") },
         { CK_MergeRightOff, N_ ("ButtonBar|Base") },
         { CK_SearchContinue, N_ ("ButtonBar|Next") },
         { CK_IgnoreKey, NULL },
@@ -4185,12 +4216,17 @@ dview_labels (WDiff *dview)
         buttonbar_set_label (b, 6, Q_ ("ButtonBar|+Right"), d->keymap, d);
     }
     else
-        buttonbar_set_label (b, 5, Q_ ("ButtonBar|Merge"), d->keymap, d);
+        buttonbar_set_label (
+            b, 5, dview->active == DIFF_LEFT ? Q_ ("ButtonBar|Copy->") : Q_ ("ButtonBar|<-Copy"),
+            d->keymap, d);
     buttonbar_set_label (b, 7, Q_ ("ButtonBar|Search"), d->keymap, d);
     buttonbar_set_label (b, 9, Q_ ("ButtonBar|Options"), d->keymap, d);
     buttonbar_set_label (b, 10, Q_ ("ButtonBar|Quit"), d->keymap, d);
     buttonbar_set_modifier_labels (b, &diff_map, NULL,
-                                   dview->nfiles == 3 ? merge_mod_labels : mod_labels, d);
+                                   dview->nfiles == 3               ? merge_mod_labels
+                                       : dview->active == DIFF_LEFT ? mod_labels_left
+                                                                    : mod_labels_right,
+                                   d);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -4427,6 +4463,15 @@ dview_execute_cmd (WDiff *dview, long command)
     case CK_Swap:
         dview->ord ^= 1;
         break;
+    case CK_ChangePanel:
+        if (dview->nfiles == 2)
+        {
+            dview->active ^= 1;
+            dview->new_frame = TRUE;
+            dview_labels (dview);
+            widget_draw (WIDGET (buttonbar_find (DIALOG (WIDGET (dview)->owner))));
+        }
+        break;
     case CK_Redo:
         dview_redo (dview);
         break;
@@ -4451,7 +4496,7 @@ dview_execute_cmd (WDiff *dview, long command)
         break;
     case CK_Edit:
         /* the sides of a merge are not changed, the result is edited */
-        dview_edit (dview, dview->nfiles == 3 ? DIFF_MERGED : dview->ord);
+        dview_edit (dview, dview->nfiles == 3 ? DIFF_MERGED : dview->active);
         break;
     case CK_Merge:
     case CK_MergeOther:
@@ -4459,7 +4504,13 @@ dview_execute_cmd (WDiff *dview, long command)
             /* in a merge F5 adds the left lines to the middle and Shift-F5 takes them out */
             merge3_toggle (dview, DIFF_LEFT, command == CK_Merge);
         else
-            do_merge_hunk (dview, command == CK_Merge ? FROM_LEFT_TO_RIGHT : FROM_RIGHT_TO_LEFT);
+        {
+            /* F5 copies from the active file into the other one; the direction names the file
+               do_merge_hunk() writes */
+            const diff_place_t to = command == CK_Merge ? dview->active ^ 1 : dview->active;
+
+            do_merge_hunk (dview, to == DIFF_LEFT ? FROM_LEFT_TO_RIGHT : FROM_RIGHT_TO_LEFT);
+        }
         dview_redo (dview);
         break;
     case CK_MergeRight:
@@ -4475,7 +4526,7 @@ dview_execute_cmd (WDiff *dview, long command)
         break;
     case CK_EditOther:
         if (dview->nfiles != 3)
-            dview_edit (dview, dview->ord ^ 1);
+            dview_edit (dview, dview->active ^ 1);
         break;
     case CK_Search:
         dview_search_cmd (dview);

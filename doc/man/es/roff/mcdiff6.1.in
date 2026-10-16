@@ -39,21 +39,29 @@ Invoca el visor de ayuda y muestra esta sección.
 Guarda los archivos modificados.
 
 .TP
+\fBTab\fP
+Cambia el archivo activo. Su marco es doble; el marco del otro archivo es
+simple y gris. Una marca en el marco del archivo activo muestra la línea
+superior, la línea sobre la que actúan F5 y F15.
+
+.TP
 \fBF4\fP
-Edita el archivo del panel izquierdo en el editor interno.
+Edita el archivo activo en el editor interno.
 
 .TP
 \fBF14\fP
-Edita el archivo del panel derecho en el editor interno.
+Edita el otro archivo en el editor interno.
 
 .TP
 \fBF5\fP
-Lleva el fragmento actual al archivo de la derecha. Solo se combina el
-fragmento actual y la diferencia se calcula de nuevo.
+Copia el fragmento actual del archivo activo al otro. El fragmento actual
+es el de la línea superior. Solo se copia ese fragmento y la diferencia se
+calcula de nuevo. La barra de teclas muestra el sentido: "Copy\->" o
+"<\-Copy".
 
 .TP
 \fBF15\fP
-Lleva el fragmento actual en sentido contrario, al archivo de la izquierda.
+Copia el fragmento actual en sentido contrario, del otro archivo al activo.
 
 .TP
 \fBShift\-F6\fP
@@ -101,7 +109,7 @@ aparte del mismo ajuste del editor.
 
 .TP
 \fBf\fP
-Maximizar el panel izquierdo.
+Muestra solo el archivo activo, en toda la pantalla.
 
 .TP
 \fB=\fP
