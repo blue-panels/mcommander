@@ -1,0 +1,39 @@
+name: AI trailers
+
+on: [ push, pull_request ]
+
+jobs:
+  ai-trailers:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages for AI co-authors
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+              range="$PR_BASE..$PR_HEAD"
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = 0000000000000000000000000000000000000000 ] \
+               || ! git cat-file -e "$BEFORE^{commit}" 2> /dev/null; then
+              # A new branch, or a force push over history we no longer have:
+              # check everything that is not on the default branch.
+              range="origin/$DEFAULT_BRANCH..$SHA"
+          else
+              range="$BEFORE..$SHA"
+          fi
+          echo "Checking $range"
+          ./maint/check-ai-trailers.sh "$range"
