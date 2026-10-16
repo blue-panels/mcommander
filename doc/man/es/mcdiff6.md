@@ -155,6 +155,10 @@ cada uno a su manera, el centro conserva las líneas de la base: es un
 conflicto, se muestra con el color de conflicto y se cuenta tras "Cnf" en la
 línea de estado de la columna central.
 
+La línea superior del marco de la columna central nombra, tras "Result:",
+el archivo donde se guarda el resultado; la inferior nombra la base, tras
+"Base:".
+
 Las diferencias se calculan de nuevo tras cada cambio de la columna central.
 Una pantalla de menos de 120 columnas muestra el centro y un solo lado.
 

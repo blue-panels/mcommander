@@ -162,6 +162,9 @@ te same wiersze, każda po swojemu, środek zachowuje wiersze bazy: to
 konflikt, pokazany kolorem konfliktu i liczony po "Cnf" w wierszu stanu
 środkowej kolumny.
 
+Górna linia ramki środkowej kolumny podaje po "Result:" plik, do którego
+zapisuje się wynik, a dolna po "Base:" plik bazy.
+
 Różnice są liczone na nowo po każdej zmianie środkowej kolumny. Ekran
 węższy niż 120 kolumn pokazuje środek i jedną stronę.
 

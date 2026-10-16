@@ -164,6 +164,10 @@ ugyanazokat a sorokat változtatta meg, mindegyik a maga módján, középen az
 alap sorai maradnak: ez ütközés, az ütközés színével látszik, a számuk a
 középső oszlop állapotsorában a "Cnf" után áll.
 
+A középső oszlop keretének felső vonala a "Result:" után megnevezi a
+fájlt, ahová az eredmény mentődik, az alsó vonala pedig a "Base:" után az
+alapot.
+
 A különbségek a középső oszlop minden változása után újra kiszámolódnak.
 120 oszlopnál keskenyebb képernyőn a középső oszlop és az egyik oldal
 látszik.

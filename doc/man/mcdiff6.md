@@ -223,6 +223,9 @@ own way, the middle keeps the lines of the base: this is a conflict, shown in
 the conflict color and counted after "Cnf" on the status line of the middle
 column. Lines that both sides changed the same way are taken as well.
 
+The top line of the frame of the middle column names the file the result
+is saved into, after "Result:"; its bottom line names the base, after "Base:".
+
 Every difference is computed again after each change of the middle column.
 A screen narrower than 120 columns shows the middle column and one side.
 

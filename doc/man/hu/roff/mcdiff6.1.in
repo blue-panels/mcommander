@@ -206,6 +206,11 @@ alap sorai maradnak: ez ütközés, az ütközés színével látszik, a számuk
 középső oszlop állapotsorában a "Cnf" után áll.
 
 .PP
+A középső oszlop keretének felső vonala a "Result:" után megnevezi a
+fájlt, ahová az eredmény mentődik, az alsó vonala pedig a "Base:" után az
+alapot.
+
+.PP
 A különbségek a középső oszlop minden változása után újra kiszámolódnak.
 120 oszlopnál keskenyebb képernyőn a középső oszlop és az egyik oldal
 látszik.

@@ -3895,6 +3895,35 @@ dview_redo (WDiff *dview)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A path after @prefix on line @y of a frame, centered and clear of the separator at @xwidth */
+static void
+dview_frame_title (int y, int x, int width, int xwidth, const char *prefix, const char *file)
+{
+    vfs_path_t *vpath;
+    char *path, *text;
+    int room, tx;
+
+    room = width - xwidth - 6;
+    if (prefix != NULL)
+        room -= str_term_width1 (prefix) + 1;
+    if (room < 3 || file == NULL)
+        return;
+
+    // the path gives way, the prefix stays whole
+    vpath = vfs_path_from_str (file);
+    path = vfs_path_to_str_flags (vpath, 0, VPF_STRIP_HOME | VPF_STRIP_PASSWORD);
+    vfs_path_free (vpath, TRUE);
+    text = prefix != NULL ? g_strconcat (prefix, " ", str_term_trim (path, room), (char *) NULL)
+                          : g_strdup (str_term_trim (path, room));
+    tx = MAX (x + xwidth + 1, x + (width - str_term_width1 (text) - 2) / 2);
+    tty_gotoyx (y, tx);
+    tty_printf (" %s ", text);
+    g_free (text);
+    g_free (path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 dview_update (WDiff *dview)
 {
@@ -3993,23 +4022,16 @@ dview_update (WDiff *dview)
                 tty_draw_vline (2, x + xwidth, mc_tty_frm[MC_TTY_FRM_VERT], height - 2);
             }
 
-            // the name of the file on the top line, as a panel has it, clear of the separator
-            if (widths[i] - xwidth > 8)
+            // the name of the file on the top line, as a panel has it; the middle of a merge
+            // is the result, and its base goes on the bottom line
+            if (dview->nfiles == 3 && ords[i] == DIFF_MERGED)
             {
-                vfs_path_t *vpath;
-                char *path;
-                const char *title;
-                int tx;
-
-                vpath = vfs_path_from_str (dview->label[ords[i]]);
-                path = vfs_path_to_str_flags (vpath, 0, VPF_STRIP_HOME | VPF_STRIP_PASSWORD);
-                vfs_path_free (vpath, TRUE);
-                title = str_term_trim (path, widths[i] - xwidth - 6);
-                tx = MAX (x + xwidth + 1, x + (widths[i] - str_term_width1 (title) - 2) / 2);
-                tty_gotoyx (1, tx);
-                tty_printf (" %s ", title);
-                g_free (path);
+                dview_frame_title (1, x, widths[i], xwidth, _ ("Result:"),
+                                   dview->label[DIFF_MERGED]);
+                dview_frame_title (height, x, widths[i], xwidth, _ ("Base:"), dview->merge_base);
             }
+            else
+                dview_frame_title (1, x, widths[i], xwidth, NULL, dview->label[ords[i]]);
         }
         dview->new_frame = FALSE;
     }

@@ -164,6 +164,10 @@ stesse righe, ognuno a modo suo, il centro mantiene le righe della base: è
 un conflitto, mostrato con il colore dei conflitti e contato dopo "Cnf" nella
 riga di stato della colonna centrale.
 
+La riga superiore della cornice della colonna centrale indica, dopo
+"Result:", il file in cui si salva il risultato; quella inferiore indica la
+base, dopo "Base:".
+
 Le differenze vengono ricalcolate dopo ogni modifica della colonna centrale.
 Uno schermo più stretto di 120 colonne mostra il centro e un solo lato.
 
