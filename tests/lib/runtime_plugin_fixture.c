@@ -60,6 +60,7 @@ G_MODULE_EXPORT guint mc_runtime_plugin_fixture_fd_ready_count (void);
 G_MODULE_EXPORT gboolean mc_runtime_plugin_fixture_suspend (gboolean terminal_changed,
                                                             const char **error);
 G_MODULE_EXPORT guint mc_runtime_plugin_fixture_between_count (void);
+G_MODULE_EXPORT gboolean mc_runtime_plugin_fixture_quit (const char **error);
 
 /*** file scope functions ************************************************************************/
 
@@ -260,6 +261,14 @@ G_MODULE_EXPORT guint
 mc_runtime_plugin_fixture_between_count (void)
 {
     return fixture_between_calls;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+G_MODULE_EXPORT gboolean
+mc_runtime_plugin_fixture_quit (const char **error)
+{
+    return fixture_host_api->ui_quit (fixture_context, error);
 }
 
 /* --------------------------------------------------------------------------------------------- */
