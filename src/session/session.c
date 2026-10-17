@@ -73,6 +73,8 @@ static mc_runtime_plugin_context_t *plugin_context = NULL;
 /* the socket to the holder, in the mc of a session */
 static int control_fd = -1;
 static session_reader_t control_reader;
+/* starts every mark this mc writes, see SESSION_MARK_HEAD */
+static char *mark_token = NULL;
 
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
@@ -194,6 +196,17 @@ take_environment (const char *text)
             g_unsetenv (lines[i]);
     }
     g_strfreev (lines);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The mark that tells the holder where the output for this terminal ends, and what next */
+
+static char *
+session_mark (const char *what, const char *id)
+{
+    return g_strconcat (SESSION_MARK_HEAD, mark_token, ";", what, id != NULL ? id : "",
+                        SESSION_MARK_TAIL, (char *) NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -339,9 +352,9 @@ sessions_dialog (void)
 
         done = TRUE;
         if (ret == B_NEW)
-            mark = g_strdup (SESSION_MARK_NEW);
+            mark = session_mark (SESSION_MARK_NEW, NULL);
         else if (ret == B_DETACH)
-            mark = g_strdup (SESSION_MARK_DETACH);
+            mark = session_mark (SESSION_MARK_DETACH, NULL);
         else if (ret == B_SWITCH && chosen != NULL && g_strcmp0 (chosen->id, self_id) != 0)
         {
             if (strcmp (chosen->term, term) != 0)
@@ -353,8 +366,7 @@ sessions_dialog (void)
             else if (in_use_confirmed (chosen,
                                        _ ("That session is in use in another terminal. "
                                           "Take it?")))
-                mark = g_strdup_printf (
-                    SESSION_MARK_HEAD SESSION_MARK_SWITCH "%s" SESSION_MARK_TAIL, chosen->id);
+                mark = session_mark (SESSION_MARK_SWITCH, chosen->id);
             else
                 done = FALSE;
         }
@@ -416,8 +428,11 @@ control_ready (mc_runtime_plugin_context_t *context, int fd, gpointer user_data)
             const char *error = "not_supported";
             const char *answer = "ok";
 
-            if ((host->capability_flags & MC_RUNTIME_HOST_CAP_QUIT) == 0
-                || !host->ui_quit (context, &error))
+            // the asker has given up: mc that was busy all that time would end unseen
+            if (data->len > 0 && (long) time (NULL) > atol (data->str))
+                answer = "late";
+            else if ((host->capability_flags & MC_RUNTIME_HOST_CAP_QUIT) == 0
+                     || !host->ui_quit (context, &error))
                 answer = error != NULL ? error : "error";
             else
                 redraw = TRUE;  // back to the loop of the dialog, which sees that mc ends
@@ -425,11 +440,12 @@ control_ready (mc_runtime_plugin_context_t *context, int fd, gpointer user_data)
         }
     g_string_free (data, TRUE);
 
-    if (!alive)
+    if (!alive || control_reader.bad)
     {
         host->fd_unwatch (context, fd);
         close (fd);
         control_fd = -1;
+        session_reader_free (&control_reader);
     }
 
     return redraw;
@@ -490,9 +506,13 @@ session_init (const mc_runtime_host_api_v1_t *host_api, mc_runtime_plugin_contex
     plugin_context = context;
 
     fd_text = g_getenv (SESSION_ENV_FD);
-    if (fd_text == NULL || (host_api->capability_flags & needed) != needed)
+    if (fd_text == NULL || g_getenv (SESSION_ENV_TOKEN) == NULL
+        || (host_api->capability_flags & needed) != needed)
         return TRUE;
 
+    // not for the programs mc starts: one could pass for mc
+    mark_token = g_strdup (g_getenv (SESSION_ENV_TOKEN));
+    g_unsetenv (SESSION_ENV_TOKEN);
     control_fd = atoi (fd_text);
     g_unsetenv (SESSION_ENV_FD);
     if (control_fd <= STDERR_FILENO || fcntl (control_fd, F_SETFD, FD_CLOEXEC) != 0)
@@ -530,6 +550,7 @@ session_shutdown (mc_runtime_plugin_context_t *context)
         control_fd = -1;
         session_reader_free (&control_reader);
     }
+    g_clear_pointer (&mark_token, g_free);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -570,7 +591,7 @@ session_invoke_action (mc_runtime_plugin_context_t *context, const char *workspa
     if (g_strcmp0 (action_id, "sessions") == 0)
         mark = sessions_dialog ();
     else if (g_strcmp0 (action_id, "detach") == 0)
-        mark = g_strdup (SESSION_MARK_DETACH);
+        mark = session_mark (SESSION_MARK_DETACH, NULL);
     else
         return FALSE;
 

@@ -32,6 +32,7 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>  // flock()
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -56,6 +57,9 @@ const char *const session_env_names[] = {
 };
 
 /*** file scope macro definitions ****************************************************************/
+
+/* How long a connection that is in progress may take */
+#define CONNECT_WAIT_MS 1000
 
 /*** file scope type declarations ****************************************************************/
 
@@ -101,6 +105,40 @@ write_all (int fd, const char *data, gsize len)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A non-blocking connect() that is in progress: whether it gets through within timeout_ms */
+
+static gboolean
+connect_completes (int fd, int timeout_ms)
+{
+    struct pollfd pfd = { fd, POLLOUT, 0 };
+    int error = 0;
+    socklen_t len = sizeof (error);
+
+    if (errno != EINPROGRESS)
+        return FALSE;
+    if (poll (&pfd, 1, timeout_ms) <= 0)
+    {
+        errno = EAGAIN;
+        return FALSE;
+    }
+    if (getsockopt (fd, SOL_SOCKET, SO_ERROR, &error, &len) != 0)
+        return FALSE;
+    errno = error;
+    return error == 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+ms_left (gint64 deadline)
+{
+    const gint64 left = (deadline - g_get_monotonic_time ()) / 1000;
+
+    return left > 0 ? (int) left : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* A directory of ours only: made with 0700 if it is not there, refused if it is anyone else's or
    others can get in */
 
@@ -114,6 +152,42 @@ private_dir (const char *path)
 
     return lstat (path, &st) == 0 && S_ISDIR (st.st_mode) && st.st_uid == getuid ()
         && (st.st_mode & 077) == 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A socket that does not answer: busy, or its holder is dead. The lock of the holder tells which,
+   whatever the system says about a full backlog (BSD refuses then, as for a dead socket). */
+
+static void
+session_remove_if_dead (const char *path, int connect_errno)
+{
+    const int base_len = (int) (strlen (path) - strlen (".sock"));
+    char *lock_path;
+    int fd;
+    gboolean dead;
+
+    lock_path = g_strdup_printf ("%.*s.lock", base_len, path);
+    fd = open (lock_path, O_RDWR | O_CLOEXEC);
+    if (fd >= 0)
+        dead = flock (fd, LOCK_EX | LOCK_NB) == 0;
+    else
+        // a holder of a version without the lock
+        dead = errno == ENOENT && (connect_errno == ECONNREFUSED || connect_errno == ENOENT);
+
+    if (dead)
+    {
+        char *agent;
+
+        agent = g_strdup_printf ("%.*s.agent", base_len, path);
+        (void) unlink (path);
+        (void) unlink (agent);
+        (void) unlink (lock_path);
+        g_free (agent);
+    }
+    if (fd >= 0)
+        close (fd);
+    g_free (lock_path);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -157,10 +231,60 @@ session_frame_write (int fd, char type, const void *data, gsize len)
 
 /* --------------------------------------------------------------------------------------------- */
 
+gboolean
+session_frame_write_timed (int fd, char type, const void *data, gsize len, int timeout_ms)
+{
+    const gint64 deadline = g_get_monotonic_time () + (gint64) timeout_ms * 1000;
+    GString *frame;
+    gsize done = 0;
+
+    frame = session_frame_new (type, data, len);
+    while (done < frame->len)
+    {
+        ssize_t n;
+
+        n = write (fd, frame->str + done, frame->len - done);
+        if (n > 0)
+            done += (gsize) n;
+        else if (n < 0 && errno == EINTR)
+            continue;
+        else if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        {
+            struct pollfd pfd = { fd, POLLOUT, 0 };
+
+            if (poll (&pfd, 1, ms_left (deadline)) <= 0)
+                break;
+        }
+        else
+            break;
+    }
+    g_string_free (frame, TRUE);
+
+    return done == SESSION_FRAME_HEADER + len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+char *
+session_random_hex (int digits)
+{
+    GString *hex;
+
+    hex = g_string_sized_new ((gsize) digits);
+    while ((int) hex->len < digits)
+        g_string_append_printf (hex, "%08x", g_random_int ());
+    g_string_truncate (hex, (gsize) digits);
+
+    return g_string_free (hex, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 void
 session_reader_init (session_reader_t *reader)
 {
     reader->buf = g_string_new (NULL);
+    reader->bad = FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -202,14 +326,15 @@ session_reader_next (session_reader_t *reader, char *type, GString *data)
     const unsigned char *p = (const unsigned char *) reader->buf->str;
     gsize len;
 
-    if (reader->buf->len < SESSION_FRAME_HEADER)
+    if (reader->bad || reader->buf->len < SESSION_FRAME_HEADER)
         return FALSE;
 
     len = ((gsize) p[1] << 24) | ((gsize) p[2] << 16) | ((gsize) p[3] << 8) | (gsize) p[4];
     if (len > SESSION_FRAME_MAX)
     {
-        // nobody of ours sends that: drop the stream rather than wait for it
+        // nobody of ours sends that
         g_string_truncate (reader->buf, 0);
+        reader->bad = TRUE;
         return FALSE;
     }
     if (reader->buf->len < SESSION_FRAME_HEADER + len)
@@ -232,7 +357,7 @@ session_dir (void)
     struct sockaddr_un addr;
     char *base, *dir;
 
-    // "/<8 hex digits>.sock" has to fit after the directory
+    // "/<id>.agent.new" has to fit after the directory
     if (runtime_dir != NULL && strlen (runtime_dir) + 32 >= sizeof (addr.sun_path))
         runtime_dir = NULL;
 
@@ -268,7 +393,7 @@ int
 session_connect (const char *path)
 {
     struct sockaddr_un addr;
-    int fd;
+    int fd, flags;
 
     if (strlen (path) >= sizeof (addr.sun_path))
         return -1;
@@ -281,9 +406,18 @@ session_connect (const char *path)
     memset (&addr, 0, sizeof (addr));
     addr.sun_family = AF_UNIX;
     strcpy (addr.sun_path, path);
-    if (connect (fd, (struct sockaddr *) &addr, sizeof (addr)) != 0)
+    // a holder that does not accept fills its backlog: then connect() would wait for ever. A
+    // non-blocking one says EAGAIN on Linux; elsewhere it may say EINPROGRESS and go on.
+    flags = fcntl (fd, F_GETFL);
+    if (flags < 0 || fcntl (fd, F_SETFL, flags | O_NONBLOCK) != 0
+        || (connect (fd, (struct sockaddr *) &addr, sizeof (addr)) != 0
+            && !connect_completes (fd, CONNECT_WAIT_MS))
+        || fcntl (fd, F_SETFL, flags) != 0)
     {
+        const int saved = errno;
+
         close (fd);
+        errno = saved;
         return -1;
     }
 
@@ -292,16 +426,41 @@ session_connect (const char *path)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* One frame, waiting at most timeout_ms for it */
+int
+session_lock (const char *lock_path)
+{
+    int fd;
+
+    // O_EXCL: a lock file that is there belongs to another holder, alive or not
+    fd = open (lock_path, O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+    if (fd < 0)
+        return -1;
+    if (flock (fd, LOCK_EX | LOCK_NB) != 0)
+    {
+        close (fd);
+        (void) unlink (lock_path);
+        return -1;
+    }
+
+    return fd;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* One frame, waiting at most timeout_ms in all for it */
 
 gboolean
 session_read_frame (int fd, session_reader_t *reader, char *type, GString *data, int timeout_ms)
 {
+    const gint64 deadline = g_get_monotonic_time () + (gint64) timeout_ms * 1000;
+
     while (!session_reader_next (reader, type, data))
     {
         struct pollfd pfd = { fd, POLLIN, 0 };
 
-        if (poll (&pfd, 1, timeout_ms) <= 0 || !session_reader_fill (reader, fd))
+        // a sender that gives a byte at a time does not get a new wait for each
+        if (reader->bad || poll (&pfd, 1, ms_left (deadline)) <= 0
+            || !session_reader_fill (reader, fd))
             return FALSE;
     }
 
@@ -369,15 +528,7 @@ session_list (const char *dir)
         fd = session_connect (path);
         if (fd < 0)
         {
-            if (errno == ECONNREFUSED || errno == ENOENT)
-            {
-                char *link;
-
-                (void) unlink (path);
-                link = g_strdup_printf ("%.*s.agent", (int) (strlen (path) - 5), path);
-                (void) unlink (link);
-                g_free (link);
-            }
+            session_remove_if_dead (path, errno);
             g_free (path);
             continue;
         }

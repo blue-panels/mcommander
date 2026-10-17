@@ -27,6 +27,7 @@ import pty
 import select
 import shutil
 import signal
+import socket
 import struct
 import sys
 import tempfile
@@ -117,7 +118,10 @@ class Terminal:
             pid, status = os.waitpid(self.pid, os.WNOHANG)
             if pid == self.pid:
                 self.status = status
-                return os.waitstatus_to_exitcode(status)
+                # os.waitstatus_to_exitcode() is Python 3.9
+                if os.WIFSIGNALED(status):
+                    return -os.WTERMSIG(status)
+                return os.WEXITSTATUS(status)
         raise Failed("the client did not exit")
 
     def kill(self):
@@ -208,6 +212,35 @@ def run_test(mc, env, work, run, settings):
     b.send(CTRL_O)
     b.settle(1)
     step("a program run by mc has /dev/tty")
+
+    # a program that prints what looks like a mark does not let the terminal go
+    m = b.mark()
+    b.send(b"printf '\\033_mc-session;detach\\033\\\\'; echo S\"\"TILL-HERE\r")
+    b.settle(2)
+    b.send(CTRL_O)
+    b.expect(b"STILL-HERE", m)
+    b.send(CTRL_O)
+    b.settle(1)
+    if b"[detached" in b.buf[m:]:
+        raise Failed("a mark printed by a program let the terminal go")
+    step("output that looks like a mark is output")
+
+    # a paste larger than the input buffer of a pty reaches mc whole
+    pasted = os.path.join(work, "pasted")
+    b.send(("cat > %s\r" % pasted).encode())
+    b.settle(1)
+    b.send((b"x" * 1023 + b"\r") * 64)  # lines: a line of a tty in canonical mode is 4 KB at most
+    b.settle(2)
+    b.send(b"\x04")
+    end = time.time() + TIMEOUT
+    while time.time() < end and (not os.path.exists(pasted) or os.path.getsize(pasted) < 65536):
+        b.pump(0.2)
+    b.settle(1)
+    size = os.path.getsize(pasted) if os.path.exists(pasted) else -1
+    if size != 65536:
+        raise Failed("a paste of 65536 bytes arrived as %d" % size)
+    os.unlink(pasted)
+    step("a large paste reaches mc whole")
 
     # the shell of the command line was started with mc: its SSH_AUTH_SOCK is a link
     m = b.mark()
@@ -414,6 +447,72 @@ def run_test(mc, env, work, run, settings):
     if b"\x1b[?9001l" not in k.buf[m:]:
         raise Failed("the client leaves the modes of a killed mc on")
     step("mc killed by a signal: the exit code goes on, the modes are turned off")
+
+    # the client is killed: the terminal is left as the shell wants it, the session stays
+    t = Terminal([mc], env, work)
+    t.expect(b"Name", 0)
+    t.settle(3)
+    m = t.mark()
+    os.kill(t.pid, signal.SIGTERM)
+    t.exit_code()
+    if b"\x1b[?9001l" not in t.buf[m:]:
+        raise Failed("a client killed by SIGTERM leaves the modes of mc on")
+    time.sleep(1)
+    if len(sockets(run)) != 1:
+        raise Failed("the session did not outlive its killed client: %s" % sockets(run))
+    step("a client killed by SIGTERM turns the modes off, the session stays")
+
+    # a holder that is stopped is alive: its socket stays, and a new mc does not wait for it
+    holder = None
+    for pid in os.listdir("/proc"):
+        try:
+            environ = open("/proc/%s/environ" % pid, "rb").read().split(b"\0")
+            argv = open("/proc/%s/cmdline" % pid, "rb").read().split(b"\0")
+        except OSError:
+            continue
+        if (("HOME=" + env["HOME"]).encode() in environ and b"session_helper" in argv[0]
+                and len(argv) > 1 and argv[1] == b"client" and os.getppid() != int(pid)
+                and int(pid) not in [x.pid for x in terminals]):
+            holder = int(pid)
+    if holder is None:
+        raise Failed("the holder of the session is not found")
+    stopped = sockets(run)
+    os.kill(holder, signal.SIGSTOP)
+    path = os.path.join(run, "mc6", "sessions", stopped[0])
+    backlog = []
+    for _ in range(32):  # more than its backlog
+        c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        c.setblocking(False)
+        try:
+            c.connect(path)
+        except (BlockingIOError, ConnectionRefusedError):
+            c.close()
+            break
+        backlog.append(c)
+    n = Terminal([mc], env, work)
+    n.expect(b"Name", 0)
+    n.settle(1)
+    if stopped[0] not in sockets(run):
+        raise Failed("the socket of a stopped holder is removed")
+    n.send(F10)
+    n.exit_code()
+    step("a stopped holder keeps its socket, and a new mc does not wait for it")
+
+    # killed, it is dead: the next list removes its files
+    os.kill(holder, signal.SIGKILL)
+    for c in backlog:
+        c.close()
+    time.sleep(0.5)
+    w = Terminal([mc], env, work)
+    w.expect(b"Name", 0)
+    w.settle(1)
+    base = stopped[0][:-len(".sock")]
+    left = [f for f in os.listdir(os.path.join(run, "mc6", "sessions")) if f.startswith(base)]
+    if left:
+        raise Failed("the files of a killed holder are left: %s" % left)
+    w.send(F10)
+    w.exit_code()
+    step("the files of a killed holder are removed")
 
 
 def main():

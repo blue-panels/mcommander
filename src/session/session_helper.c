@@ -77,6 +77,15 @@
 /* A holder whose first client never came */
 #define FIRST_CLIENT_WAIT_MS (30 * 1000)
 
+/* What the holder keeps of the keys mc does not take, before it drops them */
+#define MASTER_BUFFER_LIMIT (1024 * 1024)
+
+/* How long the last words of mc wait for a client that does not read them */
+#define FINISH_WAIT_MS 2000
+
+/* How long the holder waits for mc to write a control frame to it */
+#define CONTROL_WRITE_MS 1000
+
 /* A client that has not taken what it was sent for so long looks lost */
 #define CLIENT_LOST_SECONDS 10
 
@@ -101,7 +110,18 @@ static int winch_pipe[2] = { -1, -1 };
 static int child_pipe[2] = { -1, -1 };
 
 static struct termios saved_termios;
-static gboolean termios_saved = FALSE;
+static volatile sig_atomic_t termios_saved = 0;  // the terminal is raw: a session is in it
+
+/* What mc may have turned on in a terminal and not turned off */
+static const char terminal_reset[] = "\033[?2026l"                      // synchronized output
+                                     "\033[?1000;1002;1003;1006;1015l"  // mouse
+                                     "\033[?2004l"                      // bracketed paste
+                                     "\033[?1004l"                      // focus events
+                                     "\033[?9001l"                      // win32-input
+                                     "\033[<u"                          // kitty keyboard
+                                     "\033[?1049l"                      // alternate screen
+                                     "\033[23;0;0t"                     // the title mc pushed
+                                     "\033[?25h\033[?1l\033>\033[m";
 
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
@@ -223,10 +243,17 @@ terminal_raw (void)
 
     if (tcgetattr (STDIN_FILENO, &saved_termios) != 0)
         return;
-    termios_saved = TRUE;
+    termios_saved = 1;
 
     raw = saved_termios;
-    cfmakeraw (&raw);
+    // what cfmakeraw() does, which not every system has (Solaris)
+    raw.c_iflag &= ~(tcflag_t) (IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    raw.c_oflag &= ~(tcflag_t) OPOST;
+    raw.c_lflag &= ~(tcflag_t) (ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    raw.c_cflag &= ~(tcflag_t) (CSIZE | PARENB);
+    raw.c_cflag |= CS8;
+    raw.c_cc[VMIN] = 1;
+    raw.c_cc[VTIME] = 0;
     (void) tcsetattr (STDIN_FILENO, TCSADRAIN, &raw);
 }
 
@@ -237,7 +264,7 @@ terminal_restore (void)
 {
     if (termios_saved)
         (void) tcsetattr (STDIN_FILENO, TCSADRAIN, &saved_termios);
-    termios_saved = FALSE;
+    termios_saved = 0;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -271,17 +298,24 @@ write_terminal (const char *data, gsize len)
 static void
 terminal_reset_modes (void)
 {
-    static const char reset[] = "\033[?2026l"                      // synchronized output
-                                "\033[?1000;1002;1003;1006;1015l"  // mouse
-                                "\033[?2004l"                      // bracketed paste
-                                "\033[?1004l"                      // focus events
-                                "\033[?9001l"                      // win32-input
-                                "\033[<u"                          // kitty keyboard
-                                "\033[?1049l"                      // alternate screen
-                                "\033[23;0;0t"                     // the title mc pushed
-                                "\033[?25h\033[?1l\033>\033[m";
+    (void) write_terminal (terminal_reset, sizeof (terminal_reset) - 1);
+}
 
-    (void) write_terminal (reset, sizeof (reset) - 1);
+/* --------------------------------------------------------------------------------------------- */
+
+/* The client is killed while a session is in its terminal: the terminal is left as the shell
+   wants it, as far as what is safe in a signal handler goes */
+
+static void
+client_killed (int sig)
+{
+    if (termios_saved)
+    {
+        (void) write_terminal (terminal_reset, sizeof (terminal_reset) - 1);
+        (void) tcsetattr (STDIN_FILENO, TCSANOW, &saved_termios);
+    }
+    signal (sig, SIG_DFL);
+    raise (sig);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -446,7 +480,9 @@ typedef struct
 {
     char *path;
     char *agent_link;  // SSH_AUTH_SOCK of mc: points to the agent of the terminal behind it
+    char *lock_path;   // locked for as long as the holder lives, see session_lock()
     char *id;
+    char *token;  // starts every mark of this mc, see SESSION_MARK_HEAD
     char *term;
     char *cwd;
     char **mc_argv;  // the program first, then its argv[0] and the arguments
@@ -454,6 +490,7 @@ typedef struct
 
     int listen_fd;
     int master_fd;
+    GString *master_out;  // keys of the client that mc has not taken yet
     int control_fd;
     pid_t mc_pid;
 
@@ -465,7 +502,8 @@ typedef struct
     gboolean client_closing;  // close it once what it has is written
     time_t client_stalled;    // since when the client takes nothing, or 0
 
-    int end_fd;  // the client of the list that asked mc to end
+    int end_fd;        // the client of the list that asked mc to end
+    gint64 end_since;  // when it asked
 
     session_reader_t control_reader;
     GString *pending;  // output of mc that may be the start of a mark
@@ -564,6 +602,18 @@ holder_answer_end (holder_t *h, const char *answer)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The first n bytes of what mc wrote go to the client, if it is still the one mc writes to */
+
+static void
+holder_forward (holder_t *h, gsize n)
+{
+    if (h->forwarding && n > 0)
+        holder_queue (h, SF_DATA, h->pending->str, n);
+    g_string_erase (h->pending, 0, (gssize) n);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The output of mc: forwarded to the client up to the mark mc writes when it lets the terminal
    go, nothing after it */
 
@@ -571,71 +621,118 @@ static void
 holder_take_output (holder_t *h, const char *data, gsize len)
 {
     const gsize head_len = strlen (SESSION_MARK_HEAD);
+    const gsize tail_len = strlen (SESSION_MARK_TAIL);
+    const gsize token_len = strlen (h->token);
 
     g_string_append_len (h->pending, data, (gssize) len);
 
     while (h->pending->len > 0)
     {
-        const char *mark;
-        gsize keep = 0;
+        const char *start = h->pending->str;
+        const char *mark, *word, *tail;
+        gsize before, rest, word_len;
 
-        mark = g_strstr_len (h->pending->str, (gssize) h->pending->len, SESSION_MARK_HEAD);
+        mark = memmem (start, h->pending->len, SESSION_MARK_HEAD, head_len);
         if (mark == NULL)
         {
             // the end may be the start of a mark that comes in the next read
-            gsize k;
+            gsize k, keep = 0;
 
             for (k = MIN (head_len - 1, h->pending->len); k > 0; k--)
-                if (memcmp (h->pending->str + h->pending->len - k, SESSION_MARK_HEAD, k) == 0)
+                if (memcmp (start + h->pending->len - k, SESSION_MARK_HEAD, k) == 0)
                 {
                     keep = k;
                     break;
                 }
-
-            if (h->forwarding)
-                holder_queue (h, SF_DATA, h->pending->str, h->pending->len - keep);
-            g_string_erase (h->pending, 0, (gssize) (h->pending->len - keep));
+            holder_forward (h, h->pending->len - keep);
             return;
         }
-        else
-        {
-            const gsize before = (gsize) (mark - h->pending->str);
-            const char *word = mark + head_len;
-            const char *tail;
-            gsize word_len;
 
-            tail = g_strstr_len (word, (gssize) (h->pending->len - before - head_len),
-                                 SESSION_MARK_TAIL);
-            if (tail == NULL)
+        before = (gsize) (mark - start);
+        word = mark + head_len;
+        rest = h->pending->len - before - head_len;
+        tail = memmem (word, MIN (rest, SESSION_MARK_WORD_MAX + tail_len), SESSION_MARK_TAIL,
+                       tail_len);
+        if (tail == NULL && rest < SESSION_MARK_WORD_MAX + tail_len)
+        {
+            // the mark is not complete yet
+            holder_forward (h, before);
+            return;
+        }
+
+        word_len = tail != NULL ? (gsize) (tail - word) : 0;
+        if (tail == NULL || word_len <= token_len || memcmp (word, h->token, token_len) != 0
+            || word[token_len] != ';')
+        {
+            // only looks like a mark, as a program may print: it is output as any other
+            holder_forward (h, before + head_len);
+            continue;
+        }
+
+        {
+            // what the mark says is taken before the output in front of it leaves the buffer
+            const char *what = word + token_len + 1;
+            const gsize what_len = word_len - token_len - 1;
+            const gsize switch_len = strlen (SESSION_MARK_SWITCH);
+            char type = SF_DETACHED;
+            GString *to = g_string_new (NULL);
+
+            if (what_len == strlen (SESSION_MARK_NEW)
+                && strncmp (what, SESSION_MARK_NEW, what_len) == 0)
+                type = SF_SWITCH;
+            else if (what_len > switch_len && strncmp (what, SESSION_MARK_SWITCH, switch_len) == 0)
             {
-                // the mark is not complete yet
-                if (h->forwarding && before > 0)
-                    holder_queue (h, SF_DATA, h->pending->str, before);
-                g_string_erase (h->pending, 0, (gssize) before);
-                return;
+                type = SF_SWITCH;
+                g_string_append_len (to, what + switch_len, (gssize) (what_len - switch_len));
             }
 
-            word_len = (gsize) (tail - word);
+            holder_forward (h, before);
             if (h->forwarding)
             {
-                if (before > 0)
-                    holder_queue (h, SF_DATA, h->pending->str, before);
-                const gsize switch_len = strlen (SESSION_MARK_SWITCH);
-
-                if (word_len == strlen ("new") && strncmp (word, "new", word_len) == 0)
-                    holder_queue (h, SF_SWITCH, NULL, 0);
-                else if (word_len > switch_len
-                         && strncmp (word, SESSION_MARK_SWITCH, switch_len) == 0)
-                    holder_queue (h, SF_SWITCH, word + switch_len, word_len - switch_len);
-                else
-                    holder_queue (h, SF_DETACHED, NULL, 0);
+                holder_queue (h, type, to->str, to->len);
                 h->forwarding = FALSE;
                 h->client_closing = TRUE;
             }
-            g_string_erase (h->pending, 0,
-                            (gssize) (before + head_len + word_len + strlen (SESSION_MARK_TAIL)));
+            g_string_free (to, TRUE);
         }
+        g_string_erase (h->pending, 0, (gssize) (head_len + word_len + tail_len));
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+holder_flush_master (holder_t *h)
+{
+    while (h->master_fd >= 0 && h->master_out->len > 0)
+    {
+        ssize_t n;
+
+        n = write (h->master_fd, h->master_out->str, h->master_out->len);
+        if (n < 0)
+        {
+            if (errno == EINTR)
+                continue;
+            if (errno != EAGAIN && errno != EWOULDBLOCK)
+                g_string_truncate (h->master_out, 0);
+            return;
+        }
+        g_string_erase (h->master_out, 0, n);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Keys for mc: what its pty does not take now waits, a paste too; mc that takes nothing for long
+   loses them rather than stop the holder */
+
+static void
+holder_write_master (holder_t *h, const char *data, gsize len)
+{
+    if (h->master_out->len + len > MASTER_BUFFER_LIMIT)
+        return;
+    g_string_append_len (h->master_out, data, (gssize) len);
+    holder_flush_master (h);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -751,6 +848,7 @@ holder_start_mc (holder_t *h, const struct winsize *ws)
         g_snprintf (fd_text, sizeof (fd_text), "%d", control[1]);
         g_setenv (SESSION_ENV_ID, h->id, TRUE);
         g_setenv (SESSION_ENV_FD, fd_text, TRUE);
+        g_setenv (SESSION_ENV_TOKEN, h->token, TRUE);
         g_setenv ("SSH_AUTH_SOCK", h->agent_link, TRUE);
 
         signal (SIGHUP, SIG_DFL);
@@ -772,6 +870,24 @@ holder_start_mc (holder_t *h, const struct winsize *ws)
     h->mc_pid = pid;
 
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A frame to mc on the control socket; a frame that cannot go out whole spoils the stream, which
+   is closed then */
+
+static gboolean
+holder_write_control (holder_t *h, char type, const char *data, gsize len)
+{
+    if (h->control_fd < 0)
+        return FALSE;
+    if (session_frame_write_timed (h->control_fd, type, data, len, CONTROL_WRITE_MS))
+        return TRUE;
+
+    close (h->control_fd);
+    h->control_fd = -1;
+    return FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -840,10 +956,21 @@ holder_accept (holder_t *h)
         // mc is asked; the answer goes to this client when it comes
         if (h->end_fd >= 0)
             holder_refuse_end (fd, "busy");
-        else if (h->control_fd < 0 || !session_frame_write (h->control_fd, SF_END, NULL, 0))
-            holder_refuse_end (fd, "no answer");
         else
-            h->end_fd = fd;
+        {
+            // mc ignores a request it gets later than the asker waits: it would end unseen
+            char deadline[32];
+
+            g_snprintf (deadline, sizeof (deadline), "%ld",
+                        (long) time (NULL) + SESSION_END_WAIT_MS / 1000);
+            if (!holder_write_control (h, SF_END, deadline, strlen (deadline)))
+                holder_refuse_end (fd, "no answer");
+            else
+            {
+                h->end_fd = fd;
+                h->end_since = g_get_monotonic_time ();
+            }
+        }
     }
     else if (type != SF_HELLO)
         close (fd);
@@ -880,7 +1007,9 @@ holder_accept (holder_t *h)
             h->forwarding = TRUE;
             h->client_closing = FALSE;
             // what came with the hello belongs to this client
-            g_string_assign (h->client_reader.buf, reader.buf->str);
+            g_string_truncate (h->client_reader.buf, 0);
+            g_string_append_len (h->client_reader.buf, reader.buf->str, (gssize) reader.buf->len);
+            h->client_reader.bad = FALSE;
             env = g_string_new (NULL);
             holder_take_environment (h, lines + 4, env);
 
@@ -898,8 +1027,7 @@ holder_accept (holder_t *h)
             {
                 if (h->master_fd >= 0 && ws.ws_row > 0 && ws.ws_col > 0)
                     (void) ioctl (h->master_fd, TIOCSWINSZ, &ws);
-                if (h->control_fd >= 0)
-                    (void) session_frame_write (h->control_fd, SF_ATTACHED, env->str, env->len);
+                (void) holder_write_control (h, SF_ATTACHED, env->str, env->len);
             }
             g_string_free (env, TRUE);
             fd = -1;
@@ -925,11 +1053,7 @@ holder_read_client (holder_t *h)
     while (h->client_fd >= 0 && session_reader_next (&h->client_reader, &type, data))
     {
         if (type == SF_DATA && h->master_fd >= 0 && h->forwarding)
-        {
-            // mc not reading its keys loses them rather than stop the holder
-            if (write (h->master_fd, data->str, data->len) < 0)
-                continue;
-        }
+            holder_write_master (h, data->str, data->len);
         else if (type == SF_WINCH && h->master_fd >= 0)
         {
             struct winsize ws;
@@ -946,7 +1070,7 @@ holder_read_client (holder_t *h)
     }
     g_string_free (data, TRUE);
 
-    if (!alive)
+    if (!alive || h->client_reader.bad)
         holder_drop_client (h);
 }
 
@@ -976,7 +1100,7 @@ holder_read_control (holder_t *h)
         }
     g_string_free (data, TRUE);
 
-    if (!alive)
+    if (!alive || h->control_reader.bad)
     {
         close (h->control_fd);
         h->control_fd = -1;
@@ -1007,53 +1131,87 @@ holder_finish (holder_t *h, int status)
     g_snprintf (code, sizeof (code), "%d", exit_code);
     if (h->client_fd >= 0 && (h->forwarding || h->client_closing))
     {
-        holder_queue (h, SF_EXIT, code, strlen (code));
-        // the last words are worth a short wait
-        if (h->client_fd >= 0)
-        {
-            int flags = fcntl (h->client_fd, F_GETFL);
+        const gint64 deadline = g_get_monotonic_time () + FINISH_WAIT_MS * 1000;
 
-            if (flags >= 0)
-                (void) fcntl (h->client_fd, F_SETFL, flags & ~O_NONBLOCK);
-        }
+        holder_queue (h, SF_EXIT, code, strlen (code));
+        // the last words are worth a short wait, not more: the client may not read at all
         holder_flush_client (h);
+        while (h->client_fd >= 0 && h->client_out_sent < h->client_out->len)
+        {
+            struct pollfd pfd = { h->client_fd, POLLOUT, 0 };
+            const gint64 left = (deadline - g_get_monotonic_time ()) / 1000;
+
+            if (left <= 0 || poll (&pfd, 1, (int) left) <= 0)
+                break;
+            holder_flush_client (h);
+        }
     }
 
     (void) unlink (h->path);
     (void) unlink (h->agent_link);
+    (void) unlink (h->lock_path);
     holder_answer_end (h, "ok");
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* The socket of a session under path, listening before anyone can see it: a list that came
+   between bind() and listen() would find it refusing, and remove it as the socket of a dead
+   session. -1 with EADDRINUSE when the name is taken. */
 
 static int
 holder_listen (const char *path)
 {
     struct sockaddr_un addr;
     mode_t old_umask;
-    int fd;
+    char *tmp;
+    int fd, saved;
 
-    if (strlen (path) >= sizeof (addr.sun_path))
+    tmp = g_strconcat (path, ".new", (char *) NULL);
+    if (strlen (tmp) >= sizeof (addr.sun_path))
+    {
+        g_free (tmp);
+        errno = ENAMETOOLONG;
         return -1;
+    }
 
     fd = socket (AF_UNIX, SOCK_STREAM, 0);
     if (fd < 0)
+    {
+        g_free (tmp);
         return -1;
+    }
     set_cloexec (fd);
 
     memset (&addr, 0, sizeof (addr));
     addr.sun_family = AF_UNIX;
-    strcpy (addr.sun_path, path);
-    (void) unlink (path);
+    strcpy (addr.sun_path, tmp);
 
+    // no unlink() before: a name that is taken belongs to a session that may be alive
     old_umask = umask (077);
-    if (bind (fd, (struct sockaddr *) &addr, sizeof (addr)) != 0 || listen (fd, 8) != 0)
+    if (bind (fd, (struct sockaddr *) &addr, sizeof (addr)) != 0)
     {
+        saved = errno;
         umask (old_umask);
         close (fd);
+        g_free (tmp);
+        errno = saved;
         return -1;
     }
     umask (old_umask);
+
+    // link() does not replace a socket of the same name, as rename() would
+    if (listen (fd, 8) != 0 || link (tmp, path) != 0)
+    {
+        saved = errno == EEXIST ? EADDRINUSE : errno;
+        (void) unlink (tmp);
+        close (fd);
+        g_free (tmp);
+        errno = saved;
+        return -1;
+    }
+    (void) unlink (tmp);
+    g_free (tmp);
 
     return fd;
 }
@@ -1090,10 +1248,6 @@ holder_main (holder_t *h, int ready_fd)
     set_nonblock (child_pipe[1]);
     catch_signal (SIGCHLD, self_pipe_handler);
 
-    h->listen_fd = holder_listen (h->path);
-    if (h->listen_fd < 0)
-        _exit (1);
-
     if (write (ready_fd, "ok", 2) != 2)
         _exit (1);
     close (ready_fd);
@@ -1105,6 +1259,7 @@ holder_main (holder_t *h, int ready_fd)
     h->mc_pid = 0;
     h->started = time (NULL);
     h->client_out = g_string_new (NULL);
+    h->master_out = g_string_new (NULL);
     h->pending = g_string_new (NULL);
     session_reader_init (&h->client_reader);
     session_reader_init (&h->control_reader);
@@ -1112,7 +1267,7 @@ holder_main (holder_t *h, int ready_fd)
     while (running)
     {
         struct pollfd pfd[5];
-        int n = 0, i_listen, i_master = -1, i_control = -1, i_client = -1, i_child;
+        int n = 0, i_listen, i_master = -1, i_control = -1, i_client = -1, i_child, timeout;
 
         i_listen = n;
         pfd[n].fd = h->listen_fd;
@@ -1124,7 +1279,7 @@ holder_main (holder_t *h, int ready_fd)
         {
             i_master = n;
             pfd[n].fd = h->master_fd;
-            pfd[n++].events = POLLIN;
+            pfd[n++].events = POLLIN | (h->master_out->len > 0 ? POLLOUT : 0);
         }
         if (h->control_fd >= 0)
         {
@@ -1141,7 +1296,15 @@ holder_main (holder_t *h, int ready_fd)
         for (int i = 0; i < n; i++)
             pfd[i].revents = 0;
 
-        if (poll (pfd, (nfds_t) n, h->mc_pid == 0 ? FIRST_CLIENT_WAIT_MS : -1) < 0)
+        if (h->mc_pid == 0)
+            timeout = FIRST_CLIENT_WAIT_MS;
+        else if (h->end_fd >= 0)
+            timeout = (int) MAX (
+                0, SESSION_END_WAIT_MS - (g_get_monotonic_time () - h->end_since) / 1000);
+        else
+            timeout = -1;
+
+        if (poll (pfd, (nfds_t) n, timeout) < 0)
         {
             if (errno == EINTR)
                 continue;
@@ -1150,6 +1313,11 @@ holder_main (holder_t *h, int ready_fd)
 
         if (h->mc_pid == 0 && pfd[i_listen].revents == 0)
             break;  // the client that started us never came
+
+        // the asker has given up: so does the holder, and mc ignores the request when it comes
+        if (h->end_fd >= 0
+            && g_get_monotonic_time () - h->end_since >= (gint64) SESSION_END_WAIT_MS * 1000)
+            holder_answer_end (h, "no answer");
 
         if ((pfd[i_child].revents & POLLIN) != 0)
         {
@@ -1165,6 +1333,8 @@ holder_main (holder_t *h, int ready_fd)
 
         if (i_master >= 0 && (pfd[i_master].revents & (POLLIN | POLLHUP | POLLERR)) != 0)
             holder_read_master (h);
+        if (h->master_fd >= 0 && h->master_out->len > 0)
+            holder_flush_master (h);
         if (i_control >= 0 && h->control_fd >= 0
             && (pfd[i_control].revents & (POLLIN | POLLHUP | POLLERR)) != 0)
             holder_read_control (h);
@@ -1179,6 +1349,7 @@ holder_main (holder_t *h, int ready_fd)
 
     (void) unlink (h->path);
     (void) unlink (h->agent_link);
+    (void) unlink (h->lock_path);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1193,15 +1364,58 @@ start_holder (const char *dir, char **mc_argv)
     pid_t pid;
     char buf[4];
     ssize_t n;
+    int attempt, lock_fd = -1;
 
     memset (&h, 0, sizeof (h));
-    h.id = g_strdup_printf ("%08x", g_random_int ());
-    h.path = g_strdup_printf ("%s/%s.sock", dir, h.id);
-    h.agent_link = g_strdup_printf ("%s/%s.agent", dir, h.id);
     h.mc_argv = mc_argv;
+    h.token = session_random_hex (SESSION_TOKEN_LEN);
+    h.listen_fd = -1;
 
-    if (pipe (ready) != 0)
+    // a name that is taken is never reused: another one is chosen. The lock comes first: a
+    // socket without its lock held would look dead to a list.
+    for (attempt = 0; attempt < 8 && h.listen_fd < 0; attempt++)
+    {
+        g_free (h.id);
+        g_free (h.path);
+        g_free (h.lock_path);
+        h.id = session_random_hex (SESSION_ID_LEN);
+        h.path = g_strdup_printf ("%s/%s.sock", dir, h.id);
+        h.lock_path = g_strdup_printf ("%s/%s.lock", dir, h.id);
+        lock_fd = session_lock (h.lock_path);
+        if (lock_fd < 0)
+        {
+            if (errno != EEXIST)
+                break;
+            continue;
+        }
+        h.listen_fd = holder_listen (h.path);
+        if (h.listen_fd < 0)
+        {
+            const int saved = errno;
+
+            (void) unlink (h.lock_path);
+            close (lock_fd);
+            lock_fd = -1;
+            if (saved != EADDRINUSE)
+                break;
+        }
+    }
+    if (h.listen_fd < 0 || pipe (ready) != 0)
+    {
+        if (h.listen_fd >= 0)
+        {
+            close (h.listen_fd);
+            (void) unlink (h.path);
+            (void) unlink (h.lock_path);
+            close (lock_fd);
+        }
+        g_free (h.id);
+        g_free (h.path);
+        g_free (h.lock_path);
+        g_free (h.token);
         return NULL;
+    }
+    h.agent_link = g_strdup_printf ("%s/%s.agent", dir, h.id);
 
     pid = fork ();
     if (pid == 0)
@@ -1218,6 +1432,8 @@ start_holder (const char *dir, char **mc_argv)
     }
 
     close (ready[1]);
+    close (h.listen_fd);  // the holder has its own, and the lock is its as long as it lives
+    close (lock_fd);
     if (pid > 0)
         (void) waitpid (pid, NULL, 0);
 
@@ -1228,11 +1444,16 @@ start_holder (const char *dir, char **mc_argv)
 
     g_free (h.id);
     g_free (h.agent_link);
+    g_free (h.token);
     if (n != 2)
     {
+        (void) unlink (h.path);
+        (void) unlink (h.lock_path);
+        g_free (h.lock_path);
         g_free (h.path);
         return NULL;
     }
+    g_free (h.lock_path);
 
     return h.path;
 }
@@ -1471,6 +1692,8 @@ client_main (char **mc_argv)
     set_nonblock (winch_pipe[1]);
     catch_signal (SIGWINCH, self_pipe_handler);
     signal (SIGPIPE, SIG_IGN);
+    signal (SIGTERM, client_killed);
+    signal (SIGHUP, client_killed);
 
     {
         // the list is for a choice: none to make with no session free, nor with one detached
