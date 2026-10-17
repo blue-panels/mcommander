@@ -847,6 +847,20 @@ typedef struct
     const char *bg;
 } mc_runtime_tty_info_t;
 
+/* What the early phase of a runtime is told.  argv is the command line as it
+   was given, before the options were taken out of it; the strings belong to
+   the host and live only during the call. */
+typedef struct
+{
+    gsize struct_size;
+    int argc;
+    char *const *argv;
+    /* "full", "editor", "viewer", "diffviewer" */
+    const char *run_mode;
+    /* started from the shell of another mc */
+    gboolean nested;
+} mc_runtime_pre_tty_info_t;
+
 typedef struct
 {
     guint abi_version;
@@ -1234,6 +1248,11 @@ typedef struct
      * workspace, not only an editor script, is configured from one place. */
     gboolean (*configure_package) (mc_runtime_plugin_context_t *context, const char *package_id,
                                    const char **error);
+
+    /* Optional append-only v1 early phase: called once, after the arguments
+     * are taken and before the terminal is set up.  The runtime may exec()
+     * here and then never return. */
+    void (*pre_tty) (mc_runtime_plugin_context_t *context, const mc_runtime_pre_tty_info_t *info);
 } mc_runtime_plugin_descriptor_v1_t;
 
 typedef const mc_runtime_plugin_descriptor_v1_t *(*mc_runtime_plugin_register_v1_fn) (void);
@@ -1271,6 +1290,7 @@ gboolean mc_runtime_plugins_configure_package (const char *runtime_name, const c
 void mc_runtime_plugins_enumerate_menu_actions (const char *workspace,
                                                 mc_runtime_loaded_menu_action_callback_t callback,
                                                 gpointer user_data);
+void mc_runtime_plugins_pre_tty (const mc_runtime_pre_tty_info_t *info);
 
 #ifdef HAVE_TESTS
 void mc_runtime_plugins_set_directory_for_tests (const char *directory);

@@ -39,6 +39,7 @@ static GError *error = NULL;
 /*** file scope type declarations ****************************************************************/
 
 typedef guint (*runtime_fixture_count_fn_t) (void);
+typedef const char *(*runtime_fixture_string_fn_t) (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -135,6 +136,48 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_runtime_plugin_pre_tty)
+{
+    GModule *fixture_module;
+    char *fixture_path;
+    runtime_fixture_count_fn_t pre_tty_count;
+    runtime_fixture_string_fn_t pre_tty_seen;
+    char *argv[] = { (char *) "mcommander", (char *) "--nomouse", (char *) "/tmp", NULL };
+    mc_runtime_pre_tty_info_t info;
+
+    fixture_path =
+        g_build_filename (TEST_RUNTIME_PLUGIN_DIR, "runtime-plugin-fixture.so", (char *) NULL);
+    fixture_module = g_module_open (fixture_path, 0);
+    ck_assert_msg (fixture_module != NULL, "Failed to open runtime fixture: %s", g_module_error ());
+    g_free (fixture_path);
+
+    mctest_assert_true (g_module_symbol (fixture_module, "mc_runtime_plugin_fixture_pre_tty_count",
+                                         (gpointer *) &pre_tty_count));
+    mctest_assert_true (g_module_symbol (fixture_module, "mc_runtime_plugin_fixture_pre_tty_seen",
+                                         (gpointer *) &pre_tty_seen));
+
+    info.struct_size = sizeof (info);
+    info.argc = 3;
+    info.argv = argv;
+    info.run_mode = "full";
+    info.nested = FALSE;
+
+    // nothing is loaded yet: nobody is called
+    mc_runtime_plugins_pre_tty (&info);
+    ck_assert_int_eq ((int) pre_tty_count (), 0);
+
+    mctest_assert_true (mc_runtime_plugins_load (&error));
+    mc_runtime_plugins_pre_tty (&info);
+    ck_assert_int_eq ((int) pre_tty_count (), 1);
+    mctest_assert_str_eq (pre_tty_seen (), "full 3 /tmp 0");
+
+    mc_runtime_plugins_shutdown ();
+    g_module_close (fixture_module);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -144,6 +187,7 @@ main (void)
 
     tcase_add_checked_fixture (tc_core, setup, teardown);
     tcase_add_test (tc_core, test_runtime_plugin_loads_and_receives_events);
+    tcase_add_test (tc_core, test_runtime_plugin_pre_tty);
 
     return mctest_run_all (tc_core);
 }

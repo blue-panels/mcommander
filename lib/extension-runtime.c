@@ -141,6 +141,9 @@
 #define MC_RUNTIME_PLUGIN_DESCRIPTOR_SETTINGS_SIZE                                                 \
     (G_STRUCT_OFFSET (mc_runtime_plugin_descriptor_v1_t, configure_package)                        \
      + sizeof (((mc_runtime_plugin_descriptor_v1_t *) NULL)->configure_package))
+#define MC_RUNTIME_PLUGIN_DESCRIPTOR_PRE_TTY_SIZE                                                  \
+    (G_STRUCT_OFFSET (mc_runtime_plugin_descriptor_v1_t, pre_tty)                                  \
+     + sizeof (((mc_runtime_plugin_descriptor_v1_t *) NULL)->pre_tty))
 
 /*** file scope type declarations ****************************************************************/
 
@@ -2335,6 +2338,30 @@ mc_runtime_plugins_enumerate_menu_actions (const char *workspace,
         enumeration.user_data = user_data;
         instance->descriptor->enumerate_menu_actions (
             instance->context, workspace, mc_runtime_menu_action_enumeration_bridge, &enumeration);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mc_runtime_plugins_pre_tty (const mc_runtime_pre_tty_info_t *info)
+{
+    guint i;
+
+    if (info == NULL || mc_runtime_plugin_instances == NULL)
+        return;
+
+    for (i = 0; i < mc_runtime_plugin_instances->len; i++)
+    {
+        const mc_runtime_plugin_instance_t *instance =
+            (const mc_runtime_plugin_instance_t *) g_ptr_array_index (mc_runtime_plugin_instances,
+                                                                      i);
+
+        if (instance->descriptor->struct_size < MC_RUNTIME_PLUGIN_DESCRIPTOR_PRE_TTY_SIZE
+            || instance->descriptor->pre_tty == NULL)
+            continue;
+
+        instance->descriptor->pre_tty (instance->context, info);
     }
 }
 
