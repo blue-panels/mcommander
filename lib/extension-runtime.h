@@ -26,6 +26,7 @@
 #define MC_RUNTIME_HOST_CAP_SYNTAX            (G_GUINT64_CONSTANT (1) << 10)
 #define MC_RUNTIME_HOST_CAP_VIEWER_GENERATOR  (G_GUINT64_CONSTANT (1) << 11)
 #define MC_RUNTIME_HOST_CAP_TTY               (G_GUINT64_CONSTANT (1) << 12)
+#define MC_RUNTIME_HOST_CAP_FD_WATCH          (G_GUINT64_CONSTANT (1) << 13)
 
 #define MC_RUNTIME_PLUGIN_CAP_FILE_OPERATIONS (G_GUINT64_CONSTANT (1) << 0)
 
@@ -34,6 +35,9 @@
 /*** structures declarations (and typedefs of structures)*****************************************/
 
 typedef struct mc_runtime_plugin_context mc_runtime_plugin_context_t;
+
+typedef gboolean (*mc_runtime_fd_ready_t) (mc_runtime_plugin_context_t *context, int fd,
+                                           gpointer user_data);
 
 typedef enum
 {
@@ -1004,6 +1008,12 @@ typedef struct
     /* Optional v1 extension. The colors of the terminal, and the ones the
      * skin paints the named section with ("Viewer", "Editor", ...). */
     gboolean (*tty_info) (const char *section, mc_runtime_tty_info_t *info, const char **error);
+
+    /* Optional v1 extension. ready() is called from the main loop when fd can
+     * be read; it returns nonzero when the screen may have to be drawn again. */
+    gboolean (*fd_watch) (int fd, int (*ready) (int fd, void *data), void *data,
+                          const char **error);
+    void (*fd_unwatch) (int fd);
 } mc_runtime_host_services_v1_t;
 
 typedef struct
@@ -1196,6 +1206,14 @@ typedef struct
      * paints a section with. */
     gboolean (*tty_info) (mc_runtime_plugin_context_t *context, const char *section,
                           mc_runtime_tty_info_t *info, const char **error);
+
+    /* Optional v1 extension: ready() is called from the main loop, in any
+     * dialog, when fd can be read, and returns TRUE when the screen may have
+     * to be drawn again.  One watch per fd; a runtime that is unloaded loses
+     * its watches. */
+    gboolean (*fd_watch) (mc_runtime_plugin_context_t *context, int fd, mc_runtime_fd_ready_t ready,
+                          gpointer user_data, const char **error);
+    void (*fd_unwatch) (mc_runtime_plugin_context_t *context, int fd);
 } mc_runtime_host_api_v1_t;
 
 typedef struct

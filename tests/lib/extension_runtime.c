@@ -40,8 +40,15 @@ static GError *error = NULL;
 
 typedef guint (*runtime_fixture_count_fn_t) (void);
 typedef const char *(*runtime_fixture_string_fn_t) (void);
+typedef gboolean (*runtime_fixture_watch_fn_t) (int fd, const char **error);
 
 /*** file scope variables ************************************************************************/
+
+/* what the host services of the fd watch test were asked */
+static int host_watched_fd = -1;
+static int (*host_ready) (int fd, void *data) = NULL;
+static void *host_ready_data = NULL;
+static int host_unwatched_fd = -1;
 
 /*** file scope functions ************************************************************************/
 
@@ -87,6 +94,27 @@ startup_snapshot_new (void)
     snapshot->data.startup.data_dir = g_strdup ("/tmp/data");
 
     return snapshot;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+host_fd_watch (int fd, int (*ready) (int fd, void *data), void *data, const char **error)
+{
+    (void) error;
+
+    host_watched_fd = fd;
+    host_ready = ready;
+    host_ready_data = data;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+host_fd_unwatch (int fd)
+{
+    host_unwatched_fd = fd;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -178,6 +206,58 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_runtime_plugin_fd_watch)
+{
+    static mc_runtime_host_services_v1_t services;
+    GModule *fixture_module;
+    char *fixture_path;
+    runtime_fixture_watch_fn_t watch;
+    runtime_fixture_count_fn_t ready_count;
+    const char *watch_error = NULL;
+
+    memset (&services, 0, sizeof (services));
+    services.abi_version = MC_RUNTIME_PLUGIN_ABI_VERSION;
+    services.struct_size = sizeof (services);
+    services.fd_watch = host_fd_watch;
+    services.fd_unwatch = host_fd_unwatch;
+    mc_runtime_plugins_set_host_services (&services);
+
+    fixture_path =
+        g_build_filename (TEST_RUNTIME_PLUGIN_DIR, "runtime-plugin-fixture.so", (char *) NULL);
+    fixture_module = g_module_open (fixture_path, 0);
+    ck_assert_msg (fixture_module != NULL, "Failed to open runtime fixture: %s", g_module_error ());
+    g_free (fixture_path);
+
+    mctest_assert_true (
+        g_module_symbol (fixture_module, "mc_runtime_plugin_fixture_watch", (gpointer *) &watch));
+    mctest_assert_true (g_module_symbol (fixture_module, "mc_runtime_plugin_fixture_fd_ready_count",
+                                         (gpointer *) &ready_count));
+
+    mctest_assert_true (mc_runtime_plugins_load (&error));
+
+    mctest_assert_true (watch (7, &watch_error));
+    ck_assert_int_eq (host_watched_fd, 7);
+    ck_assert_ptr_nonnull (host_ready);
+
+    // the main loop finds the fd readable: the plugin is called, and asks for a redraw
+    ck_assert_int_eq (host_ready (7, host_ready_data), 1);
+    ck_assert_int_eq ((int) ready_count (), 1);
+
+    // one watch per fd
+    mctest_assert_false (watch (7, &watch_error));
+    mctest_assert_str_eq (watch_error, "already_watched");
+
+    // an unloaded runtime loses its watches
+    mc_runtime_plugins_shutdown ();
+    ck_assert_int_eq (host_unwatched_fd, 7);
+
+    mc_runtime_plugins_set_host_services (NULL);
+    g_module_close (fixture_module);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -188,6 +268,7 @@ main (void)
     tcase_add_checked_fixture (tc_core, setup, teardown);
     tcase_add_test (tc_core, test_runtime_plugin_loads_and_receives_events);
     tcase_add_test (tc_core, test_runtime_plugin_pre_tty);
+    tcase_add_test (tc_core, test_runtime_plugin_fd_watch);
 
     return mctest_run_all (tc_core);
 }
