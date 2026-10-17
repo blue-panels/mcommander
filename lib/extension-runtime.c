@@ -111,6 +111,9 @@
 #define MC_RUNTIME_HOST_SERVICES_FD_WATCH_SIZE                                                     \
     (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, fd_unwatch)                                   \
      + sizeof (((mc_runtime_host_services_v1_t *) NULL)->fd_unwatch))
+#define MC_RUNTIME_HOST_SERVICES_TTY_SUSPEND_SIZE                                                  \
+    (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, tty_suspend)                                  \
+     + sizeof (((mc_runtime_host_services_v1_t *) NULL)->tty_suspend))
 #define MC_RUNTIME_HOST_SERVICES_PANEL_PROVIDER_SIZE                                               \
     (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, panel_provider_unregister)                    \
      + sizeof (((mc_runtime_host_services_v1_t *) NULL)->panel_provider_unregister))
@@ -210,6 +213,13 @@ typedef struct
 } mc_runtime_fd_watch_t;
 
 static GPtrArray *mc_runtime_fd_watches = NULL;
+
+typedef struct
+{
+    mc_runtime_plugin_context_t *context;
+    mc_runtime_tty_between_t between;
+    gpointer user_data;
+} mc_runtime_tty_suspend_call_t;
 
 struct mc_runtime_plugin_instance
 {
@@ -1252,6 +1262,55 @@ mc_runtime_fd_unwatch_all (mc_runtime_plugin_context_t *context)
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
+mc_runtime_host_has_tty_suspend_services (void)
+{
+    return mc_runtime_host_services != NULL
+        && mc_runtime_host_services->struct_size >= MC_RUNTIME_HOST_SERVICES_TTY_SUSPEND_SIZE
+        && mc_runtime_host_services->tty_suspend != NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mc_runtime_tty_suspend_between (void *data)
+{
+    mc_runtime_tty_suspend_call_t *call = (mc_runtime_tty_suspend_call_t *) data;
+
+    if (call->between != NULL)
+        call->between (call->context, call->user_data);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_tty_suspend (mc_runtime_plugin_context_t *context, mc_runtime_tty_between_t between,
+                             gpointer user_data, gboolean terminal_changed, const char **error)
+{
+    mc_runtime_tty_suspend_call_t call;
+
+    if (!mc_runtime_plugin_context_is_known (context))
+    {
+        if (error != NULL)
+            *error = "invalid_context";
+        return FALSE;
+    }
+    if (!mc_runtime_host_has_tty_suspend_services ())
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+
+    call.context = context;
+    call.between = between;
+    call.user_data = user_data;
+    return mc_runtime_host_services->tty_suspend (mc_runtime_tty_suspend_between, &call,
+                                                  terminal_changed, error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
 mc_runtime_host_panel_provider_register (mc_runtime_plugin_context_t *context,
                                          const mc_runtime_panel_provider_t *provider,
                                          mc_runtime_handle_t *registration, const char **error)
@@ -1810,6 +1869,7 @@ static mc_runtime_host_api_v1_t mc_runtime_host_api = {
     .tty_info = mc_runtime_host_tty_info,
     .fd_watch = mc_runtime_host_fd_watch,
     .fd_unwatch = mc_runtime_host_fd_unwatch,
+    .tty_suspend = mc_runtime_host_tty_suspend,
 };
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2652,6 +2712,8 @@ mc_runtime_plugins_set_host_services (const mc_runtime_host_services_v1_t *servi
         mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_TTY;
     if (mc_runtime_host_has_fd_watch_services ())
         mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_FD_WATCH;
+    if (mc_runtime_host_has_tty_suspend_services ())
+        mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_TTY_SUSPEND;
     if (mc_runtime_host_has_viewer_source_services ())
         mc_runtime_host_api.capability_flags |=
             MC_RUNTIME_HOST_CAP_VIEWER_SOURCE | MC_RUNTIME_HOST_CAP_VIEWER_GENERATOR;

@@ -27,6 +27,7 @@
 #define MC_RUNTIME_HOST_CAP_VIEWER_GENERATOR  (G_GUINT64_CONSTANT (1) << 11)
 #define MC_RUNTIME_HOST_CAP_TTY               (G_GUINT64_CONSTANT (1) << 12)
 #define MC_RUNTIME_HOST_CAP_FD_WATCH          (G_GUINT64_CONSTANT (1) << 13)
+#define MC_RUNTIME_HOST_CAP_TTY_SUSPEND       (G_GUINT64_CONSTANT (1) << 14)
 
 #define MC_RUNTIME_PLUGIN_CAP_FILE_OPERATIONS (G_GUINT64_CONSTANT (1) << 0)
 
@@ -38,6 +39,7 @@ typedef struct mc_runtime_plugin_context mc_runtime_plugin_context_t;
 
 typedef gboolean (*mc_runtime_fd_ready_t) (mc_runtime_plugin_context_t *context, int fd,
                                            gpointer user_data);
+typedef void (*mc_runtime_tty_between_t) (mc_runtime_plugin_context_t *context, gpointer user_data);
 
 typedef enum
 {
@@ -1014,6 +1016,10 @@ typedef struct
     gboolean (*fd_watch) (int fd, int (*ready) (int fd, void *data), void *data,
                           const char **error);
     void (*fd_unwatch) (int fd);
+
+    /* Optional v1 extension. See tty_suspend() of the host API. */
+    gboolean (*tty_suspend) (void (*between) (void *data), void *data, gboolean terminal_changed,
+                             const char **error);
 } mc_runtime_host_services_v1_t;
 
 typedef struct
@@ -1214,6 +1220,14 @@ typedef struct
     gboolean (*fd_watch) (mc_runtime_plugin_context_t *context, int fd, mc_runtime_fd_ready_t ready,
                           gpointer user_data, const char **error);
     void (*fd_unwatch) (mc_runtime_plugin_context_t *context, int fd);
+
+    /* Optional v1 extension: give the terminal away for a while.  mc leaves
+     * it the way a program started from mc finds it, calls between() (it may
+     * be NULL), then takes it back and draws everything again.  With
+     * terminal_changed the terminal may be another one now: it is asked
+     * again what it can do before it is taken back. */
+    gboolean (*tty_suspend) (mc_runtime_plugin_context_t *context, mc_runtime_tty_between_t between,
+                             gpointer user_data, gboolean terminal_changed, const char **error);
 } mc_runtime_host_api_v1_t;
 
 typedef struct

@@ -42,6 +42,7 @@ void show_panels_request_clear (void);
 /* Handle toggling panels by Ctrl-Z */
 gboolean execute_suspend (const gchar *event_group_name, const gchar *event_name,
                           gpointer init_data, gpointer data);
+void execute_suspend_with (void (*between) (void *data), void *data, gboolean terminal_changed);
 
 /* Execute command on a filename that can be on VFS */
 void execute_with_vfs_arg (const char *command, const vfs_path_t *filename_vpath);

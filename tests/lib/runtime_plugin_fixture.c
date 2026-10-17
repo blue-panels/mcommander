@@ -47,6 +47,7 @@ static guint fixture_pre_tty_calls = 0;
 static char *fixture_pre_tty_seen = NULL;
 static mc_runtime_plugin_context_t *fixture_context = NULL;
 static guint fixture_fd_ready_calls = 0;
+static guint fixture_between_calls = 0;
 
 G_MODULE_EXPORT const mc_runtime_plugin_descriptor_v1_t *mc_runtime_plugin_register_v1 (void);
 G_MODULE_EXPORT guint mc_runtime_plugin_fixture_init_count (void);
@@ -56,6 +57,9 @@ G_MODULE_EXPORT guint mc_runtime_plugin_fixture_pre_tty_count (void);
 G_MODULE_EXPORT const char *mc_runtime_plugin_fixture_pre_tty_seen (void);
 G_MODULE_EXPORT gboolean mc_runtime_plugin_fixture_watch (int fd, const char **error);
 G_MODULE_EXPORT guint mc_runtime_plugin_fixture_fd_ready_count (void);
+G_MODULE_EXPORT gboolean mc_runtime_plugin_fixture_suspend (gboolean terminal_changed,
+                                                            const char **error);
+G_MODULE_EXPORT guint mc_runtime_plugin_fixture_between_count (void);
 
 /*** file scope functions ************************************************************************/
 
@@ -124,6 +128,17 @@ runtime_plugin_fixture_fd_ready (mc_runtime_plugin_context_t *context, int fd, g
 
     fixture_fd_ready_calls++;
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+runtime_plugin_fixture_between (mc_runtime_plugin_context_t *context, gpointer user_data)
+{
+    (void) context;
+    (void) user_data;
+
+    fixture_between_calls++;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -218,6 +233,23 @@ G_MODULE_EXPORT guint
 mc_runtime_plugin_fixture_fd_ready_count (void)
 {
     return fixture_fd_ready_calls;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+G_MODULE_EXPORT gboolean
+mc_runtime_plugin_fixture_suspend (gboolean terminal_changed, const char **error)
+{
+    return fixture_host_api->tty_suspend (fixture_context, runtime_plugin_fixture_between, NULL,
+                                          terminal_changed, error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+G_MODULE_EXPORT guint
+mc_runtime_plugin_fixture_between_count (void)
+{
+    return fixture_between_calls;
 }
 
 /* --------------------------------------------------------------------------------------------- */
