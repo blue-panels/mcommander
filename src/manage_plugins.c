@@ -69,7 +69,15 @@ typedef struct
     mp_enabled_getter_t get_enabled;       /* NULL: use plugin-prefs */
     mp_enabled_setter_t set_enabled;       /* NULL: use plugin-prefs */
     mp_settings_callback_t settings;       /* runtime-owned settings */
+    gboolean enabled_by_default;           /* runtime plugins: on when nothing was chosen */
 } mp_row_t;
+
+/* What the rows of the runtime plugins are collected with */
+typedef struct
+{
+    GArray *rows;
+    GPtrArray *strpool;
+} mp_runtime_collect_t;
 
 /* Passed to the dialog callback so Enter/F4 can reach the selected row. */
 typedef struct
@@ -95,6 +103,36 @@ typedef struct
 } mp_lua_scripts_ctx_t;
 
 /*** file scope functions ************************************************************************/
+
+static void
+mp_collect_runtime (const char *runtime_name, const char *display_name, gboolean started,
+                    gboolean enabled_by_default, gpointer user_data)
+{
+    mp_runtime_collect_t *collect = (mp_runtime_collect_t *) user_data;
+    mp_row_t r;
+    char *name, *desc;
+
+    (void) started;
+
+    // the Lua engine has a row of its own, with its scripts
+    if (g_strcmp0 (runtime_name, "lua") == 0)
+        return;
+
+    name = g_strdup (runtime_name);
+    desc = g_strdup (display_name);
+    g_ptr_array_add (collect->strpool, name);
+    g_ptr_array_add (collect->strpool, desc);
+
+    memset (&r, 0, sizeof (r));
+    r.kind = "runtime";
+    r.kind_id = MC_PLUGIN_KIND_RUNTIME;
+    r.name = name;
+    r.desc = desc;
+    r.enabled_by_default = enabled_by_default;
+    g_array_append_val (collect->rows, r);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 /* Return TRUE if a row for the given plugin (kind, name) already exists in @rows. */
 static gboolean
@@ -681,6 +719,12 @@ mp_collect_rows (GPtrArray *strpool)
     }
 #endif
 
+    {
+        mp_runtime_collect_t collect = { rows, strpool };
+
+        mc_runtime_plugins_enumerate_found (mp_collect_runtime, &collect);
+    }
+
     for (l = mc_editor_plugin_list (); l != NULL; l = g_slist_next (l))
     {
         const mc_editor_plugin_t *p = (const mc_editor_plugin_t *) l->data;
@@ -820,6 +864,8 @@ mp_get_checked (const void *data, int row, int col)
     r = &g_array_index (rows, mp_row_t, (guint) row);
     if (r->get_enabled != NULL)
         return r->get_enabled ();
+    if (r->kind_id == MC_PLUGIN_KIND_RUNTIME)
+        return mc_plugin_prefs_is_enabled (r->kind_id, r->name, r->enabled_by_default);
     return !mc_plugin_prefs_is_disabled (r->kind_id, r->name);
 }
 
@@ -839,6 +885,8 @@ mp_set_checked (void *data, int row, int col, gboolean val)
     r = &g_array_index (rows, mp_row_t, (guint) row);
     if (r->set_enabled != NULL)
         r->set_enabled (val);
+    else if (r->kind_id == MC_PLUGIN_KIND_RUNTIME)
+        mc_plugin_prefs_set_enabled (r->kind_id, r->name, val);
     else
         mc_plugin_prefs_set_disabled (r->kind_id, r->name, !val);
 }
