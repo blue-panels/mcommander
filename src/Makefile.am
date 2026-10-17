@@ -8,6 +8,10 @@ if ENABLE_MCTERM
 SUBDIRS += mcterm
 endif
 
+if ENABLE_SESSION_PLUGIN
+SUBDIRS += session
+endif
+
 if USE_INTERNAL_EDIT
 SUBDIRS += editor
 endif

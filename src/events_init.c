@@ -116,8 +116,8 @@ events_deinit (GError **mcerror)
 
 /* --------------------------------------------------------------------------------------------- */
 
-static const char *
-runtime_run_mode_name (void)
+const char *
+events_runtime_run_mode_name (void)
 {
     switch (mc_global.mc_run_mode)
     {
@@ -148,7 +148,7 @@ events_publish_runtime_startup (void)
     if (snapshot == NULL)
         return;
 
-    snapshot->data.startup.run_mode = g_strdup (runtime_run_mode_name ());
+    snapshot->data.startup.run_mode = g_strdup (events_runtime_run_mode_name ());
     snapshot->data.startup.config_dir =
         g_strdup (mc_config_get_home_dir () != NULL ? mc_config_get_home_dir () : "");
     snapshot->data.startup.data_dir =

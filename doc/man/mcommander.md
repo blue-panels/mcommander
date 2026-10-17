@@ -1545,6 +1545,10 @@ The
 command shows a dialog window with the list of currently running
 internal editors, viewers and other M-Commander modules that support this mode.
 
+The "Sessions..." command is there in a
+[session](#sessions)
+only.
+
 ### Directory Tree
 
 The Directory Tree command shows a tree figure of the directories. You
@@ -2635,6 +2639,11 @@ scripts; the scripts of a package are listed by the
 [Lua scripts](#lua-scripts)
 dialog of its settings.
 
+A plugin that is off until it is switched on here, such as
+[Sessions](#sessions),
+is listed too. Such a plugin starts or stops the next time the program
+starts.
+
 ### Lua scripts <a id="lua-scripts"></a>
 
 The scripts of a Lua package, in a table: the name, the identifier, where the
@@ -3023,6 +3032,83 @@ full screen mode (Ctrl-o), not when the panels are visible.)
 To set a specific shell different from your current SHELL variable or
 login shell defined in /etc/passwd, you may call M-Commander like this:
 **SHELL=/bin/myshell mcommander**
+
+# Sessions <a id="sessions"></a>
+
+With the Sessions plugin on, the program outlives its terminal, as it does in
+screen or tmux: when the terminal is closed or the ssh connection drops, the
+panels, the shell of the command line, the editors and the copy jobs go on,
+and the program started again in another terminal takes them over. The plugin
+is off until it is switched on in
+[Manage plugins](#manage-plugins);
+it works from the next start.
+
+The program then runs on a terminal of its own, which a small process keeps
+between the terminals of the user. There is no session on the Linux console,
+in a copy of the program started from a session, when the program is started
+as the editor, the viewer or the diff viewer, and when the standard input or
+output is not a terminal.
+
+At the start, the program takes the session nobody works in when there is
+just one, detached, and starts a new session when there is none. Otherwise it
+first lists the sessions, with what each one is doing and the directory of
+its active panel:
+
+**detached**
+: Nobody is at it. The number of the session takes it.
+
+**attached**
+: It is in use in another terminal. It is taken after a question, and the
+other terminal goes back to its shell.
+
+**attached, looks lost**
+: Its terminal has taken nothing for 10 seconds, as a terminal behind a dead
+ssh connection does. It is taken without a question.
+
+A session started in a terminal with another TERM is listed, but cannot be
+taken. The keys of the list:
+
+**number**
+: Take the session.
+
+**Enter, n**
+: Start a new session.
+
+**k number**
+: End the session the way F10 does. A session with an editor, a viewer or a
+dialog open is not ended: take it and end it there. When k has ended the
+last session not in use, a new session starts.
+
+**r**
+: Read the list again.
+
+**q**
+: Back to the shell, the sessions stay.
+
+In a session, "Sessions..." in the Command menu shows the same list in a
+dialog, the session the program is in as "this one", and the cursor on the
+first other one:
+
+**Switch**
+: Take the session under the cursor in this terminal; this one stays,
+detached. A session in use in another terminal is taken after a question.
+
+**New**
+: Start a new session in this terminal; this one stays, detached.
+
+**End**
+: End the session under the cursor, as k does in the list. This one is ended
+with F10.
+
+**Detach**
+: Back to the shell, the session stays.
+
+A terminal that takes a session brings the variables SSH_AUTH_SOCK,
+SSH_AGENT_PID, DISPLAY, WAYLAND_DISPLAY, DBUS_SESSION_BUS_ADDRESS, XAUTHORITY,
+SSH_CONNECTION and SSH_CLIENT with it, for the programs the program starts
+from then on. The shell of the command line was started with the program and
+keeps its environment, except for the agent: in a session SSH_AUTH_SOCK is a
+link, which points to the agent of the terminal the session is in.
 
 # Chmod
 
@@ -4297,6 +4383,11 @@ panels of its own.
 **MC_TTY**
 : The terminal the program was started on.
 
+**MC_SESSION**
+: The
+[session](#sessions)
+the program runs in. A copy started in a session makes no session of its own.
+
 ## Debug logs
 
 A log is written only when it is turned on, and the switch takes the value 1.
@@ -4373,6 +4464,12 @@ is shown along with it.
 
 *~/.cache/mc6/Tree*
 : The directory list for the directory tree and tree view features.
+
+*$XDG_RUNTIME_DIR/mc6/sessions/*
+: The sockets of the
+[sessions](#sessions)
+and the links of their agents. Where XDG_RUNTIME_DIR is not set or is too
+long for a socket, it is *$TMPDIR/mc6-sessions-UID/*.
 
 *./.usermenu*
 : Local user-defined menu. If this file is present in the current

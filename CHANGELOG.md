@@ -30,6 +30,17 @@ The releases of this fork, newest first.
   Shift-Enter and Ctrl-Shift-Enter in the edit line of a dialog insert the name
   of the file under the cursor of the active and of the passive panel (new
   actions PutPanelFile and PutOtherPanelFile).
+- The Sessions plugin, off by default, lets the program outlive its terminal,
+  as screen and tmux do: after the terminal is closed or the ssh connection
+  drops, the program started again lists the sessions and takes one over, with
+  the panels, the shell, the editors and the copy jobs as they were. A session
+  in use elsewhere is taken after a question, one whose terminal looks lost
+  without it, and k in the list ends a session the way F10 does. Sessions...
+  in the Command menu of a session switches to another session, starts a new
+  one, ends one or detaches; the agent, DISPLAY and the like of the new
+  terminal go with it. Suggested by unxed (PR #377).
+- Manage plugins lists the runtime plugins too, also the ones that are off
+  until they are switched on there.
 
 ## 6.1.0 - 2026-09-26
 

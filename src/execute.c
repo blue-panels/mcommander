@@ -150,12 +150,9 @@ edition_pre_exec (void)
 /* --------------------------------------------------------------------------------------------- */
 
 static void
-do_suspend_cmd (void)
+stop_self (void *data)
 {
-    pre_exec ();
-
-    if (mc_global.tty.console_flag != '\0')
-        handle_console (CONSOLE_RESTORE);
+    (void) data;
 
 #ifdef SIGTSTP
     {
@@ -173,6 +170,27 @@ do_suspend_cmd (void)
         my_sigaction (SIGTSTP, &sigtstp_action, NULL);
     }
 #endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+do_suspend_cmd (void (*between) (void *data), void *data, gboolean terminal_changed)
+{
+    pre_exec ();
+
+    if (mc_global.tty.console_flag != '\0')
+        handle_console (CONSOLE_RESTORE);
+
+    if (between != NULL)
+        between (data);
+
+    // the answers come only in the raw mode; the modes set below depend on them
+    if (terminal_changed)
+    {
+        tty_raw_mode ();
+        tty_probe_graphics ();
+    }
 
     if (mc_global.tty.console_flag != '\0')
         handle_console (CONSOLE_SAVE);
@@ -557,14 +575,30 @@ execute_suspend (const gchar *event_group_name, const gchar *event_name, gpointe
     (void) init_data;
     (void) data;
 
+    execute_suspend_with (stop_self, NULL, FALSE);
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Give the terminal away for a while: leave it the way a program started from mc finds it,
+ * call @between, then take it back and draw everything again. With @terminal_changed the
+ * terminal may be another one now: it is asked again what it can do before it is taken back.
+ */
+
+void
+execute_suspend_with (void (*between) (void *data), void *data, gboolean terminal_changed)
+{
     if (mc_global.mc_run_mode == MC_RUN_FULL)
         save_cwds_stat ();
-    do_suspend_cmd ();
+    do_suspend_cmd (between, data, terminal_changed);
     if (mc_global.mc_run_mode == MC_RUN_FULL)
         update_panels (UP_OPTIMIZE, UP_KEEPSEL);
     do_refresh ();
-
-    return TRUE;
+    // out to the terminal now, not at the next event
+    mc_refresh ();
 }
 
 /* --------------------------------------------------------------------------------------------- */

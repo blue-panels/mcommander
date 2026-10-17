@@ -35,6 +35,7 @@
 
 #define PLUGINS_PREFS_FILE "plugins.ini"
 #define DISABLED_GROUP     "DisabledPlugins"
+#define ENABLED_GROUP      "EnabledPlugins"
 
 /*** file scope variables ************************************************************************/
 
@@ -85,6 +86,8 @@ kind_prefix (mc_plugin_kind_t kind)
         return "panel/";
     case MC_PLUGIN_KIND_LUA:
         return "lua/";
+    case MC_PLUGIN_KIND_RUNTIME:
+        return "runtime/";
     default:
         return "?/";
     }
@@ -253,6 +256,57 @@ mc_plugin_prefs_set_disabled (mc_plugin_kind_t kind, const char *plugin_name, gb
         mc_config_set_string (cfg, DISABLED_GROUP, key, "true");
     else
         mc_config_del_key (cfg, DISABLED_GROUP, key);
+    g_free (key);
+
+    path = prefs_path ();
+    if (path != NULL)
+    {
+        mc_config_save_to_file (cfg, path, NULL);
+        g_free (path);
+    }
+}
+
+gboolean
+mc_plugin_prefs_is_enabled (mc_plugin_kind_t kind, const char *plugin_name,
+                            gboolean default_enabled)
+{
+    mc_config_t *cfg;
+    char *key;
+    gboolean result = default_enabled;
+
+    if (plugin_name == NULL || *plugin_name == '\0')
+        return default_enabled;
+
+    cfg = prefs_get ();
+    if (cfg == NULL)
+        return default_enabled;
+
+    key = kind_key (kind, plugin_name);
+    if (mc_config_has_param (cfg, DISABLED_GROUP, key))
+        result = FALSE;
+    else if (mc_config_has_param (cfg, ENABLED_GROUP, key))
+        result = TRUE;
+    g_free (key);
+
+    return result;
+}
+
+void
+mc_plugin_prefs_set_enabled (mc_plugin_kind_t kind, const char *plugin_name, gboolean enabled)
+{
+    mc_config_t *cfg;
+    char *path, *key;
+
+    if (plugin_name == NULL || *plugin_name == '\0')
+        return;
+
+    cfg = prefs_get ();
+    if (cfg == NULL)
+        return;
+
+    key = kind_key (kind, plugin_name);
+    mc_config_set_string (cfg, enabled ? ENABLED_GROUP : DISABLED_GROUP, key, "true");
+    mc_config_del_key (cfg, enabled ? DISABLED_GROUP : ENABLED_GROUP, key);
     g_free (key);
 
     path = prefs_path ();

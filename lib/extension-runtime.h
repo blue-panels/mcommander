@@ -26,14 +26,23 @@
 #define MC_RUNTIME_HOST_CAP_SYNTAX            (G_GUINT64_CONSTANT (1) << 10)
 #define MC_RUNTIME_HOST_CAP_VIEWER_GENERATOR  (G_GUINT64_CONSTANT (1) << 11)
 #define MC_RUNTIME_HOST_CAP_TTY               (G_GUINT64_CONSTANT (1) << 12)
+#define MC_RUNTIME_HOST_CAP_FD_WATCH          (G_GUINT64_CONSTANT (1) << 13)
+#define MC_RUNTIME_HOST_CAP_TTY_SUSPEND       (G_GUINT64_CONSTANT (1) << 14)
+#define MC_RUNTIME_HOST_CAP_QUIT              (G_GUINT64_CONSTANT (1) << 15)
 
 #define MC_RUNTIME_PLUGIN_CAP_FILE_OPERATIONS (G_GUINT64_CONSTANT (1) << 0)
+/* The plugin is not started unless the user has turned it on */
+#define MC_RUNTIME_PLUGIN_CAP_OFF_BY_DEFAULT (G_GUINT64_CONSTANT (1) << 1)
 
 /*** enums ***************************************************************************************/
 
 /*** structures declarations (and typedefs of structures)*****************************************/
 
 typedef struct mc_runtime_plugin_context mc_runtime_plugin_context_t;
+
+typedef gboolean (*mc_runtime_fd_ready_t) (mc_runtime_plugin_context_t *context, int fd,
+                                           gpointer user_data);
+typedef void (*mc_runtime_tty_between_t) (mc_runtime_plugin_context_t *context, gpointer user_data);
 
 typedef enum
 {
@@ -761,6 +770,11 @@ typedef void (*mc_runtime_loaded_runtime_callback_t) (const char *runtime_name,
                                                       guint64 capability_flags,
                                                       guint64 required_host_capabilities,
                                                       gpointer user_data);
+/* A runtime plugin found in the directories of plugins, started or not */
+typedef void (*mc_runtime_found_runtime_callback_t) (const char *runtime_name,
+                                                     const char *display_name, gboolean started,
+                                                     gboolean enabled_by_default,
+                                                     gpointer user_data);
 typedef void (*mc_runtime_loaded_package_details_callback_t) (
     const char *runtime_name, const char *id, const char *display_name, const char *workspace,
     const char *origin, const char *directory, gboolean enabled, gpointer user_data);
@@ -846,6 +860,20 @@ typedef struct
     const char *fg;
     const char *bg;
 } mc_runtime_tty_info_t;
+
+/* What the early phase of a runtime is told.  argv is the command line as it
+   was given, before the options were taken out of it; the strings belong to
+   the host and live only during the call. */
+typedef struct
+{
+    gsize struct_size;
+    int argc;
+    char *const *argv;
+    /* "full", "editor", "viewer", "diffviewer" */
+    const char *run_mode;
+    /* started from the shell of another mc */
+    gboolean nested;
+} mc_runtime_pre_tty_info_t;
 
 typedef struct
 {
@@ -990,6 +1018,19 @@ typedef struct
     /* Optional v1 extension. The colors of the terminal, and the ones the
      * skin paints the named section with ("Viewer", "Editor", ...). */
     gboolean (*tty_info) (const char *section, mc_runtime_tty_info_t *info, const char **error);
+
+    /* Optional v1 extension. ready() is called from the main loop when fd can
+     * be read; it returns nonzero when the screen may have to be drawn again. */
+    gboolean (*fd_watch) (int fd, int (*ready) (int fd, void *data), void *data,
+                          const char **error);
+    void (*fd_unwatch) (int fd);
+
+    /* Optional v1 extension. See tty_suspend() of the host API. */
+    gboolean (*tty_suspend) (void (*between) (void *data), void *data, gboolean terminal_changed,
+                             const char **error);
+
+    /* Optional v1 extension. See ui_quit() of the host API. */
+    gboolean (*ui_quit) (const char **error);
 } mc_runtime_host_services_v1_t;
 
 typedef struct
@@ -1182,6 +1223,27 @@ typedef struct
      * paints a section with. */
     gboolean (*tty_info) (mc_runtime_plugin_context_t *context, const char *section,
                           mc_runtime_tty_info_t *info, const char **error);
+
+    /* Optional v1 extension: ready() is called from the main loop, in any
+     * dialog, when fd can be read, and returns TRUE when the screen may have
+     * to be drawn again.  One watch per fd; a runtime that is unloaded loses
+     * its watches. */
+    gboolean (*fd_watch) (mc_runtime_plugin_context_t *context, int fd, mc_runtime_fd_ready_t ready,
+                          gpointer user_data, const char **error);
+    void (*fd_unwatch) (mc_runtime_plugin_context_t *context, int fd);
+
+    /* Optional v1 extension: give the terminal away for a while.  mc leaves
+     * it the way a program started from mc finds it, calls between() (it may
+     * be NULL), then takes it back and draws everything again.  With
+     * terminal_changed the terminal may be another one now: it is asked
+     * again what it can do before it is taken back. */
+    gboolean (*tty_suspend) (mc_runtime_plugin_context_t *context, mc_runtime_tty_between_t between,
+                             gpointer user_data, gboolean terminal_changed, const char **error);
+
+    /* Optional v1 extension: end mc the way F10 does, without the question.
+     * It is done only when nothing is open over the panels; else it fails
+     * with "busy" and mc goes on, so that nothing is closed unseen. */
+    gboolean (*ui_quit) (mc_runtime_plugin_context_t *context, const char **error);
 } mc_runtime_host_api_v1_t;
 
 typedef struct
@@ -1234,6 +1296,11 @@ typedef struct
      * workspace, not only an editor script, is configured from one place. */
     gboolean (*configure_package) (mc_runtime_plugin_context_t *context, const char *package_id,
                                    const char **error);
+
+    /* Optional append-only v1 early phase: called once, after the arguments
+     * are taken and before the terminal is set up.  The runtime may exec()
+     * here and then never return. */
+    void (*pre_tty) (mc_runtime_plugin_context_t *context, const mc_runtime_pre_tty_info_t *info);
 } mc_runtime_plugin_descriptor_v1_t;
 
 typedef const mc_runtime_plugin_descriptor_v1_t *(*mc_runtime_plugin_register_v1_fn) (void);
@@ -1248,6 +1315,8 @@ gboolean mc_runtime_plugins_are_loaded (void);
 guint mc_runtime_plugins_count (void);
 void mc_runtime_plugins_enumerate_runtimes (mc_runtime_loaded_runtime_callback_t callback,
                                             gpointer user_data);
+void mc_runtime_plugins_enumerate_found (mc_runtime_found_runtime_callback_t callback,
+                                         gpointer user_data);
 void mc_runtime_plugins_disable (const char *runtime_name);
 void mc_runtime_plugins_set_host_services (const mc_runtime_host_services_v1_t *services);
 
@@ -1271,6 +1340,7 @@ gboolean mc_runtime_plugins_configure_package (const char *runtime_name, const c
 void mc_runtime_plugins_enumerate_menu_actions (const char *workspace,
                                                 mc_runtime_loaded_menu_action_callback_t callback,
                                                 gpointer user_data);
+void mc_runtime_plugins_pre_tty (const mc_runtime_pre_tty_info_t *info);
 
 #ifdef HAVE_TESTS
 void mc_runtime_plugins_set_directory_for_tests (const char *directory);
