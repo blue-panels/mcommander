@@ -52,6 +52,7 @@
 #include "editor/edit-impl.h"
 #include "editor/editwidget.h"
 #include "events_init.h"
+#include "execute.h"  // execute_suspend_with()
 #include "filemanager/filemanager.h"
 #include "filemanager/layout.h"
 #include "viewer/internal.h"
@@ -1889,6 +1890,18 @@ runtime_host_fd_unwatch (int fd)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+runtime_host_tty_suspend (void (*between) (void *data), void *data, gboolean terminal_changed,
+                          const char **error)
+{
+    (void) error;
+
+    execute_suspend_with (between, data, terminal_changed);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /**
  * Color text with the syntax rules of the editor.  The rule set is the one
  * @type names, else the one @filename matches, else the one the first line of
@@ -2599,6 +2612,7 @@ runtime_host_services_init (void)
         .tty_info = runtime_host_tty_info,
         .fd_watch = runtime_host_fd_watch,
         .fd_unwatch = runtime_host_fd_unwatch,
+        .tty_suspend = runtime_host_tty_suspend,
     };
 
     /* Capabilities describe what this invocation can actually open, rather
