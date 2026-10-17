@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>  // FD_SETSIZE
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -1874,7 +1875,13 @@ runtime_host_tty_info (const char *section, mc_runtime_tty_info_t *info, const c
 static gboolean
 runtime_host_fd_watch (int fd, int (*ready) (int fd, void *data), void *data, const char **error)
 {
-    (void) error;
+    // the main loop watches with select()
+    if (fd < 0 || fd >= FD_SETSIZE)
+    {
+        if (error != NULL)
+            *error = "bad_fd";
+        return FALSE;
+    }
 
     add_select_channel (fd, ready, data);
     return TRUE;
@@ -1894,7 +1901,13 @@ static gboolean
 runtime_host_tty_suspend (void (*between) (void *data), void *data, gboolean terminal_changed,
                           const char **error)
 {
-    (void) error;
+    // before the screen is set up (init, pre_tty) there is nothing to give away
+    if (top_dlg == NULL)
+    {
+        if (error != NULL)
+            *error = "not_ready";
+        return FALSE;
+    }
 
     execute_suspend_with (between, data, terminal_changed);
     return TRUE;

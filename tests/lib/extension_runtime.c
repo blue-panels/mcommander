@@ -105,9 +105,9 @@ startup_snapshot_new (void)
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
-host_fd_watch (int fd, int (*ready) (int fd, void *data), void *data, const char **error)
+host_fd_watch (int fd, int (*ready) (int fd, void *data), void *data, const char **reason)
 {
-    (void) error;
+    (void) reason;
 
     host_watched_fd = fd;
     host_ready = ready;
@@ -127,9 +127,9 @@ host_fd_unwatch (int fd)
 
 static gboolean
 host_tty_suspend (void (*between) (void *data), void *data, gboolean terminal_changed,
-                  const char **error)
+                  const char **reason)
 {
-    (void) error;
+    (void) reason;
 
     host_suspend_calls++;
     host_suspend_changed = terminal_changed;
@@ -140,11 +140,11 @@ host_tty_suspend (void (*between) (void *data), void *data, gboolean terminal_ch
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
-host_ui_quit (const char **error)
+host_ui_quit (const char **reason)
 {
     if (host_quit_busy)
     {
-        *error = "busy";
+        *reason = "busy";
         return FALSE;
     }
     host_quit_calls++;
@@ -363,8 +363,8 @@ START_TEST (test_runtime_plugin_off_by_default)
 
     seen = g_string_new (NULL);
     mc_runtime_plugins_enumerate_found (collect_found, seen);
-    mctest_assert_true (strstr (seen->str, "test-runtime:1:1") != NULL);
-    mctest_assert_true (strstr (seen->str, "test-runtime-off:0:0") != NULL);
+    ck_assert_ptr_nonnull (strstr (seen->str, "test-runtime:1:1"));
+    ck_assert_ptr_nonnull (strstr (seen->str, "test-runtime-off:0:0"));
     g_string_free (seen, TRUE);
 
     mc_runtime_plugins_shutdown ();

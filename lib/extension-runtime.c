@@ -2242,6 +2242,8 @@ mc_runtime_plugin_try_load (const char *module_path, const char *filename)
         mc_runtime_plugin_instance_destroy (instance, TRUE);
         g_ptr_array_remove_index (mc_runtime_plugin_instances,
                                   mc_runtime_plugin_instances->len - 1);
+        // a copy that did not start does not hide the next one of the same name
+        g_ptr_array_remove (mc_runtime_found_plugins, found);
         g_module_close (module);
         return;
     }
