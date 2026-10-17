@@ -98,6 +98,7 @@
 #include "panel_modes.h"       // panel_modes_cmd
 #include "panel_plugin_ops.h"  // plugin_panel_copy_cmd()
 #include "mcterm_overlay.h"
+#include "runtime_menu.h"
 
 /*** global variables ****************************************************************************/
 
@@ -257,6 +258,8 @@ create_file_menu (void)
         }
     }
 
+    entries = runtime_menu_prepend_entries (entries, "File");
+
     entries = g_list_prepend (entries, menu_separator_new ());
     entries = g_list_prepend (entries, menu_entry_new (_ ("Select &group"), CK_Select));
     entries = g_list_prepend (entries, menu_entry_new (_ ("U&nselect group"), CK_Unselect));
@@ -292,6 +295,8 @@ create_attributes_menu (void)
     entries =
         g_list_prepend (entries, menu_entry_new (_ ("Cha&ttr flags..."), CK_ChangeAttributes));
 #endif
+
+    entries = runtime_menu_prepend_entries (entries, "Attributes");
 
     return g_list_reverse (entries);
 }
@@ -347,6 +352,8 @@ create_command_menu (void)
         }
     }
 
+    entries = runtime_menu_prepend_entries (entries, "Command");
+
     return g_list_reverse (entries);
 }
 
@@ -374,6 +381,8 @@ create_options_menu (void)
             entries = g_list_prepend (entries, p->data);
         g_list_free (plugin_entries);
     }
+
+    entries = runtime_menu_prepend_entries (entries, "Options");
 
     entries = g_list_prepend (entries, menu_separator_new ());
     entries = g_list_prepend (entries, menu_entry_new (_ ("Learn &keys..."), CK_LearnKeys));
@@ -406,6 +415,8 @@ create_options_menu (void)
 static void
 init_menu (void)
 {
+    runtime_menu_reload ();
+
     left_menu = menu_new ("", create_panel_menu (FALSE), "[Left and Right Menus]");
     menubar_add_menu (the_menubar, left_menu);
     menubar_add_menu (the_menubar, menu_new (_ ("&File"), create_file_menu (), "[File Menu]"));
@@ -1654,6 +1665,8 @@ midnight_execute_cmd (Widget *sender, long command)
         // don't close panels due to SIGINT
         break;
     default:
+        if (runtime_menu_execute (command))
+            break;
         if (command >= CK_PluginActionBase)
         {
             /* plugin action: decode plugin_idx and action_idx */
