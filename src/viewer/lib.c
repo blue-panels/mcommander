@@ -290,6 +290,7 @@ mcview_init (WView *view)
     view->command = NULL;
     view->search_nroff_seq = NULL;
     view->source_display_mode = FALSE;
+    view->source_wrap = FALSE;
     view->generator = NULL;
     view->generator_wakeup[0] = view->generator_wakeup[1] = -1;
 
@@ -393,6 +394,12 @@ mcview_done (WView *view)
         mcview_global_flags.highlight = view->mode_flags.highlight;
     if (mcview_altered_flags.nroff && !view->source_display_mode)
         mcview_global_flags.nroff = view->mode_flags.nroff;
+    /* and goes with it: Quick view loads the next file into the same view, which would keep
+       nroff, where the colors of the syntax are not drawn */
+    if (view->source_display_mode)
+        view->mode_flags.nroff = mcview_global_flags.nroff;
+    if (view->source_wrap)
+        view->mode_flags.wrap = mcview_global_flags.wrap;
     mcview_global_flags.structured = FALSE;
 
     mcview_structured_reset (view);

@@ -273,6 +273,7 @@ struct WView
 
     // the display mode came from the source, not the user: never make it global
     gboolean source_display_mode;
+    gboolean source_wrap;  // the wrap came from the source too
 
     // Plugin source controller (NULL when viewer was opened by other means)
     mcview_source_spec_t *source_spec;                    // current spec, owned
