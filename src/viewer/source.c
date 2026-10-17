@@ -189,7 +189,10 @@ mcview_install_source (WView *view, mcview_source_handle_t *handle,
     /* A source that lays its own text out, such as a diagram wider than the
        screen, asks to be scrolled sideways rather than broken. */
     if (spec->has_wrap)
+    {
         view->mode_flags.wrap = spec->wrap;
+        view->source_wrap = TRUE;
+    }
     if (spec->initial_terminal)
     {
         view->mode_flags.hex = FALSE;
