@@ -35,6 +35,7 @@
 #include "lib/global.h"
 #include "lib/fileloc.h"
 #include "lib/extension-runtime.h"
+#include "lib/plugin-prefs.h"
 #include "lib/runtime-events.h"
 #include "lib/strutil.h"
 #include "lib/util.h"
@@ -213,6 +214,17 @@ typedef struct
 } mc_runtime_fd_watch_t;
 
 static GPtrArray *mc_runtime_fd_watches = NULL;
+
+typedef struct
+{
+    char *runtime_name;
+    char *display_name;
+    gboolean started;
+    gboolean enabled_by_default;
+} mc_runtime_found_t;
+
+/* Every runtime plugin found, the ones that are turned off too */
+static GPtrArray *mc_runtime_found_plugins = NULL;
 
 typedef struct
 {
@@ -2068,8 +2080,64 @@ mc_runtime_module_filename_compare (gconstpointer first, gconstpointer second)
 /* --------------------------------------------------------------------------------------------- */
 
 static void
+mc_runtime_found_free (gpointer data)
+{
+    mc_runtime_found_t *found = (mc_runtime_found_t *) data;
+
+    g_free (found->runtime_name);
+    g_free (found->display_name);
+    g_free (found);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mc_runtime_found_t *
+mc_runtime_found_add (const mc_runtime_plugin_descriptor_v1_t *descriptor)
+{
+    mc_runtime_found_t *found;
+
+    found = g_new0 (mc_runtime_found_t, 1);
+    found->runtime_name = g_strdup (descriptor->runtime_name);
+    if (descriptor->struct_size >= MC_RUNTIME_PLUGIN_DESCRIPTOR_DISPLAY_NAME_SIZE
+        && descriptor->display_name != NULL && descriptor->display_name[0] != '\0')
+        found->display_name = g_strdup (descriptor->display_name);
+    else
+        found->display_name = g_strdup (descriptor->runtime_name);
+    found->enabled_by_default =
+        (descriptor->capability_flags & MC_RUNTIME_PLUGIN_CAP_OFF_BY_DEFAULT) == 0;
+
+    if (mc_runtime_found_plugins == NULL)
+        mc_runtime_found_plugins = g_ptr_array_new_with_free_func (mc_runtime_found_free);
+    g_ptr_array_add (mc_runtime_found_plugins, found);
+
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_found_has (const char *runtime_name)
+{
+    guint i;
+
+    for (i = 0; mc_runtime_found_plugins != NULL && i < mc_runtime_found_plugins->len; i++)
+    {
+        const mc_runtime_found_t *found =
+            (const mc_runtime_found_t *) g_ptr_array_index (mc_runtime_found_plugins, i);
+
+        if (g_strcmp0 (found->runtime_name, runtime_name) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
 mc_runtime_plugin_try_load (const char *module_path, const char *filename)
 {
+    mc_runtime_found_t *found;
     GModule *module;
     mc_runtime_plugin_register_v1_fn register_fn;
     const mc_runtime_plugin_descriptor_v1_t *descriptor;
@@ -2108,7 +2176,17 @@ mc_runtime_plugin_try_load (const char *module_path, const char *filename)
         return;
     }
 
-    if (mc_runtime_plugin_is_disabled (descriptor->runtime_name))
+    // the user's copy of a plugin that is off shadows the system's one as well
+    if (mc_runtime_found_has (descriptor->runtime_name))
+    {
+        g_module_close (module);
+        return;
+    }
+
+    found = mc_runtime_found_add (descriptor);
+    if (mc_runtime_plugin_is_disabled (descriptor->runtime_name)
+        || !mc_plugin_prefs_is_enabled (MC_PLUGIN_KIND_RUNTIME, descriptor->runtime_name,
+                                        found->enabled_by_default))
     {
         g_module_close (module);
         return;
@@ -2129,10 +2207,13 @@ mc_runtime_plugin_try_load (const char *module_path, const char *filename)
         mc_runtime_plugin_instance_destroy (instance, TRUE);
         g_ptr_array_remove_index (mc_runtime_plugin_instances,
                                   mc_runtime_plugin_instances->len - 1);
+        // a copy that did not start does not hide the next one of the same name
+        g_ptr_array_remove (mc_runtime_found_plugins, found);
         g_module_close (module);
         return;
     }
 
+    found->started = TRUE;
     g_module_make_resident (module);
 }
 
@@ -2246,6 +2327,8 @@ mc_runtime_plugins_shutdown (void)
         g_hash_table_destroy (mc_runtime_disabled_plugin_names);
         mc_runtime_disabled_plugin_names = NULL;
     }
+
+    g_clear_pointer (&mc_runtime_found_plugins, g_ptr_array_unref);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2289,6 +2372,27 @@ mc_runtime_plugins_enumerate_runtimes (mc_runtime_loaded_runtime_callback_t call
 
         callback (descriptor->runtime_name, display_name, descriptor->abi_version,
                   descriptor->capability_flags, descriptor->required_host_capabilities, user_data);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mc_runtime_plugins_enumerate_found (mc_runtime_found_runtime_callback_t callback,
+                                    gpointer user_data)
+{
+    guint i;
+
+    if (callback == NULL)
+        return;
+
+    for (i = 0; mc_runtime_found_plugins != NULL && i < mc_runtime_found_plugins->len; i++)
+    {
+        const mc_runtime_found_t *found =
+            (const mc_runtime_found_t *) g_ptr_array_index (mc_runtime_found_plugins, i);
+
+        callback (found->runtime_name, found->display_name, found->started,
+                  found->enabled_by_default, user_data);
     }
 }
 

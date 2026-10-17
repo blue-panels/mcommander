@@ -95,6 +95,11 @@ runtime_plugin_fixture_init (const mc_runtime_host_api_v1_t *host_api,
     fixture_context = context;
     fixture_init_calls++;
 
+#ifdef FIXTURE_INIT_FAILS
+    (void) mcerror;
+    return FALSE;
+#endif
+
     state = g_new0 (runtime_plugin_fixture_state_t, 1);
     host_api->context_set_data (context, state, g_free);
 
@@ -167,8 +172,13 @@ mc_runtime_plugin_register_v1 (void)
     static const mc_runtime_plugin_descriptor_v1_t descriptor = {
         .abi_version = MC_RUNTIME_PLUGIN_ABI_VERSION,
         .struct_size = sizeof (mc_runtime_plugin_descriptor_v1_t),
+#ifdef FIXTURE_OFF_BY_DEFAULT
+        .capability_flags = MC_RUNTIME_PLUGIN_CAP_OFF_BY_DEFAULT,
+        .runtime_name = "test-runtime-off",
+#else
         .capability_flags = 0,
         .runtime_name = "test-runtime",
+#endif
         .required_host_capabilities = MC_RUNTIME_HOST_CAP_EVENTS | MC_RUNTIME_HOST_CAP_CONTEXT_DATA,
         .init = runtime_plugin_fixture_init,
         .shutdown = runtime_plugin_fixture_shutdown,

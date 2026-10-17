@@ -106,12 +106,27 @@ TESTS += mc_realpath
 
 if HAVE_RUNTIME_MODULES
 TESTS += extension_runtime
-noinst_LTLIBRARIES = runtime-plugin-fixture.la
+noinst_LTLIBRARIES = runtime-plugin-fixture.la runtime-plugin-off-fixture.la \
+	runtime-plugin-badinit-fixture.la
 
 runtime_plugin_fixture_la_SOURCES = \
 	runtime_plugin_fixture.c
 runtime_plugin_fixture_la_LDFLAGS = -module -avoid-version -rpath $(abs_builddir)/.libs
 runtime_plugin_fixture_la_LIBADD = $(GLIB_LIBS)
+
+# the same plugin, off until the user turns it on
+runtime_plugin_off_fixture_la_SOURCES = \
+	runtime_plugin_fixture.c
+runtime_plugin_off_fixture_la_CPPFLAGS = $(AM_CPPFLAGS) -DFIXTURE_OFF_BY_DEFAULT
+runtime_plugin_off_fixture_la_LDFLAGS = -module -avoid-version -rpath $(abs_builddir)/.libs
+runtime_plugin_off_fixture_la_LIBADD = $(GLIB_LIBS)
+
+# the same name as runtime-plugin-fixture, an init() that fails, and found first
+runtime_plugin_badinit_fixture_la_SOURCES = \
+	runtime_plugin_fixture.c
+runtime_plugin_badinit_fixture_la_CPPFLAGS = $(AM_CPPFLAGS) -DFIXTURE_INIT_FAILS
+runtime_plugin_badinit_fixture_la_LDFLAGS = -module -avoid-version -rpath $(abs_builddir)/.libs
+runtime_plugin_badinit_fixture_la_LIBADD = $(GLIB_LIBS)
 endif
 
 if HAVE_RUNTIME_MODULES
@@ -145,7 +160,8 @@ runtime_events_SOURCES = \
 
 extension_runtime_SOURCES = \
 	extension_runtime.c
-extension_runtime_DEPENDENCIES = runtime-plugin-fixture.la
+extension_runtime_DEPENDENCIES = runtime-plugin-fixture.la runtime-plugin-off-fixture.la \
+	runtime-plugin-badinit-fixture.la
 extension_runtime_LDADD = $(GMODULE_LIBS)
 
 lua_runtime_SOURCES = \
