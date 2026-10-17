@@ -45,6 +45,8 @@ static guint fixture_startup_calls = 0;
 static guint fixture_shutdown_calls = 0;
 static guint fixture_pre_tty_calls = 0;
 static char *fixture_pre_tty_seen = NULL;
+static mc_runtime_plugin_context_t *fixture_context = NULL;
+static guint fixture_fd_ready_calls = 0;
 
 G_MODULE_EXPORT const mc_runtime_plugin_descriptor_v1_t *mc_runtime_plugin_register_v1 (void);
 G_MODULE_EXPORT guint mc_runtime_plugin_fixture_init_count (void);
@@ -52,6 +54,8 @@ G_MODULE_EXPORT guint mc_runtime_plugin_fixture_startup_count (void);
 G_MODULE_EXPORT guint mc_runtime_plugin_fixture_shutdown_count (void);
 G_MODULE_EXPORT guint mc_runtime_plugin_fixture_pre_tty_count (void);
 G_MODULE_EXPORT const char *mc_runtime_plugin_fixture_pre_tty_seen (void);
+G_MODULE_EXPORT gboolean mc_runtime_plugin_fixture_watch (int fd, const char **error);
+G_MODULE_EXPORT guint mc_runtime_plugin_fixture_fd_ready_count (void);
 
 /*** file scope functions ************************************************************************/
 
@@ -84,6 +88,7 @@ runtime_plugin_fixture_init (const mc_runtime_host_api_v1_t *host_api,
     runtime_plugin_fixture_state_t *state;
 
     fixture_host_api = host_api;
+    fixture_context = context;
     fixture_init_calls++;
 
     state = g_new0 (runtime_plugin_fixture_state_t, 1);
@@ -106,6 +111,19 @@ runtime_plugin_fixture_shutdown (mc_runtime_plugin_context_t *context)
 
     fixture_shutdown_calls++;
     g_clear_pointer (&fixture_pre_tty_seen, g_free);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+runtime_plugin_fixture_fd_ready (mc_runtime_plugin_context_t *context, int fd, gpointer user_data)
+{
+    (void) context;
+    (void) fd;
+    (void) user_data;
+
+    fixture_fd_ready_calls++;
+    return TRUE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -183,6 +201,23 @@ G_MODULE_EXPORT const char *
 mc_runtime_plugin_fixture_pre_tty_seen (void)
 {
     return fixture_pre_tty_seen;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+G_MODULE_EXPORT gboolean
+mc_runtime_plugin_fixture_watch (int fd, const char **error)
+{
+    return fixture_host_api->fd_watch (fixture_context, fd, runtime_plugin_fixture_fd_ready, NULL,
+                                       error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+G_MODULE_EXPORT guint
+mc_runtime_plugin_fixture_fd_ready_count (void)
+{
+    return fixture_fd_ready_calls;
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>  // FD_SETSIZE
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -1870,6 +1871,31 @@ runtime_host_tty_info (const char *section, mc_runtime_tty_info_t *info, const c
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+runtime_host_fd_watch (int fd, int (*ready) (int fd, void *data), void *data, const char **error)
+{
+    // the main loop watches with select()
+    if (fd < 0 || fd >= FD_SETSIZE)
+    {
+        if (error != NULL)
+            *error = "bad_fd";
+        return FALSE;
+    }
+
+    add_select_channel (fd, ready, data);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+runtime_host_fd_unwatch (int fd)
+{
+    delete_select_channel (fd);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /**
  * Color text with the syntax rules of the editor.  The rule set is the one
  * @type names, else the one @filename matches, else the one the first line of
@@ -2578,6 +2604,8 @@ runtime_host_services_init (void)
         .syntax_scan = runtime_host_syntax_scan,
         .syntax_result_free = runtime_host_syntax_result_free,
         .tty_info = runtime_host_tty_info,
+        .fd_watch = runtime_host_fd_watch,
+        .fd_unwatch = runtime_host_fd_unwatch,
     };
 
     /* Capabilities describe what this invocation can actually open, rather
