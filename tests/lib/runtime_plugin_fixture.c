@@ -96,6 +96,11 @@ runtime_plugin_fixture_init (const mc_runtime_host_api_v1_t *host_api,
     fixture_context = context;
     fixture_init_calls++;
 
+#ifdef FIXTURE_INIT_FAILS
+    (void) mcerror;
+    return FALSE;
+#endif
+
     state = g_new0 (runtime_plugin_fixture_state_t, 1);
     host_api->context_set_data (context, state, g_free);
 

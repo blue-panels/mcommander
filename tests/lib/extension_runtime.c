@@ -352,6 +352,26 @@ collect_found (const char *runtime_name, const char *display_name, gboolean star
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_runtime_plugin_failed_init_does_not_hide_the_next)
+{
+    GString *seen;
+
+    // runtime-plugin-badinit-fixture is found first, by the same name, and does not start
+    mctest_assert_true (mc_runtime_plugins_load (&error));
+    ck_assert_int_eq ((int) mc_runtime_plugins_count (), 1);
+
+    seen = g_string_new (NULL);
+    mc_runtime_plugins_enumerate_found (collect_found, seen);
+    ck_assert_ptr_nonnull (strstr (seen->str, "test-runtime:1:1"));
+    ck_assert_ptr_null (strstr (seen->str, "test-runtime:0:"));
+    g_string_free (seen, TRUE);
+
+    mc_runtime_plugins_shutdown ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_runtime_plugin_off_by_default)
 {
     GString *seen;
@@ -433,6 +453,7 @@ main (void)
     tcase_add_test (tc_core, test_runtime_plugin_pre_tty);
     tcase_add_test (tc_core, test_runtime_plugin_fd_watch);
     tcase_add_test (tc_core, test_runtime_plugin_tty_suspend);
+    tcase_add_test (tc_core, test_runtime_plugin_failed_init_does_not_hide_the_next);
     tcase_add_test (tc_core, test_runtime_plugin_off_by_default);
     tcase_add_test (tc_core, test_runtime_plugin_ui_quit);
 
