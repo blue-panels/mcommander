@@ -1,12 +1,14 @@
 /** \file plugin-prefs.h
- *  \brief Header: shared preference helpers for editor and panel plugins, and Lua scripts.
+ *  \brief Header: shared preference helpers for editor, panel and runtime plugins, and Lua scripts.
  *
  * Enable/disable state lives in ~/.config/mc6/plugins.ini under section
  * [DisabledPlugins], one key per disabled plugin in the form "<kind>/<name>"
- * (value is ignored, presence == disabled).  Kind disambiguates editor and
- * panel plugins, and Lua scripts so they can share names without colliding.  Changes are
- * persisted immediately on each set call.  Also provides a common hotkey
- * config parser so plugins resolve key bindings identically.
+ * (value is ignored, presence == disabled).  Kind disambiguates editor, panel
+ * and runtime plugins, and Lua scripts so they can share names without colliding.
+ * A plugin that is off unless the user turns it on is turned on by a key of the
+ * same form in [EnabledPlugins].  Changes are persisted immediately on each set
+ * call.  Also provides a common hotkey config parser so plugins resolve key
+ * bindings identically.
  */
 
 #ifndef MC__PLUGIN_PREFS_H
@@ -19,11 +21,17 @@ typedef enum
     MC_PLUGIN_KIND_EDITOR,
     MC_PLUGIN_KIND_PANEL,
     MC_PLUGIN_KIND_LUA,
+    MC_PLUGIN_KIND_RUNTIME,
 } mc_plugin_kind_t;
 
 gboolean mc_plugin_prefs_is_disabled (mc_plugin_kind_t kind, const char *plugin_name);
 void mc_plugin_prefs_set_disabled (mc_plugin_kind_t kind, const char *plugin_name,
                                    gboolean disabled);
+/* What the user chose for the plugin, or default_enabled when nothing was chosen */
+gboolean mc_plugin_prefs_is_enabled (mc_plugin_kind_t kind, const char *plugin_name,
+                                     gboolean default_enabled);
+/* Keeps the choice either way, so that it holds whatever the default of the plugin is */
+void mc_plugin_prefs_set_enabled (mc_plugin_kind_t kind, const char *plugin_name, gboolean enabled);
 
 /* Return a NULL-terminated array of plugin names disabled under the given
  * kind.  Caller must free with g_strfreev(). */

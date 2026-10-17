@@ -30,6 +30,8 @@
 #define MC_RUNTIME_HOST_CAP_TTY_SUSPEND       (G_GUINT64_CONSTANT (1) << 14)
 
 #define MC_RUNTIME_PLUGIN_CAP_FILE_OPERATIONS (G_GUINT64_CONSTANT (1) << 0)
+/* The plugin is not started unless the user has turned it on */
+#define MC_RUNTIME_PLUGIN_CAP_OFF_BY_DEFAULT (G_GUINT64_CONSTANT (1) << 1)
 
 /*** enums ***************************************************************************************/
 
@@ -767,6 +769,11 @@ typedef void (*mc_runtime_loaded_runtime_callback_t) (const char *runtime_name,
                                                       guint64 capability_flags,
                                                       guint64 required_host_capabilities,
                                                       gpointer user_data);
+/* A runtime plugin found in the directories of plugins, started or not */
+typedef void (*mc_runtime_found_runtime_callback_t) (const char *runtime_name,
+                                                     const char *display_name, gboolean started,
+                                                     gboolean enabled_by_default,
+                                                     gpointer user_data);
 typedef void (*mc_runtime_loaded_package_details_callback_t) (
     const char *runtime_name, const char *id, const char *display_name, const char *workspace,
     const char *origin, const char *directory, gboolean enabled, gpointer user_data);
@@ -1299,6 +1306,8 @@ gboolean mc_runtime_plugins_are_loaded (void);
 guint mc_runtime_plugins_count (void);
 void mc_runtime_plugins_enumerate_runtimes (mc_runtime_loaded_runtime_callback_t callback,
                                             gpointer user_data);
+void mc_runtime_plugins_enumerate_found (mc_runtime_found_runtime_callback_t callback,
+                                         gpointer user_data);
 void mc_runtime_plugins_disable (const char *runtime_name);
 void mc_runtime_plugins_set_host_services (const mc_runtime_host_services_v1_t *services);
 

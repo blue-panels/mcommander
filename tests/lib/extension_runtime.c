@@ -321,6 +321,47 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+static void
+collect_found (const char *runtime_name, const char *display_name, gboolean started,
+               gboolean enabled_by_default, gpointer user_data)
+{
+    GString *seen = (GString *) user_data;
+
+    (void) display_name;
+
+    g_string_append_printf (seen, "%s%s:%d:%d", seen->len > 0 ? " " : "", runtime_name,
+                            (int) started, (int) enabled_by_default);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_runtime_plugin_off_by_default)
+{
+    GString *seen;
+
+    mctest_assert_true (mc_runtime_plugins_load (&error));
+
+    // the plugin that is off until turned on is found, and not started
+    ck_assert_int_eq ((int) mc_runtime_plugins_count (), 1);
+
+    seen = g_string_new (NULL);
+    mc_runtime_plugins_enumerate_found (collect_found, seen);
+    mctest_assert_true (strstr (seen->str, "test-runtime:1:1") != NULL);
+    mctest_assert_true (strstr (seen->str, "test-runtime-off:0:0") != NULL);
+    g_string_free (seen, TRUE);
+
+    mc_runtime_plugins_shutdown ();
+
+    // nothing is left of them once the plugins are shut down
+    seen = g_string_new (NULL);
+    mc_runtime_plugins_enumerate_found (collect_found, seen);
+    mctest_assert_str_eq (seen->str, "");
+    g_string_free (seen, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -333,6 +374,7 @@ main (void)
     tcase_add_test (tc_core, test_runtime_plugin_pre_tty);
     tcase_add_test (tc_core, test_runtime_plugin_fd_watch);
     tcase_add_test (tc_core, test_runtime_plugin_tty_suspend);
+    tcase_add_test (tc_core, test_runtime_plugin_off_by_default);
 
     return mctest_run_all (tc_core);
 }
