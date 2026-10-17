@@ -599,6 +599,17 @@ if test x"$have_lua_plugin" = xyes; then
     AC_DEFINE([ENABLE_LUA_PLUGIN], [1], [Define to build the Lua runtime extension])
 fi
 
+AC_ARG_ENABLE([session-plugin],
+    AS_HELP_STRING([--disable-session-plugin],
+        [Do not build the session runtime plugin (mc that outlives its terminal)]),
+    [enable_session_plugin="$enableval"],
+    [enable_session_plugin=yes])
+
+if test x"$enable_session_plugin" = xyes && test -z "$g_module_supported"; then
+    enable_session_plugin=no
+fi
+AM_CONDITIONAL([ENABLE_SESSION_PLUGIN], [test x"$enable_session_plugin" = xyes])
+
 dnl Optional libmagic support used by core file-operation MIME matching and arcmc
 have_libmagic=no
 LIBMAGIC_CFLAGS=""
@@ -1231,6 +1242,7 @@ src/Makefile
 src/consaver/Makefile
 src/editor/Makefile
 src/lua/Makefile
+src/session/Makefile
 src/mctree/Makefile
 src/viewer/Makefile
 src/mcterm/Makefile
