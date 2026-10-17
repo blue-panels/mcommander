@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>  // FD_SETSIZE
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -52,6 +53,7 @@
 #include "editor/edit-impl.h"
 #include "editor/editwidget.h"
 #include "events_init.h"
+#include "execute.h"  // execute_suspend_with()
 #include "filemanager/filemanager.h"
 #include "filemanager/layout.h"
 #include "viewer/internal.h"
@@ -1870,6 +1872,73 @@ runtime_host_tty_info (const char *section, mc_runtime_tty_info_t *info, const c
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+runtime_host_fd_watch (int fd, int (*ready) (int fd, void *data), void *data, const char **error)
+{
+    // the main loop watches with select()
+    if (fd < 0 || fd >= FD_SETSIZE)
+    {
+        if (error != NULL)
+            *error = "bad_fd";
+        return FALSE;
+    }
+
+    add_select_channel (fd, ready, data);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+runtime_host_fd_unwatch (int fd)
+{
+    delete_select_channel (fd);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+runtime_host_tty_suspend (void (*between) (void *data), void *data, gboolean terminal_changed,
+                          const char **error)
+{
+    // before the screen is set up (init, pre_tty) there is nothing to give away
+    if (top_dlg == NULL)
+    {
+        if (error != NULL)
+            *error = "not_ready";
+        return FALSE;
+    }
+
+    execute_suspend_with (between, data, terminal_changed);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* F10 without the question, when only the panels are open: nothing is closed unseen */
+
+static gboolean
+runtime_host_ui_quit (const char **error)
+{
+    if (mc_global.mc_run_mode != MC_RUN_FULL || filemanager == NULL)
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+    if (dialog_switch_num () > 1 || top_dlg == NULL || top_dlg->data != filemanager)
+    {
+        if (error != NULL)
+            *error = "busy";
+        return FALSE;
+    }
+
+    (void) quiet_quit_cmd (FALSE);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /**
  * Color text with the syntax rules of the editor.  The rule set is the one
  * @type names, else the one @filename matches, else the one the first line of
@@ -2578,6 +2647,10 @@ runtime_host_services_init (void)
         .syntax_scan = runtime_host_syntax_scan,
         .syntax_result_free = runtime_host_syntax_result_free,
         .tty_info = runtime_host_tty_info,
+        .fd_watch = runtime_host_fd_watch,
+        .fd_unwatch = runtime_host_fd_unwatch,
+        .tty_suspend = runtime_host_tty_suspend,
+        .ui_quit = runtime_host_ui_quit,
     };
 
     /* Capabilities describe what this invocation can actually open, rather

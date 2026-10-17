@@ -262,6 +262,7 @@ main (int argc, char *argv[])
     GError *mcerror = NULL;
     int exit_code = EXIT_FAILURE;
     const char *tmpdir = NULL;
+    char **original_argv;
 
     mc_global.run_from_parent_mc = !check_sid ();
 
@@ -277,12 +278,16 @@ main (int argc, char *argv[])
 
     mc_setup_run_mode (argv);  // are we mc? editor? viewer? etc...
 
+    // the options are taken out of argv by mc_args_parse()
+    original_argv = g_strdupv (argv);
+
     if (!mc_args_parse (&argc, &argv, "mc", &mcerror))
     {
     startup_exit_falure:
         fprintf (stderr, _ ("Failed to run:\n%s\n"), mcerror->message);
         g_error_free (mcerror);
     startup_exit_ok:
+        g_strfreev (original_argv);
         mc_shell_deinit ();
         str_uninit_strings ();
         return exit_code;
@@ -390,6 +395,19 @@ main (int argc, char *argv[])
             g_free (buffer);
         vfs_path_free (vpath, TRUE);
     }
+
+    {
+        mc_runtime_pre_tty_info_t pre_tty_info;
+
+        pre_tty_info.struct_size = sizeof (pre_tty_info);
+        pre_tty_info.argc = (int) g_strv_length (original_argv);
+        pre_tty_info.argv = original_argv;
+        pre_tty_info.run_mode = events_runtime_run_mode_name ();
+        pre_tty_info.nested = mc_global.run_from_parent_mc;
+        mc_runtime_plugins_pre_tty (&pre_tty_info);
+    }
+    g_strfreev (original_argv);
+    original_argv = NULL;
 
     /* NOTE: This has to be called before tty_init or whatever routine
        calls any define_sequence */

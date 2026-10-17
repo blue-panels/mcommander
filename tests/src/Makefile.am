@@ -40,6 +40,7 @@ TESTS = \
 	file_history \
 	keymap_reload \
 	runtime_host__syntax \
+	runtime_host__services \
 	learn_modifiers \
 	mctree_model \
 	mctree_resolver \
@@ -87,6 +88,9 @@ keymap_reload_SOURCES = \
 
 runtime_host__syntax_SOURCES = \
 	runtime_host__syntax.c
+
+runtime_host__services_SOURCES = \
+	runtime_host__services.c
 
 learn_modifiers_SOURCES = \
 	learn_modifiers.c

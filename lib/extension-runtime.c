@@ -35,6 +35,7 @@
 #include "lib/global.h"
 #include "lib/fileloc.h"
 #include "lib/extension-runtime.h"
+#include "lib/plugin-prefs.h"
 #include "lib/runtime-events.h"
 #include "lib/strutil.h"
 #include "lib/util.h"
@@ -108,6 +109,15 @@
 #define MC_RUNTIME_HOST_SERVICES_TTY_SIZE                                                          \
     (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, tty_info)                                     \
      + sizeof (((mc_runtime_host_services_v1_t *) NULL)->tty_info))
+#define MC_RUNTIME_HOST_SERVICES_FD_WATCH_SIZE                                                     \
+    (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, fd_unwatch)                                   \
+     + sizeof (((mc_runtime_host_services_v1_t *) NULL)->fd_unwatch))
+#define MC_RUNTIME_HOST_SERVICES_TTY_SUSPEND_SIZE                                                  \
+    (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, tty_suspend)                                  \
+     + sizeof (((mc_runtime_host_services_v1_t *) NULL)->tty_suspend))
+#define MC_RUNTIME_HOST_SERVICES_QUIT_SIZE                                                         \
+    (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, ui_quit)                                      \
+     + sizeof (((mc_runtime_host_services_v1_t *) NULL)->ui_quit))
 #define MC_RUNTIME_HOST_SERVICES_PANEL_PROVIDER_SIZE                                               \
     (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, panel_provider_unregister)                    \
      + sizeof (((mc_runtime_host_services_v1_t *) NULL)->panel_provider_unregister))
@@ -141,6 +151,9 @@
 #define MC_RUNTIME_PLUGIN_DESCRIPTOR_SETTINGS_SIZE                                                 \
     (G_STRUCT_OFFSET (mc_runtime_plugin_descriptor_v1_t, configure_package)                        \
      + sizeof (((mc_runtime_plugin_descriptor_v1_t *) NULL)->configure_package))
+#define MC_RUNTIME_PLUGIN_DESCRIPTOR_PRE_TTY_SIZE                                                  \
+    (G_STRUCT_OFFSET (mc_runtime_plugin_descriptor_v1_t, pre_tty)                                  \
+     + sizeof (((mc_runtime_plugin_descriptor_v1_t *) NULL)->pre_tty))
 
 /*** file scope type declarations ****************************************************************/
 
@@ -194,6 +207,34 @@ struct mc_runtime_plugin_context
 
 static GPtrArray *mc_runtime_ui_indicators = NULL;
 static guint64 mc_runtime_ui_indicator_serial = 0;
+
+typedef struct
+{
+    mc_runtime_plugin_context_t *context;
+    int fd;
+    mc_runtime_fd_ready_t ready;
+    gpointer user_data;
+} mc_runtime_fd_watch_t;
+
+static GPtrArray *mc_runtime_fd_watches = NULL;
+
+typedef struct
+{
+    char *runtime_name;
+    char *display_name;
+    gboolean started;
+    gboolean enabled_by_default;
+} mc_runtime_found_t;
+
+/* Every runtime plugin found, the ones that are turned off too */
+static GPtrArray *mc_runtime_found_plugins = NULL;
+
+typedef struct
+{
+    mc_runtime_plugin_context_t *context;
+    mc_runtime_tty_between_t between;
+    gpointer user_data;
+} mc_runtime_tty_suspend_call_t;
 
 struct mc_runtime_plugin_instance
 {
@@ -1100,6 +1141,222 @@ mc_runtime_host_tty_info (mc_runtime_plugin_context_t *context, const char *sect
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
+mc_runtime_host_has_fd_watch_services (void)
+{
+    return mc_runtime_host_services != NULL
+        && mc_runtime_host_services->struct_size >= MC_RUNTIME_HOST_SERVICES_FD_WATCH_SIZE
+        && mc_runtime_host_services->fd_watch != NULL
+        && mc_runtime_host_services->fd_unwatch != NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mc_runtime_fd_watch_t *
+mc_runtime_fd_watch_find (int fd, guint *index)
+{
+    guint i;
+
+    for (i = 0; mc_runtime_fd_watches != NULL && i < mc_runtime_fd_watches->len; i++)
+    {
+        mc_runtime_fd_watch_t *watch =
+            (mc_runtime_fd_watch_t *) g_ptr_array_index (mc_runtime_fd_watches, i);
+
+        if (watch->fd == fd)
+        {
+            if (index != NULL)
+                *index = i;
+            return watch;
+        }
+    }
+
+    return NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static int
+mc_runtime_fd_watch_ready (int fd, void *data)
+{
+    mc_runtime_fd_watch_t *watch = (mc_runtime_fd_watch_t *) data;
+
+    return watch->ready (watch->context, fd, watch->user_data) ? 1 : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_fd_watch (mc_runtime_plugin_context_t *context, int fd, mc_runtime_fd_ready_t ready,
+                          gpointer user_data, const char **error)
+{
+    mc_runtime_fd_watch_t *watch;
+
+    if (!mc_runtime_plugin_context_is_known (context))
+    {
+        if (error != NULL)
+            *error = "invalid_context";
+        return FALSE;
+    }
+    if (!mc_runtime_host_has_fd_watch_services ())
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+    if (fd < 0 || ready == NULL)
+    {
+        if (error != NULL)
+            *error = "invalid_argument";
+        return FALSE;
+    }
+    if (mc_runtime_fd_watch_find (fd, NULL) != NULL)
+    {
+        if (error != NULL)
+            *error = "already_watched";
+        return FALSE;
+    }
+
+    watch = g_new0 (mc_runtime_fd_watch_t, 1);
+    watch->context = context;
+    watch->fd = fd;
+    watch->ready = ready;
+    watch->user_data = user_data;
+
+    if (!mc_runtime_host_services->fd_watch (fd, mc_runtime_fd_watch_ready, watch, error))
+    {
+        g_free (watch);
+        return FALSE;
+    }
+
+    if (mc_runtime_fd_watches == NULL)
+        mc_runtime_fd_watches = g_ptr_array_new_with_free_func (g_free);
+    g_ptr_array_add (mc_runtime_fd_watches, watch);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mc_runtime_host_fd_unwatch (mc_runtime_plugin_context_t *context, int fd)
+{
+    mc_runtime_fd_watch_t *watch;
+    guint index;
+
+    watch = mc_runtime_fd_watch_find (fd, &index);
+    if (watch == NULL || watch->context != context)
+        return;
+
+    mc_runtime_host_services->fd_unwatch (fd);
+    g_ptr_array_remove_index_fast (mc_runtime_fd_watches, index);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mc_runtime_fd_unwatch_all (mc_runtime_plugin_context_t *context)
+{
+    guint i = 0;
+
+    while (mc_runtime_fd_watches != NULL && i < mc_runtime_fd_watches->len)
+    {
+        mc_runtime_fd_watch_t *watch =
+            (mc_runtime_fd_watch_t *) g_ptr_array_index (mc_runtime_fd_watches, i);
+
+        if (watch->context != context)
+        {
+            i++;
+            continue;
+        }
+        mc_runtime_host_services->fd_unwatch (watch->fd);
+        g_ptr_array_remove_index_fast (mc_runtime_fd_watches, i);
+    }
+
+    if (mc_runtime_fd_watches != NULL && mc_runtime_fd_watches->len == 0)
+        g_clear_pointer (&mc_runtime_fd_watches, g_ptr_array_unref);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_has_tty_suspend_services (void)
+{
+    return mc_runtime_host_services != NULL
+        && mc_runtime_host_services->struct_size >= MC_RUNTIME_HOST_SERVICES_TTY_SUSPEND_SIZE
+        && mc_runtime_host_services->tty_suspend != NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mc_runtime_tty_suspend_between (void *data)
+{
+    mc_runtime_tty_suspend_call_t *call = (mc_runtime_tty_suspend_call_t *) data;
+
+    if (call->between != NULL)
+        call->between (call->context, call->user_data);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_tty_suspend (mc_runtime_plugin_context_t *context, mc_runtime_tty_between_t between,
+                             gpointer user_data, gboolean terminal_changed, const char **error)
+{
+    mc_runtime_tty_suspend_call_t call;
+
+    if (!mc_runtime_plugin_context_is_known (context))
+    {
+        if (error != NULL)
+            *error = "invalid_context";
+        return FALSE;
+    }
+    if (!mc_runtime_host_has_tty_suspend_services ())
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+
+    call.context = context;
+    call.between = between;
+    call.user_data = user_data;
+    return mc_runtime_host_services->tty_suspend (mc_runtime_tty_suspend_between, &call,
+                                                  terminal_changed, error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_has_quit_services (void)
+{
+    return mc_runtime_host_services != NULL
+        && mc_runtime_host_services->struct_size >= MC_RUNTIME_HOST_SERVICES_QUIT_SIZE
+        && mc_runtime_host_services->ui_quit != NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_ui_quit (mc_runtime_plugin_context_t *context, const char **error)
+{
+    if (!mc_runtime_plugin_context_is_known (context))
+    {
+        if (error != NULL)
+            *error = "invalid_context";
+        return FALSE;
+    }
+    if (!mc_runtime_host_has_quit_services ())
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+
+    return mc_runtime_host_services->ui_quit (error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
 mc_runtime_host_panel_provider_register (mc_runtime_plugin_context_t *context,
                                          const mc_runtime_panel_provider_t *provider,
                                          mc_runtime_handle_t *registration, const char **error)
@@ -1656,6 +1913,10 @@ static mc_runtime_host_api_v1_t mc_runtime_host_api = {
     .syntax_scan = mc_runtime_host_syntax_scan,
     .syntax_result_free = mc_runtime_host_syntax_result_free,
     .tty_info = mc_runtime_host_tty_info,
+    .fd_watch = mc_runtime_host_fd_watch,
+    .fd_unwatch = mc_runtime_host_fd_unwatch,
+    .tty_suspend = mc_runtime_host_tty_suspend,
+    .ui_quit = mc_runtime_host_ui_quit,
 };
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1808,6 +2069,7 @@ mc_runtime_plugin_instance_destroy (mc_runtime_plugin_instance_t *instance, gboo
 
     /* A buggy runtime must not leave a callback registered while its state dies. */
     mc_runtime_events_unsubscribe_all (instance->context);
+    mc_runtime_fd_unwatch_all (instance->context);
     mc_runtime_plugin_context_destroy (instance->context);
     g_free (instance);
 }
@@ -1853,8 +2115,64 @@ mc_runtime_module_filename_compare (gconstpointer first, gconstpointer second)
 /* --------------------------------------------------------------------------------------------- */
 
 static void
+mc_runtime_found_free (gpointer data)
+{
+    mc_runtime_found_t *found = (mc_runtime_found_t *) data;
+
+    g_free (found->runtime_name);
+    g_free (found->display_name);
+    g_free (found);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mc_runtime_found_t *
+mc_runtime_found_add (const mc_runtime_plugin_descriptor_v1_t *descriptor)
+{
+    mc_runtime_found_t *found;
+
+    found = g_new0 (mc_runtime_found_t, 1);
+    found->runtime_name = g_strdup (descriptor->runtime_name);
+    if (descriptor->struct_size >= MC_RUNTIME_PLUGIN_DESCRIPTOR_DISPLAY_NAME_SIZE
+        && descriptor->display_name != NULL && descriptor->display_name[0] != '\0')
+        found->display_name = g_strdup (descriptor->display_name);
+    else
+        found->display_name = g_strdup (descriptor->runtime_name);
+    found->enabled_by_default =
+        (descriptor->capability_flags & MC_RUNTIME_PLUGIN_CAP_OFF_BY_DEFAULT) == 0;
+
+    if (mc_runtime_found_plugins == NULL)
+        mc_runtime_found_plugins = g_ptr_array_new_with_free_func (mc_runtime_found_free);
+    g_ptr_array_add (mc_runtime_found_plugins, found);
+
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_found_has (const char *runtime_name)
+{
+    guint i;
+
+    for (i = 0; mc_runtime_found_plugins != NULL && i < mc_runtime_found_plugins->len; i++)
+    {
+        const mc_runtime_found_t *found =
+            (const mc_runtime_found_t *) g_ptr_array_index (mc_runtime_found_plugins, i);
+
+        if (g_strcmp0 (found->runtime_name, runtime_name) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
 mc_runtime_plugin_try_load (const char *module_path, const char *filename)
 {
+    mc_runtime_found_t *found;
     GModule *module;
     mc_runtime_plugin_register_v1_fn register_fn;
     const mc_runtime_plugin_descriptor_v1_t *descriptor;
@@ -1893,7 +2211,17 @@ mc_runtime_plugin_try_load (const char *module_path, const char *filename)
         return;
     }
 
-    if (mc_runtime_plugin_is_disabled (descriptor->runtime_name))
+    // the user's copy of a plugin that is off shadows the system's one as well
+    if (mc_runtime_found_has (descriptor->runtime_name))
+    {
+        g_module_close (module);
+        return;
+    }
+
+    found = mc_runtime_found_add (descriptor);
+    if (mc_runtime_plugin_is_disabled (descriptor->runtime_name)
+        || !mc_plugin_prefs_is_enabled (MC_PLUGIN_KIND_RUNTIME, descriptor->runtime_name,
+                                        found->enabled_by_default))
     {
         g_module_close (module);
         return;
@@ -1914,10 +2242,13 @@ mc_runtime_plugin_try_load (const char *module_path, const char *filename)
         mc_runtime_plugin_instance_destroy (instance, TRUE);
         g_ptr_array_remove_index (mc_runtime_plugin_instances,
                                   mc_runtime_plugin_instances->len - 1);
+        // a copy that did not start does not hide the next one of the same name
+        g_ptr_array_remove (mc_runtime_found_plugins, found);
         g_module_close (module);
         return;
     }
 
+    found->started = TRUE;
     g_module_make_resident (module);
 }
 
@@ -2031,6 +2362,8 @@ mc_runtime_plugins_shutdown (void)
         g_hash_table_destroy (mc_runtime_disabled_plugin_names);
         mc_runtime_disabled_plugin_names = NULL;
     }
+
+    g_clear_pointer (&mc_runtime_found_plugins, g_ptr_array_unref);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2074,6 +2407,27 @@ mc_runtime_plugins_enumerate_runtimes (mc_runtime_loaded_runtime_callback_t call
 
         callback (descriptor->runtime_name, display_name, descriptor->abi_version,
                   descriptor->capability_flags, descriptor->required_host_capabilities, user_data);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mc_runtime_plugins_enumerate_found (mc_runtime_found_runtime_callback_t callback,
+                                    gpointer user_data)
+{
+    guint i;
+
+    if (callback == NULL)
+        return;
+
+    for (i = 0; mc_runtime_found_plugins != NULL && i < mc_runtime_found_plugins->len; i++)
+    {
+        const mc_runtime_found_t *found =
+            (const mc_runtime_found_t *) g_ptr_array_index (mc_runtime_found_plugins, i);
+
+        callback (found->runtime_name, found->display_name, found->started,
+                  found->enabled_by_default, user_data);
     }
 }
 
@@ -2340,6 +2694,30 @@ mc_runtime_plugins_enumerate_menu_actions (const char *workspace,
 
 /* --------------------------------------------------------------------------------------------- */
 
+void
+mc_runtime_plugins_pre_tty (const mc_runtime_pre_tty_info_t *info)
+{
+    guint i;
+
+    if (info == NULL || mc_runtime_plugin_instances == NULL)
+        return;
+
+    for (i = 0; i < mc_runtime_plugin_instances->len; i++)
+    {
+        const mc_runtime_plugin_instance_t *instance =
+            (const mc_runtime_plugin_instance_t *) g_ptr_array_index (mc_runtime_plugin_instances,
+                                                                      i);
+
+        if (instance->descriptor->struct_size < MC_RUNTIME_PLUGIN_DESCRIPTOR_PRE_TTY_SIZE
+            || instance->descriptor->pre_tty == NULL)
+            continue;
+
+        instance->descriptor->pre_tty (instance->context, info);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static gboolean
 mc_runtime_host_has_panel_services (void)
 {
@@ -2471,6 +2849,12 @@ mc_runtime_plugins_set_host_services (const mc_runtime_host_services_v1_t *servi
     if (services != NULL && services->struct_size >= MC_RUNTIME_HOST_SERVICES_TTY_SIZE
         && services->tty_info != NULL)
         mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_TTY;
+    if (mc_runtime_host_has_fd_watch_services ())
+        mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_FD_WATCH;
+    if (mc_runtime_host_has_tty_suspend_services ())
+        mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_TTY_SUSPEND;
+    if (mc_runtime_host_has_quit_services ())
+        mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_QUIT;
     if (mc_runtime_host_has_viewer_source_services ())
         mc_runtime_host_api.capability_flags |=
             MC_RUNTIME_HOST_CAP_VIEWER_SOURCE | MC_RUNTIME_HOST_CAP_VIEWER_GENERATOR;

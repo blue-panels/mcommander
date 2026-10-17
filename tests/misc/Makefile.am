@@ -1,6 +1,17 @@
 SUBDIRS = ext.d
 
+if ENABLE_SESSION_PLUGIN
+# mcommander in pseudo-terminals: a session outlives its terminal and is taken by another
+TESTS = session.py
+AM_TESTS_ENVIRONMENT = \
+	MC_BIN='$(abs_top_builddir)/src/mcommander'; export MC_BIN; \
+	SESSION_PLUGIN='$(abs_top_builddir)/src/session/.libs/session.so'; export SESSION_PLUGIN; \
+	MC_SESSION_HELPER='$(abs_top_builddir)/src/session/session_helper'; export MC_SESSION_HELPER; \
+	MC_DATADIR='$(abs_top_srcdir)/misc'; export MC_DATADIR;
+endif
+
 EXTRA_DIST = \
+	session.py \
 	docker/glib-api/Dockerfile \
 	docker/README.md \
 	docker/sandbox.sh \
