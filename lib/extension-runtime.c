@@ -115,6 +115,9 @@
 #define MC_RUNTIME_HOST_SERVICES_TTY_SUSPEND_SIZE                                                  \
     (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, tty_suspend)                                  \
      + sizeof (((mc_runtime_host_services_v1_t *) NULL)->tty_suspend))
+#define MC_RUNTIME_HOST_SERVICES_QUIT_SIZE                                                         \
+    (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, ui_quit)                                      \
+     + sizeof (((mc_runtime_host_services_v1_t *) NULL)->ui_quit))
 #define MC_RUNTIME_HOST_SERVICES_PANEL_PROVIDER_SIZE                                               \
     (G_STRUCT_OFFSET (mc_runtime_host_services_v1_t, panel_provider_unregister)                    \
      + sizeof (((mc_runtime_host_services_v1_t *) NULL)->panel_provider_unregister))
@@ -1323,6 +1326,37 @@ mc_runtime_host_tty_suspend (mc_runtime_plugin_context_t *context, mc_runtime_tt
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
+mc_runtime_host_has_quit_services (void)
+{
+    return mc_runtime_host_services != NULL
+        && mc_runtime_host_services->struct_size >= MC_RUNTIME_HOST_SERVICES_QUIT_SIZE
+        && mc_runtime_host_services->ui_quit != NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+mc_runtime_host_ui_quit (mc_runtime_plugin_context_t *context, const char **error)
+{
+    if (!mc_runtime_plugin_context_is_known (context))
+    {
+        if (error != NULL)
+            *error = "invalid_context";
+        return FALSE;
+    }
+    if (!mc_runtime_host_has_quit_services ())
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+
+    return mc_runtime_host_services->ui_quit (error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
 mc_runtime_host_panel_provider_register (mc_runtime_plugin_context_t *context,
                                          const mc_runtime_panel_provider_t *provider,
                                          mc_runtime_handle_t *registration, const char **error)
@@ -1882,6 +1916,7 @@ static mc_runtime_host_api_v1_t mc_runtime_host_api = {
     .fd_watch = mc_runtime_host_fd_watch,
     .fd_unwatch = mc_runtime_host_fd_unwatch,
     .tty_suspend = mc_runtime_host_tty_suspend,
+    .ui_quit = mc_runtime_host_ui_quit,
 };
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2816,6 +2851,8 @@ mc_runtime_plugins_set_host_services (const mc_runtime_host_services_v1_t *servi
         mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_FD_WATCH;
     if (mc_runtime_host_has_tty_suspend_services ())
         mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_TTY_SUSPEND;
+    if (mc_runtime_host_has_quit_services ())
+        mc_runtime_host_api.capability_flags |= MC_RUNTIME_HOST_CAP_QUIT;
     if (mc_runtime_host_has_viewer_source_services ())
         mc_runtime_host_api.capability_flags |=
             MC_RUNTIME_HOST_CAP_VIEWER_SOURCE | MC_RUNTIME_HOST_CAP_VIEWER_GENERATOR;

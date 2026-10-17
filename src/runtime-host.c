@@ -1902,6 +1902,30 @@ runtime_host_tty_suspend (void (*between) (void *data), void *data, gboolean ter
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* F10 without the question, when only the panels are open: nothing is closed unseen */
+
+static gboolean
+runtime_host_ui_quit (const char **error)
+{
+    if (mc_global.mc_run_mode != MC_RUN_FULL || filemanager == NULL)
+    {
+        if (error != NULL)
+            *error = "not_supported";
+        return FALSE;
+    }
+    if (dialog_switch_num () > 1 || top_dlg == NULL || top_dlg->data != filemanager)
+    {
+        if (error != NULL)
+            *error = "busy";
+        return FALSE;
+    }
+
+    (void) quiet_quit_cmd (FALSE);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /**
  * Color text with the syntax rules of the editor.  The rule set is the one
  * @type names, else the one @filename matches, else the one the first line of
@@ -2613,6 +2637,7 @@ runtime_host_services_init (void)
         .fd_watch = runtime_host_fd_watch,
         .fd_unwatch = runtime_host_fd_unwatch,
         .tty_suspend = runtime_host_tty_suspend,
+        .ui_quit = runtime_host_ui_quit,
     };
 
     /* Capabilities describe what this invocation can actually open, rather

@@ -42,6 +42,7 @@ typedef guint (*runtime_fixture_count_fn_t) (void);
 typedef const char *(*runtime_fixture_string_fn_t) (void);
 typedef gboolean (*runtime_fixture_watch_fn_t) (int fd, const char **error);
 typedef gboolean (*runtime_fixture_suspend_fn_t) (gboolean terminal_changed, const char **error);
+typedef gboolean (*runtime_fixture_quit_fn_t) (const char **error);
 
 /*** file scope variables ************************************************************************/
 
@@ -51,6 +52,8 @@ static int (*host_ready) (int fd, void *data) = NULL;
 static void *host_ready_data = NULL;
 static int host_unwatched_fd = -1;
 static int host_suspend_calls = 0;
+static gboolean host_quit_busy = FALSE;
+static int host_quit_calls = 0;
 static gboolean host_suspend_changed = FALSE;
 
 /*** file scope functions ************************************************************************/
@@ -131,6 +134,20 @@ host_tty_suspend (void (*between) (void *data), void *data, gboolean terminal_ch
     host_suspend_calls++;
     host_suspend_changed = terminal_changed;
     between (data);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+host_ui_quit (const char **error)
+{
+    if (host_quit_busy)
+    {
+        *error = "busy";
+        return FALSE;
+    }
+    host_quit_calls++;
     return TRUE;
 }
 
@@ -362,6 +379,48 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_runtime_plugin_ui_quit)
+{
+    static mc_runtime_host_services_v1_t services;
+    GModule *fixture_module;
+    char *fixture_path;
+    runtime_fixture_quit_fn_t quit;
+    const char *quit_error = NULL;
+
+    memset (&services, 0, sizeof (services));
+    services.abi_version = MC_RUNTIME_PLUGIN_ABI_VERSION;
+    services.struct_size = sizeof (services);
+    services.ui_quit = host_ui_quit;
+    mc_runtime_plugins_set_host_services (&services);
+
+    fixture_path =
+        g_build_filename (TEST_RUNTIME_PLUGIN_DIR, "runtime-plugin-fixture.so", (char *) NULL);
+    fixture_module = g_module_open (fixture_path, 0);
+    ck_assert_msg (fixture_module != NULL, "Failed to open runtime fixture: %s", g_module_error ());
+    g_free (fixture_path);
+    mctest_assert_true (
+        g_module_symbol (fixture_module, "mc_runtime_plugin_fixture_quit", (gpointer *) &quit));
+
+    mctest_assert_true (mc_runtime_plugins_load (&error));
+
+    // something is open over the panels: mc says so and goes on
+    host_quit_busy = TRUE;
+    mctest_assert_false (quit (&quit_error));
+    mctest_assert_str_eq (quit_error, "busy");
+    ck_assert_int_eq (host_quit_calls, 0);
+
+    host_quit_busy = FALSE;
+    mctest_assert_true (quit (&quit_error));
+    ck_assert_int_eq (host_quit_calls, 1);
+
+    mc_runtime_plugins_shutdown ();
+    mc_runtime_plugins_set_host_services (NULL);
+    g_module_close (fixture_module);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -375,6 +434,7 @@ main (void)
     tcase_add_test (tc_core, test_runtime_plugin_fd_watch);
     tcase_add_test (tc_core, test_runtime_plugin_tty_suspend);
     tcase_add_test (tc_core, test_runtime_plugin_off_by_default);
+    tcase_add_test (tc_core, test_runtime_plugin_ui_quit);
 
     return mctest_run_all (tc_core);
 }
