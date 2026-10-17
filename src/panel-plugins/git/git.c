@@ -60,6 +60,7 @@ typedef struct
     char *state_text;
     char *state_mark_text;
     char *commit_sha;
+    char *base_sha;  // GIT_ITEM_DIFF_DIR: where the changes of the listed commits start
     gboolean is_deleted;
     gboolean is_staged;
     gboolean is_conflict;  // unmerged: Show diff opens the merge
@@ -88,6 +89,7 @@ typedef struct
     char *coole_executable;
     int view;
     char *selected_commit;
+    char *selected_commit_base;  // diff: the files from here to selected_commit
     char *current_branch;
     char *selected_branch;
     char *selected_remote;
@@ -119,6 +121,8 @@ static mc_pp_result_t git_view_item (void *plugin_data, const char *fname, const
 static mc_pp_result_t git_get_help_info (void *plugin_data, const char **filename,
                                          const char **node);
 static mc_pp_result_t git_get_local_copy (void *plugin_data, const char *fname, char **local_path);
+static mc_pp_result_t git_get_quick_view (void *plugin_data, const char *fname,
+                                          const struct stat *st, char **local_path);
 static const char *git_get_title (void *plugin_data);
 static char *git_get_location (void *plugin_data);
 static mc_pp_result_t git_handle_key (void *plugin_data, int key);
@@ -153,6 +157,7 @@ static const mc_panel_plugin_t git_plugin = {
     .view = git_view_item,
     .get_help_info = git_get_help_info,
     .get_local_copy = git_get_local_copy,
+    .get_quick_view = git_get_quick_view,
     .put_file = NULL,
     .save_file = NULL,
     .delete_items = git_delete_items,
@@ -244,10 +249,12 @@ typedef enum
     GIT_ITEM_COMMIT_DIR,
     GIT_ITEM_COMMIT_PARENT_ENTRY,
     GIT_ITEM_COMMIT_FILE,
-    GIT_ITEM_FAVORITE_REPO
+    GIT_ITEM_FAVORITE_REPO,
+    GIT_ITEM_DIFF_DIR
 } git_item_kind_t;
 
 #define GIT_COMMITS_DIR_NAME        "commits"
+#define GIT_DIFF_DIR_NAME           "diff"
 #define GIT_BRANCHES_DIR_NAME       "branches"
 #define GIT_BRANCHES_LOCAL_DIR_NAME "local"
 #define GIT_BRANCHES_REMOTE_PREFIX  "remote/"
@@ -479,6 +486,7 @@ git_entry_info_free (gpointer ptr)
     g_free (info->state_text);
     g_free (info->state_mark_text);
     g_free (info->commit_sha);
+    g_free (info->base_sha);
     g_free (info);
 }
 
@@ -1233,10 +1241,37 @@ git_find_merge_commit (git_data_t *data, const char *base, const char *ref)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static char *
+git_merge_base (git_data_t *data, const char *a, const char *b)
+{
+    char *argv[] = {
+        (char *) "git", (char *) "-C", data->repo_root, (char *) "merge-base", (char *) a,
+        (char *) b,     NULL
+    };
+    char *out = NULL;
+
+    if (!git_run_stdout (argv, &out))
+    {
+        g_free (out);
+        return NULL;
+    }
+    g_strchomp (out);
+    if (*out == '\0')
+    {
+        g_free (out);
+        return NULL;
+    }
+
+    return out;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Log of BASE..REF. When the range is empty, REF is already merged into BASE:
- * show the commits that the merge brought in, else the whole log of REF. */
+ * show the commits that the merge brought in, else the whole log of REF.
+ * FROM, when not NULL, gets the commit the listed changes start from: NULL for the whole log. */
 static gboolean
-git_run_branch_log (git_data_t *data, const char *base, const char *ref, char **out)
+git_run_branch_log (git_data_t *data, const char *base, const char *ref, char **out, char **from)
 {
     char *argv[] = { (char *) "git",
                      (char *) "-C",
@@ -1254,6 +1289,9 @@ git_run_branch_log (git_data_t *data, const char *base, const char *ref, char **
     char *merge;
     gboolean ok;
 
+    if (from != NULL)
+        *from = NULL;
+
     if (base != NULL)
     {
         range = g_strdup_printf ("%s..%s", base, ref);
@@ -1261,19 +1299,32 @@ git_run_branch_log (git_data_t *data, const char *base, const char *ref, char **
         ok = git_run_stdout (argv, out);
         g_free (range);
         if (!ok || **out != '\0')
+        {
+            if (ok && from != NULL)
+                *from = git_merge_base (data, base, ref);
             return ok;
+        }
         g_free (*out);
 
         merge = git_find_merge_commit (data, base, ref);
         if (merge != NULL)
         {
-            range = g_strdup_printf ("%s^1..%s", merge, ref);
+            char *first_parent;
+
+            first_parent = g_strdup_printf ("%s^1", merge);
             g_free (merge);
+            range = g_strdup_printf ("%s..%s", first_parent, ref);
             argv[10] = range;
             ok = git_run_stdout (argv, out);
             g_free (range);
             if (!ok || **out != '\0')
+            {
+                if (ok && from != NULL)
+                    *from = git_merge_base (data, first_parent, ref);
+                g_free (first_parent);
                 return ok;
+            }
+            g_free (first_parent);
             g_free (*out);
         }
     }
@@ -1316,6 +1367,32 @@ git_parse_log_and_fill (git_data_t *data, dir_list *list, const char *out)
     }
 
     g_strfreev (lines);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* diff, the first entry of a commit list: every file the listed commits change, FROM..the
+   newest one. BASE is what the list is taken against. */
+
+static void
+git_add_diff_dir (git_data_t *data, dir_list *list, const char *log, const char *from,
+                  const char *base)
+{
+    const char *tab;
+    char *tip;
+    git_entry_info_t *info;
+
+    if (from == NULL || log == NULL || (tab = strchr (log, '\t')) == NULL)
+        return;
+
+    // the newest commit comes first: its sha ends the range
+    tip = g_strndup (log, (gsize) (tab - log));
+    git_add_virtual_dir (data, list, GIT_DIFF_DIR_NAME, GIT_ITEM_DIFF_DIR, tip,
+                         base != NULL ? base : "", time (NULL));
+    info = (git_entry_info_t *) g_hash_table_lookup (data->display_to_info, GIT_DIFF_DIR_NAME);
+    if (info != NULL)
+        info->base_sha = g_strdup (from);
+    g_free (tip);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1375,8 +1452,9 @@ git_parse_commit_files_and_fill (git_data_t *data, dir_list *list, const char *o
         }
 
         is_deleted = (status[0] == 'D');
-        git_add_entry (data, list, git_type_mark_from_name_status (status), "COMMIT", path,
-                       is_deleted, FALSE, GIT_ITEM_COMMIT_FILE, data->selected_commit, old_path);
+        git_add_entry (data, list, git_type_mark_from_name_status (status),
+                       data->selected_commit_base != NULL ? "DIFF" : "COMMIT", path, is_deleted,
+                       FALSE, GIT_ITEM_COMMIT_FILE, data->selected_commit, old_path);
         added++;
 
         g_strfreev (parts);
@@ -1837,7 +1915,10 @@ git_show_diff_selected (git_data_t *data)
         }
         else
         {
-            object_old = g_strdup_printf ("%s^:%s", info->commit_sha, old_path);
+            if (data->selected_commit_base != NULL)
+                object_old = g_strdup_printf ("%s:%s", data->selected_commit_base, old_path);
+            else
+                object_old = g_strdup_printf ("%s^:%s", info->commit_sha, old_path);
             ok = git_write_temp_from_git_show (data, object_old, old_path, &left_path);
             if (!ok && !git_write_temp_contents ("", 0, old_path, &left_path))
             {
@@ -1902,14 +1983,21 @@ git_show_diff_selected (git_data_t *data)
     if (info->kind == GIT_ITEM_COMMIT_FILE)
     {
         char sha[8];
+        char *before;
         const char *old_path =
             (info->old_repo_path != NULL) ? info->old_repo_path : info->repo_path;
 
         g_strlcpy (sha, info->commit_sha != NULL ? info->commit_sha : "", sizeof (sha));
-        if (info->state_mark_text != NULL && info->state_mark_text[0] == '+')
-            left_label = g_strdup_printf ("%s (not in %s^)", info->repo_path, sha);
+        // the left side is where diff starts, else the parent
+        if (data->selected_commit_base != NULL)
+            before = g_strdup_printf ("%.7s", data->selected_commit_base);
         else
-            left_label = g_strdup_printf ("%s (%s^)", old_path, sha);
+            before = g_strdup_printf ("%s^", sha);
+        if (info->state_mark_text != NULL && info->state_mark_text[0] == '+')
+            left_label = g_strdup_printf ("%s (not in %s)", info->repo_path, before);
+        else
+            left_label = g_strdup_printf ("%s (%s)", old_path, before);
+        g_free (before);
         if (info->is_deleted)
             right_label = g_strdup_printf ("%s (deleted in %s)", info->repo_path, sha);
         else
@@ -1967,36 +2055,18 @@ fail:
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The output of a git command in a temporary file: what F3 and Quick view show for an entry
+   that is not a file */
+
 static gboolean
-git_show_commit_description_by_sha (git_data_t *data, const char *sha, const char *name_for_log)
+git_output_to_temp (git_data_t *data, char **argv, const char *header, char **tmp_path)
 {
     char *out = NULL;
     char *err = NULL;
-    char *tmp_path = NULL;
+    char *text;
     gboolean ok;
-    char *argv[] = { (char *) "git",
-                     (char *) "-C",
-                     data->repo_root,
-                     (char *) "show",
-                     (char *) "--no-color",
-                     (char *) "-s",
-                     (char *) "--format=fuller",
-                     NULL,
-                     NULL };
 
-    if (sha == NULL || *sha == '\0')
-    {
-        git_debug_log ("git: F3 empty sha name='%s'",
-                       name_for_log != NULL ? name_for_log : "(null)");
-        return FALSE;
-    }
-
-    git_debug_log ("git: F3 commit description name='%s' sha=%s view=%s",
-                   name_for_log != NULL ? name_for_log : "(null)", sha, git_view_name (data->view));
-
-    argv[7] = (char *) sha;
-    ok = git_run_capture (argv, &out, &err);
-    if (!ok)
+    if (!git_run_capture (argv, &out, &err))
     {
         if (err != NULL && *err != '\0')
             git_show_error (data, "Git panel", err);
@@ -2005,30 +2075,97 @@ git_show_commit_description_by_sha (git_data_t *data, const char *sha, const cha
         return FALSE;
     }
 
-    if (!git_write_temp_contents (out != NULL ? out : "", out != NULL ? (gssize) strlen (out) : 0,
-                                  /* a commit message, not a file: no name to keep */ NULL,
-                                  &tmp_path))
-    {
-        git_debug_log ("git: F3 failed to write temp file for sha=%s", sha);
-        g_free (out);
-        g_free (err);
-        return FALSE;
-    }
-    git_debug_log ("git: F3 temp file=%s", tmp_path);
-
-    {
-        vfs_path_t *tmp_vpath;
-
-        tmp_vpath = vfs_path_from_str (tmp_path);
-        (void) mcview_viewer (NULL, tmp_vpath, 0, 0, 0);
-        vfs_path_free (tmp_vpath, TRUE);
-    }
-
-    unlink (tmp_path);
-    g_free (tmp_path);
+    text = g_strconcat (header != NULL ? header : "", out != NULL ? out : "", (char *) NULL);
+    // a commit message or a summary, not a file: no name to keep
+    ok = git_write_temp_contents (text, (gssize) strlen (text), NULL, tmp_path);
+    g_free (text);
     g_free (out);
     g_free (err);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+git_commit_description_to_temp (git_data_t *data, const char *sha, char **tmp_path)
+{
+    char *argv[] = { (char *) "git",
+                     (char *) "-C",
+                     data->repo_root,
+                     (char *) "show",
+                     (char *) "--no-color",
+                     (char *) "-s",
+                     (char *) "--format=fuller",
+                     (char *) sha,
+                     NULL };
+
+    if (sha == NULL || *sha == '\0')
+        return FALSE;
+
+    return git_output_to_temp (data, argv, NULL, tmp_path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* diff: how much each file of the listed commits changes */
+
+static gboolean
+git_diff_stat_to_temp (git_data_t *data, const git_entry_info_t *info, char **tmp_path)
+{
+    char *argv[] = { (char *) "git",
+                     (char *) "-C",
+                     data->repo_root,
+                     (char *) "diff",
+                     (char *) "--no-color",
+                     (char *) "--stat",
+                     (char *) "--find-renames",
+                     info->base_sha,
+                     info->commit_sha,
+                     NULL };
+    char *header;
+    gboolean ok;
+
+    if (info->base_sha == NULL || info->commit_sha == NULL)
+        return FALSE;
+
+    header =
+        g_strdup_printf ("git diff --stat %.12s %.12s (the branch against %s)\n\n", info->base_sha,
+                         info->commit_sha, info->state_text != NULL ? info->state_text : "");
+    ok = git_output_to_temp (data, argv, header, tmp_path);
+    g_free (header);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+git_view_temp (char *tmp_path)
+{
+    vfs_path_t *tmp_vpath;
+
+    tmp_vpath = vfs_path_from_str (tmp_path);
+    (void) mcview_viewer (NULL, tmp_vpath, 0, 0, 0);
+    vfs_path_free (tmp_vpath, TRUE);
+    unlink (tmp_path);
+    g_free (tmp_path);
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+git_show_commit_description_by_sha (git_data_t *data, const char *sha, const char *name_for_log)
+{
+    char *tmp_path = NULL;
+
+    git_debug_log ("git: F3 commit description name='%s' sha=%s view=%s",
+                   name_for_log != NULL ? name_for_log : "(null)", sha != NULL ? sha : "(null)",
+                   git_view_name (data->view));
+
+    if (!git_commit_description_to_temp (data, sha, &tmp_path))
+        return FALSE;
+
+    return git_view_temp (tmp_path);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2352,6 +2489,7 @@ git_close (void *plugin_data)
     g_free (data->default_format);
     g_free (data->coole_executable);
     g_free (data->selected_commit);
+    g_free (data->selected_commit_base);
     g_free (data->current_branch);
     g_free (data->selected_branch);
     g_free (data->selected_remote);
@@ -2459,6 +2597,8 @@ git_get_items (void *plugin_data, void *list_ptr)
     else if ((git_view_t) data->view == GIT_VIEW_COMMITS)
     {
         char *out2 = NULL;
+        char *from = NULL;
+        char *base = NULL;
         gboolean ok2;
 
         if (data->selected_branch != NULL)
@@ -2530,8 +2670,8 @@ git_get_items (void *plugin_data, void *list_ptr)
                 }
             }
 
-            ok2 = git_run_branch_log (data, sel_upstream, data->selected_branch, &out2);
-            g_free (sel_upstream);
+            ok2 = git_run_branch_log (data, sel_upstream, data->selected_branch, &out2, &from);
+            base = sel_upstream;
         }
         else
         {
@@ -2540,16 +2680,40 @@ git_get_items (void *plugin_data, void *list_ptr)
             base_ref = git_detect_upstream_ref (data);
             if (base_ref == NULL)
                 base_ref = git_detect_base_ref (data);
-            ok2 = git_run_branch_log (data, base_ref, "HEAD", &out2);
-            g_free (base_ref);
+            ok2 = git_run_branch_log (data, base_ref, "HEAD", &out2, &from);
+            base = base_ref;
         }
 
+        if (ok2)
+        {
+            git_add_diff_dir (data, list, out2, from, base);
+            git_parse_log_and_fill (data, list, out2);
+        }
+        g_free (base);
+        g_free (from);
+        g_free (out2);
         if (!ok2)
             return MC_PPR_FAILED;
-
-        git_parse_log_and_fill (data, list, out2);
-        g_free (out2);
         return MC_PPR_OK;
+    }
+    else if ((git_view_t) data->view == GIT_VIEW_COMMIT_FILES && data->selected_commit != NULL
+             && data->selected_commit_base != NULL)
+    {
+        char *argv[] = { (char *) "git",
+                         (char *) "-C",
+                         data->repo_root,
+                         (char *) "diff",
+                         (char *) "--no-color",
+                         (char *) "--name-status",
+                         (char *) "--find-renames",
+                         data->selected_commit_base,
+                         data->selected_commit,
+                         NULL };
+
+        ok = git_run_stdout (argv, &out);
+        if (!ok)
+            return MC_PPR_FAILED;
+        (void) git_parse_commit_files_and_fill (data, list, out);
     }
     else if ((git_view_t) data->view == GIT_VIEW_COMMIT_FILES && data->selected_commit != NULL)
     {
@@ -2756,6 +2920,9 @@ git_chdir (void *plugin_data, const char *path)
         {
             char *return_focus = g_strdup (data->selected_commit_name);
 
+            g_free (data->selected_commit_base);
+            data->selected_commit_base = NULL;
+
             if (git_commit_stack_pop_to_current (data))
             {
                 git_set_pending_focus (data, return_focus);
@@ -2803,6 +2970,8 @@ git_chdir (void *plugin_data, const char *path)
             data->selected_branch_scope = GIT_BRANCH_SCOPE_NONE;
             g_free (data->selected_commit);
             data->selected_commit = NULL;
+            g_free (data->selected_commit_base);
+            data->selected_commit_base = NULL;
             g_free (data->selected_commit_name);
             data->selected_commit_name = NULL;
             g_free (data->selected_commit_list_name);
@@ -2819,6 +2988,8 @@ git_chdir (void *plugin_data, const char *path)
         data->selected_branch_scope = GIT_BRANCH_SCOPE_NONE;
         g_free (data->selected_commit);
         data->selected_commit = NULL;
+        g_free (data->selected_commit_base);
+        data->selected_commit_base = NULL;
         g_free (data->selected_commit_name);
         data->selected_commit_name = NULL;
         g_free (data->selected_commit_list_name);
@@ -2918,14 +3089,20 @@ git_chdir (void *plugin_data, const char *path)
     if ((git_view_t) data->view == GIT_VIEW_COMMITS)
     {
         info = git_lookup_info (data, path);
-        if (info == NULL || info->kind != GIT_ITEM_COMMIT_DIR || info->commit_sha == NULL)
+        if (info == NULL || (info->kind != GIT_ITEM_COMMIT_DIR && info->kind != GIT_ITEM_DIFF_DIR)
+            || info->commit_sha == NULL)
             return MC_PPR_FAILED;
 
         data->view = GIT_VIEW_COMMIT_FILES;
         g_free (data->selected_commit);
         data->selected_commit = g_strdup (info->commit_sha);
+        g_free (data->selected_commit_base);
+        data->selected_commit_base = g_strdup (info->base_sha);
         g_free (data->selected_commit_name);
-        data->selected_commit_name = g_strdup (info->state_text != NULL ? info->state_text : path);
+        // a commit is named by its short sha, diff by itself
+        data->selected_commit_name = g_strdup (
+            info->kind == GIT_ITEM_COMMIT_DIR && info->state_text != NULL ? info->state_text
+                                                                          : path);
         g_free (data->selected_commit_list_name);
         data->selected_commit_list_name = g_strdup (path);
         git_set_pending_focus (data, path);
@@ -2979,6 +3156,7 @@ git_enter (void *plugin_data, const char *fname, const struct stat *st)
         case GIT_ITEM_COMMIT_DIR:
         case GIT_ITEM_COMMIT_PARENT_ENTRY:
         case GIT_ITEM_FAVORITE_REPO:
+        case GIT_ITEM_DIFF_DIR:
             return git_chdir (plugin_data, fname);
         default:
             break;
@@ -3009,6 +3187,15 @@ git_view_item (void *plugin_data, const char *fname, const struct stat *st, gboo
     if (info == NULL)
         return MC_PPR_NOT_SUPPORTED;
 
+    if (info->kind == GIT_ITEM_DIFF_DIR)
+    {
+        char *tmp_path = NULL;
+
+        if (git_diff_stat_to_temp (data, info, &tmp_path) && git_view_temp (tmp_path))
+            return MC_PPR_OK;
+        return MC_PPR_FAILED;
+    }
+
     if ((git_view_t) data->view != GIT_VIEW_COMMITS
         && (git_view_t) data->view != GIT_VIEW_COMMIT_FILES)
         return MC_PPR_NOT_SUPPORTED;
@@ -3020,6 +3207,37 @@ git_view_item (void *plugin_data, const char *fname, const struct stat *st, gboo
         return MC_PPR_OK;
 
     return MC_PPR_FAILED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A commit is a directory of the panel: Quick view shows what F3 does, and files go on to
+   get_local_copy() */
+
+static mc_pp_result_t
+git_get_quick_view (void *plugin_data, const char *fname, const struct stat *st, char **local_path)
+{
+    git_data_t *data = (git_data_t *) plugin_data;
+    const git_entry_info_t *info;
+    gboolean ok;
+
+    (void) st;
+
+    if (data == NULL || fname == NULL || local_path == NULL)
+        return MC_PPR_FAILED;
+
+    info = git_lookup_info (data, fname);
+    if (info == NULL)
+        return MC_PPR_NOT_SUPPORTED;
+
+    if (info->kind == GIT_ITEM_DIFF_DIR)
+        ok = git_diff_stat_to_temp (data, info, local_path);
+    else if (info->kind == GIT_ITEM_COMMIT_DIR || info->kind == GIT_ITEM_COMMIT_PARENT_ENTRY)
+        ok = git_commit_description_to_temp (data, info->commit_sha, local_path);
+    else
+        return MC_PPR_NOT_SUPPORTED;
+
+    return ok ? MC_PPR_OK : MC_PPR_FAILED;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3179,9 +3397,12 @@ git_handle_key (void *plugin_data, int key)
             || (data->key_reword != 0 && key == data->key_reword)
             || (view == GIT_VIEW_COMMITS && key == CK_Edit)))
     {
-        const char *sha = view == GIT_VIEW_COMMIT_FILES         ? data->selected_commit
-            : info != NULL && info->kind == GIT_ITEM_COMMIT_DIR ? info->commit_sha
-                                                                : NULL;
+        // in diff selected_commit is the end of the list, not a chosen commit
+        const char *sha = view == GIT_VIEW_COMMIT_FILES && data->selected_commit_base == NULL
+            ? data->selected_commit
+            : view == GIT_VIEW_COMMITS && info != NULL && info->kind == GIT_ITEM_COMMIT_DIR
+            ? info->commit_sha
+            : NULL;
 
         return git_launch_coole (data, key == data->key_show ? GIT_COOLE_SHOW : GIT_COOLE_REWORD,
                                  sha);

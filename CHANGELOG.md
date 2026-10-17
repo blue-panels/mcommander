@@ -41,6 +41,9 @@ The releases of this fork, newest first.
   terminal go with it. Suggested by unxed (PR #377).
 - Manage plugins lists the runtime plugins too, also the ones that are off
   until they are switched on there.
+- The commit list of the git panel starts with diff: every file the branch
+  changes from its base, with Shift-F3 for the diff of the whole branch. Quick
+  view shows the description of a commit, as F3 does.
 
 ## 6.1.0 - 2026-09-26
 
