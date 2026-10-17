@@ -2799,8 +2799,7 @@ git_get_local_copy (void *plugin_data, const char *fname, char **local_path)
         g_free (object_spec);
         if (!ok)
             return MC_PPR_FAILED;
-
-        source_name = info->repo_path;
+        // the name of the copy ends with the name of the file already
     }
     else
         return MC_PPR_FAILED;
