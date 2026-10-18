@@ -612,6 +612,11 @@ static size_t kitty_text_pos = 0;
 static unsigned int key_repeat_left = 0;
 /* The repeat count of the Win32 input record parsed last, 1 for any other key */
 static unsigned int win32_record_repeat = 1;
+/* the last record: a pressed Esc with no virtual key is one the console typed itself, as the
+   start of a paste mark */
+static unsigned int win32_record_vk = 0;
+static unsigned int win32_record_uc = 0;
+static gboolean win32_record_press = FALSE;
 /* The modifier keys held now, a bit for each from Left Shift to Right Meta */
 static guint kitty_mod_keys = 0;
 /* The kitty modifier bit of each of the six modifier keys of a side */
@@ -1859,6 +1864,9 @@ win32_parse_record (const char *params, size_t len, tty_key_event_t *ev)
 
     // a held key may come as one record with a count, a WORD in the Windows console
     win32_record_repeat = field[5] == 0 ? 1 : MIN (field[5], 0xFFFF);
+    win32_record_vk = field[0];
+    win32_record_uc = field[2];
+    win32_record_press = field[3] != 0;
 
     vk = field[0];
     sc = field[1];
@@ -1969,6 +1977,8 @@ static gboolean
 key_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
 {
     win32_record_repeat = 1;
+    win32_record_vk = G_MAXUINT;
+    win32_record_press = FALSE;
     if (win32_input_active && len > 0 && params[len - 1] == '_')
         return win32_parse_record (params, len, ev);
     return kitty_parse_csi (params, len, ev);
@@ -3233,11 +3243,15 @@ nodelay_try_again:
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
-            // the Windows console types a paste, its marks too, as keys of the Win32 input mode
-            if (c == ESC_CHAR && win32_input_active && kitty_event_valid
-                && kitty_event.event == TTY_KITTY_PRESS && kitty_event.mods == 0
-                && tty_lowlevel_input_pending ())
+            /* the Windows console types a paste, its marks too, as keys of the Win32 input mode;
+               the Esc of a mark has no key, the Esc key has VK_ESCAPE */
+            if (win32_input_active && win32_record_press && win32_record_vk == 0
+                && win32_record_uc == ESC_CHAR)
+            {
                 c = win32_paste_start ();
+                if (c != MCKEY_BRACKETED_PASTING_START)
+                    kitty_event_valid = FALSE;
+            }
             if (c == -1 || c == KEY_KITTY_EVENT || c == MCKEY_MODIFIERS)
             {
                 this = NULL;
@@ -3311,9 +3325,9 @@ win32_take_record (GString *raw, gboolean *press, unsigned int *uc)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* Called for Esc of the Win32 input mode with more input behind it. Records of [ 2 0 0 ~ behind
-   it are the start of a bracketed paste that the Windows console typed as keys. Else the Esc is
-   a key, and what was read after it is read next: the characters that matched, then the record
+/* Called for an Esc that the Windows console typed itself, with no key. Records of [ 2 0 0 ~
+   behind it, as they come, are the start of a bracketed paste typed as keys. Else the Esc is a
+   key, and what was read after it is read next: the characters that matched, then the record
    that did not. */
 
 static int

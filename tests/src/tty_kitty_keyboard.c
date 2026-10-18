@@ -641,18 +641,44 @@ START_TEST (test_win32_paste_typed_as_keys)
 {
     GString *seq = g_string_new (NULL);
 
-    // the Windows console: the marks and the text all as keys, Enter as a key with CR
+    /* the Windows console: the marks and the text all as keys, Enter as a key with CR; the
+       characters of the marks with no key */
     kitty_keyboard_active = FALSE;
     win32_input_active = TRUE;
-    win32_type (seq, 27, 27);
+    win32_type (seq, 0, 27);
     win32_type_text (seq, "[200~ab");
     win32_type (seq, 13, 13);
     win32_type_text (seq, "c");
     g_string_append (seq, "\033[0;0;55357;1;0;1_\033[0;0;56832;1;0;1_");  // U+1F600
-    win32_type (seq, 27, 27);
+    win32_type (seq, 0, 27);
     win32_type_text (seq, "[201~");
     check_paste (seq->str, "ab\nc\xf0\x9f\x98\x80");
     g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_paste_from_windows_console)
+{
+    // a'[$> Enter, two spaces and cd, pasted with Shift held, as conhost of Windows 11 sent it
+    static const char seq[] =
+        "\033[0;0;27;1;0;1_\033[0;0;27;0;0;1_\033[0;0;91;1;0;1_\033[0;0;91;0;0;1_"
+        "\033[0;0;50;1;0;1_\033[0;0;50;0;0;1_\033[0;0;48;1;0;1_\033[0;0;48;0;0;1_"
+        "\033[0;0;48;1;0;1_\033[0;0;48;0;0;1_\033[0;0;126;1;0;1_\033[0;0;126;0;0;1_"
+        "\033[65;30;97;1;0;1_\033[65;30;97;0;0;1_\033[222;40;39;1;0;1_\033[222;40;39;0;0;1_"
+        "\033[219;26;91;1;0;1_\033[219;26;91;0;0;1_\033[16;42;0;1;16;1_\033[52;5;36;1;16;1_"
+        "\033[52;5;36;0;16;1_\033[16;42;0;0;0;1_\033[16;42;0;1;16;1_\033[190;52;62;1;16;1_"
+        "\033[190;52;62;0;16;1_\033[16;42;0;0;0;1_\033[13;28;13;1;0;1_\033[13;28;13;0;0;1_"
+        "\033[32;57;32;1;0;1_\033[32;57;32;0;0;1_\033[32;57;32;1;0;1_\033[32;57;32;0;0;1_"
+        "\033[67;46;99;1;0;1_\033[67;46;99;0;0;1_\033[68;32;100;1;0;1_\033[68;32;100;0;0;1_"
+        "\033[0;0;27;1;0;1_\033[0;0;27;0;0;1_\033[0;0;91;1;0;1_\033[0;0;91;0;0;1_"
+        "\033[0;0;50;1;0;1_\033[0;0;50;0;0;1_\033[0;0;48;1;0;1_\033[0;0;48;0;0;1_"
+        "\033[0;0;49;1;0;1_\033[0;0;49;0;0;1_\033[0;0;126;1;0;1_\033[0;0;126;0;0;1_";
+
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+    check_paste (seq, "a'[$>\n  cd");
 }
 END_TEST
 
@@ -683,8 +709,15 @@ START_TEST (test_win32_esc_is_a_key)
 
     ck_assert_int_eq (decode ("\033[27;1;27;1;0;1_"), ESC_CHAR);
 
-    // keys behind Esc that are no paste mark come after it, as they were typed
+    // the Esc key is a key even with the keys of a paste mark behind it
     win32_type (seq, 27, 27);
+    win32_type_text (seq, "[200~");
+    ck_assert_int_eq (decode (seq->str), ESC_CHAR);
+    ck_assert_int_eq (get_key_code (1), '[');
+
+    // an Esc typed by the console with no mark behind it: the keys come after it, as they were
+    g_string_truncate (seq, 0);
+    win32_type (seq, 0, 27);
     win32_type_text (seq, "[2x");
     ck_assert_int_eq (decode (seq->str), ESC_CHAR);
     ck_assert_int_eq (get_key_code (1), '[');
@@ -891,6 +924,7 @@ main (void)
     mctest_add_parameterized_test (tc_core, test_win32_decode, win32_ds);
     tcase_add_test (tc_core, test_win32_keys_without_code);
     tcase_add_test (tc_core, test_win32_paste_typed_as_keys);
+    tcase_add_test (tc_core, test_win32_paste_from_windows_console);
     tcase_add_test (tc_core, test_win32_enter_in_paste);
     tcase_add_test (tc_core, test_win32_esc_is_a_key);
     tcase_add_test (tc_core, test_paste_without_win32);
