@@ -320,6 +320,7 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 /*** forward declarations (file scope functions) *************************************************/
 
 static inline gboolean kitty_text_pending (void);
+static int win32_paste_start (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -611,6 +612,11 @@ static size_t kitty_text_pos = 0;
 static unsigned int key_repeat_left = 0;
 /* The repeat count of the Win32 input record parsed last, 1 for any other key */
 static unsigned int win32_record_repeat = 1;
+/* the last record: a pressed Esc with no virtual key is one the console typed itself, as the
+   start of a paste mark */
+static unsigned int win32_record_vk = 0;
+static unsigned int win32_record_uc = 0;
+static gboolean win32_record_press = FALSE;
 /* The modifier keys held now, a bit for each from Left Shift to Right Meta */
 static guint kitty_mod_keys = 0;
 /* The kitty modifier bit of each of the six modifier keys of a side */
@@ -1858,6 +1864,9 @@ win32_parse_record (const char *params, size_t len, tty_key_event_t *ev)
 
     // a held key may come as one record with a count, a WORD in the Windows console
     win32_record_repeat = field[5] == 0 ? 1 : MIN (field[5], 0xFFFF);
+    win32_record_vk = field[0];
+    win32_record_uc = field[2];
+    win32_record_press = field[3] != 0;
 
     vk = field[0];
     sc = field[1];
@@ -1968,6 +1977,8 @@ static gboolean
 key_parse_csi (const char *params, size_t len, tty_key_event_t *ev)
 {
     win32_record_repeat = 1;
+    win32_record_vk = G_MAXUINT;
+    win32_record_press = FALSE;
     if (win32_input_active && len > 0 && params[len - 1] == '_')
         return win32_parse_record (params, len, ev);
     return kitty_parse_csi (params, len, ev);
@@ -3232,6 +3243,15 @@ nodelay_try_again:
         {
             c = kitty_read_csi (c);
             pending_keys = seq_append = NULL;
+            /* the Windows console types a paste, its marks too, as keys of the Win32 input mode;
+               the Esc of a mark has no key, the Esc key has VK_ESCAPE */
+            if (win32_input_active && win32_record_press && win32_record_vk == 0
+                && win32_record_uc == ESC_CHAR)
+            {
+                c = win32_paste_start ();
+                if (c != MCKEY_BRACKETED_PASTING_START)
+                    kitty_event_valid = FALSE;
+            }
             if (c == -1 || c == KEY_KITTY_EVENT || c == MCKEY_MODIFIERS)
             {
                 this = NULL;
@@ -3259,6 +3279,241 @@ done:
     c = correct_key_code (c, from_sequence);
     kitty_event_code = c;
     return c;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* One record of the Win32 input mode, ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _, read from the input
+   into @raw. FALSE when the bytes read are no record. */
+
+static gboolean
+win32_take_record (GString *raw, gboolean *press, unsigned int *uc)
+{
+    unsigned int field[6] = { 0, 0, 0, 0, 0, 1 };
+    unsigned int f = 0;
+    int c;
+
+    while (TRUE)
+    {
+        c = getch_with_timeout (KITTY_CSI_TIMEOUT);
+        if (c == -1)
+            return FALSE;
+        g_string_append_c (raw, (char) c);
+        if ((raw->len == 1 && c != ESC_CHAR) || (raw->len == 2 && c != '['))
+            return FALSE;
+        if (raw->len <= 2)
+            continue;
+        if (c == '_')
+            break;
+        if (g_ascii_isdigit (c))
+        {
+            if (f < G_N_ELEMENTS (field) && field[f] < 0x10FFFF)
+                field[f] = field[f] * 10 + (unsigned int) (c - '0');
+        }
+        else if (c == ';' && raw->len < 64)
+        {
+            f++;
+            if (f < G_N_ELEMENTS (field))
+                field[f] = 0;
+        }
+        else
+            return FALSE;
+    }
+
+    *press = field[3] != 0;
+    *uc = field[2];
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Called for an Esc that the Windows console typed itself, with no key. Records of [ 2 0 0 ~
+   behind it, as they come, are the start of a bracketed paste typed as keys. Else the Esc is a
+   key, and what was read after it is read next: the characters that matched, then the record
+   that did not. */
+
+static int
+win32_paste_start (void)
+{
+    static const char mark[] = "[200~";
+    const size_t mark_len = sizeof (mark) - 1;
+    size_t matched = 0;
+    GString *raw = g_string_new (NULL);
+    int code = ESC_CHAR;
+
+    while (TRUE)
+    {
+        gboolean press = FALSE;
+        unsigned int uc = 0;
+
+        g_string_truncate (raw, 0);
+        if (!win32_take_record (raw, &press, &uc))
+            break;
+        // the releases of the keys
+        if (!press)
+            continue;
+        if (uc != (unsigned char) mark[matched])
+            break;
+        g_string_truncate (raw, 0);
+        if (++matched == mark_len)
+        {
+            code = MCKEY_BRACKETED_PASTING_START;
+            kitty_event_valid = FALSE;
+            break;
+        }
+    }
+
+    if (code == ESC_CHAR)
+    {
+        memcpy (kitty_text, mark, matched);
+        kitty_text_len = matched;
+        kitty_text_pos = 0;
+        if (raw->len != 0)
+            tty_unget_input ((const unsigned char *) raw->str, raw->len);
+    }
+
+    g_string_free (raw, TRUE);
+    return code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The bytes of a paste as they are read: up to its end mark, with the records of the Win32 input
+   mode turned into the characters they type */
+
+typedef struct
+{
+    GString *text;
+    size_t end_matched;
+    gboolean ended;
+    GString *record;         // a record being read
+    unsigned int high_half;  // the first half of a UTF-16 pair
+} tty_paste_reader_t;
+
+static const char tty_paste_end_mark[] = ESC_STR "[201~";
+
+static void
+tty_paste_put (tty_paste_reader_t *r, unsigned char c)
+{
+    const size_t end_len = sizeof (tty_paste_end_mark) - 1;
+
+    if (r->ended)
+        return;
+
+    if (r->text->len < TTY_PASTE_MAX_BYTES)
+        g_string_append_c (r->text, (char) c);
+    if (c == (unsigned char) tty_paste_end_mark[r->end_matched])
+        r->end_matched++;
+    else
+        r->end_matched = (c == ESC_CHAR) ? 1 : 0;
+    if (r->end_matched == end_len)
+    {
+        r->ended = TRUE;
+        r->end_matched = 0;
+        if (r->text->len >= end_len
+            && memcmp (r->text->str + r->text->len - end_len, tty_paste_end_mark, end_len) == 0)
+            g_string_truncate (r->text, r->text->len - end_len);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+tty_paste_put_record (tty_paste_reader_t *r)
+{
+    unsigned int field[6] = { 0, 0, 0, 0, 0, 1 };
+    unsigned int f = 0, i;
+    gunichar cp;
+    char utf8[8];
+    gchar *bytes;
+    gsize len;
+    size_t k;
+
+    for (k = 2; k + 1 < r->record->len; k++)
+    {
+        const char ch = r->record->str[k];
+
+        if (ch == ';')
+        {
+            f++;
+            if (f < G_N_ELEMENTS (field))
+                field[f] = 0;
+        }
+        else if (f < G_N_ELEMENTS (field) && field[f] < 0x10FFFF)
+            field[f] = field[f] * 10 + (unsigned int) (ch - '0');
+    }
+
+    /* a key typed once: the press gives its character, the release nothing. A character with no
+       key, such as a line of a frame, comes as Alt and the digits of its code: the release of Alt
+       gives it, as for a key (see win32_parse_record ()). */
+    if (field[2] == 0
+        || (field[3] == 0
+            && !((field[0] == 0x12 || field[0] == 0xA4 || field[0] == 0xA5) && field[2] >= 0x20)))
+        return;
+
+    if (field[2] >= 0xD800 && field[2] <= 0xDBFF)
+    {
+        r->high_half = field[2];
+        return;
+    }
+    if (field[2] >= 0xDC00 && field[2] <= 0xDFFF)
+    {
+        if (r->high_half == 0)
+            return;
+        cp = 0x10000 + ((r->high_half - 0xD800) << 10) + (field[2] - 0xDC00);
+    }
+    else
+        cp = field[2];
+    r->high_half = 0;
+
+    len = (gsize) g_unichar_to_utf8 (cp, utf8);
+    if (mc_global.utf8_display || cp < 0x80)
+        bytes = g_strndup (utf8, len);
+    else
+        bytes = g_locale_from_utf8 (utf8, (gssize) len, NULL, &len, NULL);
+    if (bytes == NULL)
+        return;
+
+    for (i = 0; i < MIN (field[5], 1024U); i++)
+        for (k = 0; k < len; k++)
+            tty_paste_put (r, (unsigned char) bytes[k]);
+    g_free (bytes);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+tty_paste_feed (tty_paste_reader_t *r, unsigned char c)
+{
+    size_t k;
+
+    if (!win32_input_active)
+    {
+        tty_paste_put (r, c);
+        return;
+    }
+
+    if (r->record->len == 0 && c != ESC_CHAR)
+    {
+        tty_paste_put (r, c);
+        return;
+    }
+
+    g_string_append_c (r->record, (char) c);
+    if (r->record->len == 1)
+        return;
+    if (r->record->len > 2 && r->record->len < 64 && (g_ascii_isdigit (c) || c == ';'))
+        return;
+    if (r->record->len > 2 && c == '_')
+    {
+        tty_paste_put_record (r);
+        g_string_truncate (r->record, 0);
+        return;
+    }
+    if (r->record->len == 2 && c == '[')
+        return;
+
+    // no record: the bytes as they came, such as the end mark
+    for (k = 0; k < r->record->len; k++)
+        tty_paste_put (r, (unsigned char) r->record->str[k]);
+    g_string_truncate (r->record, 0);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3295,16 +3550,16 @@ tty_paste_clean (GString *text)
 static GString *
 tty_paste_collect (void)
 {
-    static const char end_mark[] = ESC_STR "[201~";
-    const size_t end_len = sizeof (end_mark) - 1;
-    size_t end_matched = 0;
-    GString *text = g_string_new (NULL);
+    tty_paste_reader_t r = { NULL, 0, FALSE, NULL, 0 };
     gint64 deadline = g_get_monotonic_time () + TTY_PASTE_GAP_USEC;
     const gint64 max_deadline = g_get_monotonic_time () + TTY_PASTE_MAX_USEC;
-    gboolean ended = FALSE;
+    GString *text;
+
+    r.text = g_string_new (NULL);
+    r.record = g_string_new (NULL);
 
     tty_nodelay (TRUE);
-    while (!ended)
+    while (!r.ended)
     {
         int c;
 
@@ -3334,27 +3589,16 @@ tty_paste_collect (void)
             continue;
 
         deadline = g_get_monotonic_time () + TTY_PASTE_GAP_USEC;
-        if (text->len < TTY_PASTE_MAX_BYTES)
-            g_string_append_c (text, (char) c);
-        if (c == end_mark[end_matched])
-            end_matched++;
-        else
-            end_matched = (c == ESC_CHAR) ? 1 : 0;
-        if (end_matched == end_len)
-        {
-            ended = TRUE;
-            end_matched = 0;
-            if (text->len >= end_len
-                && memcmp (text->str + text->len - end_len, end_mark, end_len) == 0)
-                g_string_truncate (text, text->len - end_len);
-        }
+        tty_paste_feed (&r, (unsigned char) c);
     }
     tty_nodelay (FALSE);
 
+    text = r.text;
     // Discard a partial end mark when the terminal stopped sending the paste.
-    if (!ended && end_matched != 0 && text->len >= end_matched
-        && memcmp (text->str + text->len - end_matched, end_mark, end_matched) == 0)
-        g_string_truncate (text, text->len - end_matched);
+    if (!r.ended && r.end_matched != 0 && text->len >= r.end_matched
+        && memcmp (text->str + text->len - r.end_matched, tty_paste_end_mark, r.end_matched) == 0)
+        g_string_truncate (text, text->len - r.end_matched);
+    g_string_free (r.record, TRUE);
 
     bracketed_pasting_in_progress = FALSE;
 

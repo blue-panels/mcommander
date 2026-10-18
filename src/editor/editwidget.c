@@ -1964,6 +1964,11 @@ edit_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data
     case MSG_PASTE:
         edit_paste_text (e, (const GString *) data);
         edit_update_screen (e);
+        /* with input still there the text is not drawn yet, as after a key: the dialog draws it
+           when the input ends. The Windows console sends the repeats of a held Shift after a
+           paste, which are no keys and draw nothing. */
+        if (!is_idle ())
+            widget_idle (WIDGET (w->owner), TRUE);
         return MSG_HANDLED;
 
     case MSG_ACTION:
