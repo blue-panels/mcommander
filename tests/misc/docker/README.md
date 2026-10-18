@@ -24,7 +24,7 @@ leaves nothing in the working tree and reuses its object files between runs.
     sandbox.sh              the driver; it holds no list of environments
     ci.sh                   every subject in one run, for CI and before a push
     common/                 what an environment should not have to write again
-      build-mc.sh           copy the tree in, configure, make, install
+      build-mc.sh           copy the tree in, meson setup, build, install
       check-plugins.sh      can every plugin the build installed be loaded
       features.ini          build profiles for build -f
       run-cases.sh          press the keys, read the screen, write the report

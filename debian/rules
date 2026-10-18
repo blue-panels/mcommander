@@ -1,9 +1,8 @@
 #!/usr/bin/make -f
 
-# Neither mc-version.h nor autoreconf is run here: the release archive is
-# bootstrapped and carries both that header and the configure script. Writing
-# the header from the Debian version would also put a series suffix such as
-# ~ubuntu24.04.1 into the version banner.
+# The version comes from .tarball-version in the release archive, which
+# packaging/release-source.sh writes. Taking it from the Debian version instead
+# would put a series suffix such as ~ubuntu24.04.1 into the version banner.
 
 # Ubuntu turns link time optimisation on by default; Debian does not.  With it,
 # gcc 15 leaves the recursion in mctree_node_expand_to_depth unrun, so a tree
@@ -15,32 +14,28 @@ export DEB_BUILD_MAINT_OPTIONS = optimize=-lto hardening=+bindnow
 %:
 	dh $@
 
+# dh_auto_configure passes a multiarch --libdir; the package keeps the plain
+# /usr/lib/mcommander layout, so libdir and libexecdir are named again here.
 override_dh_auto_configure:
 	dh_auto_configure -- \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--libexecdir=/usr/lib \
-		--disable-static \
-		--with-screen=slang \
-		--with-panel-plugins-dir=/usr/lib/mcommander/panel-plugins \
-		--with-editor-plugins-dir=/usr/lib/mcommander/editor-plugins \
-		--with-runtime-plugins-dir=/usr/lib/mcommander/runtime-plugins \
-		--enable-lua-plugin=yes \
-		--enable-mctree-magic=yes \
-		--enable-panel-plugin-samba=yes \
-		--enable-panel-plugin-acl=yes \
-		--enable-panel-plugin-ftp=yes \
-		--enable-panel-plugin-arcmc=yes \
-		--enable-panel-plugin-s3=yes \
-		--enable-panel-plugin-mongo=yes \
-		--enable-panel-plugin-sqlite=yes \
-		--enable-panel-plugin-sftp=yes \
-		--enable-panel-plugin-shell-link=yes \
-		--enable-shell-ssh2=yes
-
-override_dh_auto_install:
-	dh_auto_install
-	find debian/tmp -name '*.la' -delete
+		--libdir=lib \
+		--libexecdir=lib \
+		-Dscreen=slang \
+		-Dpanel_plugins_dir=/usr/lib/mcommander/panel-plugins \
+		-Deditor_plugins_dir=/usr/lib/mcommander/editor-plugins \
+		-Druntime_plugins_dir=/usr/lib/mcommander/runtime-plugins \
+		-Dlua=enabled \
+		-Dmagic=enabled \
+		-Dpanel_plugin_samba=enabled \
+		-Dpanel_plugin_acl=enabled \
+		-Dpanel_plugin_ftp=enabled \
+		-Dpanel_plugin_arcmc=enabled \
+		-Dpanel_plugin_s3=enabled \
+		-Dpanel_plugin_mongo=enabled \
+		-Dpanel_plugin_sqlite=enabled \
+		-Dpanel_plugin_sftp=enabled \
+		-Dpanel_plugin_shell_link=enabled \
+		-Dshell_ssh2=enabled
 
 override_dh_installchangelogs:
 	# Ours, not the ChangeLog inherited from upstream mc, which dh_installchangelogs

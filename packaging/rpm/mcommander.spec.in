@@ -14,7 +14,7 @@ BuildRequires:   gpm-devel
 BuildRequires:   libarchive-devel
 BuildRequires:   libcurl-devel
 BuildRequires:   libssh2-devel
-BuildRequires:   make
+BuildRequires:   meson
 BuildRequires:   mongo-c-driver-devel
 BuildRequires:   e2fsprogs-devel
 BuildRequires:   file-devel
@@ -87,38 +87,32 @@ absent.
 %autosetup -n %{name}-%{version}
 
 %build
-# The archive is bootstrapped: it carries configure and mc-version.h.
-%configure \
-    PERL=%{__perl} \
-    PYTHON=%{__python3} \
-    --disable-static \
-    --with-screen=slang \
-    --with-panel-plugins-dir=%{_libdir}/mcommander/panel-plugins \
-    --with-editor-plugins-dir=%{_libdir}/mcommander/editor-plugins \
-    --enable-lua-plugin=yes \
-    --enable-mctree-magic=yes \
-    --enable-panel-plugin-samba=yes \
-    --enable-panel-plugin-acl=yes \
-    --enable-panel-plugin-ftp=yes \
-    --enable-panel-plugin-arcmc=yes \
-    --enable-panel-plugin-s3=yes \
-    --enable-panel-plugin-mongo=yes \
-    --enable-panel-plugin-sqlite=yes \
-    --enable-panel-plugin-sftp=yes \
-    --enable-panel-plugin-shell-link=yes \
-    --enable-shell-ssh2=yes
-%make_build
+# The archive carries .tarball-version, where the build finds the version.
+%meson \
+    -Dscreen=slang \
+    -Dlua=enabled \
+    -Dmagic=enabled \
+    -Dpanel_plugin_samba=enabled \
+    -Dpanel_plugin_acl=enabled \
+    -Dpanel_plugin_ftp=enabled \
+    -Dpanel_plugin_arcmc=enabled \
+    -Dpanel_plugin_s3=enabled \
+    -Dpanel_plugin_mongo=enabled \
+    -Dpanel_plugin_sqlite=enabled \
+    -Dpanel_plugin_sftp=enabled \
+    -Dpanel_plugin_shell_link=enabled \
+    -Dshell_ssh2=enabled
+%meson_build
 
 %install
-%make_install
-find %{buildroot} -name '*.la' -delete
+%meson_install
 %find_lang %{name}
 # The Lua documentation is listed as %%doc below, which puts it in place
-# itself; what make install left behind would be packaged twice.
+# itself; what meson install left behind would be packaged twice.
 rm -rf %{buildroot}%{_docdir}/%{name}
 
 %check
-%make_build check
+%meson_test
 
 %files -f %{name}.lang
 %license COPYING

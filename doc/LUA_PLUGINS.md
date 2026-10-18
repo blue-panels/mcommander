@@ -8,14 +8,15 @@ runs Lua scripts.
 Build it with:
 
 ```sh
-./configure --enable-lua-plugin=yes --with-lua=PREFIX
-make
+meson setup build -Dlua=enabled
+meson compile -C build
 ```
 
-Replace `PREFIX` with the Lua installation prefix, for example `/usr`.
+A Lua installed in an unusual place is found through pkg-config: set
+`PKG_CONFIG_PATH` to its `lib/pkgconfig` before `meson setup`.
 
-`--enable-lua-plugin=auto` is the default.  In that mode the runtime is not
-built when a compatible Lua development package is unavailable.
+`-Dlua=auto` is the default.  In that mode the runtime is not built when a
+compatible Lua development package is unavailable.
 
 ## Enabling and disabling
 

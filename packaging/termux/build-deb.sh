@@ -11,10 +11,9 @@
 #            one the checked-out commit is turned into an archive of the same
 #            kind, with a version of its own (0.0.0+ci.<commit>).
 #
-# Needs Docker, git and the tools release-source.sh needs (autoconf, automake,
-# libtool, gettext, autopoint) when it has to make the archive. The package
-# builder is the image of termux-packages, which brings the Android NDK with
-# it; the libraries mcommander needs are downloaded as Termux packages.
+# Needs Docker and git. The package builder is the image of termux-packages,
+# which brings the Android NDK with it; the libraries mcommander needs are
+# downloaded as Termux packages.
 #
 # Environment:
 #   TERMUX_OUTPUT         where the .deb goes (default: termux-out)

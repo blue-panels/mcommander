@@ -19,16 +19,18 @@ It is recommended that all those tools are installed with the same
 prefix.  Make sure that the tools with the right version are first in
 PATH.
 
-Once you have the right tools, run `autogen.sh' - it will generate
-everything necessary for the build `configure'. Then run 'configure'
-and `make' as usually.
+M-Commander is built with meson in a build directory outside the source
+tree:
 
-The distribution tarball is created by the command `make distcheck'. 
-This command can take a while.
+meson setup build
+meson compile -C build
 
-Note that the version of gettext doesn't affect the snapshot because the
-distributed files are installed by gettext from archives for the version
-used in the AM_GNU_GETTEXT_VERSION macro, which is 0.18.2.
+The distribution archive is created by `meson dist -C build', which also
+builds and tests what it packs.  This command can take a while.
+
+The version is taken from the Git tags: version.sh runs `git describe',
+and the build writes it into mc-version.h.  A release archive keeps it
+in .tarball-version.
 
 
 
@@ -40,37 +42,26 @@ versions.  A lot of cleanup is going on.  The GIT version may be easier
 to understand, in addition to the obvious fact that the merging is
 easier with the GIT version.
 
-In order to compile M-Commander from a clean GIT checkout you
-should use 'autogen.sh && ./configure' instead of 'configure'.
+If you add or remove any files, please change the meson.build in the same
+directory accordingly: meson lists every source file by name.  When doing
+significant changes in the tree structure, "meson dist -C build" is
+strongly recommended.
 
-M-Commander uses Autoconf and Automake, with make it fairly
-portable.  However, GNU Make is strongly recommended for development
-because other versions of make may not track dependencies properly. 
-This is very important for correct compilation, especially if you change
-any header files.
+Every build directory has a configuration of its own, so several of them
+can be tested at once:
 
-If you add or remove any files, please change Makefile.am in the same
-directory accordingly.  When doing significant changes in the tree
-structure, "make distcheck" is strongly recommended.
+meson setup build-debug   --buildtype=debug
+meson setup build-ncurses -Dscreen=ncurses
+meson setup build-asan    -Db_sanitize=address
 
-GNU Autoconf allows you to test several different configurations are
-once.  To do so, use the so called out-of-tree (or VPATH) compilation. 
-Create separate empty directories and run configure with full path from
-those directories, like this:
-
-cd /usr/local/src
-mkdir mc-slang
-mkdir mc-ncurses
-cd mc-slang
-/usr/local/src/mc/configure && make all
-cd ../mc-ncurses
-/usr/local/src/mc/configure --with-screen=ncurses && make all
+The unit tests use the check library and are run by `meson test -C build'.
+They live in tests/, in a tree that mirrors lib/ and src/.
 
 Please use the same indentation as other developers.  We enforce our
 indentation style with clang-format.  If your IDE doesn't have a
 suitable itegration, make sure to run the formatter yourself:
 
-make indent
+meson compile -C build indent
 
 Please keep in mind that the VFS subsystem is licensed under LGPL, while
 the rest of the code uses GPL.

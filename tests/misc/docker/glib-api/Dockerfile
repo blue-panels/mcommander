@@ -4,11 +4,14 @@ FROM debian@sha256:bb3dc79fddbca7e8903248ab916bb775c96ec61014b3d02b4f06043b60472
 RUN printf 'deb http://archive.debian.org/debian buster main\ndeb http://archive.debian.org/debian-security buster/updates main\n' > /etc/apt/sources.list \
     && apt-get -o Acquire::Check-Valid-Until=false update \
     && apt-get install -y --no-install-recommends \
-        build-essential autoconf automake libtool pkg-config gettext autopoint \
+        build-essential pkg-config gettext python3-pip \
         libglib2.0-dev libncursesw5-dev libslang2-dev libacl1-dev \
         libssh2-1-dev libcurl4-openssl-dev libarchive-dev libmagic-dev \
         libsqlite3-dev libsmbclient-dev check file unzip perl \
     && rm -rf /var/lib/apt/lists/*
+
+# The meson of Debian 10 is older than the build needs; the Python there runs a newer one.
+RUN pip3 install --no-cache-dir 'meson==1.3.2' 'ninja==1.11.1.1'
 
 # Keep the test framework current while GLib stays at the supported minimum.
 ADD https://deb.debian.org/debian/pool/main/c/check/check_0.15.2.orig.tar.gz /tmp/check.tar.gz

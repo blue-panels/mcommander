@@ -20,7 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
-# Usage: sh maint/check-glib-api.sh [configure options...]
+# Usage: sh maint/check-glib-api.sh [meson options...]
 # Requires Docker. GLIB_API_CHECK_JOBS sets parallelism (default: 4).
 # Logs and build files are kept in the printed temporary directory.
 
@@ -44,21 +44,18 @@ docker run --rm --user "$(id -u):$(id -g)" \
             2.58.*) printf "GLib: %s\n" "$version" ;;
             *) printf "Expected GLib 2.58, found %s\n" "$version" >&2; exit 1 ;;
         esac
-        mkdir /work/src /work/build
-        tar -C /src --exclude=.git --exclude=.claude --exclude=.agents --exclude=.codex -cf - . | tar -C /work/src -xf -
-        cd /work/src
-        if ! ./autogen.sh > /work/autogen.log 2>&1; then
-            tail -n 40 /work/autogen.log; exit 1
-        fi
-        cd /work/build
-        if ! ../src/configure --enable-tests \
-            CFLAGS="-O2 -g -Werror=implicit-function-declaration" "$@" > /work/configure.log 2>&1; then
+        mkdir /work/src
+        tar -C /src --exclude=.git --exclude=.claude --exclude=.agents --exclude=.codex \
+            --exclude="./build*" -cf - . | tar -C /work/src -xf -
+        if ! CFLAGS="-Werror=implicit-function-declaration" meson setup /work/build /work/src \
+            -Dtests=enabled "$@" > /work/configure.log 2>&1; then
             tail -n 40 /work/configure.log; exit 1
         fi
-        if ! make -j"$GLIB_API_CHECK_JOBS" > /work/build.log 2>&1; then
+        if ! ninja -C /work/build -j"$GLIB_API_CHECK_JOBS" > /work/build.log 2>&1; then
             tail -n 60 /work/build.log; exit 1
         fi
-        if ! make -j"$GLIB_API_CHECK_JOBS" check > /work/check.log 2>&1; then
+        if ! meson test -C /work/build --num-processes "$GLIB_API_CHECK_JOBS" --print-errorlogs \
+            > /work/check.log 2>&1; then
             tail -n 60 /work/check.log; exit 1
         fi
         printf "PASS: build and tests with GLib %s.\n" "$version"

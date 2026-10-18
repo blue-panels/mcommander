@@ -60,10 +60,9 @@ Full notes: **[Releases wiki](https://github.com/blue-panels/mcommander/wiki/Rel
 See [`INSTALL`](INSTALL) for dependencies and instructions.
 
 ```sh
-./autogen.sh          # from a git checkout
-./configure
-make
-sudo make install
+meson setup build --prefix=/usr --sysconfdir=/etc
+meson compile -C build
+sudo meson install -C build
 ```
 
 `mcommander --version` identifies this fork.
@@ -113,15 +112,14 @@ do not open pull requests that edit `po/*.po` by hand.
 
 An ordinary build compiles the checked-in translations without updating the
 `.po` files. Maintainers can merge them with the current template using
-`make -C po update-po`; creating a release archive with `make dist` also runs
-that update.
+`meson compile -C build mcommander-update-po`.
 
 ## Reporting problems
 
 Open an issue: <https://github.com/blue-panels/mcommander/issues>
 
 Include `mcommander --version`, your OS and distribution, and the compiler and
-configure flags if you know them. For a crash, attach a `gdb` backtrace
+meson options if you know them. For a crash, attach a `gdb` backtrace
 (`gdb mcommander core`, then `where`).
 
 ## License

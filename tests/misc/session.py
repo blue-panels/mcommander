@@ -15,7 +15,7 @@ and does not when a dialog is open in it; when it has ended the last one, a
 new one starts without the list.
 
 MC_BIN, SESSION_PLUGIN, MC_SESSION_HELPER and MC_DATADIR come from
-tests/misc/Makefile.am.
+tests/misc/meson.build.
 
 Exit status: 0 passed, 77 skipped, anything else failed.
 """

@@ -139,7 +139,7 @@ Frequently Asked Questions
    M-Commander runs on POSIX (Unix-like) operating systems, such as
    GNU/Linux, FreeBSD, macOS, Solaris and others.
 
-   It uses GNU Autoconf, which should configure it for every Unix
+   It is built with meson, which should configure it for every Unix
    clone.  The packages built for each release cover Debian, Ubuntu,
    Fedora, RHEL and Arch.
 
@@ -195,8 +195,8 @@ Frequently Asked Questions
    error messages exactly as they appear, mention the versions of your
    OS, your compiler and whatever else software you think is relevant.
    If a panel plugin is what fails to build, leave it out with
-   "./configure --enable-panel-plugin-<name>=no"; "./configure --help"
-   lists the names.
+   "meson setup build -Dpanel_plugin_<name>=disabled"; "meson configure
+   build" lists the names.
 
 
 2 Keyboard

@@ -27,7 +27,9 @@ jobs:
           update: true
           install: >-
             gcc
-            autotools
+            meson
+            ninja
+            pkgconf
             gettext-devel
             glib2-devel
             ncurses-devel
@@ -48,43 +50,31 @@ jobs:
             unzip
             zip
 
-      - name: Bootstrap build system
-        run: |
-          if LC_ALL=C grep -q $'\r' configure.ac; then
-            echo '::error title=CRLF checkout::configure.ac has CRLF line endings'
-            exit 1
-          fi
-          if ! ./autogen.sh >bootstrap.log 2>&1; then
-            tail -n 60 bootstrap.log
-            detail=$(tail -n 12 bootstrap.log | tr '\r\n' '  ' | cut -c1-1400)
-            echo "::error title=autogen.sh failed::$detail"
-            exit 1
-          fi
-
       - name: Configure
         run: |
-          mkdir build-msys2
-          cd build-msys2
-          if ! ../configure \
+          if LC_ALL=C grep -q $'\r' meson.build; then
+            echo '::error title=CRLF checkout::meson.build has CRLF line endings'
+            exit 1
+          fi
+          if ! meson setup build-msys2 \
             --prefix=/usr/local \
-            --with-screen=ncurses \
-            --disable-nls \
-            --disable-tests \
-            --enable-lua-plugin=no \
-            --enable-option-checking=fatal >configure.out 2>&1; then
+            -Dscreen=ncurses \
+            -Dnls=disabled \
+            -Dtests=disabled \
+            -Dlua=disabled >configure.out 2>&1; then
             tail -n 60 configure.out
             detail=$(tail -n 12 configure.out | tr '\r\n' '  ' | cut -c1-1400)
-            echo "::error title=configure failed::$detail"
+            echo "::error title=meson setup failed::$detail"
             exit 1
           fi
 
       - name: Build and smoke test
         run: |
           cd build-msys2
-          if ! make -j2 >build.out 2>&1; then
+          if ! ninja -j2 >build.out 2>&1; then
             tail -n 60 build.out
             detail=$(tail -n 12 build.out | tr '\r\n' '  ' | cut -c1-1400)
-            echo "::error title=make failed::$detail"
+            echo "::error title=build failed::$detail"
             exit 1
           fi
           ./src/mcommander --version
@@ -92,7 +82,7 @@ jobs:
       - name: Package MSYS2 build
         run: |
           cd build-msys2
-          if ! make install DESTDIR="$PWD/package-root" >install.out 2>&1; then
+          if ! meson install --destdir "$PWD/package-root" >install.out 2>&1; then
             tail -n 60 install.out
             detail=$(tail -n 12 install.out | tr '\r\n' '  ' | cut -c1-1400)
             echo "::error title=install failed::$detail"
@@ -100,7 +90,7 @@ jobs:
           fi
           installed_bin=$(find package-root -type f -name mcommander.exe -print -quit)
           if test -z "$installed_bin"; then
-            echo '::error title=MSYS2 package incomplete::make install did not stage mcommander.exe'
+            echo '::error title=MSYS2 package incomplete::meson install did not stage mcommander.exe'
             find package-root -type f -name '*mcommander*' -print
             exit 1
           fi
@@ -171,10 +161,8 @@ jobs:
         with:
           name: msys2-build-logs
           path: |
-            bootstrap.log
-            build-msys2/config.log
-            build-msys2/configure.out
+            configure.out
+            build-msys2/meson-logs/*.txt
             build-msys2/build.out
             build-msys2/install.out
             build-msys2/portable.out
-            build-msys2/**/test-suite.log

@@ -1,63 +1,59 @@
+# meson build directories: meson setup build, build-debug, build-ncurses, ...
+/build*/
+/_build*/
+/subprojects/packagecache/
+
 *.o
 *.a
+*.so
+*~
+*.tar.gz
+*.tar.xz
+TAGS
+
+# left over from the autotools build in an old checkout
 *.lo
 *.la
-*~
+.deps
+.libs
 *.cache
-*.tar.gz
-# autoconf runs "mktemp ./confXXXXXX"
 /conf??????/
 /confdefs.h
 /conftest.err
 /conftest.c
 ABOUT-NLS
-Make.common
 Makefile
 Makefile.in
 aclocal.m4
+autom4te.cache
 config
 config.guess
 config.h
 config.h.in
+config.h.in~
 config.log
 config.status
 config.sub
 configure
-configure.mc
-gettext.m4
+configure~
 install-sh
 m4
-mc.qpg
-mcommander.spec
 missing
 mkinstalldirs
-pkginfo
-prototype
 stamp-h
 stamp-h?
 stamp-h.in
-tmpout
-debug
-mc.kdevelop
-version.h
-TAGS
-doc/devel/
-doc/html/
-.deps
 libtool
-make.log
-make.clang
-make.gcc
-make.tcc
 misc/extensions.ini
 misc/charsets
 tests/lib/vfs/charsets
 src/vfs/extfs/helpers/torrent
 src/vfs/extfs/helpers/uc1541
-tests/src/editor/test-data.txt
 src/vfs/extfs/helpers/usqfs
+tests/src/editor/test-data.txt
 tests/src/vfs/extfs/helpers-list/data/config.sh
 mc-version.h
+src/panel-plugins/shell-link/shelldef.h
 src/panel-plugins/shell-link/shelldef.h
 
 # editor/build artifacts
@@ -74,5 +70,5 @@ src/panel-plugins/shell-link/shelldef.h
 /termux-out/
 
 # The sandbox subjects that carry mc's own configuration: "config" above is
-# autotools' directory, not theirs.
+# the directory of the old autotools build, not theirs.
 !tests/misc/docker/cases/*/config

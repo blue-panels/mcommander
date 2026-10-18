@@ -22,29 +22,22 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install autoconf automake gettext check libtool pkg-config
+          brew install gettext check meson pkg-config
           brew install e2fsprogs glib libssh2 openssl s-lang
 
           # unzip is part of the base system
-
-      - name: Bootstrap build system
-        run: ./autogen.sh
 
       - name: Build default configuration
         run: |
           export CFLAGS="${{ inputs.CFLAGS }}"
 
-          ./configure \
-            --prefix="$(pwd)/install-prefix" \
-            --enable-option-checking=fatal \
-            --enable-mclib
-
-          make -j$(sysctl -n hw.logicalcpu)
-          make check
-          make install
+          meson setup build --prefix="$(pwd)/install-prefix" -Dmclib=true
+          meson compile -C build
+          meson test -C build --print-errorlogs
+          meson install -C build
 
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: test-suite-logs-macos
-          path: ./**/test-suite.log
+          name: test-logs-macos
+          path: build/meson-logs/*.txt

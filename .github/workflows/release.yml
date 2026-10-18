@@ -43,14 +43,6 @@ jobs:
           # release-source.sh reads the tag object; prepare.sh reads every tag.
           fetch-depth: 0
 
-      - name: Install the bootstrap tooling
-        # autogen.sh inside the archive needs these; autopoint in particular is
-        # a package of its own on Debian and Ubuntu, only suggested by gettext.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-              autoconf automake libtool gettext autopoint
-
       - name: Build the release archive
         id: build
         run: |
@@ -445,7 +437,7 @@ jobs:
       - name: Install the libraries
         # The heavy optional ones, Samba and the Mongo driver, are left out:
         # their plugins are not what this check is about.
-        run: brew install glib s-lang pkgconf gettext libssh2 libarchive libmagic
+        run: brew install meson glib s-lang pkgconf gettext libssh2 libarchive libmagic
 
       - name: Build from the release archive
         run: |
@@ -460,20 +452,19 @@ jobs:
 
           tar -xf "dist/mcommander-$VERSION.tar.gz"
           cd "mcommander-$VERSION"
-          ./configure --prefix="$brew_prefix" --disable-static \
-              --with-screen=slang
-          make -j"$(sysctl -n hw.ncpu)"
+          meson setup build --prefix="$brew_prefix" -Dscreen=slang
+          meson compile -C build
 
           # A runner has no TERM, and mc sets up its terminal before it gets to
           # printing a version.
-          TERM=xterm ./src/mcommander --version
+          TERM=xterm ./build/src/mcommander --version
 
       - name: Keep the configure log of a failed build
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: macos-config-log
-          path: mcommander-*/config.log
+          path: mcommander-*/build/meson-logs/*.txt
           if-no-files-found: warn
           overwrite: true
 
@@ -516,7 +507,7 @@ jobs:
           path: dist
 
       - name: Install the libraries
-        run: brew install glib s-lang pkgconf gettext libssh2 libarchive libmagic samba mongo-c-driver dylibbundler
+        run: brew install meson glib s-lang pkgconf gettext libssh2 libarchive libmagic samba mongo-c-driver dylibbundler
 
       - name: Build and stage the package
         run: |
@@ -532,15 +523,15 @@ jobs:
           tar -xf "dist/mcommander-$VERSION.tar.gz"
           cd "mcommander-$VERSION"
           # Keep the package out of Homebrew's prefixes on both architectures.
-          # DESTDIR stages the tree; pkgbuild puts stage/opt/mcommander at /opt/mcommander.
-          ./configure --prefix=/opt/mcommander --disable-static \
-              --with-screen=slang \
-              --enable-mctree-magic=yes \
-              --enable-panel-plugin-samba=yes \
-              --enable-panel-plugin-mongo=yes \
-              --with-magic-file=/opt/mcommander/share/misc/magic.mgc
-          make -j"$(sysctl -n hw.ncpu)"
-          make install DESTDIR="$(pwd)/stage"
+          # --destdir stages the tree; pkgbuild puts stage/opt/mcommander at /opt/mcommander.
+          meson setup build --prefix=/opt/mcommander \
+              -Dscreen=slang \
+              -Dmagic=enabled \
+              -Dpanel_plugin_samba=enabled \
+              -Dpanel_plugin_mongo=enabled \
+              -Dmagic_file=/opt/mcommander/share/misc/magic.mgc
+          meson compile -C build
+          meson install -C build --destdir "$(pwd)/stage"
 
           # libmagic's compiled database is a runtime dependency too.
           install -d stage/opt/mcommander/share/misc
@@ -692,7 +683,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.suffix }}-config-log
-          path: mcommander-*/config.log
+          path: mcommander-*/build/meson-logs/*.txt
           if-no-files-found: warn
           overwrite: true
 
