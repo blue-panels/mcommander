@@ -1,0 +1,70 @@
+option('screen', type: 'combo', choices: ['slang', 'ncurses'], value: 'slang',
+       description: 'Screen library')
+option('gpm', type: 'feature', value: 'auto',
+       description: 'gpm mouse support on the Linux console')
+option('x11', type: 'feature', value: 'auto',
+       description: 'Read the keyboard modifiers from the X server')
+option('mclib', type: 'boolean', value: false,
+       description: 'Build libmc as a shared library')
+option('internal_edit', type: 'boolean', value: true,
+       description: 'The internal editor')
+option('diff_viewer', type: 'boolean', value: true,
+       description: 'The diff viewer')
+option('background', type: 'boolean', value: true,
+       description: 'Background file operations')
+option('vfs', type: 'boolean', value: true,
+       description: 'The virtual file system')
+option('vfs_extfs', type: 'boolean', value: true,
+       description: 'The extfs file system (archives through helper scripts)')
+option('vfs_sfs', type: 'boolean', value: true,
+       description: 'The sfs file system (single files through filters)')
+option('ext2fs_attr', type: 'feature', value: 'auto',
+       description: 'ext2/3/4 file attributes (needs e2fsprogs)')
+option('lua', type: 'feature', value: 'auto',
+       description: 'The Lua runtime plugin')
+option('session', type: 'feature', value: 'auto',
+       description: 'The session runtime plugin: mc that outlives its terminal')
+option('magic', type: 'feature', value: 'auto',
+       description: 'libmagic for the file types of the file operations and of the tree view')
+option('magic_file', type: 'string', value: '',
+       description: 'Absolute path of the libmagic database [the default of libmagic]')
+option('zlib', type: 'feature', value: 'auto',
+       description: 'zlib, for the compressed blocks of mcstruct')
+option('nls', type: 'feature', value: 'auto',
+       description: 'Translations of the messages')
+option('tests', type: 'feature', value: 'auto',
+       description: 'Unit tests (needs the check library)')
+option('assert', type: 'boolean', value: true,
+       description: 'Keep the GLib assertions')
+
+option('panel_plugin_sftp', type: 'feature', value: 'auto',
+       description: 'The SFTP panel plugin (needs libssh2 >= 1.9.0)')
+option('panel_plugin_samba', type: 'feature', value: 'auto',
+       description: 'The Samba panel plugin (needs libsmbclient)')
+option('panel_plugin_acl', type: 'feature', value: 'auto',
+       description: 'The access control list plugin (needs libacl)')
+option('panel_plugin_shell_link', type: 'feature', value: 'auto',
+       description: 'The shell link panel plugin')
+option('shell_ssh2', type: 'feature', value: 'auto',
+       description: 'libssh2 as the transport of the shell link plugin')
+option('panel_plugin_ftp', type: 'feature', value: 'auto',
+       description: 'The FTP/FTPS panel plugin (needs libcurl >= 7.20.0)')
+option('panel_plugin_arcmc', type: 'feature', value: 'auto',
+       description: 'The archive browser panel plugin (needs libarchive >= 3.0)')
+option('panel_plugin_s3', type: 'feature', value: 'auto',
+       description: 'The S3 object storage panel plugin (needs libcurl >= 7.75.0)')
+option('panel_plugin_mongo', type: 'feature', value: 'auto',
+       description: 'The MongoDB panel plugin (needs the MongoDB C driver)')
+option('panel_plugin_sqlite', type: 'feature', value: 'auto',
+       description: 'The SQLite database browser panel plugin (needs sqlite3 >= 3.26)')
+
+option('panel_plugins_dir', type: 'string', value: '',
+       description: 'Directory of the panel plugins [LIBDIR/mcommander/panel-plugins]')
+option('editor_plugins_dir', type: 'string', value: '',
+       description: 'Directory of the editor plugins [LIBDIR/mcommander/editor-plugins]')
+option('runtime_plugins_dir', type: 'string', value: '',
+       description: 'Directory of the runtime plugins [LIBDIR/mcommander/runtime-plugins]')
+option('lua_scripts_dir', type: 'string', value: '',
+       description: 'Directory of the system Lua scripts [DATADIR/mcommander/lua/scripts]')
+option('lua_modules_dir', type: 'string', value: '',
+       description: 'Directory of the shared Lua modules [DATADIR/mcommander/lua/lib]')

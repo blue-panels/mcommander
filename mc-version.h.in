@@ -1,0 +1,4 @@
+#ifndef MC_CURRENT_VERSION
+/* This is a generated file: made from mc-version.h.in by the build. */
+#define MC_CURRENT_VERSION "@VCS_TAG@"
+#endif
