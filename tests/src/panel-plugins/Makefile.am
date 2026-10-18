@@ -1,4 +1,4 @@
-SUBDIRS = ftp arcmc samba docker pp_common mcstruct skineditor
+SUBDIRS = ftp arcmc samba docker git pp_common mcstruct skineditor
 
 if ENABLE_PANEL_PLUGIN_MONGO
 SUBDIRS += mongo
