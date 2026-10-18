@@ -8,290 +8,341 @@ Build requirements for M-Commander
 - gcc or clang
   - https://gcc.gnu.org
   - https://clang.llvm.org
-- make
-  - https://www.gnu.org/software/make/
-- autoconf >= 2.64
-  - https://www.gnu.org/software/autoconf/
-- automake >= 1.14
-  - https://www.gnu.org/software/automake/
-- libtool
-  - https://www.gnu.org/software/libtool/
-- pkg-config (optional)
+- meson >= 0.61 and ninja (on the machine that builds)
+  - https://mesonbuild.com
+  - https://ninja-build.org
+- pkg-config
   - https://pkg-config.freedesktop.org/wiki/
 - glib2 >= 2.58
   - https://www.gtk.org
-  - Check the API baseline with: sh maint/check-glib-api.sh
-    This uses Docker to build enabled components and run
-    tests against the real GLib 2.58 headers and library from Debian 10.
-    Sources are mounted read only; build files and logs stay in a temporary
-    directory. Additional configure options can be passed to the script.
+  - Check the API baseline with: meson compile -C build check-glib-api
+    (or sh maint/check-glib-api.sh).  This uses Docker to build enabled
+    components and run the tests against the real GLib 2.58 headers and
+    library from Debian 10.  Sources are mounted read only; build files
+    and logs stay in a temporary directory.  Meson options can be passed
+    to the script.
 - slang2 or ncurses screen library
   - https://www.jedsoft.org/slang/
   - https://invisible-island.net/ncurses/ncurses.html
 - gettext >= 0.18.2
   - https://www.gnu.org/software/gettext/
-- gpm (general purpose mouse daemon as an alternative to xterm mouse)
+- openpty(), in libc or in libutil (the terminal widget)
+
+Optional:
+
+- gpm (general purpose mouse daemon as an alternative to xterm mouse,
+  Linux only)
   - https://www.nico.schottelius.org/software/gpm/
-- libssh2 >= 1.9.0 (required only for the sftp panel plugin and the
-  libssh2 transport of the shell link plugin)
-  - https://libssh2.org
-- libaspell (spell checking support in the internal editor)
-  - https://github.com/GNUAspell/aspell
+- X11 client library (reads the state of the keyboard modifiers when
+  running in a terminal emulator under X11)
 - ext2fs >= 1.42.4 (support for ext{2,3,4}fs extended attributes)
   - https://e2fsprogs.sourceforge.net
+- libmagic (file types for the file operations, the tree view and the
+  archive plugin)
+- Lua >= 5.3 (the Lua runtime plugin)
+  - https://www.lua.org
+- check >= 0.9.10 (unit tests)
+  - https://libcheck.github.io/check/
+- the libraries of the panel plugins, see below
+
+Spell checking needs neither aspell nor hunspell at build time: the
+built-in spell plugin of the editor opens libaspell or libhunspell at
+run time through gmodule, and its settings dialog selects the engine and
+the language.
 
 
 Installation instructions for M-Commander
 -----------------------------------------
 
-M-Commander is written in a portable manner and uses GNU Autoconf
-for configuration, so it is expected to compile without changes on many
-other operating systems.
+M-Commander is built with meson, always in a build directory of its
+own, outside the source tree.  A Git checkout and a release archive are
+built the same way.
 
-If you are installing from an official tarball, it already contains
-pre-bootstrapped autotools build system (specifically the `configure'
-script). In the case that you are installing from a version control
-checkout, you need to bootstrap the build system yourself first using
-the `autogen.sh' script. Note that to do this you would need to install
-the autotools suite first and not only direct mc build dependencies.
+In short:
 
-The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation, and creates
-the makefiles.  It also creates a file `config.status' that you can run
-in the future to recreate the current configuration.
+    meson setup build
+    meson compile -C build
+    meson test -C build           # optional, needs the check library
+    meson install -C build
 
-To compile this package:
+Several build directories can live side by side, each with its own
+configuration:
 
-1.  Configure the package for your system.
+    meson setup build-debug   --buildtype=debug
+    meson setup build-ncurses -Dscreen=ncurses
+    meson setup build-asan    -Db_sanitize=address
 
-Normally, you just `cd' to the directory containing the package's source
-code and type `./configure'.
+The default build type is debugoptimized.  A debug build also turns on
+the debug log.
 
-To compile the package in a different directory than the one containing
-the source code, you must use a version of `make' supporting the `VPATH'
-variable, such as GNU `make'.  Change to the directory where you want
-the object files and executables to go and run the `configure' script
-with the full path.  If for some reason `configure' cannot find the
-source code directory, run `configure' with the option `--srcdir=DIR',
-where DIR is the directory that contains the source code.
+By default, "meson install" installs the files under /usr/local.  Use
+--prefix to choose another place, and --sysconfdir for the system
+configuration, e.g.
 
-By default, `make install' will install the package's files in
-`/usr/local/bin', `/usr/local/man', etc.  You can specify an
-installation prefix other than `/usr/local' by giving `configure' the
-option `--prefix=PATH'.
+    meson setup build --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/libexec
 
-If compiled on GNU/Linux, M-Commander detects if you have the gpm
-library installed.  If you installed the gpm mouse library in a
-non-standard place, you will need to use the --with-gpm-mouse flag with
-the directory base where you installed the gpm package.
+An existing build directory can be changed the same way.  The
+directories are compiled into the program, so build it again as
+yourself before installing; "sudo meson install" would otherwise
+rebuild as root and leave root-owned files in the build directory:
 
-`configure' recognizes the following options (the list may be
-incomplete, use `configure --help' to get the full list):
+    meson configure build --prefix=/usr --sysconfdir=/etc
+    meson compile -C build
+    sudo meson install -C build
 
-`--help'
-     Print a summary of the options to `configure' and exit.
+"ninja -C build uninstall" (with sudo for a system directory) removes
+the files the last "meson install" put in place.
 
-`--quiet'
-`--silent'
-     Do not print messages saying which checks are being made.
+DESTDIR, or "meson install --destdir DIR", stages the installation in
+another directory, as packages do.
 
-`--version'
-     Print the version of Autoconf used to generate the `configure'
-     script, and exit.
+The options of M-Commander are given to "meson setup" as -Dname=value,
+and can be changed later with "meson configure build -Dname=value".
+"meson configure build" lists them all with their current values; the
+meson built-in options (buildtype, prefix, b_sanitize, werror, ...) are
+listed there as well.  An option meson does not know is an error.
 
-`--without-internal-edit'
-     Configure M-Commander to be compiled without the
-     built-in file editor.  The built-in editor is compiled in by
-     default.
+-Dscreen=slang|ncurses
+     Choose the library used to manage interaction with the terminal.
+     S-Lang is the default, and it is tested better than ncurses.
 
-     Spell checking needs no configure option.  It is built into the
-     internal editor whenever gmodule is available, and is handled by
-     the built-in editor plugin named `spell'.  The plugin opens
-     libaspell or libhunspell at run time, so neither library is needed
-     to build; the settings dialog selects the engine and the language.
+-Dgpm=auto|enabled|disabled
+     On GNU/Linux, M-Commander uses the gpm library if it is found.
+     `enabled' makes a missing gpm an error, and `disabled' turns gpm
+     mouse support off (e.g. to use the mouse only in terminal
+     emulators).
 
-`--without-diff-viewer'
+-Dx11=auto|enabled|disabled
+     By default, M-Commander connects to the X Window System to query
+     the status of the keyboard modifiers, such as Control, Shift and
+     Alt, when it runs in a terminal emulator under X11.  This is
+     necessary (but not always sufficient) to recognize some optional
+     but handy key combinations like Ctrl-Home and Shift-Cursor keys.
+     With gmodule, libX11 is opened at run time and only its headers
+     are needed to build.
+
+-Dmclib=true
+     Build libmc as a shared library, libmc-1.so, instead of linking it
+     into the program.
+
+-Dinternal_edit=false
+     Build without the internal editor.  It is compiled in by default.
+
+-Ddiff_viewer=false
      Build without the internal diff viewer.  It is compiled in by
      default.
 
-`--disable-nls'
-     Build without translations of the user interface.
+-Dbackground=false
+     Disable background operations.  Background operations allow to
+     perform some tasks such as copying files in a separate background
+     process.  Any messages from the background process are forwarded
+     to the foreground process.  More advanced dialogs cannot be
+     forwarded yet, so the background process uses the default.
 
-`--without-gpm-mouse'
-     Use this flag to disable gpm mouse support (e.g. if you want to
-     use mouse only on X terminals).
+-Dvfs=false
+     Disable the Virtual File System switch code and use the standard
+     file system calls for file access.  Without it there is no
+     transparent access to archives through extfs and sfs.
 
-`--with-glib-static'
-     Force linking against glib statically.  This option is intended for
-     building binaries for distribution purposes and may not work on
-     some operating systems.
+-Dvfs_extfs=false, -Dvfs_sfs=false
+     Leave out the extfs or the sfs file system (both on by default).
 
-`--without-x'
-     By default, M-Commander tries to connect to the X Window
-     System events to query the status of the keyboard modifiers, such
-     as Control, Shift and Alt, when invoked in a terminal emulator
-     under X11.  This is necessary (but not always sufficient) to
-     recognize some optional but handy key combinations like Ctrl-Home
-     and Shift-Cursor keys.  Use `--without-x' if the dependency on
-     X11 libraries is not desired.
+-Dext2fs_attr=auto|enabled|disabled
+     Support for ext{2,3,4}fs file attributes (needs e2fsprogs).
 
-`--disable-largefile'
-     This option disables support for large files (2 gigabytes and more)
-     on the systems where file operations use 32-bit offsets by default,
-     but support for 64-bit offsets is available.  May be useful for
-     slow processors and embedded systems.
+-Dlua=auto|enabled|disabled
+     The Lua runtime plugin (auto: when Lua 5.3 or newer and GModule
+     are found).  `enabled' makes a missing Lua an error.  A Lua
+     installed in an unusual place is found through pkg-config: set
+     PKG_CONFIG_PATH to its lib/pkgconfig.
 
-`--disable-background'
-     This option disables support for background operations.  Background
-     operations allow to perform some tasks such as copying files in a
-     separate background process.  Any messages from the background
-     process are forwarded to the foreground process.  More advanced
-     dialogs cannot be forwarded yet, so the background process uses the
-     default.  Background code is known to be less stable than the rest
-     of the code, so you may want to disable it at the compile time.
+-Dsession=auto|enabled|disabled
+     The session runtime plugin, which lets mc outlive its terminal.
 
-VFS options:
-- - - - - -
+-Dmagic=auto|enabled|disabled
+     libmagic for the file types.
 
-`--disable-vfs'
-     This option disables the Virtual File System switch code in the
-     M-Commander and uses the standard file system calls for
-     file access.  If you specify this option, you won't get the
-     transparent access to archives and remote directories.
+-Dmagic_file=PATH
+     Use PATH as the libmagic database instead of the default of
+     libmagic.
 
-`--enable-vfs-extfs'
-     (on by default)
-     Support for extfs
+-Dnls=auto|enabled|disabled
+     Translations of the user interface.
 
-`--enable-vfs-sfs'
-     (on by default)
-     Support for sfs
+-Dtests=auto|enabled|disabled
+     The unit tests (auto: when the check library is found, and never in
+     a cross build).  They are run with "meson test".
+
+-Dassert=true|false
+     Keep the GLib assertions (on by default).
+
+-Dwerror=true
+     Handle all compiler warnings as errors (a meson built-in option).
+
+-Dpanel_plugins_dir=DIR
+     The directory where M-Commander looks for dynamic panel plugins at
+     run time [default=LIBDIR/mcommander/panel-plugins].  A dynamic panel
+     plugin is a shared object (.so) that exports the
+     mc_panel_plugin_register symbol.
+
+-Deditor_plugins_dir=DIR
+     The directory where M-Commander looks for dynamic editor plugins at
+     run time [default=LIBDIR/mcommander/editor-plugins].  A dynamic
+     editor plugin is a shared object (.so) that exports the
+     mc_editor_plugin_register symbol.
+
+-Druntime_plugins_dir=DIR
+     The directory of the runtime plugins
+     [default=LIBDIR/mcommander/runtime-plugins].
+
+-Dlua_scripts_dir=DIR, -Dlua_modules_dir=DIR
+     The directories of the system Lua scripts and of the shared Lua
+     modules [default=DATADIR/mcommander/lua/scripts and
+     DATADIR/mcommander/lua/lib].
+
+Compiler and linker flags of your own go into CFLAGS, CPPFLAGS and
+LDFLAGS when "meson setup" runs, or into -Dc_args and -Dc_link_args.
 
 Panel plugins:
 - - - - - - -
 
 Network file systems and archives are panel plugins, not parts of the
-VFS.  Each plugin has an option that takes `auto', `yes' or `no'.  With
-`auto' (the default) the plugin is built when its library is found.
-With `yes' configure stops with an error if the library is missing.
-Use `--disable-panel-plugin-NAME' to leave a plugin out.
+VFS.  Each plugin has an option that takes `auto', `enabled' or
+`disabled'.  With `auto' (the default) the plugin is built when its
+library is found.  With `enabled' meson stops with an error if the
+library is missing.
 
-`--enable-panel-plugin-ftp'
+-Dpanel_plugin_ftp
      FTP.  Requires libcurl >= 7.20.0.
 
-`--enable-panel-plugin-sftp'
+-Dpanel_plugin_sftp
      SFTP.  Requires libssh2 >= 1.9.0.
 
-`--enable-panel-plugin-samba'
+-Dpanel_plugin_samba
      SMB/CIFS.  Requires libsmbclient.
 
-`--enable-panel-plugin-shell-link'
+-Dpanel_plugin_acl
+     The editor of access control lists.  Requires libacl.
+
+-Dpanel_plugin_shell_link
      The shell link (FISH) protocol, with its helper scripts.
 
-`--enable-shell-ssh2'
+-Dshell_ssh2
      Use libssh2 as the transport of the shell link plugin instead of
      the ssh program.  Requires libssh2 >= 1.9.0.
 
-`--enable-panel-plugin-arcmc'
+-Dpanel_plugin_arcmc
      Archive browser.  Requires libarchive >= 3.0.
 
-`--enable-panel-plugin-s3'
+-Dpanel_plugin_s3
      S3 object storage.  Requires libcurl >= 7.75.0.
 
-`--enable-panel-plugin-mongo'
+-Dpanel_plugin_mongo
      MongoDB.  Requires libmongoc-1.0 >= 1.21 or mongoc2 >= 2.0.
 
-`--enable-panel-plugin-sqlite'
+-Dpanel_plugin_sqlite
      SQLite database browser.  Requires sqlite3 >= 3.26.
 
-`--enable-lua-plugin'
-     The Lua runtime extension.  Requires Lua 5.3 or newer; use
-     `--with-lua=PREFIX' if Lua is not in a standard place.
+The options of configure and their meson names:
+- - - - - - - - - - - - - - - - - - - - - - - -
 
-`--with-panel-plugins-dir=DIR'
-     Set the directory where M-Commander looks for dynamic panel
-     plugins at runtime [default=LIBDIR/mcommander/panel-plugins].  A
-     dynamic panel plugin is a shared object (.so) that exports the
-     mc_panel_plugin_register symbol.
+Up to version 6.1 M-Commander was built with autotools.  The configure
+options map to meson options this way:
 
-`--with-editor-plugins-dir=DIR'
-     Set the directory where M-Commander looks for dynamic editor
-     plugins at runtime [default=LIBDIR/mcommander/editor-plugins].  A
-     dynamic editor plugin is a shared object (.so) that exports the
-     mc_editor_plugin_register symbol.
+  --with-screen=X                 -Dscreen=X
+  --enable-mclib                  -Dmclib=true
+  --without-internal-edit         -Dinternal_edit=false
+  --without-diff-viewer           -Ddiff_viewer=false
+  --disable-background            -Dbackground=false
+  --disable-vfs                   -Dvfs=false
+  --without-gpm-mouse             -Dgpm=disabled
+  --without-x                     -Dx11=disabled
+  --disable-nls                   -Dnls=disabled
+  --disable-assert                -Dassert=false
+  --enable-tests                  -Dtests=enabled
+  --enable-werror                 -Dwerror=true
+  --enable-lua-plugin=yes|no      -Dlua=enabled|disabled
+  --disable-session-plugin        -Dsession=disabled
+  --enable-mctree-magic=yes       -Dmagic=enabled
+  --with-magic-file=PATH          -Dmagic_file=PATH
+  --enable-panel-plugin-NAME=yes  -Dpanel_plugin_NAME=enabled
+                                  (shell-link becomes shell_link)
+  --with-panel-plugins-dir=DIR    -Dpanel_plugins_dir=DIR
+  --with-lua=PREFIX               PKG_CONFIG_PATH=PREFIX/lib/pkgconfig
 
-`--with-runtime-plugins-dir=DIR'
-     Set the directory for dynamic runtime plugins
-     [default=LIBDIR/mcommander/runtime-plugins].
+The options of Midnight Commander that are gone stay gone:
 
-Options of Midnight Commander that are gone:
-- - - - - - - - - - - - - - - - - - - - - -
-
-configure does not know these options.  It only prints
-"WARNING: unrecognized options" at the end and goes on, so check that
-line, or add `--enable-option-checking=fatal' to make configure stop on
-any unknown option.
-
-  --disable-vfs-ftp      use --disable-panel-plugin-ftp
-  --disable-vfs-sftp     use --disable-panel-plugin-sftp
-  --disable-vfs-smb      use --disable-panel-plugin-samba
+  --disable-vfs-ftp      use -Dpanel_plugin_ftp=disabled
+  --disable-vfs-sftp     use -Dpanel_plugin_sftp=disabled
+  --disable-vfs-smb      use -Dpanel_plugin_samba=disabled
   --disable-vfs-shell,
-  --disable-vfs-fish     use --disable-panel-plugin-shell-link
+  --disable-vfs-fish     use -Dpanel_plugin_shell_link=disabled
   --disable-vfs-tarfs,
-  --disable-vfs-cpiofs   use --disable-panel-plugin-arcmc
-  --without-edit         use --without-internal-edit
-
-Some build scripts pass options that neither Midnight Commander nor
-M-Commander ever had:
-
-  --without-nls          use --disable-nls
+  --disable-vfs-cpiofs   use -Dpanel_plugin_arcmc=disabled
+  --without-edit         use -Dinternal_edit=false
   --without-iconv        not needed: iconv comes from glib and is
                          always used
-  --without-curses       choose the screen library with --with-screen
-  --disable-mce          use --without-internal-edit to build without
-                         the editor
+  --with-glib-static     gone; static glib libraries of your own can be
+                         given through PKG_CONFIG_PATH and LDFLAGS
 
 
-Screen library:
-- - - - - - - -
+What "meson install" installs
+-----------------------------
 
-You may also tell configure which screen library you want to use with
-M-Commander.  The configure script uses S-Lang by default, but you
-can override this by using the following flag (please note that since
-S-Lang is default, it is tested better than ncurses):
+    $(bindir)/mcommander                  the program, with the links
+                                          mc6, mview, mcedit6, mcdiff6,
+                                          mctree and mcstruct to it
+    $(sysconfdir)/mcommander/             the system configuration
+    $(datadir)/mcommander/                help, hints, skins, syntax,
+                                          the Lua scripts, examples
+    $(libexecdir)/mcommander/             cons.saver, the helpers of
+                                          extfs and of the file types
+    $(libdir)/mcommander/                 the panel and runtime plugins
+    $(mandir)/                            the manual pages
 
-`--with-screen={slang|ncurses}'
-     Choose the library used to manage interaction with the terminal.
-     `slang' means S-Lang library already installed on the system,
-     `ncurses' means ncurses library already installed on the system.
-     The S-Lang library is used by default if found.
+If you're on a GNU/Linux system, this installs the `cons.saver'
+utility, which allows M-Commander to save and restore the console
+contents.  This utility can be installed setuid root, but it's only
+needed on systems where users cannot access /dev/vcsaN, where N is the
+virtual console number, on which the uses is logged on.
 
-`--with-ncurses-includedir=[DIR]'
-     Set path to ncurses includes [default=/usr/include]; make
-     sense only if --with-screen=ncurses is used;
-     for /usr/local/include/ncurses specify /usr/local/include.
 
-`--with-ncurses-libdir=[DIR]'
-     Set path to ncurses library [default=/usr/lib]; make sense
-     only if --with-screen=ncurses is used.
+Maintainer targets
+------------------
 
-On systems that require unusual options for compilation or linking that
-the package's `configure' script does not know about, you can give
-`configure' initial values for variables by placing them in the command
-line:
+    meson compile -C build indent            format the sources (clang-format)
+    meson compile -C build man-in            remake doc/man/**/roff/*.1.in
+                                             from the markdown (go-md2man)
+    meson compile -C build check-glib-api    check the GLib 2.58 baseline
+                                             (Docker)
+    meson compile -C build buildcheck        what the ubuntu CI job does, in
+                                             a container (Docker)
+    meson dist -C build                      the release archive
 
-./configure CC='gcc -traditional' LIBS=-lposix
 
-2.  Type `make' to compile the package.
+Cross compiling
+---------------
 
-3.  Type `make install' to install programs, data files, and the
-documentation.
+meson runs on the build machine and compiles for the target with the
+toolchain named in a cross file, for instance for a little endian MIPS
+router:
 
-If you're on a GNU/Linux system, this will install the `cons.saver'
-utility, which allows M-Commander to save and restore the
-console contents.  This utility can be installed setuid root, but it's
-only needed on systems where users cannot access /dev/vcsaN, where N is
-the virtual console number, on which the uses is logged on.
+    [binaries]
+    c = 'mipsel-linux-gcc'
+    strip = 'mipsel-linux-strip'
+    pkg-config = 'pkg-config'
+
+    [host_machine]
+    system = 'linux'
+    cpu_family = 'mips'
+    cpu = 'mipsel'
+    endian = 'little'
+
+    meson setup build-mipsel --cross-file mipsel.ini -Dlua=disabled
+
+The unit tests are not built in a cross build.  PKG_CONFIG_LIBDIR (or
+the pkg-config named in the cross file) must point at the pkg-config
+files of the target's glib and screen library.
 
 
 Terminal database
@@ -303,21 +354,3 @@ the termcap database using the infocmp utility in ncurses).
 
 If you want to run mc on xterm/color_xterm/ansi_xterm (not rxvt), then
 you might read contrib/README.xterm for further information.
-
-
-Porting
--------
-
-Some less widespread UNIX systems like AIX or Solaris often come with their own
-implementations of make and relevant parts of the toolchain necessary to build
-mc. While autotools abstract a lot of platform specific issues, you might
-encounter unresolved problems while using the native toolchain.
-
-Often, GNU tools are shipped as a part of an additional software collection
-(/opt/freeware on AIX, or OpenCSW on Solaris). These tools are usually prefixed
-with the letter `g', e.g. `gmake' instead of `make'. If you are not really
-interested in building with the native toolchain, try to override tools causing
-problems like this:
-
-./configure MAKE=gmake AR=gar
-gmake

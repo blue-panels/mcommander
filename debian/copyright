@@ -49,23 +49,6 @@ License: LGPL-3+
 Comment: Taken from gnulib.
 
 Files:
-    m4.include/gnulib/*.m4
-Copyright: 1997-2025 Free Software Foundation, Inc.
-License: FSFULLR
-
-Files:
-    m4.include/ax_append_compile_flags.m4
-    m4.include/ax_append_flag.m4
-    m4.include/ax_check_compile_flag.m4
-    m4.include/ax_require_defined.m4
-Copyright:
-    2008 Guido U. Draheim <guidod@gmx.de>
-    2011 Maarten Bosmans <mkbosmans@gmail.com>
-    2014 Mike Frysinger <vapier@gentoo.org>
-License: FSFAP
-Comment: Taken from the GNU Autoconf Archive.
-
-Files:
     misc/syntax/nemerle.syntax
 Copyright: 2004 The University of Wroclaw
 License: BSD-3-Clause
@@ -140,19 +123,6 @@ License: LGPL-3+
  .
  On Debian systems, the complete text of the GNU Lesser General Public
  License Version 3 can be found in "/usr/share/common-licenses/LGPL-3".
-
-License: FSFULLR
- This file is free software; the Free Software Foundation gives unlimited
- permission to copy and/or distribute it, with or without modifications,
- as long as this notice is preserved.
- .
- This file is offered as-is, without any warranty.
-
-License: FSFAP
- Copying and distribution of this file, with or without modification, are
- permitted in any medium without royalty provided the copyright notice
- and this notice are preserved.  This file is offered as-is, without any
- warranty.
 
 License: BSD-3-Clause
  Redistribution and use in source and binary forms, with or without

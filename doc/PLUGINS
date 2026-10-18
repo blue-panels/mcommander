@@ -70,7 +70,7 @@ mc loads dynamic panel plugins at startup via mc_panel_plugins_load()
 
 The directory is configurable at build time:
 
-    ./configure --with-panel-plugins-dir=DIR
+    meson setup build -Dpanel_plugins_dir=DIR
 
 Each .so is dlopen'd; the loader resolves the exported symbol
 "mc_panel_plugin_register" (MC_PANEL_PLUGIN_ENTRY), calls it to obtain
@@ -387,35 +387,32 @@ directly:
 
 3.9 Build Integration
 
-Plugin Makefile.am skeleton (src/panel-plugins/myplugin/Makefile.am):
+Plugin meson.build skeleton (src/panel-plugins/myplugin/meson.build):
 
-    myplugindir = $(panel_plugins_dir)/myplugin
-    myplugin_LTLIBRARIES = mc-panel-myplugin.la
+    shared_module('mc-panel-myplugin',
+      'myplugin.c',
+      name_prefix: '',
+      name_suffix: 'so',
+      dependencies: plugin_deps,
+      install: true,
+      install_dir: panel_plugins_dir / 'myplugin',
+    )
 
-    mc_panel_myplugin_la_SOURCES = myplugin.c
-    mc_panel_myplugin_la_CPPFLAGS = $(GLIB_CFLAGS) -I$(top_srcdir)
-    mc_panel_myplugin_la_LDFLAGS = -module -avoid-version
-    mc_panel_myplugin_la_LIBADD = $(GLIB_LIBS)
+`name_prefix: ''` and `name_suffix: 'so'` give `mc-panel-myplugin.so`
+rather than `libmc-panel-myplugin.so` (or `.dylib` on macOS); a
+shared_module has no version in its name, which is what the loader
+expects.  plugin_deps (glib and the headers of
+the screen library) comes from src/panel-plugins/meson.build.  The
+module does not link libmc: it calls the core through the program.
 
-The mandatory `-module -avoid-version` libtool flags produce
-`mc-panel-myplugin.so` rather than a versioned shared library, which
-is what the loader expects.
-
-Wire-up:
-
-- src/panel-plugins/Makefile.am: add `myplugin` to both `SUBDIRS` and
-  `DIST_SUBDIRS`.
-- configure.ac: append the file to `AC_CONFIG_FILES`:
-
-      src/panel-plugins/myplugin/Makefile
+Wire-up: add `subdir('myplugin')` to src/panel-plugins/meson.build, under
+an `if` when the plugin needs a library that may be missing.
 
 Build / install cycle for iterating on a plugin:
 
-    autoreconf -fi              # only after Makefile.am / configure.ac edits
-    cd <build-dir>
-    ../mc/configure --prefix=/usr ...   # if not configured yet
-    make
-    sudo make install
+    meson setup build --prefix=/usr ...   # if not configured yet
+    meson compile -C build
+    sudo meson install -C build
     # restart mc; check that the plugin appears in Manage Plugins.
 
 The loader writes rejection reasons (version mismatch, missing
@@ -479,7 +476,7 @@ three fake files when activated:
         return &my_plugin;
     }
 
-After `sudo make install` and restarting mc, the plugin shows up in
+After `sudo meson install -C build` and restarting mc, the plugin shows up in
 the Alt-F1 / Alt-F2 drive menu under "My Plugin"; pressing Enter on
 it opens a panel populated by my_get_items().
 
@@ -599,7 +596,7 @@ Editor plugins are loaded at editor startup.  The loader scans:
 
 The directory is configurable at build time:
 
-    ./configure --with-editor-plugins-dir=DIR
+    meson setup build -Deditor_plugins_dir=DIR
 
 Each .so is dlopen'd; the loader resolves
 "mc_editor_plugin_register" (MC_EDITOR_PLUGIN_ENTRY) and rejects the
@@ -741,22 +738,19 @@ Events delivered via handle_event(plugin_data, edit, event_id, payload):
 
 4.7 Build Integration
 
-Plugin Makefile.am skeleton (src/editor-plugins/myplugin/Makefile.am):
+Plugin meson.build skeleton (src/editor-plugins/myplugin/meson.build):
 
-    myplugindir = $(editor_plugins_dir)/myplugin
-    myplugin_LTLIBRARIES = mc-editor-myplugin.la
+    shared_module('mc-editor-myplugin',
+      'myplugin.c',
+      name_prefix: '',
+      name_suffix: 'so',
+      dependencies: plugin_deps,
+      install: true,
+      install_dir: editor_plugins_dir / 'myplugin',
+    )
 
-    mc_editor_myplugin_la_SOURCES = myplugin.c
-    mc_editor_myplugin_la_CPPFLAGS = $(GLIB_CFLAGS) -I$(top_srcdir)
-    mc_editor_myplugin_la_LDFLAGS = -module -avoid-version
-    mc_editor_myplugin_la_LIBADD = $(GLIB_LIBS)
-
-Wire-up:
-
-- src/editor-plugins/Makefile.am: add `myplugin` to both `SUBDIRS` and
-  `DIST_SUBDIRS`.
-- configure.ac: append `src/editor-plugins/myplugin/Makefile` to
-  `AC_CONFIG_FILES`.
+Wire-up: add `subdir('editor-plugins/myplugin')` to src/meson.build, after
+`subdir('panel-plugins')`, which defines plugin_deps.
 
 Build / install cycle is identical to panel plugins.
 

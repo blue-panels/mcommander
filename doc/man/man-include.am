@@ -1,9 +1,0 @@
-# The date a page shows stands in its markdown; the paths come from the build.
-SED_PARAMETERS = \
-	-e "s|{{MAN_VERSION}}|$(MAN_VERSION)|g" \
-	-e "s|{{sysconfdir}}|$(sysconfdir)|g" \
-	-e "s|{{libexecdir}}|$(libexecdir)|g" \
-	-e "s|{{pkglibexecdir}}|$(pkglibexecdir)|g" \
-	-e "s|{{pkgdatadir}}|$(pkgdatadir)|g" \
-	-e "s|{{bindir}}|$(bindir)|g" \
-	-e "s|{{panel_plugins_dir}}|$(panel_plugins_dir)|g"
