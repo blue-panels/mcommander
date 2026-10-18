@@ -3907,6 +3907,15 @@ clipboard_store=xclip -i
 clipboard_paste=xclip -o
 ```
 
+*clipboard_osc52*
+: Se una copia va anche negli appunti del terminale, con la sequenza OSC 52.
+Funziona in locale e via ssh, senza un comando in
+*clipboard_store*
+e senza programmi da eseguire; in tmux serve "set -g set-clipboard on". Il testo
+viene inviato in UTF-8, e un testo più lungo di 75000 byte non viene inviato.
+Lo riceve solo un terminale di tipo xterm, non la console di Linux. Il valore
+predefinito è "false".
+
 *autodetect_codeset*
 : Con questa opzione il programma usa il comando 'enca' per riconoscere da sé
 il set di caratteri dei file di testo nel visualizzatore e nell'editor

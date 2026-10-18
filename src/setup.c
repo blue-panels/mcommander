@@ -997,6 +997,8 @@ load_setup (void)
         mc_config_get_string (mc_global.main_config, CONFIG_MISC_SECTION, "clipboard_store", "");
     clipboard_paste_path =
         mc_config_get_string (mc_global.main_config, CONFIG_MISC_SECTION, "clipboard_paste", "");
+    clipboard_osc52 =
+        mc_config_get_bool (mc_global.main_config, CONFIG_MISC_SECTION, "clipboard_osc52", FALSE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1039,6 +1041,8 @@ save_setup (gboolean save_options, gboolean save_panel_options)
                               clipboard_store_path);
         mc_config_set_string (mc_global.main_config, CONFIG_MISC_SECTION, "clipboard_paste",
                               clipboard_paste_path);
+        mc_config_set_bool (mc_global.main_config, CONFIG_MISC_SECTION, "clipboard_osc52",
+                            clipboard_osc52);
 
         tmp_profile = mc_config_get_full_path (MC_CONFIG_FILE);
         ret = mc_config_save_to_file (mc_global.main_config, tmp_profile, NULL);

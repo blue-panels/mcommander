@@ -2,7 +2,7 @@ src_test_c_args = test_c_args + [
   '-DTEST_SHARE_DIR="@0@"'.format(meson.current_source_dir() / 'fixtures'),
 ]
 
-src_tests = ['clipboard_info', 'input_clip_text', 'execute__execute_with_vfs_arg',
+src_tests = ['clipboard_info', 'clipboard_osc52', 'input_clip_text', 'execute__execute_with_vfs_arg',
              'execute__execute_external_editor_or_viewer',
              'execute__execute_get_external_cmd_opts_from_config', 'file_history', 'keymap_reload',
              'runtime_host__syntax', 'runtime_host__services', 'learn_modifiers', 'mctree_model',
