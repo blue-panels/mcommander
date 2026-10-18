@@ -7,6 +7,8 @@
     Outside Git repo : Shows the favorites list.
     /branches        : Local and remote branches.
     /commits         : Commit history (parent commits act as directories).
+    /commits/diff    : Every file the listed commits change, from the base of
+                       the branch to its end.
 
   Keys (Repository Views):
     Alt-G      - Open this repository in coole (Git window)
@@ -35,6 +37,14 @@
     F8         - Remove from favorites
     Ctrl-R     - Refresh panel
 ```
+
+Quick view on a commit shows what F3 does: the description of the commit. On
+`diff` it shows how much each file of the branch changes. The base is the
+upstream of the branch, else `master` or `main`, the same as for the list of
+its commits; the Status column of `diff` names it. Shift-F3 on a file in `diff`
+diffs the base of the branch against its end; F3 shows the file at the end of
+the branch. The list shows the newest 200 commits, while `diff` has all the
+changes of the branch, however many commits it has.
 
 A file with a merge conflict has the mark `!` and the state CONFLICT. Shift-F3
 on it opens the merge of three files: your version (ours) on the left, the

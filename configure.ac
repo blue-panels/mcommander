@@ -1389,6 +1389,7 @@ tests/src/panel-plugins/skineditor/Makefile
 tests/src/panel-plugins/samba/Makefile
 tests/src/panel-plugins/acl/Makefile
 tests/src/panel-plugins/docker/Makefile
+tests/src/panel-plugins/git/Makefile
 tests/src/panel-plugins/mongo/Makefile
 tests/src/panel-plugins/sqlite/Makefile
 tests/src/panel-plugins/pp_common/Makefile
