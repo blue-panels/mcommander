@@ -165,10 +165,17 @@ teardown (void)
         waitpid (child, NULL, 0);
         child = -1;
     }
-    if (master >= 0)
-        close (master);
+    // What nobody read is dropped first: the close of a STREAMS pty (Solaris) waits for it.
     if (slave >= 0)
+    {
+        tcflush (slave, TCIOFLUSH);
         close (slave);
+    }
+    if (master >= 0)
+    {
+        tcflush (master, TCIOFLUSH);
+        close (master);
+    }
     master = slave = -1;
     g_free (text);
     text = NULL;
