@@ -43,7 +43,8 @@ Quick view on a commit shows what F3 does: the description of the commit. On
 upstream of the branch, else `master` or `main`, the same as for the list of
 its commits; the Status column of `diff` names it. Shift-F3 on a file in `diff`
 diffs the base of the branch against its end; F3 shows the file at the end of
-the branch.
+the branch. The list shows the newest 200 commits, while `diff` has all the
+changes of the branch, however many commits it has.
 
 A file with a merge conflict has the mark `!` and the state CONFLICT. Shift-F3
 on it opens the merge of three files: your version (ours) on the left, the
