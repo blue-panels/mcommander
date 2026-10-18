@@ -29,6 +29,8 @@
 
 #include "execute__common.c"
 
+#include "src/setup.h"  // keep_screen_for_external
+
 /* --------------------------------------------------------------------------------------------- */
 
 char *execute_get_external_cmd_opts_from_config (const char *command,
@@ -157,7 +159,7 @@ START_TEST (do_open_external_editor_or_viewer)
 
     // check call to do_executev()
     mctest_assert_str_eq (do_executev__lc_shell__captured, "editor_or_viewer");
-    ck_assert_int_eq (do_executev__flags__captured, EXECUTE_INTERNAL);
+    ck_assert_int_eq (do_executev__flags__captured, EXECUTE_INTERNAL | EXECUTE_KEEP_SCREEN);
     ck_assert_int_eq (do_executev__argv__captured->len, 7);
 
     mctest_assert_str_eq (g_ptr_array_index (do_executev__argv__captured, 0),
@@ -168,6 +170,30 @@ START_TEST (do_open_external_editor_or_viewer)
     mctest_assert_str_eq (g_ptr_array_index (do_executev__argv__captured, 4), "-cdef");
     mctest_assert_str_eq (g_ptr_array_index (do_executev__argv__captured, 5), "/path/to/file.txt");
     mctest_assert_str_eq (g_ptr_array_index (do_executev__argv__captured, 6), "+123");
+
+    vfs_path_free (filename_vpath, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* @Test */
+START_TEST (do_open_external_editor_or_viewer_no_keep_screen)
+{
+    // given
+    vfs_path_t *filename_vpath;
+    filename_vpath = vfs_path_from_str ("/path/to/file.txt");
+
+    vfs_file_is_local__return_value = TRUE;
+    execute_external_cmd_opts__return_value = g_strdup ("/path/to/file.txt");
+    keep_screen_for_external = FALSE;
+
+    // when
+    execute_external_editor_or_viewer ("editor_or_viewer", filename_vpath, 0);
+    keep_screen_for_external = TRUE;
+
+    // then
+    ck_assert_int_eq (do_executev__flags__captured, EXECUTE_INTERNAL);
 
     vfs_path_free (filename_vpath, TRUE);
 }
@@ -186,6 +212,7 @@ main (void)
 
     // Add new tests here: ***************
     tcase_add_test (tc_core, do_open_external_editor_or_viewer);
+    tcase_add_test (tc_core, do_open_external_editor_or_viewer_no_keep_screen);
     // ***********************************
 
     return mctest_run_all (tc_core);

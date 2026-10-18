@@ -79,6 +79,8 @@
 #define EXECUTE_INTERNAL (1 << 0)
 #define EXECUTE_AS_SHELL (1 << 2)
 #define EXECUTE_HIDE     (1 << 3)
+// stay on the alternate screen: the program draws its own full screen
+#define EXECUTE_KEEP_SCREEN (1 << 4)
 
 /*** enums ***************************************************************************************/
 

@@ -4755,6 +4755,13 @@ bottom of the screen, edit your ~/.config/mc6/ini file and change the value of
 the field clear_before_exec to 0.
 
 .TP
+\fIkeep_screen_for_external\fP
+When an external editor or viewer starts, M\-Commander stays on the alternate
+screen, and the panels are seen until the program draws its own screen. If the
+program does not use the alternate screen and you would prefer to see the
+console under it, change the value of this field to 0.
+
+.TP
 \fIconfirm_view_dir\fP
 If you press F3 on a directory, normally M\-Commander enters that directory.  If
 this flag is set to 1, then M\-Commander will ask for confirmation before changing

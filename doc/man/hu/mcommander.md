@@ -3849,6 +3849,12 @@ Ezeket a változókat a ~/.config/mc6/ini fájlban lehet megadni:
 Ha a parancs kimenetét a képernyő alján szeretnéd látni, írd át a
 ~/.config/mc6/ini fájlban a clear_before_exec értékét 0-ra.
 
+*keep_screen_for_external*
+: Külső szerkesztő vagy nézőke indításakor a program az alternatív képernyőn
+marad, és a panelek látszanak, amíg a program meg nem rajzolja a saját
+képernyőjét. Ha a program nem használ alternatív képernyőt, és alatta inkább a
+konzolt szeretnéd látni, írd át ennek a mezőnek az értékét 0-ra.
+
 *confirm_view_dir*
 : Ha könyvtáron nyomsz F3-at, a program rendes körülmények között belép a
 könyvtárba. Ha ez az érték 1, akkor kijelölt fájlok esetén megerősítést kér,

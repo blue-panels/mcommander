@@ -3830,6 +3830,13 @@ eseguire un comando. Se si preferisce vedere il risultato di un comando in
 fondo allo schermo, si modifichi il file ~/.config/mc6/ini e si cambi il
 valore del campo clear_before_exec a 0.
 
+*keep_screen_for_external*
+: Quando parte un editor o un visualizzatore esterno, il programma resta sullo
+schermo alternativo, e i pannelli restano visibili finché il programma non
+disegna il proprio schermo. Se il programma non usa lo schermo alternativo e si
+preferisce vedere la console sotto di esso, si cambi il valore di questo campo
+a 0.
+
 *confirm_view_dir*
 : Se si preme F3 su una directory, normalmente il programma entra nella
 directory. Se questo valore è 1, chiede una conferma prima di cambiare

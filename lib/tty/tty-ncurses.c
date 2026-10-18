@@ -490,6 +490,15 @@ tty_reset_screen (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/** A program ran over the screen without tty_reset_screen(): ncurses must not trust its copy */
+
+void
+tty_resume_kept_screen (void)
+{
+    clearok (curscr, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 void
 tty_touch_screen (void)

@@ -3689,6 +3689,12 @@ Te zmienne można ustawić w pliku ~/.config/mc6/ini:
 widzieć wyjście polecenia na dole ekranu, zmień w pliku ~/.config/mc6/ini
 wartość pola clear_before_exec na 0.
 
+*keep_screen_for_external*
+: Gdy startuje zewnętrzny edytor lub podgląd, program zostaje na ekranie
+alternatywnym i panele są widoczne, dopóki program nie narysuje własnego
+ekranu. Jeśli program nie używa ekranu alternatywnego i wolisz widzieć pod nim
+konsolę, zmień wartość tego pola na 0.
+
 *confirm_view_dir*
 : Jeśli naciskasz F3 na katalogu, program zwykle do niego wchodzi. Jeśli ta
 wartość to 1, przy zaznaczonych plikach zapyta o potwierdzenie przed zmianą

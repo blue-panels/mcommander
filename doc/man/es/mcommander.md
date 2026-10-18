@@ -4199,6 +4199,12 @@ de la pantalla, editaremos nuestro archivo
 y cambiaremos el
 valor del campo clear_before_exec a 0.
 
+*keep_screen_for_external*
+: Cuando arranca un editor o visor externo, M-Commander se queda en la
+pantalla alternativa y los paneles se ven hasta que el programa dibuja su
+propia pantalla. Si el programa no usa la pantalla alternativa y preferimos ver
+la consola debajo de él, cambiaremos el valor de este campo a 0.
+
 *confirm_view_dir*
 : Al pulsar F3 en un directorio, normalmente M-Commander entra
 en ese directorio.  Si este valor está a 1, entonces el programa
