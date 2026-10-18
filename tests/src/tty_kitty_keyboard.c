@@ -684,6 +684,31 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_win32_paste_of_a_frame)
+{
+    GString *seq = g_string_new (NULL);
+    static const char alt_code[] = "\033[18;56;0;1;2;1_\033[18;56;%u;0;0;1_";
+
+    /* the Windows console types a line of a frame as Alt and the digits of its code: the
+       character comes with the release of Alt */
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+    win32_type (seq, 0, 27);
+    win32_type_text (seq, "[200~");
+    g_string_append_printf (seq, alt_code, 0x2554U);                      // a corner
+    g_string_append_printf (seq, alt_code, 0x2550U);                      // a line
+    g_string_append (seq, "\033[78;49;110;1;0;1_\033[78;49;110;0;0;1_");  // n
+    win32_type (seq, 13, 13);
+    g_string_append_printf (seq, alt_code, 0x2551U);
+    win32_type (seq, 0, 27);
+    win32_type_text (seq, "[201~");
+    check_paste (seq->str, "\xe2\x95\x94\xe2\x95\x90n\n\xe2\x95\x91");
+    g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_win32_enter_in_paste)
 {
     GString *seq = g_string_new ("\033[200~ab");
@@ -925,6 +950,7 @@ main (void)
     tcase_add_test (tc_core, test_win32_keys_without_code);
     tcase_add_test (tc_core, test_win32_paste_typed_as_keys);
     tcase_add_test (tc_core, test_win32_paste_from_windows_console);
+    tcase_add_test (tc_core, test_win32_paste_of_a_frame);
     tcase_add_test (tc_core, test_win32_enter_in_paste);
     tcase_add_test (tc_core, test_win32_esc_is_a_key);
     tcase_add_test (tc_core, test_paste_without_win32);

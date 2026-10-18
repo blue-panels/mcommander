@@ -3440,8 +3440,12 @@ tty_paste_put_record (tty_paste_reader_t *r)
             field[f] = field[f] * 10 + (unsigned int) (ch - '0');
     }
 
-    // a key typed once: the press gives its character, the release nothing
-    if (field[3] == 0 || field[2] == 0)
+    /* a key typed once: the press gives its character, the release nothing. A character with no
+       key, such as a line of a frame, comes as Alt and the digits of its code: the release of Alt
+       gives it, as for a key (see win32_parse_record ()). */
+    if (field[2] == 0
+        || (field[3] == 0
+            && !((field[0] == 0x12 || field[0] == 0xA4 || field[0] == 0xA5) && field[2] >= 0x20)))
         return;
 
     if (field[2] >= 0xD800 && field[2] <= 0xDBFF)
