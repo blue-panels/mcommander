@@ -7,7 +7,7 @@ pkgdesc='Twin-panel text-mode file manager with loadable panel plugins'
 arch=('x86_64' 'aarch64')
 url='https://blue-panels.github.io/mcommander/'
 license=('GPL-3.0-or-later')
-makedepends=('make' 'pkgconf' 'gettext'
+makedepends=('meson' 'pkgconf' 'gettext'
              'glib2' 'slang' 'gpm' 'e2fsprogs' 'libssh2' 'curl' 'samba' 'acl'
              'libarchive' 'file' 'mongo-c-driver' 'lua' 'sqlite' 'libx11'
              'chafa')
@@ -18,35 +18,33 @@ source=("mcommander-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/mcomma
 b2sums=('@B2SUMS@')
 
 build() {
-  cd "${srcdir}/mcommander-${pkgver}"
-  ./configure \
-    --prefix=/usr \
-    --sysconfdir=/etc \
-    --libexecdir=/usr/lib \
-    --libdir=/usr/lib \
-    --disable-static \
-    --with-screen=slang \
-    --with-panel-plugins-dir=/usr/lib/mcommander/panel-plugins \
-    --with-editor-plugins-dir=/usr/lib/mcommander/editor-plugins \
-    --enable-lua-plugin=yes \
-    --enable-mctree-magic=yes \
-    --enable-panel-plugin-samba=yes \
-    --enable-panel-plugin-acl=yes \
-    --enable-panel-plugin-ftp=yes \
-    --enable-panel-plugin-arcmc=yes \
-    --enable-panel-plugin-s3=yes \
-    --enable-panel-plugin-mongo=yes \
-    --enable-panel-plugin-sqlite=yes \
-    --enable-panel-plugin-sftp=yes \
-    --enable-panel-plugin-shell-link=yes \
-    --enable-shell-ssh2=yes
-  make
+  # arch-meson turns every auto feature on; the unit tests need check, which
+  # is not a dependency here, so they are left out. Link time optimisation is
+  # off: with it gcc 15 leaves the recursion in mctree_node_expand_to_depth
+  # unrun, and a tree opens collapsed.
+  arch-meson "mcommander-${pkgver}" build \
+    -Db_lto=false \
+    -Dtests=disabled \
+    -Dscreen=slang \
+    -Dlua=enabled \
+    -Dmagic=enabled \
+    -Dpanel_plugin_samba=enabled \
+    -Dpanel_plugin_acl=enabled \
+    -Dpanel_plugin_ftp=enabled \
+    -Dpanel_plugin_arcmc=enabled \
+    -Dpanel_plugin_s3=enabled \
+    -Dpanel_plugin_mongo=enabled \
+    -Dpanel_plugin_sqlite=enabled \
+    -Dpanel_plugin_sftp=enabled \
+    -Dpanel_plugin_shell_link=enabled \
+    -Dshell_ssh2=enabled
+  meson compile -C build
 }
 
 package_mcommander() {
   pkgdesc='Twin-panel text-mode file manager with loadable panel plugins'
-  # libe2p comes in through --enable-ext2fs-attr, which defaults to auto and
-  # always finds the library here; libmagic through --enable-mctree-magic.
+  # libe2p comes in through the ext2fs_attr feature, which arch-meson turns
+  # on; libmagic through -Dmagic.
   depends=('glib2' 'slang' 'gpm' 'e2fsprogs' 'file')
   optdepends=('mcommander-plugins: panels for archives and remote systems'
               'mcommander-lua: pictures, markdown and PDF in the viewer'
@@ -67,22 +65,20 @@ package_mcommander() {
           'etc/mcommander/panels.git.ini' 'etc/mcommander/sfs.ini'
           'etc/mcommander/spell.keymap')
 
-  cd "${srcdir}/mcommander-${pkgver}"
-  make DESTDIR="${pkgdir}" install
+  meson install -C build --destdir "${pkgdir}"
   rm -rf "${pkgdir}/usr/lib/mcommander/panel-plugins"
   rm -rf "${pkgdir}/usr/lib/mcommander/runtime-plugins"
   rm -rf "${pkgdir}/usr/share/mcommander/lua"
   # mcstruct opens a panel plugin, so it goes with the plugins.
   rm "${pkgdir}/usr/bin/mcstruct"
-  find "${pkgdir}" -name '*.la' -delete
 
   # keymap.ini is installed as a symlink to keymap.default.ini, and pacman
   # cannot keep a symlink through the backup mechanism: the user's edits would
   # be lost on upgrade. Ship it as a file. (Arch FS#50889)
   rm "${pkgdir}/etc/mcommander/keymap.ini"
   cp "${pkgdir}"/etc/mcommander/keymap{.default,}.ini
-  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/mcommander/COPYING"
-  install -Dm644 CHANGELOG.md "${pkgdir}/usr/share/doc/mcommander/CHANGELOG.md"
+  install -Dm644 "mcommander-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/mcommander/COPYING"
+  install -Dm644 "mcommander-${pkgver}/CHANGELOG.md" "${pkgdir}/usr/share/doc/mcommander/CHANGELOG.md"
 }
 
 package_mcommander-plugins() {
@@ -94,8 +90,7 @@ package_mcommander-plugins() {
               'kubectl: the Kubernetes panel'
               'openssh: shell links where libssh2 cannot serve the host')
 
-  cd "${srcdir}/mcommander-${pkgver}"
-  make DESTDIR="${pkgdir}" install
+  meson install -C build --destdir "${pkgdir}"
   rm -rf "${pkgdir}/etc" "${pkgdir}/usr/share"
   # Keep the plugin modules and the mcstruct entry point, nothing else: naming
   # what to drop instead left cons.saver and the shell wrappers in both
@@ -103,8 +98,7 @@ package_mcommander-plugins() {
   find "${pkgdir}/usr/bin" -mindepth 1 ! -name mcstruct -delete
   find "${pkgdir}/usr/lib/mcommander" -mindepth 1 -maxdepth 1 ! -name panel-plugins \
     -exec rm -rf {} +
-  find "${pkgdir}" -name '*.la' -delete
-  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/mcommander-plugins/COPYING"
+  install -Dm644 "mcommander-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/mcommander-plugins/COPYING"
 }
 
 package_mcommander-lua() {
@@ -117,8 +111,7 @@ package_mcommander-lua() {
               'imagemagick: the line of details above a picture'
               'perl-image-exiftool: the same line where exif is missing')
 
-  cd "${srcdir}/mcommander-${pkgver}"
-  make DESTDIR="${pkgdir}" install
+  meson install -C build --destdir "${pkgdir}"
   rm -rf "${pkgdir}/etc" "${pkgdir}/usr/bin"
   # Keep the runtime plugin and the Lua scripts, drop everything else the
   # install put here: pacman refuses two packages that own the same file.
@@ -126,6 +119,5 @@ package_mcommander-lua() {
     -exec rm -rf {} +
   find "${pkgdir}/usr/share" -mindepth 1 -maxdepth 1 ! -name mcommander -exec rm -rf {} +
   find "${pkgdir}/usr/share/mcommander" -mindepth 1 -maxdepth 1 ! -name lua -exec rm -rf {} +
-  find "${pkgdir}" -name '*.la' -delete
-  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/mcommander-lua/COPYING"
+  install -Dm644 "mcommander-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/mcommander-lua/COPYING"
 }

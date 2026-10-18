@@ -5,7 +5,7 @@
 # Run it in an MSYS2 shell; .github/workflows/ci-msys2.yml calls it.
 #
 # Usage: package_msys2_portable.sh <staged-root> <portable-root>
-#   staged-root    the DESTDIR of "make install"
+#   staged-root    the DESTDIR of "meson install"
 #   portable-root  where the portable tree is made
 
 set -euo pipefail

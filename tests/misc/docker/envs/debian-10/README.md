@@ -1,8 +1,8 @@
 # debian-10
 
-The lower bound: Debian 10 has GLib 2.58.3, the oldest version configure.ac
+The lower bound: Debian 10 has GLib 2.58.3, the oldest version meson.build
 accepts, and the rest of its libraries are as old: libarchive 3.3, curl 7.64
-(too old for the s3 plugin, which configure should leave out by itself),
+(too old for the s3 plugin, which meson should leave out by itself),
 libssh2 1.8, gcc 8, gettext 0.19, check 0.10.
 
     tests/misc/docker/sandbox.sh debian-10 up

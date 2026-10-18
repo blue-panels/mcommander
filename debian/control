@@ -3,6 +3,8 @@ Section: utils
 Priority: optional
 Maintainer: Ilia Maslakov <il.smind@gmail.com>
 Build-Depends: debhelper-compat (= 13),
+               meson (>= 0.61),
+               ninja-build,
                pkgconf,
                gettext,
                chafa,

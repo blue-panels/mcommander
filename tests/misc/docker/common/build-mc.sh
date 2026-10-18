@@ -20,8 +20,8 @@ done
 
 ini=/usr/local/bin/features.ini
 
-# "a,b,-c": the flags of a and b, then those of c taken out.  An --enable-x
-# flag taken out becomes --enable-x=no, since configure's own default is auto.
+# "a,b,-c": the flags of a and b, then those of c taken out.  A -Dfeature=...
+# flag taken out becomes -Dfeature=disabled, since its own default is auto.
 profile_flags ()
 {
     key=$1
@@ -40,7 +40,7 @@ profile_flags ()
                 grep -vE "^$base(=.*)?\$" /tmp/flags.$$ > /tmp/flags2.$$ || true
                 mv /tmp/flags2.$$ /tmp/flags.$$
                 case "$base" in
-                --enable-*) echo "$base=no" >> /tmp/flags.$$ ;;
+                -Dpanel_plugin_* | -Dlua) echo "$base=disabled" >> /tmp/flags.$$ ;;
                 esac
             done
             ;;
@@ -50,7 +50,7 @@ profile_flags ()
     rm -f /tmp/flags.$$
 }
 
-configure_flags=$(profile_flags configure)
+meson_flags=$(profile_flags meson)
 cflags=$(profile_flags cflags)
 tag=$(echo "$features" | tr ',' '+')
 
@@ -66,33 +66,27 @@ echo "== copying sources =="
 mkdir -p /work/src
 copy_sources
 
-cd /work/src
-[ -x autogen.sh ] || { echo "no autogen.sh in /work/src: is the tree mounted at /src?" >&2; exit 1; }
-if [ ! -x configure ] || [ configure.ac -nt configure ]; then
-    echo "== autogen =="
-    ./autogen.sh
-fi
+[ -f /work/src/meson.build ] || { echo "no meson.build in /work/src: is the tree mounted at /src?" >&2; exit 1; }
 
 # Everything lives in the volume: the container that builds mc is not the one
 # that runs it.  One tree per set of features.
 PREFIX=/work/opt/mc-$tag
 BUILD=/work/build-$tag
-mkdir -p "$BUILD"
 
-cd "$BUILD"
-if [ ! -f config.status ] || [ /work/src/configure -nt config.status ] \
-    || [ "$(cat flags 2>/dev/null)" != "$configure_flags|$cflags" ]; then
-    echo "== configure [$features] =="
-    echo "   $configure_flags"
+# meson remakes its own files when a meson.build changes; other flags need a new setup
+if [ ! -f "$BUILD/build.ninja" ] || [ "$(cat "$BUILD.flags" 2>/dev/null)" != "$meson_flags|$cflags" ]; then
+    echo "== meson setup [$features] =="
+    echo "   $meson_flags"
     [ -n "$cflags" ] && echo "   CFLAGS: $cflags"
+    rm -rf "$BUILD"
     # shellcheck disable=SC2086
-    CFLAGS="$cflags" /work/src/configure --prefix="$PREFIX" $configure_flags
-    echo "$configure_flags|$cflags" > flags
+    CFLAGS="$cflags" meson setup "$BUILD" /work/src --prefix="$PREFIX" $meson_flags
+    echo "$meson_flags|$cflags" > "$BUILD.flags"
 fi
 
-echo "== make =="
-make -j"$(nproc)"
-make install
+echo "== build =="
+meson compile -C "$BUILD"
+meson install -C "$BUILD" --quiet
 
 # a volume from before the profiles has a real directory here
 if [ -d /work/opt/mc ] && [ ! -L /work/opt/mc ]; then

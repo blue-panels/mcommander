@@ -63,19 +63,12 @@ and that is uploaded as the GitHub release asset `mcommander-<version>.tar.gz`:
 packaging/release-source.sh 6.0.3 v6.0.3
 ```
 
-The archive is **bootstrapped**: `autogen.sh` runs inside it, so it carries
-`configure`, the `Makefile.in` files, `po/Makefile.in.in` and `po/POTFILES.in`.
-None of those is in Git, and no recipe can produce them all for itself:
-`autoreconf` needs `autopoint` for `po/Makefile.in.in`, and `po/POTFILES.in`
-comes from the `xgettext` pass in `autogen.sh`.  What is published is a release
-tarball, not a snapshot of the tree, and the recipes only configure and build.
-The script also adds the generated `mc-version.h`, so a build outside a Git
-checkout reports the correct fork version, and it refuses to overwrite an
-existing archive.
-
-Because the bootstrap ran, the bytes depend on the autoconf, automake, libtool
-and gettext versions that produced them.  Take a checksum from the archive that
-was published, not from one rebuilt elsewhere.
+The archive is the tree of the tag, as `git archive` gives it, with one file
+added: `.tarball-version`, where `version.sh` finds the version outside a Git
+checkout, so a build from the archive reports the correct fork version.  It
+holds no generated build files: every recipe runs meson on it.  The script
+refuses to overwrite an existing archive, and the same tag always gives the
+same bytes.
 
 `debian/` and `packaging/` carry `export-ignore` in `.gitattributes` and are
 absent from the archive: the recipes are used from the repository, and a Debian
@@ -104,7 +97,7 @@ the package.
 
 Debian and Ubuntu.  The source package is built from the release archive with
 `debian/` copied into it, not from the Git checkout: that keeps it free of
-patches, since the archive carries `mc-version.h` and no `debian` directory.
+patches, since the archive carries `.tarball-version` and no `debian` directory.
 Build a binary package in its target distribution: the MongoDB plugin links to
 the distribution's Mongo C Driver ABI, so a Debian-built `.deb` is not a
 substitute for an Ubuntu-built one.

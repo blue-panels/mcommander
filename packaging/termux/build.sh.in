@@ -17,28 +17,24 @@ TERMUX_PKG_DEPENDS="glib, libandroid-support, libarchive, libcurl, libmagic, lib
 TERMUX_PKG_RECOMMENDS="chafa"
 # Samba and the Mongo driver are not in Termux: those two panels are left out.
 # There is no X server to ask for the keyboard state, and no gpm.
+# The builder runs meson when the source has a meson.build.
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
---with-screen=slang
---without-x
---without-gpm-mouse
---enable-lua-plugin=yes
---enable-mctree-magic=yes
---enable-panel-plugin-samba=no
---enable-panel-plugin-mongo=no
---enable-panel-plugin-ftp=yes
---enable-panel-plugin-arcmc=yes
---enable-panel-plugin-s3=yes
---enable-panel-plugin-sqlite=yes
---enable-panel-plugin-sftp=yes
---enable-panel-plugin-shell-link=yes
+-Dscreen=slang
+-Dx11=disabled
+-Dgpm=disabled
+-Dlua=enabled
+-Dmagic=enabled
+-Dpanel_plugin_samba=disabled
+-Dpanel_plugin_mongo=disabled
+-Dpanel_plugin_ftp=enabled
+-Dpanel_plugin_arcmc=enabled
+-Dpanel_plugin_s3=enabled
+-Dpanel_plugin_sqlite=enabled
+-Dpanel_plugin_sftp=enabled
+-Dpanel_plugin_shell_link=enabled
 "
 
 termux_step_pre_configure() {
-	# The release archive is bootstrapped; a snapshot of the tree is not.
-	if [ ! -x ./configure ]; then
-		./autogen.sh
-	fi
-
 	# Android has no /bin and no /tmp: what the sources name as fixed paths is
 	# in the prefix here.
 	sed -i "s|\"/bin/|\"${TERMUX_PREFIX}/bin/|g; s|#! /bin/sh|#! ${TERMUX_PREFIX}/bin/sh|g" \

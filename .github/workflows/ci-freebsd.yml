@@ -24,12 +24,11 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         with:
           prepare: |
-            pkg install -y autoconf automake gettext libtool pkgconf
+            # perl runs the extfs helpers under test; automake used to pull it in
+            pkg install -y gettext meson ninja perl5 pkgconf
             pkg install -y check glib libssh2 libX11 python3
 
           run: |
-            ./autogen.sh
-
             pw useradd test -d "$(pwd)"
             chown -R test $(pwd)
 
@@ -37,21 +36,15 @@ jobs:
               \
               export CFLAGS="${{ inputs.CFLAGS }}" && \
               \
-              ./configure \
-                --prefix="$(pwd)/install-prefix" \
-                --enable-option-checking=fatal \
-                --with-screen=ncurses \
-                --enable-mclib \
-                --enable-werror \
-                && \
-              \
-              make && \
-              make check && \
-              make install \
+              meson setup build --prefix="$(pwd)/install-prefix" \
+                -Dscreen=ncurses -Dmclib=true -Dwerror=true && \
+              meson compile -C build && \
+              meson test -C build --print-errorlogs && \
+              meson install -C build \
             '
 
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: test-suite-logs-freebsd
-          path: ./**/test-suite.log
+          name: test-logs-freebsd
+          path: build/meson-logs/*.txt

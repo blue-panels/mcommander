@@ -22,12 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install the tools that make the source archive
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-              autoconf automake libtool gettext autopoint
-
       - name: Build the package
         run: packaging/termux/build-deb.sh ${{ matrix.arch }}
 

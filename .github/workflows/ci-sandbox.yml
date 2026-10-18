@@ -98,19 +98,18 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y autoconf autopoint check gettext libtool pkg-config
+          sudo apt-get install -y check gettext meson ninja-build pkg-config
           sudo apt-get install -y e2fslibs-dev libglib2.0-dev libgpm-dev libncurses5-dev libslang2-dev libssh2-1-dev libx11-dev unzip
-
-      - name: Bootstrap build system
-        run: ./autogen.sh
 
       - name: Build
         run: |
-          mkdir -p build && cd $_
-
-          ../configure --enable-option-checking=fatal
-
-          make -j$(nproc)
+          meson setup build -Dsession=enabled
+          meson compile -C build
 
       - name: The session test
-        run: make -C build/tests/misc check-session
+        run: |
+          MC_BIN="$PWD/build/src/mcommander" \
+          SESSION_PLUGIN="$PWD/build/src/session/session.so" \
+          MC_SESSION_HELPER="$PWD/build/src/session/session_helper" \
+          MC_DATADIR="$PWD/misc" \
+          tests/misc/session.py

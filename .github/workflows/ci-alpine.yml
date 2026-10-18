@@ -19,11 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apk add autoconf automake build-base libtool pkgconf sudo
+          apk add build-base meson pkgconf sudo
           apk add acl-dev check-dev e2fsprogs-dev gettext-dev glib-dev gpm-dev libssh2-dev perl slang-dev
-
-      - name: Bootstrap build system
-        run: ./autogen.sh
 
       - name: Build default configuration
         run: |
@@ -31,20 +28,14 @@ jobs:
           chown -R test "$(pwd)"
 
           su - test -c ' \
-            ./configure \
-              --prefix="$(pwd)/install-prefix" \
-              --enable-option-checking=fatal \
-              --enable-mclib \
-              --enable-werror \
-              && \
-            \
-            make -j$(nproc) && \
-            make check  && \
-            make install \
+            meson setup build --prefix="$(pwd)/install-prefix" -Dmclib=true -Dwerror=true && \
+            meson compile -C build && \
+            meson test -C build --print-errorlogs && \
+            meson install -C build \
           '
 
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: test-suite-logs-alpine
-          path: ./**/test-suite.log
+          name: test-logs-alpine
+          path: build/meson-logs/*.txt

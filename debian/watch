@@ -1,8 +1,8 @@
 version=4
 
 # The release archive is a GitHub release asset, not a tarball made from the tag:
-# it is bootstrapped and carries configure and mc-version.h, which the Git tree
-# does not. No signature is published beside it, so pgpmode is off.
+# it carries .tarball-version, which the Git tree does not. No signature is
+# published beside it, so pgpmode is off.
 opts="searchmode=plain, pgpmode=none" \
   https://api.github.com/repos/blue-panels/mcommander/releases \
   https://github.com/blue-panels/mcommander/releases/download/v[\d.]+/mcommander-([\d.]+)\.tar\.gz

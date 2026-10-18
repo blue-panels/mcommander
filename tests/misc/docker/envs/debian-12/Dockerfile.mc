@@ -4,7 +4,7 @@ FROM debian@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
-        autoconf automake libtool pkg-config gettext autopoint \
+        meson ninja-build pkg-config gettext \
         libglib2.0-dev libncurses-dev libslang2-dev \
         libssh2-1-dev libcurl4-openssl-dev libarchive-dev libmagic-dev libsqlite3-dev libsmbclient-dev \
         check rsync file openssh-client curl sshpass smbclient ca-certificates \

@@ -20,7 +20,7 @@ jobs:
           sed -i 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|' /etc/apt/sources.list.d/ubuntu.sources
           echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries
           apt-get update
-          apt-get install -y git autoconf automake autopoint build-essential gettext libtool pkg-config
+          apt-get install -y git build-essential gettext meson ninja-build pkg-config
           apt-get install -y e2fslibs-dev libglib2.0-dev libgpm-dev libncurses-dev libslang2-dev libssh2-1-dev libx11-dev libarchive-dev libcurl4-openssl-dev libsmbclient-dev libacl1-dev libmongoc-dev libbson-dev unzip
 
       - uses: actions/checkout@v7
@@ -31,17 +31,9 @@ jobs:
           # runs as, and git refuses to read a repository it finds suspicious.
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-          ./autogen.sh
-
-          # Named twice on purpose: this step runs in the shell of the container,
-          # and $_ of the jobs on the runner is a bash thing that sh does not have.
-          mkdir -p build-mongo
-          cd build-mongo
-
-          ../configure --enable-panel-plugin-mongo=yes
-
-          make -j$(nproc)
-          test -f src/panel-plugins/mongo/.libs/mc-panel-mongo.so
+          meson setup build-mongo -Dpanel_plugin_mongo=enabled
+          meson compile -C build-mongo
+          test -f build-mongo/src/panel-plugins/mongo/mc-panel-mongo.so
 
   build-ubuntu:
     runs-on: ubuntu-latest
@@ -52,86 +44,67 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # meson dist packs the git tree: it needs the tags version.sh reads
+          fetch-depth: 0
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y autoconf autopoint check gettext libtool pkg-config
+          sudo apt-get install -y check gettext meson ninja-build pkg-config
           sudo apt-get install -y e2fslibs-dev libglib2.0-dev libgpm-dev libncurses5-dev libslang2-dev libssh2-1-dev libx11-dev unzip
-
-      - name: Bootstrap build system
-        run: ./autogen.sh
 
       - name: Build distribution archive
         run: |
-          mkdir -p build-distrib && cd $_
+          meson setup build-distrib
+          meson dist -C build-distrib --formats=xztar --no-tests
 
-          ../configure
-
-          make dist-bzip2
+          # the other configurations build from the archive, to see that it has everything
+          mkdir -p dist-src
+          tar -xJf build-distrib/meson-dist/*.tar.xz -C dist-src --strip-components=1
 
       - name: Build full configuration
         run: |
-          tar -xjf $(ls build-distrib/*.tar.bz2) --one-top-level=build-full
-          cd build-full
-
-          ../configure \
+          meson setup build-full dist-src \
               --prefix="$(pwd)/install" \
-              --enable-option-checking=fatal \
-              --enable-mclib \
-              --enable-werror
-
-          make -j$(nproc)
-          make check
-          make install
+              -Dmclib=true \
+              -Dwerror=true
+          meson compile -C build-full
+          meson test -C build-full --print-errorlogs
+          meson install -C build-full
 
       - name: Build ncurses configuration
         run: |
-          tar -xjf $(ls build-distrib/*.tar.bz2) --one-top-level=build-ncurses
-          cd build-ncurses
-
-          ../configure \
+          meson setup build-ncurses dist-src \
               --prefix="$(pwd)/install" \
-              --enable-option-checking=fatal \
-              --with-screen=ncurses \
-              --enable-werror
-
-          make -j$(nproc)
-          make check
+              -Dscreen=ncurses \
+              -Dwerror=true
+          meson compile -C build-ncurses
+          meson test -C build-ncurses --print-errorlogs
 
       - name: Build minimal configuration
         run: |
-          tar -xjf $(ls build-distrib/*.tar.bz2) --one-top-level=build-minimal
-          cd build-minimal
-
-          ../configure \
+          meson setup build-minimal dist-src \
               --prefix="$(pwd)/install" \
-              --enable-option-checking=fatal \
-              --disable-shared \
-              --disable-static \
-              --disable-maintainer-mode \
-              --disable-largefile \
-              --disable-nls \
-              --disable-rpath \
-              --disable-mclib \
-              --disable-assert \
-              --disable-background \
-              --disable-vfs \
-              --without-x \
-              --without-gpm-mouse \
-              --without-internal-edit \
-              --without-diff-viewer \
-              --enable-tests \
-              --enable-werror
-
-            make -j$(nproc)
-            make check
+              -Dnls=disabled \
+              -Dmclib=false \
+              -Dassert=false \
+              -Dbackground=false \
+              -Dvfs=false \
+              -Dx11=disabled \
+              -Dgpm=disabled \
+              -Dinternal_edit=false \
+              -Ddiff_viewer=false \
+              -Dtests=enabled \
+              -Dwerror=true
+          meson compile -C build-minimal
+          meson test -C build-minimal --print-errorlogs
 
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: test-suite-logs-ubuntu
-          path: build-*/**/test-suite.log
+          name: test-logs-ubuntu
+          path: build-*/meson-logs/*.txt
 
   check-glib-api:
     runs-on: ubuntu-latest
@@ -148,4 +121,4 @@ jobs:
           name: glib-258-logs
           path: |
             /tmp/mc-glib-api.*/*.log
-            /tmp/mc-glib-api.*/build/**/test-suite.log
+            /tmp/mc-glib-api.*/build/meson-logs/*.txt

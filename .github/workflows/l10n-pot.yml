@@ -27,13 +27,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # The same file list that autogen.sh writes.
+          # po/POTFILES.in: every source file with a translatable string.
           xgettext --keyword=_ --keyword=N_ --keyword=Q_ --output=- \
-            $(find lib maint src tests -name '*.[ch]') \
+            $(git ls-files 'lib/*.[ch]' 'maint/*.[ch]' 'src/*.[ch]' 'tests/*.[ch]') \
             | sed -ne '/^#:/{s/#://;s/:[0-9]*/\n/g;s/ //g;p;}' \
             | grep -v '^$' | sort | uniq > po/POTFILES.in
 
-          # The same call that po/Makefile makes, without needing a configured
+          # What "meson compile mcommander-pot" does, without needing a configured
           # build tree.
           xgettext --default-domain=mcommander --directory=. \
             --add-comments=TRANSLATORS: --keyword=_ --keyword=N_ --keyword=Q_ \
@@ -50,7 +50,7 @@ jobs:
             grep -v -e '^"POT-Creation-Date:' -e '^"Project-Id-Version:' "$1"
           }
           if strip po/mcommander.pot > old.pot && strip po/mcommander.pot.new > new.pot \
-             && cmp -s old.pot new.pot; then
+             && cmp -s old.pot new.pot && git diff --quiet -- po/POTFILES.in; then
             echo "The template is up to date." >> "$GITHUB_STEP_SUMMARY"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -59,7 +59,7 @@ jobs:
           mv po/mcommander.pot.new po/mcommander.pot
           rm -f old.pot new.pot
           git switch -C l10n/pot
-          git add po/mcommander.pot
+          git add po/mcommander.pot po/POTFILES.in
           git commit -m "po: update mcommander.pot"
           git push --force origin l10n/pot
           echo "changed=true" >> "$GITHUB_OUTPUT"

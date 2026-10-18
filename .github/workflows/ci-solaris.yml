@@ -17,35 +17,27 @@ jobs:
       - name: Build on Solaris
         uses: vmactions/solaris-vm@v1
         with:
-          release: "11.4-gcc"  # autoconf automake developer/gcc/gcc-c libtool pkg-config
+          release: "11.4-gcc"  # developer/gcc/gcc-c pkg-config
           prepare: |
             pkg install --no-backup-be --no-refresh --accept -v \
-              check glib2 libssh2 libx11
+              check glib2 libssh2 libx11 developer/build/meson developer/build/ninja
 
           run: |
-            ./autogen.sh
-
             useradd -d "$(pwd)" test
             chown -R test $(pwd)
 
             su - test -c ' \
               export PKG_CONFIG_PATH=/usr/lib/64/pkgconfig && \
               \
-              ./configure \
-                --prefix="$(pwd)/install-prefix" \
-                --enable-option-checking=fatal \
-                --with-screen=ncurses \
-                --enable-mclib \
-                --enable-werror \
-                && \
-              \
-              make && \
-              (make check || { find . -name test-suite.log -exec cat {} +; exit 1; }) && \
-              make install \
+              meson setup build --prefix="$(pwd)/install-prefix" \
+                -Dscreen=ncurses -Dmclib=true -Dwerror=true && \
+              meson compile -C build && \
+              meson test -C build --print-errorlogs && \
+              meson install -C build \
             '
 
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: test-suite-logs-solaris
-          path: ./**/test-suite.log
+          name: test-logs-solaris
+          path: build/meson-logs/*.txt

@@ -39,7 +39,7 @@ else
     if [ -z "$CLANG_FORMAT" ]; then
         echo "$0: clang-format $WANTED not found." >&2
         echo "Install it with 'pip install clang-format==$WANTED'," >&2
-        echo "or name the binary: make indent CLANG_FORMAT=/path/to/clang-format" >&2
+        echo "or name the binary: CLANG_FORMAT=/path/to/clang-format meson compile -C <builddir> indent" >&2
         exit 1
     fi
 fi

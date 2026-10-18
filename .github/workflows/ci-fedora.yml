@@ -23,7 +23,7 @@ jobs:
           dnf install -y \
             git `# Install git inside container` \
             \
-            autoconf automake clang-tools-extra gcc gettext-devel groff libtool make pkgconfig \
+            clang-tools-extra gcc gettext-devel groff meson pkgconfig \
             check-devel gpm-devel libX11-devel "pkgconfig(ext2fs)" "pkgconfig(glib-2.0)" "pkgconfig(gmodule-2.0)" "pkgconfig(libssh2)" "pkgconfig(slang)" "pkgconfig(libacl)" \
             \
             glibc-gconv-extra util-linux `# For tests` \
@@ -43,36 +43,28 @@ jobs:
         working-directory: maint
         run: ./asciitest.py
 
-      - name: Bootstrap build system
-        run: ./autogen.sh
-
       - name: Build default configuration
         run: |
           useradd --home "$(pwd)" test
           chown -R test "$(pwd)"
 
           su - test -c ' \
-            ./configure \
-              --prefix="$(pwd)/install-prefix" \
-              --enable-option-checking=fatal \
-              --enable-mclib \
-              --enable-werror \
-              && \
+            meson setup build --prefix="$(pwd)/install-prefix" -Dmclib=true -Dwerror=true && \
             \
             echo "Checking formatting..." && \
             clang-format --version && \
-            make indent && \
+            meson compile -C build indent && \
             echo "Changed files after formatting:" && \
             git diff --name-only -- '*.c' '*.h' && \
             git diff --exit-code -- '*.c' '*.h' && \
             \
-            make -j$(nproc) && \
-            make check && \
-            make install \
+            meson compile -C build && \
+            meson test -C build --print-errorlogs && \
+            meson install -C build \
           '
 
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
-          name: test-suite-logs-fedora
-          path: ./**/test-suite.log
+          name: test-logs-fedora
+          path: build/meson-logs/*.txt
