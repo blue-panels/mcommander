@@ -30,10 +30,12 @@
 #define tty_lowlevel_getch         test_tty_lowlevel_getch
 #define tty_lowlevel_input_pending test_tty_lowlevel_input_pending
 #define tty_nodelay                test_tty_nodelay
+#define tty_unget_input            test_tty_unget_input
 #include "lib/tty/key.c"
 #undef tty_lowlevel_getch
 #undef tty_lowlevel_input_pending
 #undef tty_nodelay
+#undef tty_unget_input
 
 static int test_input[KITTY_CSI_MAX + 256];
 static size_t test_input_len;
@@ -55,6 +57,17 @@ void
 test_tty_nodelay (gboolean set)
 {
     (void) set;
+}
+
+void
+test_tty_unget_input (const unsigned char *data, size_t len)
+{
+    size_t i;
+
+    ck_assert_uint_ge (test_input_pos, len);
+    test_input_pos -= len;
+    for (i = 0; i < len; i++)
+        test_input[test_input_pos + i] = data[i];
 }
 
 static void
@@ -592,6 +605,107 @@ END_PARAMETRIZED_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A key of the Win32 input mode, pressed and released, as the Windows console sends a paste */
+
+static void
+win32_type (GString *seq, unsigned int vk, unsigned int uc)
+{
+    g_string_append_printf (seq, "\033[%u;0;%u;1;0;1_\033[%u;0;%u;0;0;1_", vk, uc, vk, uc);
+}
+
+static void
+win32_type_text (GString *seq, const char *text)
+{
+    for (; *text != '\0'; text++)
+        win32_type (seq, 0, (unsigned char) *text);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+check_paste (const char *seq, const char *text)
+{
+    GString *paste;
+
+    ck_assert_int_eq (decode (seq), MCKEY_BRACKETED_PASTING_START);
+    ck_assert_int_eq (tty_paste_next (), MCKEY_PASTE);
+    paste = tty_paste_take ();
+    ck_assert_ptr_nonnull (paste);
+    ck_assert_str_eq (paste->str, text);
+    g_string_free (paste, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_paste_typed_as_keys)
+{
+    GString *seq = g_string_new (NULL);
+
+    // the Windows console: the marks and the text all as keys, Enter as a key with CR
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+    win32_type (seq, 27, 27);
+    win32_type_text (seq, "[200~ab");
+    win32_type (seq, 13, 13);
+    win32_type_text (seq, "c");
+    g_string_append (seq, "\033[0;0;55357;1;0;1_\033[0;0;56832;1;0;1_");  // U+1F600
+    win32_type (seq, 27, 27);
+    win32_type_text (seq, "[201~");
+    check_paste (seq->str, "ab\nc\xf0\x9f\x98\x80");
+    g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_enter_in_paste)
+{
+    GString *seq = g_string_new ("\033[200~ab");
+
+    // Windows Terminal: the text as it is, but Enter as a key
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+    win32_type (seq, 13, 13);
+    g_string_append (seq, "c\033[201~");
+    check_paste (seq->str, "ab\nc");
+    g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_win32_esc_is_a_key)
+{
+    GString *seq = g_string_new (NULL);
+
+    kitty_keyboard_active = FALSE;
+    win32_input_active = TRUE;
+
+    ck_assert_int_eq (decode ("\033[27;1;27;1;0;1_"), ESC_CHAR);
+
+    // keys behind Esc that are no paste mark come after it, as they were typed
+    win32_type (seq, 27, 27);
+    win32_type_text (seq, "[2x");
+    ck_assert_int_eq (decode (seq->str), ESC_CHAR);
+    ck_assert_int_eq (get_key_code (1), '[');
+    ck_assert_int_eq (get_key_code (1), '2');
+    ck_assert_int_eq (get_key_code (1), 'x');
+    g_string_free (seq, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_paste_without_win32)
+{
+    kitty_keyboard_active = FALSE;
+    // a record in a paste of another terminal is text, as the terminal sent it
+    check_paste ("\033[200~ab\r\nc\033[201~", "ab\nc");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_win32_keys_without_code)
 {
     tty_key_event_t ev;
@@ -776,6 +890,10 @@ main (void)
     tcase_add_test (tc_core, test_learn_skips_leading_release);
     mctest_add_parameterized_test (tc_core, test_win32_decode, win32_ds);
     tcase_add_test (tc_core, test_win32_keys_without_code);
+    tcase_add_test (tc_core, test_win32_paste_typed_as_keys);
+    tcase_add_test (tc_core, test_win32_enter_in_paste);
+    tcase_add_test (tc_core, test_win32_esc_is_a_key);
+    tcase_add_test (tc_core, test_paste_without_win32);
     tcase_add_test (tc_core, test_win32_capture_pair);
     tcase_add_test (tc_core, test_win32_text_and_modifiers);
     tcase_add_test (tc_core, test_super_key_names);
