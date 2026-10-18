@@ -86,6 +86,7 @@ extern gboolean confirm_view_dir;
 extern gboolean safe_delete;
 extern gboolean safe_overwrite;
 extern gboolean clear_before_exec;
+extern gboolean keep_screen_for_external;
 extern gboolean auto_menu;
 extern gboolean drop_menus;
 extern gboolean verbose;

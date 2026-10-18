@@ -4347,6 +4347,13 @@ widzieć wyjście polecenia na dole ekranu, zmień w pliku ~/.config/mc6/ini
 wartość pola clear_before_exec na 0.
 
 .TP
+\fIkeep_screen_for_external\fP
+Gdy startuje zewnętrzny edytor lub podgląd, program zostaje na ekranie
+alternatywnym i panele są widoczne, dopóki program nie narysuje własnego
+ekranu. Jeśli program nie używa ekranu alternatywnego i wolisz widzieć pod nim
+konsolę, zmień wartość tego pola na 0.
+
+.TP
 \fIconfirm_view_dir\fP
 Jeśli naciskasz F3 na katalogu, program zwykle do niego wchodzi. Jeśli ta
 wartość to 1, przy zaznaczonych plikach zapyta o potwierdzenie przed zmianą

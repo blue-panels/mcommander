@@ -138,6 +138,7 @@ extern int tty_baudrate (void);
  */
 
 extern int tty_reset_screen (void);
+extern void tty_resume_kept_screen (void);
 extern void tty_touch_screen (void);
 
 extern void tty_gotoyx (int y, int x);

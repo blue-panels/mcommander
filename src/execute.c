@@ -54,7 +54,7 @@
 #include "filemanager/layout.h"          // use_dash()
 #include "filemanager/mcterm_overlay.h"  // mcterm_overlay_exec_command()
 #include "consaver/cons.saver.h"
-#include "setup.h"  // clear_before_exec
+#include "setup.h"  // clear_before_exec, keep_screen_for_external
 
 #include "execute.h"
 
@@ -94,8 +94,10 @@ show_panels_request_handler (int sig)
 /* --------------------------------------------------------------------------------------------- */
 
 static void
-edition_post_exec (void)
+edition_post_exec (gboolean keep_screen)
 {
+    if (keep_screen)
+        tty_resume_kept_screen ();
     tty_enter_ca_mode ();
 
     // FIXME: Missing on slang endwin?
@@ -115,13 +117,13 @@ edition_post_exec (void)
 /* --------------------------------------------------------------------------------------------- */
 
 static void
-edition_pre_exec (void)
+edition_pre_exec (gboolean keep_screen)
 {
-    if (clear_before_exec)
-        tty_clear_screen ();
-    else
+    if (!keep_screen)
     {
-        if (!(mc_global.tty.console_flag != '\0' || mc_global.tty.xterm_flag))
+        if (clear_before_exec)
+            tty_clear_screen ();
+        else if (!(mc_global.tty.console_flag != '\0' || mc_global.tty.xterm_flag))
             printf ("\n\n");
     }
 
@@ -132,7 +134,8 @@ edition_pre_exec (void)
 
     tty_reset_shell_mode ();
     tty_keypad (FALSE);
-    tty_reset_screen ();
+    if (!keep_screen)
+        tty_reset_screen ();
 
     numeric_keypad_mode ();
 
@@ -142,7 +145,8 @@ edition_pre_exec (void)
      * Do not move this before endwin: in some systems rmcup includes
      * a call to clear screen, so it will end up clearing the shell screen.
      */
-    tty_exit_ca_mode ();
+    if (!keep_screen)
+        tty_exit_ca_mode ();
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -195,7 +199,7 @@ do_suspend_cmd (void (*between) (void *data), void *data, gboolean terminal_chan
     if (mc_global.tty.console_flag != '\0')
         handle_console (CONSOLE_SAVE);
 
-    edition_post_exec ();
+    edition_post_exec (FALSE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -322,9 +326,13 @@ do_executev (const char *shell, int flags, char *const argv[])
     if (!vfs_current_is_local ())
         old_vfs_dir_vpath = vfs_path_clone (vfs_get_raw_current_dir ());
 
+    if (mc_global.tty.console_flag != '\0')
+        flags &= ~EXECUTE_KEEP_SCREEN;
+
     if (mc_global.mc_run_mode == MC_RUN_FULL)
         save_cwds_stat ();
-    pre_exec ();
+    use_dash (FALSE);
+    edition_pre_exec ((flags & EXECUTE_KEEP_SCREEN) != 0);
     if (mc_global.tty.console_flag != '\0')
         handle_console (CONSOLE_RESTORE);
 
@@ -358,7 +366,7 @@ do_executev (const char *shell, int flags, char *const argv[])
 
     if (mc_global.tty.console_flag != '\0')
         handle_console (CONSOLE_SAVE);
-    edition_post_exec ();
+    edition_post_exec ((flags & EXECUTE_KEEP_SCREEN) != 0);
 
     if (old_vfs_dir_vpath != NULL)
     {
@@ -436,7 +444,7 @@ void
 pre_exec (void)
 {
     use_dash (FALSE);
-    edition_pre_exec ();
+    edition_pre_exec (FALSE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -444,7 +452,7 @@ pre_exec (void)
 void
 post_exec (void)
 {
-    edition_post_exec ();
+    edition_post_exec (FALSE);
     use_dash (TRUE);
     repaint_screen ();
 }
@@ -643,11 +651,15 @@ execute_external_editor_or_viewer (const char *command, const vfs_path_t *filena
     const vfs_path_t *do_execute_vpath;
     char *extern_cmd_options;
     time_t mtime = 0;
+    int flags = EXECUTE_INTERNAL;
 
     if (!execute_prepare_with_vfs_arg (filename_vpath, &localcopy_vpath, &mtime))
         return;
 
     do_execute_vpath = (localcopy_vpath == NULL) ? filename_vpath : localcopy_vpath;
+
+    if (keep_screen_for_external)
+        flags |= EXECUTE_KEEP_SCREEN;
 
     extern_cmd_options =
         execute_get_external_cmd_opts_from_config (command, do_execute_vpath, start_line);
@@ -659,11 +671,11 @@ execute_external_editor_or_viewer (const char *command, const vfs_path_t *filena
 
         if (g_shell_parse_argv (extern_cmd_options, &argv_count, &argv_cmd_options, NULL))
         {
-            do_executev (command, EXECUTE_INTERNAL, argv_cmd_options);
+            do_executev (command, flags, argv_cmd_options);
             g_strfreev (argv_cmd_options);
         }
         else
-            do_executev (command, EXECUTE_INTERNAL, NULL);
+            do_executev (command, flags, NULL);
 
         g_free (extern_cmd_options);
     }

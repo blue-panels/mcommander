@@ -85,6 +85,9 @@ gboolean safe_overwrite = FALSE;
 /* Controls screen clearing before an exec */
 gboolean clear_before_exec = TRUE;
 
+/* External editor and viewer start on the alternate screen, the console is not shown */
+gboolean keep_screen_for_external = TRUE;
+
 /* Asks for confirmation before deleting a file */
 gboolean confirm_delete = TRUE;
 /* Asks for confirmation before deleting a hotlist entry */
@@ -301,6 +304,7 @@ static const struct
     { "use_internal_view", &use_internal_view },
     { "use_internal_edit", &use_internal_edit },
     { "clear_before_exec", &clear_before_exec },
+    { "keep_screen_for_external", &keep_screen_for_external },
     { "confirm_delete", &confirm_delete },
     { "confirm_overwrite", &confirm_overwrite },
     { "confirm_execute", &confirm_execute },

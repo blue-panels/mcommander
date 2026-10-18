@@ -4058,6 +4058,12 @@ command.  If you would prefer to see the output of the command at the
 bottom of the screen, edit your ~/.config/mc6/ini file and change the value of
 the field clear_before_exec to 0.
 
+*keep_screen_for_external*
+: When an external editor or viewer starts, M-Commander stays on the alternate
+screen, and the panels are seen until the program draws its own screen. If the
+program does not use the alternate screen and you would prefer to see the
+console under it, change the value of this field to 0.
+
 *confirm_view_dir*
 : If you press F3 on a directory, normally M-Commander enters that directory.  If
 this flag is set to 1, then M-Commander will ask for confirmation before changing

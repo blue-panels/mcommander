@@ -466,6 +466,19 @@ tty_reset_screen (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/** A program ran over the screen without tty_reset_screen() and may have left the alternate one */
+
+void
+tty_resume_kept_screen (void)
+{
+    char *ti;
+
+    ti = SLtt_tgetstr ((SLFUTURE_CONST char *) "ti");
+    if (ti != NULL)
+        SLtt_write_string (ti);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 void
 tty_touch_screen (void)
