@@ -715,33 +715,6 @@ git_detect_repo_root (const char *start_path)
 /* --------------------------------------------------------------------------------------------- */
 
 static char *
-git_detect_upstream_ref (git_data_t *data)
-{
-    char *argv[] = { (char *) "git",          (char *) "-C",
-                     data->repo_root,         (char *) "rev-parse",
-                     (char *) "--abbrev-ref", (char *) "--symbolic-full-name",
-                     (char *) "@{upstream}",  NULL };
-    char *out = NULL;
-    char *trimmed;
-
-    if (!git_run_stdout (argv, &out))
-        return NULL;
-
-    g_strchomp (out);
-    if (out[0] == '\0')
-    {
-        g_free (out);
-        return NULL;
-    }
-
-    trimmed = g_strdup (out);
-    g_free (out);
-    return trimmed;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static char *
 git_detect_current_branch (git_data_t *data)
 {
     char *argv[] = { (char *) "git",     (char *) "-C",
@@ -783,54 +756,96 @@ git_detect_current_branch (git_data_t *data)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Try to find a base branch (master or main) to use as fallback when no upstream is configured. */
+/* What a branch is listed against: its upstream, unless that is the same branch on a remote,
+   else master or main when that is not the branch itself; NULL when there is none. BRANCH NULL
+   is the current branch. */
+
 static char *
-git_detect_base_ref (git_data_t *data)
+git_branch_base (git_data_t *data, const char *branch)
 {
     static const char *candidates[] = { "master", "main" };
-    char *current_branch;
+    char *local;
+    const char *slash;
+    const char *short_name;
+    char *base = NULL;
     size_t i;
 
-    current_branch = git_detect_current_branch (data);
+    local = branch != NULL ? g_strdup (branch) : git_detect_current_branch (data);
 
-    for (i = 0; i < G_N_ELEMENTS (candidates); i++)
     {
+        char *spec = g_strdup_printf ("%s@{upstream}", branch != NULL ? branch : "");
+        char *argv[] = { (char *) "git",
+                         (char *) "-C",
+                         data->repo_root,
+                         (char *) "rev-parse",
+                         (char *) "--abbrev-ref",
+                         (char *) "--symbolic-full-name",
+                         spec,
+                         NULL };
+        char *out = NULL;
+
+        if (git_run_stdout (argv, &out))
+        {
+            g_strchomp (out);
+            if (out[0] != '\0')
+                base = out;
+            else
+                g_free (out);
+        }
+        g_free (spec);
+    }
+
+    // origin/feat for feat: the branch itself on a remote, which has the same commits once pushed
+    if (base != NULL)
+    {
+        char *key = g_strdup_printf ("branch.%s.merge", local);
+        char *argv[] = { (char *) "git",
+                         (char *) "-C",
+                         data->repo_root,
+                         (char *) "config",
+                         (char *) "--get",
+                         key,
+                         NULL };
+        char *merge = NULL;
+
+        if (git_run_stdout (argv, &merge))
+        {
+            char *own = g_strdup_printf ("refs/heads/%s", local);
+
+            g_strchomp (merge);
+            if (strcmp (merge, own) == 0)
+                g_clear_pointer (&base, g_free);
+            g_free (own);
+        }
+        g_free (merge);
+        g_free (key);
+    }
+
+    // origin/master is master for this
+    slash = strrchr (local, '/');
+    short_name = slash != NULL ? slash + 1 : local;
+
+    for (i = 0; base == NULL && i < G_N_ELEMENTS (candidates); i++)
+    {
+        char *ref = g_strdup_printf ("refs/heads/%s", candidates[i]);
         char *argv[] = { (char *) "git",
                          (char *) "-C",
                          data->repo_root,
                          (char *) "rev-parse",
                          (char *) "--verify",
                          (char *) "--quiet",
-                         NULL,
+                         ref,
                          NULL };
-        char *ref;
         char *out = NULL;
 
-        ref = g_strdup_printf ("refs/heads/%s", candidates[i]);
-        argv[6] = ref;
-
-        if (git_run_stdout (argv, &out))
-        {
-            g_free (out);
-
-            /* Don't use base ref if we ARE on that branch */
-            if (current_branch != NULL && strcmp (current_branch, candidates[i]) == 0)
-            {
-                g_free (ref);
-                continue;
-            }
-
-            g_free (ref);
-            g_free (current_branch);
-            return g_strdup (candidates[i]);
-        }
-
-        g_free (ref);
+        if (strcmp (short_name, candidates[i]) != 0 && git_run_stdout (argv, &out))
+            base = g_strdup (candidates[i]);
         g_free (out);
+        g_free (ref);
     }
 
-    g_free (current_branch);
-    return NULL;
+    g_free (local);
+    return base;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2601,88 +2616,10 @@ git_get_items (void *plugin_data, void *list_ptr)
         char *base = NULL;
         gboolean ok2;
 
-        if (data->selected_branch != NULL)
-        {
-            char *sel_upstream = NULL;
-            /* Local name portion: strip remote prefix (e.g. "origin/master" -> "master"). */
-            const char *sel_slash = strrchr (data->selected_branch, '/');
-            const char *sel_local = (sel_slash != NULL) ? sel_slash + 1 : data->selected_branch;
-
-            /* Try the configured upstream for the selected branch. */
-            {
-                char *up_ref = g_strdup_printf ("%s@{upstream}", data->selected_branch);
-                char *up_argv[] = { (char *) "git",
-                                    (char *) "-C",
-                                    data->repo_root,
-                                    (char *) "rev-parse",
-                                    (char *) "--abbrev-ref",
-                                    (char *) "--symbolic-full-name",
-                                    up_ref,
-                                    NULL };
-                char *up_out = NULL;
-
-                if (git_run_stdout (up_argv, &up_out))
-                {
-                    g_strchomp (up_out);
-                    if (up_out[0] != '\0')
-                    {
-                        /* Skip if upstream is just the remote tracking copy of this branch
-                         * (e.g. origin/master for master) -- range would be empty when synced. */
-                        const char *up_slash = strrchr (up_out, '/');
-                        const char *up_tail = (up_slash != NULL) ? up_slash + 1 : up_out;
-
-                        if (strcmp (up_tail, sel_local) != 0)
-                            sel_upstream = up_out;
-                        else
-                            g_free (up_out);
-                    }
-                    else
-                        g_free (up_out);
-                }
-                g_free (up_ref);
-            }
-
-            /* Fall back to local base branch (master/main). */
-            if (sel_upstream == NULL)
-            {
-                static const char *candidates[] = { "master", "main" };
-                size_t ci;
-
-                for (ci = 0; ci < G_N_ELEMENTS (candidates); ci++)
-                {
-                    char *ref_check = g_strdup_printf ("refs/heads/%s", candidates[ci]);
-                    char *chk_argv[] = { (char *) "git",      (char *) "-C",
-                                         data->repo_root,     (char *) "rev-parse",
-                                         (char *) "--verify", (char *) "--quiet",
-                                         ref_check,           NULL };
-                    char *chk_out = NULL;
-
-                    if (git_run_stdout (chk_argv, &chk_out)
-                        && strcmp (sel_local, candidates[ci]) != 0)
-                    {
-                        g_free (chk_out);
-                        g_free (ref_check);
-                        sel_upstream = g_strdup (candidates[ci]);
-                        break;
-                    }
-                    g_free (chk_out);
-                    g_free (ref_check);
-                }
-            }
-
-            ok2 = git_run_branch_log (data, sel_upstream, data->selected_branch, &out2, &from);
-            base = sel_upstream;
-        }
-        else
-        {
-            char *base_ref;
-
-            base_ref = git_detect_upstream_ref (data);
-            if (base_ref == NULL)
-                base_ref = git_detect_base_ref (data);
-            ok2 = git_run_branch_log (data, base_ref, "HEAD", &out2, &from);
-            base = base_ref;
-        }
+        base = git_branch_base (data, data->selected_branch);
+        ok2 = git_run_branch_log (data, base,
+                                  data->selected_branch != NULL ? data->selected_branch : "HEAD",
+                                  &out2, &from);
 
         if (ok2)
         {
