@@ -3763,6 +3763,15 @@ jak 'xclip', który wypisuje zaznaczenie na standardowe wyjście. Na przykład:
 clipboard_paste=xclip -o
 ```
 
+*clipboard_osc52*
+: Czy kopia trafia też do schowka terminala, sekwencją OSC 52. Działa lokalnie
+i przez ssh, bez polecenia w
+*clipboard_store*
+i bez uruchamiania programów; w tmux wymaga "set -g set-clipboard on". Tekst
+jest wysyłany w UTF-8, a tekst dłuższy niż 75000 bajtów nie jest wysyłany.
+Otrzymuje go tylko terminal podobny do xterm, nie konsola Linuksa. Domyślnie
+"false".
+
 *autodetect_codeset*
 : Ta opcja pozwala użyć polecenia 'enca' do samodzielnego rozpoznania strony
 kodowej plików tekstowych we wbudowanym podglądzie i edytorze. Listę

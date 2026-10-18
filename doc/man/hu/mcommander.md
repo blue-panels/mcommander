@@ -3927,6 +3927,15 @@ amely a kijelölést a szabványos kimenetre írja. Például:
 clipboard_paste=xclip -o
 ```
 
+*clipboard_osc52*
+: A másolás a terminál vágólapjára is kerüljön-e, az OSC 52 szekvenciával.
+Helyben és ssh-n át is működik,
+*clipboard_store*
+parancs és futtatandó program nélkül; tmuxban a "set -g set-clipboard on"
+beállítás kell hozzá. A szöveg UTF-8-ban megy, a 75000 bájtnál hosszabb szöveg
+nem megy el. Csak xterm-szerű terminál kapja meg, a Linux konzol nem.
+Alapértelmezés: "false".
+
 *autodetect_codeset*
 : Ezzel a beállítással a program az 'enca' paranccsal állapítja meg a
 szövegfájlok kódlapját a belső fájlnézőben és a szerkesztőben. Az érvényes

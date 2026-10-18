@@ -4283,6 +4283,15 @@ Por ejemplo:
 clipboard_paste=/usr/bin/xclip -o
 ```
 
+*clipboard_osc52*
+: Si una copia va también al portapapeles del terminal, con la secuencia
+OSC 52. Funciona en local y por ssh, sin una orden en
+*clipboard_store*
+y sin ningún programa que ejecutar; en tmux necesita "set -g set-clipboard on".
+El texto se envía en UTF-8, y un texto de más de 75000 bytes no se envía. Solo
+lo recibe un terminal de tipo xterm, no la consola de Linux. Por defecto
+"false".
+
 *autodetect_codeset*
 : Esta opción permite emplear la orden 'enca' para autodetectar el juego de
 caracteres de los archivos de texto para el visor y el editor interno. La

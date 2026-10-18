@@ -22,8 +22,12 @@
 
 extern char *clipboard_store_path;
 extern char *clipboard_paste_path;
+extern gboolean clipboard_osc52;
 
 /*** declarations of public functions ************************************************************/
+
+char *clipboard_osc52_sequence (const char *text, size_t len);
+char *clipboard_osc52_from_file (const char *clip_path);
 
 gboolean clipboard_file_to_ext_clip (const gchar *event_group_name, const gchar *event_name,
                                      gpointer init_data, gpointer data);

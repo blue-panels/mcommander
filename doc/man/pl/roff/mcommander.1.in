@@ -4432,6 +4432,16 @@ clipboard_paste=xclip \-o
 .EE
 
 .TP
+\fIclipboard_osc52\fP
+Czy kopia trafia też do schowka terminala, sekwencją OSC 52. Działa lokalnie
+i przez ssh, bez polecenia w
+\fIclipboard_store\fP
+i bez uruchamiania programów; w tmux wymaga "set \-g set\-clipboard on". Tekst
+jest wysyłany w UTF\-8, a tekst dłuższy niż 75000 bajtów nie jest wysyłany.
+Otrzymuje go tylko terminal podobny do xterm, nie konsola Linuksa. Domyślnie
+"false".
+
+.TP
 \fIautodetect_codeset\fP
 Ta opcja pozwala użyć polecenia 'enca' do samodzielnego rozpoznania strony
 kodowej plików tekstowych we wbudowanym podglądzie i edytorze. Listę

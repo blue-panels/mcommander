@@ -41,6 +41,7 @@
 #include "lib/mcconfig.h"
 #include "lib/util.h"
 #include "lib/event.h"
+#include "lib/strutil.h"  // str_isutf8()
 
 #include "lib/vfs/vfs.h"
 
@@ -54,7 +55,17 @@
 char *clipboard_store_path = NULL;
 char *clipboard_paste_path = NULL;
 
+/* Send the copied text to the terminal by OSC 52 */
+gboolean clipboard_osc52 = FALSE;
+
 /*** file scope macro definitions ****************************************************************/
+
+/* The longest OSC 52 payload (base64) sent, as xterm takes; a longer text is not sent at all */
+#define CLIP_OSC52_MAX_PAYLOAD 100000
+
+/* The mark of a column block in a clipfile without info, see VERTICAL_MAGIC of the editor */
+#define CLIP_VERTICAL_MAGIC     "\1\1\1\1\n"
+#define CLIP_VERTICAL_MAGIC_LEN 5
 
 /*** file scope type declarations ****************************************************************/
 
@@ -77,6 +88,72 @@ clip_info_path (const char *clip_path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The text of the clipfile as the terminal wants it: UTF-8, without the mark of a column block */
+static char *
+clip_text_for_terminal (const char *clip_path, gsize *len)
+{
+    char *data;
+    char digest[CLIP_DIGEST_LEN + 1];
+    char codeset[CLIP_CODESET_MAX + 1];
+    gboolean vertical;
+
+    if (!g_file_get_contents (clip_path, &data, len, NULL))
+        return NULL;
+
+    if (clipboard_info_read (clip_path, digest, &vertical, codeset))
+    {
+        char *sum;
+
+        sum = g_compute_checksum_for_data (CLIP_DIGEST_TYPE, (const guchar *) data, *len);
+        if (strcmp (sum, digest) == 0 && codeset[0] != '\0' && !str_isutf8 (codeset))
+        {
+            char *utf8;
+            gsize utf8_len;
+
+            utf8 = g_convert_with_fallback (data, (gssize) *len, "UTF-8", codeset, "?", NULL,
+                                            &utf8_len, NULL);
+            if (utf8 != NULL)
+            {
+                g_free (data);
+                data = utf8;
+                *len = utf8_len;
+            }
+        }
+        g_free (sum);
+    }
+    else if (*len >= CLIP_VERTICAL_MAGIC_LEN
+             && memcmp (data, CLIP_VERTICAL_MAGIC, CLIP_VERTICAL_MAGIC_LEN) == 0)
+    {
+        *len -= CLIP_VERTICAL_MAGIC_LEN;
+        memmove (data, data + CLIP_VERTICAL_MAGIC_LEN, *len);
+    }
+
+    return data;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Put the text of the clipfile on the clipboard of the terminal */
+static void
+clip_send_osc52 (const char *clip_path)
+{
+    char *seq;
+
+    // the xterm-like terminals; the Linux console has no OSC 52 and may show it as text
+    if (!mc_global.tty.xterm_flag)
+        return;
+
+    seq = clipboard_osc52_from_file (clip_path);
+    if (seq != NULL)
+    {
+        fputs (seq, stdout);
+        fflush (stdout);
+        g_free (seq);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The clipfile was replaced by text from outside the editor: its info no longer applies */
 static void
 clip_info_drop_home (void)
@@ -92,6 +169,52 @@ clip_info_drop_home (void)
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
+/**
+ * The OSC 52 sequence that puts @text on the clipboard of the terminal.
+ *
+ * @return the sequence, or NULL when the text is too long for it
+ */
+
+char *
+clipboard_osc52_sequence (const char *text, size_t len)
+{
+    char *b64, *seq;
+
+    if ((len + 2) / 3 * 4 > CLIP_OSC52_MAX_PAYLOAD)
+        return NULL;
+
+    b64 = g_base64_encode ((const guchar *) text, len);
+    seq = g_strconcat (ESC_STR "]52;c;", b64, ESC_STR "\\", (char *) NULL);
+    g_free (b64);
+
+    return seq;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * The OSC 52 sequence for the text of a clipfile: in UTF-8, without the mark of a column block.
+ *
+ * @return the sequence, or NULL when the file cannot be read or the text is too long
+ */
+
+char *
+clipboard_osc52_from_file (const char *clip_path)
+{
+    char *text, *seq;
+    gsize len;
+
+    text = clip_text_for_terminal (clip_path, &len);
+    if (text == NULL)
+        return NULL;
+
+    seq = clipboard_osc52_sequence (text, len);
+    g_free (text);
+
+    return seq;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* event callback */
 gboolean
 clipboard_file_to_ext_clip (const gchar *event_group_name, const gchar *event_name,
@@ -104,10 +227,20 @@ clipboard_file_to_ext_clip (const gchar *event_group_name, const gchar *event_na
     (void) init_data;
     (void) data;
 
-    if (clipboard_store_path == NULL || clipboard_store_path[0] == '\0')
+    if (!clipboard_osc52 && (clipboard_store_path == NULL || clipboard_store_path[0] == '\0'))
         return TRUE;
 
     tmp = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
+
+    if (clipboard_osc52)
+        clip_send_osc52 (tmp);
+
+    if (clipboard_store_path == NULL || clipboard_store_path[0] == '\0')
+    {
+        g_free (tmp);
+        return TRUE;
+    }
+
     cmd = g_strconcat (clipboard_store_path, " ", tmp, " 2>/dev/null", (char *) NULL);
 
     if (cmd != NULL)

@@ -4146,6 +4146,14 @@ For example:
 clipboard_paste=xclip -o
 ```
 
+*clipboard_osc52*
+: Whether a copy also goes to the clipboard of the terminal, with the OSC 52
+sequence. It works locally and over ssh, with no
+*clipboard_store*
+command and no program to run; in tmux it needs "set -g set-clipboard on". The
+text is sent in UTF-8, and a text longer than 75000 bytes is not sent. Only an
+xterm-like terminal gets it, not the Linux console. "false" by default.
+
 *autodetect_codeset*
 : This option allows use the \`enca' command to autodetect codeset of text files
 in internal viewer and editor. List of valid values can be obtain by the
