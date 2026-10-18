@@ -795,7 +795,10 @@ git_branch_base (git_data_t *data, const char *branch)
         g_free (spec);
     }
 
-    // origin/feat for feat: the branch itself on a remote, which has the same commits once pushed
+    /* origin/feat for feat, also for a/feat pushed as feat: the branch itself on a remote,
+       which has the same commits once pushed. branch.<name>.merge names the branch there. */
+    slash = strrchr (local, '/');
+    short_name = slash != NULL ? slash + 1 : local;
     if (base != NULL)
     {
         char *key = g_strdup_printf ("branch.%s.merge", local);
@@ -810,21 +813,18 @@ git_branch_base (git_data_t *data, const char *branch)
 
         if (git_run_stdout (argv, &merge))
         {
-            char *own = g_strdup_printf ("refs/heads/%s", local);
+            const char *merge_slash;
 
             g_strchomp (merge);
-            if (strcmp (merge, own) == 0)
+            merge_slash = strrchr (merge, '/');
+            if (strcmp (merge_slash != NULL ? merge_slash + 1 : merge, short_name) == 0)
                 g_clear_pointer (&base, g_free);
-            g_free (own);
         }
         g_free (merge);
         g_free (key);
     }
 
     // origin/master is master for this
-    slash = strrchr (local, '/');
-    short_name = slash != NULL ? slash + 1 : local;
-
     for (i = 0; base == NULL && i < G_N_ELEMENTS (candidates); i++)
     {
         char *ref = g_strdup_printf ("refs/heads/%s", candidates[i]);
