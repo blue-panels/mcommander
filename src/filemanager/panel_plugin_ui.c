@@ -269,8 +269,12 @@ host_navigate_other_panel_impl (mc_panel_host_t *host, const char *dir_path, con
 
     (void) host;
 
+    // Quick view, Info or the tree in the other half: no panel to go to
+    if (dir_path == NULL || get_other_type () != view_listing)
+        return;
+
     op = get_other_panel ();
-    if (op == NULL || op->is_plugin_panel || dir_path == NULL)
+    if (op == NULL || op->is_plugin_panel)
         return;
 
     vpath = vfs_path_from_str (dir_path);
