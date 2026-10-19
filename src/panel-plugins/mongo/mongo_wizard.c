@@ -118,6 +118,7 @@ GArray *s_rules = NULL; /* wiz_rule_t; invariant: len >= 1; shared, see mongo_wi
 static int s_cur = 0;   /* current row */
 static int s_top = 0;   /* first visible row (scroll offset) */
 static WDialog *s_dlg = NULL;
+static WScrollBar *s_bar = NULL; /* beside the rows, drawn by the dialog */
 static WButton *e_field = NULL;
 static WButton *e_op = NULL;
 static WInput *e_value = NULL;
@@ -715,37 +716,13 @@ wiz_draw_rows (void)
         tty_print_string (buf);
     }
 
-    /* Scrollbar in the WListbox style: a full-height vertical track with ^/v
-       end caps and a '*' thumb at the current row's relative position. Drawn
-       only when the rules overflow the visible window. */
     if ((int) s_rules->len > WIZ_MAXVIS)
     {
-        int len = (int) s_rules->len;
-        int last = WIZ_MAXVIS - 1;
-        int thumb;
-        int row;
+        WRect r = { w->rect.y + WIZ_ROW0, w->rect.x + WIZ_X_MARK, WIZ_MAXVIS, 1 };
 
-        widget_gotoyx (w, WIZ_ROW0, WIZ_X_MARK);
-        if (s_top == 0)
-            tty_print_one_vline (TRUE);
-        else
-            tty_print_char ('^');
-
-        widget_gotoyx (w, WIZ_ROW0 + last, WIZ_X_MARK);
-        if (s_top + WIZ_MAXVIS >= len)
-            tty_print_one_vline (TRUE);
-        else
-            tty_print_char ('v');
-
-        thumb = 1 + (s_cur * (WIZ_MAXVIS - 2)) / len;
-        for (row = 1; row < last; row++)
-        {
-            widget_gotoyx (w, WIZ_ROW0 + row, WIZ_X_MARK);
-            if (row == thumb)
-                tty_print_char ('*');
-            else
-                tty_print_one_vline (TRUE);
-        }
+        if (s_bar == NULL)
+            s_bar = scrollbar_new (r.y, r.x, r.lines, SCROLLBAR_VERTICAL);
+        scrollbar_show (s_bar, &r, (long) s_rules->len, WIZ_MAXVIS, s_top, DIALOG_NORMAL_COLOR);
     }
 }
 
@@ -937,6 +914,9 @@ mongo_wizard_run (const char *const *fields, mongo_wizard_values_fn values_fn, g
     }
 
     widget_destroy (WIDGET (s_dlg));
+    if (s_bar != NULL)
+        widget_destroy (WIDGET (s_bar));
+    s_bar = NULL;
 
     g_array_free (s_rules, TRUE);
     s_rules = NULL;

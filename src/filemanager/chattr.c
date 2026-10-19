@@ -83,8 +83,9 @@ struct WChattrBoxes
 {
     WGroup base;  // base class
 
-    int pos;  // The current checkbox selected
-    int top;  // The first flag displayed
+    int pos;          // The current checkbox selected
+    int top;          // The first flag displayed
+    WScrollBar *bar;  // on the column right of the boxes, the frame of the dialog
 };
 
 /*** forward declarations (file scope functions) *************************************************/
@@ -400,41 +401,13 @@ chattr_toggle_select (const WChattrBoxes *cb, int Id)
 
 /* --------------------------------------------------------------------------------------------- */
 
-static inline void
-chattrboxes_draw_scrollbar (const WChattrBoxes *cb)
+static void
+chattrboxes_draw_scrollbar (WChattrBoxes *cb, int color)
 {
-    const Widget *w = CONST_WIDGET (cb);
-    int max_line;
-    int line;
-    int i;
+    const WRect *w = &CONST_WIDGET (cb)->rect;
+    WRect r = { w->y, w->x + w->cols, w->lines, 1 };
 
-    // Are we at the top?
-    widget_gotoyx (w, 0, w->rect.cols);
-    if (cb->top == 0)
-        tty_print_one_vline (TRUE);
-    else
-        tty_print_char ('^');
-
-    max_line = w->rect.lines - 1;
-
-    // Are we at the bottom?
-    widget_gotoyx (w, max_line, w->rect.cols);
-    if (cb->top + w->rect.lines == check_attr_mod_num || w->rect.lines >= check_attr_mod_num)
-        tty_print_one_vline (TRUE);
-    else
-        tty_print_char ('v');
-
-    // Now draw the nice relative pointer
-    line = 1 + (cb->pos * (w->rect.lines - 2)) / check_attr_mod_num;
-
-    for (i = 1; i < max_line; i++)
-    {
-        widget_gotoyx (w, i, w->rect.cols);
-        if (i != line)
-            tty_print_one_vline (TRUE);
-        else
-            tty_print_char ('*');
-    }
+    scrollbar_show (cb->bar, &r, check_attr_mod_num, w->lines, cb->top, color);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -454,10 +427,8 @@ chattrboxes_draw (WChattrBoxes *cb)
     // redraw checkboxes
     group_default_callback (w, NULL, MSG_DRAW, 0, NULL);
 
-    // draw scrollbar
-    tty_setcolor (colors[DLG_COLOR_NORMAL]);
     if (!mc_global.tty.slow_terminal && check_attr_mod_num > w->rect.lines)
-        chattrboxes_draw_scrollbar (cb);
+        chattrboxes_draw_scrollbar (cb, colors[DLG_COLOR_NORMAL]);
 
     // mark selected checkboxes
     for (i = cb->top, l = GROUP (cb)->widgets; l != NULL; i++, l = g_list_next (l))
@@ -820,6 +791,8 @@ chattrboxes_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, voi
     case MSG_DESTROY:
         // save all states
         checkboxes_save_state (cb);
+        widget_destroy (WIDGET (cb->bar));
+        cb->bar = NULL;
         MC_FALLTHROUGH;
 
     default:
@@ -884,6 +857,9 @@ chattrboxes_new (const WRect *r)
     w->options |= WOP_SELECTABLE | WOP_WANT_CURSOR;
     w->mouse_handler = chattrboxes_handle_mouse_event;
     w->keymap = chattr_map;
+    // the boxes' own, in no group: they draw it
+    cb->bar = scrollbar_new (r->y, r->x + r->cols, r->lines, SCROLLBAR_VERTICAL);
+    scrollbar_set_client (cb->bar, w);
 
     // create checkboxes
     for (i = 0; i < r->lines; i++)

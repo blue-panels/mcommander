@@ -104,43 +104,15 @@ listbox_entry_free (void *data)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The scrollbar of the list, on the column right of it, the frame of the window it is in */
 static void
-listbox_drawscroll (const WListbox *l)
+listbox_draw_bar (WListbox *l, int color)
 {
     const WRect *w = &CONST_WIDGET (l)->rect;
-    int max_line = w->lines - 1;
-    int line = 0;
-    int i;
-    int length;
+    WRect r = { w->y, w->x + w->cols, w->lines, 1 };
 
-    // Are we at the top?
-    widget_gotoyx (l, 0, w->cols);
-    if (l->top == 0)
-        tty_print_one_vline (TRUE);
-    else
-        tty_print_char ('^');
-
-    length = g_queue_get_length (l->list);
-
-    // Are we at the bottom?
-    widget_gotoyx (w, max_line, w->cols);
-    if (l->top + listbox_visible_lines (l) >= length)
-        tty_print_one_vline (TRUE);
-    else
-        tty_print_char ('v');
-
-    // Now draw the nice relative pointer
-    if (length != 0)
-        line = 1 + ((l->current * (w->lines - 2)) / length);
-
-    for (i = 1; i < max_line; i++)
-    {
-        widget_gotoyx (l, i, w->cols);
-        if (i != line)
-            tty_print_one_vline (TRUE);
-        else
-            tty_print_char ('*');
-    }
+    scrollbar_show (l->bar, &r, (long) g_queue_get_length (l->list), listbox_visible_lines (l),
+                    l->top, color);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -228,10 +200,7 @@ listbox_draw (WListbox *l, gboolean focused)
     }
 
     if (l->scrollbar && length > w->lines)
-    {
-        tty_setcolor (scrollbarc);
-        listbox_drawscroll (l);
-    }
+        listbox_draw_bar (l, scrollbarc);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -636,6 +605,8 @@ static inline void
 listbox_destroy (WListbox *l)
 {
     listbox_remove_list (l);
+    widget_destroy (WIDGET (l->bar));
+    l->bar = NULL;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -768,6 +739,9 @@ listbox_new (int y, int x, int height, int width, gboolean deletable, lcback_fn 
     l->callback = callback;
     l->allow_duplicates = TRUE;
     l->scrollbar = !mc_global.tty.slow_terminal;
+    // the list's own, in no group, drawn on the column right of the list
+    l->bar = scrollbar_new (y, x + width, r.lines, SCROLLBAR_VERTICAL);
+    scrollbar_set_client (l->bar, w);
     l->cursor_x = l->cursor_y = 0;
     l->search = NULL;
     l->search_chpoint = 0;
