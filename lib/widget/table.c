@@ -301,6 +301,38 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The line style of the right column: that of the frame of the dialog when the column lies
+   on it, else a single line */
+static gboolean
+table_frame_single (const WTable *t)
+{
+    const Widget *w = CONST_WIDGET (t);
+    const Widget *top;
+    const Widget *bg;
+    int d;
+
+    if (!t->scrollbar_on_frame)
+        return TRUE;
+
+    // a dialog is its own owner; a group without a dialog above has none
+    for (top = w; top->owner != NULL && CONST_WIDGET (top->owner) != top;
+         top = CONST_WIDGET (top->owner))
+        ;
+    if (top == w || top->owner == NULL)
+        return TRUE;
+
+    bg = CONST_DIALOG (top)->bg;
+    if (bg == NULL || bg->callback != frame_callback)
+        return TRUE;
+
+    d = CONST_FRAME (bg)->compact ? 0 : 1;
+    if (w->rect.x + w->rect.cols != bg->rect.x + bg->rect.cols - d)
+        return TRUE;
+    return CONST_FRAME (bg)->single;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 table_drawscroll (const WTable *t, int nrows)
 {
@@ -463,12 +495,14 @@ table_draw (WTable *t, gboolean focused)
     }
     else if (t->scrollbar_on_frame)
     {
-        /* nothing to scroll, but the column belongs to the frame */
+        /* nothing to scroll: the column is the frame, in its line */
+        const gboolean single = table_frame_single (t);
+
         tty_setcolor (scrollbarc);
         for (i = 0; i < w->lines; i++)
         {
             widget_gotoyx (t, i, w->cols - 1);
-            tty_print_one_vline (TRUE);
+            tty_print_one_vline (single);
         }
     }
 }
