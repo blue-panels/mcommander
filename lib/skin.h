@@ -6,6 +6,7 @@
 #include "lib/mcconfig.h"
 
 #include "lib/tty/color.h"
+#include "lib/tty/tty.h"  // mc_tty_char_t
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
@@ -146,6 +147,17 @@
 
 /*** structures declarations (and typedefs of structures)*****************************************/
 
+/* How a scrollbar is drawn: the arrows at its start and its end, the fill of its track, its
+   thumb, and the cells of the thumb when it fits; [scrollbar] of the skin */
+typedef struct
+{
+    mc_tty_char_t start;
+    mc_tty_char_t end;
+    mc_tty_char_t track;
+    mc_tty_char_t thumb;
+    int thumb_len;
+} mc_skin_scrollbar_t;
+
 typedef struct mc_skin_struct
 {
     gchar *name;
@@ -160,6 +172,9 @@ typedef struct mc_skin_struct
 
 extern int mc_skin_color__cache[];
 extern mc_skin_t mc_skin__default;
+/* the scrollbars of the skin, the vertical one and the horizontal one */
+extern mc_skin_scrollbar_t mc_skin_scrollbar_vert;
+extern mc_skin_scrollbar_t mc_skin_scrollbar_horiz;
 
 /*** declarations of public functions ************************************************************/
 

@@ -33,7 +33,8 @@
 
 /*** file scope macro definitions ****************************************************************/
 
-#define set_lines(x, y) mc_config_set_string (mc_skin->config, "lines", x, y)
+#define set_lines(x, y)     mc_config_set_string (mc_skin->config, "lines", x, y)
+#define set_scrollbar(x, y) mc_config_set_string (mc_skin->config, "scrollbar", x, y)
 
 /*** file scope type declarations ****************************************************************/
 
@@ -41,6 +42,22 @@
 
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The scrollbars in ASCII, the track in track_v and track_h: nothing of the skin is left in them */
+static void
+mc_skin_hardcoded_scrollbar (mc_skin_t *mc_skin, const char *track_v, const char *track_h)
+{
+    set_scrollbar ("vstart", "^");
+    set_scrollbar ("vend", "v");
+    set_scrollbar ("vtrack", track_v);
+    set_scrollbar ("vthumb", "#");
+    set_scrollbar ("hstart", "<");
+    set_scrollbar ("hend", ">");
+    set_scrollbar ("htrack", track_h);
+    set_scrollbar ("hthumb", "#");
+}
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
@@ -120,6 +137,8 @@ mc_skin_hardcoded_space_lines (mc_skin_t *mc_skin)
     set_lines ("dbottommiddle", " ");
     set_lines ("dleftmiddle", " ");
     set_lines ("drightmiddle", " ");
+
+    mc_skin_hardcoded_scrollbar (mc_skin, " ", " ");
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -151,6 +170,8 @@ mc_skin_hardcoded_ugly_lines (mc_skin_t *mc_skin)
     set_lines ("dbottommiddle", "-");
     set_lines ("dleftmiddle", "|");
     set_lines ("drightmiddle", "|");
+
+    mc_skin_hardcoded_scrollbar (mc_skin, "|", "-");
 }
 
 /* --------------------------------------------------------------------------------------------- */

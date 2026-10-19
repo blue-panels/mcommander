@@ -225,6 +225,49 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* forty rows, the even ones with "x" in them */
+static int
+get_nrows_many (const void *data)
+{
+    (void) data;
+    return 40;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static const char *
+get_text_many (const void *data, int row, int col)
+{
+    static char buf[16];
+
+    (void) data;
+    (void) col;
+    g_snprintf (buf, sizeof (buf), "%s%d", row % 2 == 0 ? "x" : "y", row);
+    return buf;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_filter_scrollbar)
+{
+    table_datasource_t ds = { get_nrows_many, get_text_many, NULL, NULL, NULL, NULL };
+
+    table_set_datasource (t, ds);
+    send_message (t, NULL, MSG_KEY, ALT ('S'), NULL);
+    keys ("x");
+    ck_assert_int_eq (t->qs_rows->len, 20);
+
+    /* the thumb is moved to the fifth row shown, the data row 8; the data row 4 is the third
+       row shown and must not be taken for it */
+    t->bar->pos = 4;
+    send_message (t, WIDGET (t->bar), MSG_NOTIFY, 0, NULL);
+    ck_assert_int_eq (t->top, 4);
+    ck_assert_int_eq (table_get_current (t), 8);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -238,6 +281,7 @@ main (void)
     tcase_add_test (tc_core, test_fuzzy_score);
     tcase_add_test (tc_core, test_filter_fuzzy);
     tcase_add_test (tc_core, test_filter_fuzzy_kept_row);
+    tcase_add_test (tc_core, test_filter_scrollbar);
 
     return mctest_run_all (tc_core);
 }

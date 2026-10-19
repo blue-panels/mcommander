@@ -58,6 +58,8 @@ typedef struct WListbox
     GString *search;            // Quick search text, NULL when not searching
     char search_ch[MB_LEN_MAX + 1];
     int search_chpoint;
+    // last: the fields above keep their places for the plugins built before it
+    WScrollBar *bar;  // The scrollbar, the list's own
 } WListbox;
 
 /*** global variables defined in .c file *********************************************************/

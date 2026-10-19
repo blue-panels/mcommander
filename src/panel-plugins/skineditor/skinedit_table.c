@@ -320,12 +320,18 @@ static const skinedit_table_row_t rows_other_marks[] = {
 };
 
 static const skinedit_table_row_t rows_scrollbar[] = {
-    CH ("widget-scrollbar", "up-char", N_ ("Up"), N_ ("Not read by mc today"), "^"),
-    CH ("widget-scrollbar", "down-char", N_ ("Down"), N_ ("Not read by mc today"), "v"),
-    CH ("widget-scrollbar", "left-char", N_ ("Left"), N_ ("Not read by mc today"), "<"),
-    CH ("widget-scrollbar", "right-char", N_ ("Right"), N_ ("Not read by mc today"), ">"),
-    CH ("widget-scrollbar", "thumb-char", N_ ("Thumb"), N_ ("Not read by mc today"), "*"),
-    CH ("widget-scrollbar", "track-char", N_ ("Track"), N_ ("Not read by mc today"), "X"),
+    CH ("scrollbar", "vstart", N_ ("Vertical: top arrow"), NULL, "^"),
+    CH ("scrollbar", "vend", N_ ("Vertical: bottom arrow"), NULL, "v"),
+    CH ("scrollbar", "vtrack", N_ ("Vertical: track"), N_ ("Default: vert of the lines"), "\xe2\x94\x82"),
+    CH ("scrollbar", "vthumb", N_ ("Vertical: thumb"), NULL, "\xe2\x96\x88"),
+    ST ("scrollbar", "vthumblen", N_ ("Vertical: thumb length"),
+        N_ ("Cells of the thumb when it fits, else half the track"), "6"),
+    CH ("scrollbar", "hstart", N_ ("Horizontal: left arrow"), NULL, "<"),
+    CH ("scrollbar", "hend", N_ ("Horizontal: right arrow"), NULL, ">"),
+    CH ("scrollbar", "htrack", N_ ("Horizontal: track"), N_ ("Default: horiz of the lines"), "\xe2\x94\x80"),
+    CH ("scrollbar", "hthumb", N_ ("Horizontal: thumb"), NULL, "\xe2\x96\xa0"),
+    ST ("scrollbar", "hthumblen", N_ ("Horizontal: thumb length"),
+        N_ ("Cells of the thumb when it fits, else half the track"), "4"),
 };
 
 static const skinedit_table_row_t rows_spinner[] = {
@@ -359,7 +365,7 @@ const skinedit_table_section_t skinedit_table[] = {
     SECTION (N_ ("Frames"), rows_lines),
     SECTION (N_ ("Panel marks"), rows_panel_marks),
     SECTION (N_ ("Find and editor marks"), rows_other_marks),
-    SECTION (N_ ("Scrollbar (unused)"), rows_scrollbar),
+    SECTION (N_ ("Scrollbar"), rows_scrollbar),
     SECTION (N_ ("Spinner"), rows_spinner),
 };
 

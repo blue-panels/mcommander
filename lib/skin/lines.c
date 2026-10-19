@@ -26,12 +26,16 @@
 
 #include <config.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "internal.h"
 #include "lib/tty/tty.h"
 #include "lib/strutil.h"
 
 /*** global variables ****************************************************************************/
+
+mc_skin_scrollbar_t mc_skin_scrollbar_vert = { '^', 'v', '|', '#', 6 };
+mc_skin_scrollbar_t mc_skin_scrollbar_horiz = { '<', '>', '-', '#', 4 };
 
 /*** file scope macro definitions ****************************************************************/
 
@@ -83,7 +87,8 @@ unicode_to_mc_acs (gunichar c)
 // "def" is the default in case the skin doesn't define anything. It's not the fallback in case the
 // character cannot be converted to the locale, the fallback is handled by the caller.
 static gboolean
-skin_get_char (mc_skin_t *mc_skin, const char *name, gunichar def, mc_tty_char_t *result)
+skin_get_char (mc_skin_t *mc_skin, const char *section, const char *name, gunichar def,
+               mc_tty_char_t *result)
 {
     gunichar c;
     GIConv conv;
@@ -91,8 +96,8 @@ skin_get_char (mc_skin_t *mc_skin, const char *name, gunichar def, mc_tty_char_t
     estr_t conv_res;
     char *value_utf8;
 
-    value_utf8 = mc_config_get_string_raw (mc_skin->config, "lines", name, NULL);
-    if (value_utf8 == NULL)
+    value_utf8 = mc_config_get_string_raw (mc_skin->config, section, name, NULL);
+    if (value_utf8 == NULL && strcmp (section, "lines") == 0)
     {
         // it was called "Lines" (uppercase L) in mc <= 4.8.33, accept that for compatibility
         value_utf8 = mc_config_get_string_raw (mc_skin->config, "Lines", name, NULL);
@@ -163,6 +168,34 @@ skin_get_char (mc_skin_t *mc_skin, const char *name, gunichar def, mc_tty_char_t
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* A scrollbar of the skin, its keys starting with prefix: the arrows default to start and end,
+   the track to the single line of the frame frm, the thumb to thumb; a character the locale has
+   not falls back to them, the thumb to '#' */
+static void
+mc_skin_scrollbar_parse (mc_skin_t *mc_skin, const char *prefix, mc_skin_scrollbar_t *bar,
+                         gunichar start, gunichar end, mc_tty_frm_t frm, gunichar thumb, int len)
+{
+    char key[32];
+
+    g_snprintf (key, sizeof (key), "%sstart", prefix);
+    if (!skin_get_char (mc_skin, "scrollbar", key, start, &bar->start))
+        bar->start = start;
+    g_snprintf (key, sizeof (key), "%send", prefix);
+    if (!skin_get_char (mc_skin, "scrollbar", key, end, &bar->end))
+        bar->end = end;
+    g_snprintf (key, sizeof (key), "%strack", prefix);
+    if (!mc_config_has_param (mc_skin->config, "scrollbar", key)
+        || !skin_get_char (mc_skin, "scrollbar", key, ' ', &bar->track))
+        bar->track = mc_tty_frm[frm];
+    g_snprintf (key, sizeof (key), "%sthumb", prefix);
+    if (!skin_get_char (mc_skin, "scrollbar", key, thumb, &bar->thumb))
+        bar->thumb = '#';
+    g_snprintf (key, sizeof (key), "%sthumblen", prefix);
+    bar->thumb_len = MAX (1, mc_config_get_int (mc_skin->config, "scrollbar", key, len));
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -178,17 +211,22 @@ mc_skin_lines_parse_ini_file (mc_skin_t *mc_skin)
 
     // single lines
     success = TRUE /* just for nicer indentation */
-        && skin_get_char (mc_skin, "horiz", 0x2500, &mc_tty_frm[MC_TTY_FRM_HORIZ])
-        && skin_get_char (mc_skin, "vert", 0x2502, &mc_tty_frm[MC_TTY_FRM_VERT])
-        && skin_get_char (mc_skin, "lefttop", 0x250C, &mc_tty_frm[MC_TTY_FRM_LEFTTOP])
-        && skin_get_char (mc_skin, "righttop", 0x2510, &mc_tty_frm[MC_TTY_FRM_RIGHTTOP])
-        && skin_get_char (mc_skin, "leftbottom", 0x2514, &mc_tty_frm[MC_TTY_FRM_LEFTBOTTOM])
-        && skin_get_char (mc_skin, "rightbottom", 0x2518, &mc_tty_frm[MC_TTY_FRM_RIGHTBOTTOM])
-        && skin_get_char (mc_skin, "topmiddle", 0x252C, &mc_tty_frm[MC_TTY_FRM_TOPMIDDLE])
-        && skin_get_char (mc_skin, "bottommiddle", 0x2534, &mc_tty_frm[MC_TTY_FRM_BOTTOMMIDDLE])
-        && skin_get_char (mc_skin, "leftmiddle", 0x251C, &mc_tty_frm[MC_TTY_FRM_LEFTMIDDLE])
-        && skin_get_char (mc_skin, "rightmiddle", 0x2524, &mc_tty_frm[MC_TTY_FRM_RIGHTMIDDLE])
-        && skin_get_char (mc_skin, "cross", 0x253C, &mc_tty_frm[MC_TTY_FRM_CROSS]);
+        && skin_get_char (mc_skin, "lines", "horiz", 0x2500, &mc_tty_frm[MC_TTY_FRM_HORIZ])
+        && skin_get_char (mc_skin, "lines", "vert", 0x2502, &mc_tty_frm[MC_TTY_FRM_VERT])
+        && skin_get_char (mc_skin, "lines", "lefttop", 0x250C, &mc_tty_frm[MC_TTY_FRM_LEFTTOP])
+        && skin_get_char (mc_skin, "lines", "righttop", 0x2510, &mc_tty_frm[MC_TTY_FRM_RIGHTTOP])
+        && skin_get_char (mc_skin, "lines", "leftbottom", 0x2514,
+                          &mc_tty_frm[MC_TTY_FRM_LEFTBOTTOM])
+        && skin_get_char (mc_skin, "lines", "rightbottom", 0x2518,
+                          &mc_tty_frm[MC_TTY_FRM_RIGHTBOTTOM])
+        && skin_get_char (mc_skin, "lines", "topmiddle", 0x252C, &mc_tty_frm[MC_TTY_FRM_TOPMIDDLE])
+        && skin_get_char (mc_skin, "lines", "bottommiddle", 0x2534,
+                          &mc_tty_frm[MC_TTY_FRM_BOTTOMMIDDLE])
+        && skin_get_char (mc_skin, "lines", "leftmiddle", 0x251C,
+                          &mc_tty_frm[MC_TTY_FRM_LEFTMIDDLE])
+        && skin_get_char (mc_skin, "lines", "rightmiddle", 0x2524,
+                          &mc_tty_frm[MC_TTY_FRM_RIGHTMIDDLE])
+        && skin_get_char (mc_skin, "lines", "cross", 0x253C, &mc_tty_frm[MC_TTY_FRM_CROSS]);
 
     // if any of them are unavailable, revert all of them to regular single lines
     if (!success)
@@ -208,16 +246,22 @@ mc_skin_lines_parse_ini_file (mc_skin_t *mc_skin)
 
     // double lines
     success = TRUE /* just for nicer indentation */
-        && skin_get_char (mc_skin, "dhoriz", 0x2550, &mc_tty_frm[MC_TTY_FRM_DHORIZ])
-        && skin_get_char (mc_skin, "dvert", 0x2551, &mc_tty_frm[MC_TTY_FRM_DVERT])
-        && skin_get_char (mc_skin, "dlefttop", 0x2554, &mc_tty_frm[MC_TTY_FRM_DLEFTTOP])
-        && skin_get_char (mc_skin, "drighttop", 0x2557, &mc_tty_frm[MC_TTY_FRM_DRIGHTTOP])
-        && skin_get_char (mc_skin, "dleftbottom", 0x255A, &mc_tty_frm[MC_TTY_FRM_DLEFTBOTTOM])
-        && skin_get_char (mc_skin, "drightbottom", 0x255D, &mc_tty_frm[MC_TTY_FRM_DRIGHTBOTTOM])
-        && skin_get_char (mc_skin, "dtopmiddle", 0x2564, &mc_tty_frm[MC_TTY_FRM_DTOPMIDDLE])
-        && skin_get_char (mc_skin, "dbottommiddle", 0x2567, &mc_tty_frm[MC_TTY_FRM_DBOTTOMMIDDLE])
-        && skin_get_char (mc_skin, "dleftmiddle", 0x255F, &mc_tty_frm[MC_TTY_FRM_DLEFTMIDDLE])
-        && skin_get_char (mc_skin, "drightmiddle", 0x2562, &mc_tty_frm[MC_TTY_FRM_DRIGHTMIDDLE]);
+        && skin_get_char (mc_skin, "lines", "dhoriz", 0x2550, &mc_tty_frm[MC_TTY_FRM_DHORIZ])
+        && skin_get_char (mc_skin, "lines", "dvert", 0x2551, &mc_tty_frm[MC_TTY_FRM_DVERT])
+        && skin_get_char (mc_skin, "lines", "dlefttop", 0x2554, &mc_tty_frm[MC_TTY_FRM_DLEFTTOP])
+        && skin_get_char (mc_skin, "lines", "drighttop", 0x2557, &mc_tty_frm[MC_TTY_FRM_DRIGHTTOP])
+        && skin_get_char (mc_skin, "lines", "dleftbottom", 0x255A,
+                          &mc_tty_frm[MC_TTY_FRM_DLEFTBOTTOM])
+        && skin_get_char (mc_skin, "lines", "drightbottom", 0x255D,
+                          &mc_tty_frm[MC_TTY_FRM_DRIGHTBOTTOM])
+        && skin_get_char (mc_skin, "lines", "dtopmiddle", 0x2564,
+                          &mc_tty_frm[MC_TTY_FRM_DTOPMIDDLE])
+        && skin_get_char (mc_skin, "lines", "dbottommiddle", 0x2567,
+                          &mc_tty_frm[MC_TTY_FRM_DBOTTOMMIDDLE])
+        && skin_get_char (mc_skin, "lines", "dleftmiddle", 0x255F,
+                          &mc_tty_frm[MC_TTY_FRM_DLEFTMIDDLE])
+        && skin_get_char (mc_skin, "lines", "drightmiddle", 0x2562,
+                          &mc_tty_frm[MC_TTY_FRM_DRIGHTMIDDLE]);
 
     // if any of them are unavailable, revert all of them to their single counterpart
     if (!success)
@@ -233,6 +277,11 @@ mc_skin_lines_parse_ini_file (mc_skin_t *mc_skin)
         mc_tty_frm[MC_TTY_FRM_DLEFTMIDDLE] = mc_tty_frm[MC_TTY_FRM_LEFTMIDDLE];
         mc_tty_frm[MC_TTY_FRM_DRIGHTMIDDLE] = mc_tty_frm[MC_TTY_FRM_RIGHTMIDDLE];
     }
+
+    mc_skin_scrollbar_parse (mc_skin, "v", &mc_skin_scrollbar_vert, '^', 'v', MC_TTY_FRM_VERT,
+                             0x2588, 6);
+    mc_skin_scrollbar_parse (mc_skin, "h", &mc_skin_scrollbar_horiz, '<', '>', MC_TTY_FRM_HORIZ,
+                             0x25A0, 4);
 }
 
 /* --------------------------------------------------------------------------------------------- */

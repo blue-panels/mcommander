@@ -16,6 +16,7 @@ typedef struct WGroup WGroup;
 #include "lib/widget/rect.h"          /* WRect */
 #include "lib/widget/widget-common.h" /* Widget */
 #include "lib/widget/hline.h"         /* WHLine */
+#include "lib/widget/scrollbar.h"     /* WScrollBar */
 #include "lib/strutil.h"              /* align_crt_t */
 
 /*** typedefs(not structures) and defined constants **********************************************/
@@ -103,6 +104,8 @@ typedef struct
     gboolean qs_letters_filter; /* a letter starts the filter, not the search */
     int (*qs_group_of) (void *data, int row); /* rows rank within groups, lower groups first */
     WHLine *qs_label; /* shows the text of a quick search instead of the last line */
+    /* last: the fields above keep their places for the plugins built before it */
+    WScrollBar *bar; /* the scrollbar, the table's own */
 } WTable;
 
 /*** global variables defined in .c file *********************************************************/

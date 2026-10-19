@@ -723,25 +723,45 @@ draw_other_marks (WSkinSample *s, const WRect *r)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The cells of the thumb from the skin, the default when it names none */
+static int
+scrollbar_thumb_len (WSkinSample *s, const char *key, int def, int room)
+{
+    int len = atoi (sample_char (s, "scrollbar", key));
+
+    return CLAMP (len > 0 ? len : def, 1, MAX (1, room));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 draw_scrollbar (WSkinSample *s, const WRect *r)
 {
-    int h = MIN (8, r->lines - 4), i;
+    const int h = MIN (10, r->lines - 4);
+    const int w = 14;
+    const int vthumb = scrollbar_thumb_len (s, "vthumblen", 6, h - 3);
+    const int hthumb = scrollbar_thumb_len (s, "hthumblen", 4, w - 3);
+    int i;
 
     F (0, 0, r->lines, r->cols, "core", "_default_");
-    T (0, 2, "widget-scrollbar", "up-char", sample_char (s, "widget-scrollbar", "up-char"));
-    for (i = 1; i < h - 1; i++)
-        T (i, 2, "widget-scrollbar", i == 2 ? "thumb-char" : "track-char",
-           sample_char (s, "widget-scrollbar", i == 2 ? "thumb-char" : "track-char"));
-    T (h - 1, 2, "widget-scrollbar", "down-char", sample_char (s, "widget-scrollbar", "down-char"));
 
-    T (h + 1, 2, "widget-scrollbar", "left-char", sample_char (s, "widget-scrollbar", "left-char"));
-    for (i = 1; i < 12; i++)
-        T (h + 1, 2 + i, "widget-scrollbar", i == 4 ? "thumb-char" : "track-char",
-           sample_char (s, "widget-scrollbar", i == 4 ? "thumb-char" : "track-char"));
-    T (h + 1, 14, "widget-scrollbar", "right-char",
-       sample_char (s, "widget-scrollbar", "right-char"));
-    T (h + 3, 2, "core", "_default_", "nothing in mc reads these today");
+    T (0, 2, "scrollbar", "vstart", sample_char (s, "scrollbar", "vstart"));
+    for (i = 1; i < h - 1; i++)
+    {
+        const char *key = i >= 2 && i < 2 + vthumb ? "vthumb" : "vtrack";
+
+        T (i, 2, "scrollbar", key, sample_char (s, "scrollbar", key));
+    }
+    T (h - 1, 2, "scrollbar", "vend", sample_char (s, "scrollbar", "vend"));
+
+    T (h + 1, 2, "scrollbar", "hstart", sample_char (s, "scrollbar", "hstart"));
+    for (i = 1; i < w - 1; i++)
+    {
+        const char *key = i >= 3 && i < 3 + hthumb ? "hthumb" : "htrack";
+
+        T (h + 1, 2 + i, "scrollbar", key, sample_char (s, "scrollbar", key));
+    }
+    T (h + 1, 2 + w - 1, "scrollbar", "hend", sample_char (s, "scrollbar", "hend"));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -803,7 +823,7 @@ static const sample_map_t sample_map[] = {
     { "lines", NULL, draw_lines },
     { "widget-panel", NULL, draw_panel_marks },
     { "widget-find", NULL, draw_other_marks },
-    { "widget-scrollbar", NULL, draw_scrollbar },
+    { "scrollbar", NULL, draw_scrollbar },
 };
 
 /* --------------------------------------------------------------------------------------------- */

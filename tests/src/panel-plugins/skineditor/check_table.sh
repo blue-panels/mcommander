@@ -10,8 +10,8 @@ trap 'rm -f "$tmp.code" "$tmp.table"' EXIT
         | sed -E 's/.*\("([^"]+)", "([^"]+)"\)/\1 \2/'
     grep -rhoE 'mc_skin_get \("[^"]+", "[^"]+"' "$top/src" "$top/lib" \
         | sed -E 's/.*\("([^"]+)", "([^"]+)"/\1 \2/'
-    grep -rhoE 'skin_get_char \(mc_skin, "[^"]+"' "$top/lib/skin" \
-        | sed -E 's/.*"([^"]+)"/lines \1/'
+    grep -rhoE 'skin_get_char \(mc_skin, "[^"]+", "[^"]+"' "$top/lib/skin" \
+        | sed -E 's/.*\("?[^"]*"?, "([^"]+)", "([^"]+)"/\1 \2/'
 } | grep -v '^skin ' | sort -u > "$tmp.code"
 
 ./skinedit_table_dump | sort -u > "$tmp.table"

@@ -301,42 +301,58 @@ table_draw_cells (WTable *t, int y, int row_idx, int nrows, int row_color, gbool
 
 /* --------------------------------------------------------------------------------------------- */
 
-static void
-table_drawscroll (const WTable *t, int nrows)
+/* The line style of the right column: that of the frame of the dialog when the column lies
+   on it, else a single line */
+static gboolean
+table_frame_single (const WTable *t)
+{
+    const Widget *w = CONST_WIDGET (t);
+    const Widget *top;
+    const Widget *bg;
+    int d;
+
+    if (!t->scrollbar_on_frame)
+        return TRUE;
+
+    // a dialog is its own owner; a group without a dialog above has none
+    for (top = w; top->owner != NULL && CONST_WIDGET (top->owner) != top;
+         top = CONST_WIDGET (top->owner))
+        ;
+    if (top == w || top->owner == NULL)
+        return TRUE;
+
+    bg = CONST_DIALOG (top)->bg;
+    if (bg == NULL || bg->callback != frame_callback)
+        return TRUE;
+
+    d = CONST_FRAME (bg)->compact ? 0 : 1;
+    if (w->rect.x + w->rect.cols != bg->rect.x + bg->rect.cols - d)
+        return TRUE;
+    return CONST_FRAME (bg)->single;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Where the scrollbar of the table is: down its last column, beside the rows */
+static WRect
+table_bar_rect (const WTable *t)
 {
     const WRect *w = &CONST_WIDGET (t)->rect;
-    int first = table_row_y (t, 0);
-    int lines = table_data_lines (t);
-    int max_line = first + lines - 1; /* the line of the quick search is below it */
-    int line = first;
-    int i;
+    WRect r = { w->y + table_row_y (t, 0), w->x + w->cols - 1, MAX (1, table_data_lines (t)), 1 };
 
-    /* top arrow */
-    widget_gotoyx (t, first, w->cols - 1);
-    if (t->top == 0)
-        tty_print_one_vline (TRUE);
-    else
-        tty_print_char ('^');
+    return r;
+}
 
-    /* bottom arrow */
-    widget_gotoyx (t, max_line, w->cols - 1);
-    if (t->top + lines >= nrows || lines >= nrows)
-        tty_print_one_vline (TRUE);
-    else
-        tty_print_char ('v');
+/* --------------------------------------------------------------------------------------------- */
 
-    /* thumb position */
-    if (nrows != 0 && lines > 2)
-        line = first + 1 + ((t->current * (lines - 2)) / nrows);
+/* The scrollbar placed and given the range of the rows, for the mouse */
+static void
+table_place_bar (WTable *t)
+{
+    WRect r = table_bar_rect (t);
 
-    for (i = first + 1; i < max_line; i++)
-    {
-        widget_gotoyx (t, i, w->cols - 1);
-        if (i != line)
-            tty_print_one_vline (TRUE);
-        else
-            tty_print_char ('*');
-    }
+    widget_set_size_rect (WIDGET (t->bar), &r);
+    scrollbar_set_range (t->bar, table_get_nrows (t), table_data_lines (t), t->top);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -450,25 +466,34 @@ table_draw (WTable *t, gboolean focused)
 
     if (t->scrollbar && nrows > lines)
     {
-        tty_setcolor (scrollbarc);
-        table_drawscroll (t, nrows);
-        /* the header row above the scrollbar and the search line below it are still the frame */
+        const WRect r = table_bar_rect (t);
+
+        scrollbar_show (t->bar, &r, nrows, lines, t->top, scrollbarc);
+        /* the header row above the scrollbar and the search line below it are still the frame,
+           in its line */
         if (t->scrollbar_on_frame)
+        {
+            const gboolean single = table_frame_single (t);
+
+            tty_setcolor (scrollbarc);
             for (i = 0; i < w->lines; i++)
                 if (i < table_row_y (t, 0) || i >= table_row_y (t, 0) + lines)
                 {
                     widget_gotoyx (t, i, w->cols - 1);
-                    tty_print_one_vline (TRUE);
+                    tty_print_one_vline (single);
                 }
+        }
     }
     else if (t->scrollbar_on_frame)
     {
-        /* nothing to scroll, but the column belongs to the frame */
+        /* nothing to scroll: the column is the frame, in its line */
+        const gboolean single = table_frame_single (t);
+
         tty_setcolor (scrollbarc);
         for (i = 0; i < w->lines; i++)
         {
             widget_gotoyx (t, i, w->cols - 1);
-            tty_print_one_vline (TRUE);
+            tty_print_one_vline (single);
         }
     }
 }
@@ -994,6 +1019,8 @@ table_destroy (WTable *t)
     if (t->qs_rows != NULL)
         g_array_free (t->qs_rows, TRUE);
     t->qs_rows = NULL;
+    widget_destroy (WIDGET (t->bar));
+    t->bar = NULL;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1057,6 +1084,24 @@ table_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
     case MSG_ACTION:
         return table_execute_cmd (t, parm);
 
+    case MSG_NOTIFY:
+        // the scrollbar has moved: the rows go with it, the current one kept among them
+        if (sender == WIDGET (t->bar))
+        {
+            const int old_current = t->current;
+            const int lines = table_data_lines (t);
+
+            t->top = (int) scrollbar_get_pos (t->bar);
+            // a row as it is shown, among the rows a filter left: not table_set_current()
+            table_go (t, CLAMP (t->current, t->top, t->top + lines - 1));
+            if (t->current != old_current)
+                table_on_change (t);
+            else
+                table_draw (t, widget_get_state (w, WST_FOCUSED));
+            return MSG_HANDLED;
+        }
+        return MSG_NOT_HANDLED;
+
     case MSG_CURSOR:
         if (t->cursor_y >= 0)
             widget_gotoyx (t, t->cursor_y, 0);
@@ -1095,6 +1140,21 @@ table_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
 
     old_current = t->current;
     old_col = t->current_col;
+
+    // the last column is the scrollbar's while there is something to scroll, and so is a drag of
+    // its thumb wherever it goes
+    if (t->scrollbar && t->bar != NULL
+        && (t->bar->drag >= 0
+            || (event->x == w->rect.cols - 1 && event->y >= table_row_y (t, 0)
+                && event->y < table_row_y (t, 0) + table_data_lines (t)
+                && nrows > table_data_lines (t))))
+    {
+        table_place_bar (t);
+        scrollbar_mouse (t->bar, msg, event->y - table_row_y (t, 0));
+        if (msg == MSG_MOUSE_DOWN)
+            widget_select (w);
+        return;
+    }
 
     switch (msg)
     {
@@ -1199,6 +1259,9 @@ table_new (int y, int x, int height, int width, int ncols, const table_column_de
     t->cursor_y = 0;
     t->scrollbar = !mc_global.tty.slow_terminal;
     t->scrollbar_on_frame = FALSE;
+    // the table's own, in no group: it draws it and gives it the mouse of its last column
+    t->bar = scrollbar_new (y, x + width - 1, MAX (1, r.lines), SCROLLBAR_VERTICAL);
+    scrollbar_set_client (t->bar, w);
     t->color_idx = -1;
     t->normal_color = -1;
     t->selected_color = -1;
