@@ -104,6 +104,10 @@ mouse_translate_event (Widget *w, Gpm_Event *event)
                 msg = MSG_MOUSE_SCROLL_UP;
             else if ((event->buttons & GPM_B_DOWN) != 0)
                 msg = MSG_MOUSE_SCROLL_DOWN;
+            else if ((event->buttons & GPM_B_WHEEL_LEFT) != 0)
+                msg = MSG_MOUSE_SCROLL_LEFT;
+            else if ((event->buttons & GPM_B_WHEEL_RIGHT) != 0)
+                msg = MSG_MOUSE_SCROLL_RIGHT;
             else
             {
                 /* Handle normal buttons: anything but the mouse wheel's.

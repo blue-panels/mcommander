@@ -997,7 +997,7 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
     {
         if (last_btn != 0)
         {
-            if ((last_btn & (GPM_B_UP | GPM_B_DOWN)) != 0)
+            if ((last_btn & GPM_B_WHEEL) != 0)
             {
                 // FIXME: DIRTY HACK
                 // don't generate GPM_UP after mouse wheel
@@ -1031,6 +1031,21 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
         else
             clicks = 0;
 
+        /* The wheel reports Shift, Meta and Ctrl in its code (4, 8, 16): it is 64-67 with them
+           taken off.  The other buttons keep them as they did, unknown. */
+        if (btn >= 64 && btn < 128)
+        {
+            const gboolean shift = (btn & 4) != 0;
+
+            btn &= ~(4 | 8 | 16);
+            // the wheel turned with Shift scrolls sideways, as the terminals and the browsers have
+            // it
+            if (shift && btn == 64)
+                btn = 66;
+            else if (shift && btn == 65)
+                btn = 67;
+        }
+
         if (btn >= 32 && btn <= 34)
         {
             btn -= 32;
@@ -1059,6 +1074,14 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
             break;
         case 65:
             ev->buttons = GPM_B_DOWN;
+            clicks = 0;
+            break;
+        case 66:
+            ev->buttons = GPM_B_WHEEL_LEFT;
+            clicks = 0;
+            break;
+        case 67:
+            ev->buttons = GPM_B_WHEEL_RIGHT;
             clicks = 0;
             break;
         default:

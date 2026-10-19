@@ -29,8 +29,10 @@ typedef enum
                       // the widget.
     MSG_MOUSE_DRAG,   // When a drag, initiated by button press inside the widget, occurs anywhere.
     MSG_MOUSE_MOVE,   // (Not currently implemented in MC.)
-    MSG_MOUSE_SCROLL_UP,   // When mouse wheel is rotated away from the user.
-    MSG_MOUSE_SCROLL_DOWN  // When mouse wheel is rotated towards the user.
+    MSG_MOUSE_SCROLL_UP,    // When mouse wheel is rotated away from the user.
+    MSG_MOUSE_SCROLL_DOWN,  // When mouse wheel is rotated towards the user.
+    MSG_MOUSE_SCROLL_LEFT,  // When mouse wheel is tilted left, or rotated away with Shift.
+    MSG_MOUSE_SCROLL_RIGHT  // When mouse wheel is tilted right, or rotated towards with Shift.
 } mouse_msg_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
