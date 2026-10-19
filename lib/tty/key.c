@@ -1002,40 +1002,19 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
     {
         if (xmouse.button != 0)
         {
-            if ((xmouse.button & GPM_B_WHEEL) != 0)
-            {
-                // FIXME: DIRTY HACK
-                // don't generate GPM_UP after mouse wheel
-                // need for menu event handling
-                ev->type = 0;
-                xmouse.last_press = 0;
-            }
-            else
-            {
-                ev->type = GPM_UP | (GPM_SINGLE << xmouse.clicks);
-            }
+            ev->type = GPM_UP | (GPM_SINGLE << xmouse.clicks);
             ev->buttons = 0;
             xmouse.button = 0;
         }
         else
         {
-            // Bogus event, maybe mouse wheel
+            // no button is down: a release some terminals send after a turn of the wheel
             ev->type = 0;
         }
     }
     else
     {
         gint64 tv2;
-
-        tv2 = g_get_monotonic_time ();
-        if (xmouse.last_press != 0
-            && tv2 - xmouse.last_press < (gint64) double_click_speed * MC_USEC_PER_MSEC)
-        {
-            xmouse.clicks++;
-            xmouse.clicks %= 3;
-        }
-        else
-            xmouse.clicks = 0;
 
         /* The wheel reports Shift, Meta and Ctrl in its code (4, 8, 16): it is 64-67 with them
            taken off.  The other buttons keep them as they did, unknown. */
@@ -1051,6 +1030,30 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
             else if (shift && btn == 65)
                 btn = 67;
         }
+
+        // a turn of the wheel is no press: no button goes down, but the clicks before it are no
+        // longer a series
+        if (btn >= 64 && btn <= 67)
+        {
+            static const int wheel[] = { GPM_B_UP, GPM_B_DOWN, GPM_B_WHEEL_LEFT,
+                                         GPM_B_WHEEL_RIGHT };
+
+            ev->type = GPM_DOWN | GPM_SINGLE;
+            ev->buttons = wheel[btn - 64];
+            xmouse.last_press = 0;
+            xmouse.clicks = 0;
+            return;
+        }
+
+        tv2 = g_get_monotonic_time ();
+        if (xmouse.last_press != 0
+            && tv2 - xmouse.last_press < (gint64) double_click_speed * MC_USEC_PER_MSEC)
+        {
+            xmouse.clicks++;
+            xmouse.clicks %= 3;
+        }
+        else
+            xmouse.clicks = 0;
 
         if (btn >= 32 && btn <= 34)
         {
@@ -1073,22 +1076,6 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
             break;
         case 2:
             ev->buttons = GPM_B_RIGHT;
-            break;
-        case 64:
-            ev->buttons = GPM_B_UP;
-            xmouse.clicks = 0;
-            break;
-        case 65:
-            ev->buttons = GPM_B_DOWN;
-            xmouse.clicks = 0;
-            break;
-        case 66:
-            ev->buttons = GPM_B_WHEEL_LEFT;
-            xmouse.clicks = 0;
-            break;
-        case 67:
-            ev->buttons = GPM_B_WHEEL_RIGHT;
-            xmouse.clicks = 0;
             break;
         default:
             // Nothing
