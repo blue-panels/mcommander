@@ -435,18 +435,33 @@ display. The characters in the skin files need to be encoded in UTF-8.
             Long, truncated, scrollable file names
 
 
-    [widget-scrollbar]
-        Symbols of the scrollbar. Not yet implemented.
+    [scrollbar]
+        The scrollbars of the lists and the tables: an arrow at each end, a
+        track between them and a thumb in the track.
 
-        up-char
-        down-char
-        left-char
-        right-char
-            Endpoints of vertical and horizontal scrollbars
+        vstart
+        vend
+            The arrows at the top and at the bottom of a vertical bar.
+            Default: ^ and v
 
-        thumb-char
-        track-char
-            The look of the scrollbar itself
+        vtrack
+            The fill of the track of a vertical bar. Default: vert of [lines]
+
+        vthumb
+            The thumb of a vertical bar. Default: a full block, '#' where the
+            terminal has not the character
+
+        vthumblen
+            The cells of the thumb of a vertical bar when it fits; else it is
+            half the track. Default: 6
+
+        hstart
+        hend
+        htrack
+        hthumb
+        hthumblen
+            The same of a horizontal bar. Default: < and >, horiz of [lines],
+            a black square, which sits in the middle of the line, and 4
 
 
     [widget-editor]
