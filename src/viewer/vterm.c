@@ -77,6 +77,9 @@ struct mcview_vterm_struct
     gboolean osc_overflow;
     gboolean in_dcs;
     gboolean in_dcs_esc;
+    /* Inside APC, PM or SOS: a string for other terminals, skipped. */
+    gboolean in_string;
+    gboolean in_string_esc;
     gboolean csi_gt;
     gboolean csi_lt;
     gboolean csi_eq;
@@ -1552,6 +1555,8 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     vt->in_dcs = FALSE;
     vt->in_dcs_esc = FALSE;
     vt->dcs_len = 0;
+    vt->in_string = FALSE;
+    vt->in_string_esc = FALSE;
     vt->in_sixel = FALSE;
     vt->sixel_overflow = FALSE;
     g_string_truncate (vt->sixel, 0);
@@ -1701,6 +1706,24 @@ mcview_vterm_set_size (mcview_vterm_t *vt, int rows, int cols)
 vterm_event_t
 mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
 {
+    /* APC, PM and SOS carry what other terminals know (kitty graphics, far2l): the text is not
+       shown and nothing is answered, as on a terminal that does not know them. They end with ST;
+       BEL ends them too, as many programs send it, and CAN and SUB abort them. */
+    if (vt->in_string)
+    {
+        if (vt->in_string_esc)
+        {
+            vt->in_string_esc = FALSE;
+            if (byte == '\\')
+                vt->in_string = FALSE;
+        }
+        else if (byte == ESC_CHAR)
+            vt->in_string_esc = TRUE;
+        else if (byte == 0x07u || byte == 0x18u || byte == 0x1Au)
+            vt->in_string = FALSE;
+        return vterm_make (vt, VTERM_CONSUMED);
+    }
+
     if (vt->in_dcs)
     {
         if (vt->in_dcs_esc)
@@ -1836,6 +1859,13 @@ mcview_vterm_feed (mcview_vterm_t *vt, unsigned char byte)
     if (vt->saw_esc && byte != ESC_CHAR)
     {
         vt->saw_esc = FALSE;
+
+        if (byte == '_' || byte == '^' || byte == 'X')
+        {
+            vt->in_string = TRUE;
+            vt->in_string_esc = FALSE;
+            return vterm_make (vt, VTERM_CONSUMED);
+        }
 
         if (byte == 'P')
         {
