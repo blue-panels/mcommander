@@ -113,6 +113,9 @@ enable_mouse (void)
     if (mouse_enabled)
         return;
 
+    // a button let go while the mouse was another program's is not down any more
+    xmouse_reset ();
+
     switch (use_mouse_p)
     {
 #ifdef HAVE_LIBGPM
@@ -172,6 +175,7 @@ disable_mouse (void)
         return;
 
     mouse_enabled = FALSE;
+    xmouse_reset ();
 
     switch (use_mouse_p)
     {

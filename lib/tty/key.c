@@ -676,6 +676,14 @@ static const size_t key_conv_tab_size = G_N_ELEMENTS (key_name_conv_tab) - 1;
 static const key_code_name_t *key_conv_tab_sorted[G_N_ELEMENTS (key_name_conv_tab) - 1];
 
 /* --------------------------------------------------------------------------------------------- */
+/* What the xterm mouse decoder keeps from one report to the next */
+static struct
+{
+    gint64 last_press;  // when a button went down last, 0 to make the next click a single one
+    int clicks;         // presses in a row within the time of a double click, less one
+    int button;         // the button that is down, 0 for none
+} xmouse = { 0, 0, 0 };
+
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -934,9 +942,6 @@ getch_with_delay (void)
 static void
 xmouse_get_event (Gpm_Event *ev, gboolean extended)
 {
-    static gint64 tv1 = 0;  // Force first click as single
-    static int clicks = 0;
-    static int last_btn = 0;
     int btn;
 
     // Decode Xterm mouse information to a GPM style event
@@ -995,41 +1000,21 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
 
     if (btn == 3)
     {
-        if (last_btn != 0)
+        if (xmouse.button != 0)
         {
-            if ((last_btn & GPM_B_WHEEL) != 0)
-            {
-                // FIXME: DIRTY HACK
-                // don't generate GPM_UP after mouse wheel
-                // need for menu event handling
-                ev->type = 0;
-                tv1 = 0;
-            }
-            else
-            {
-                ev->type = GPM_UP | (GPM_SINGLE << clicks);
-            }
+            ev->type = GPM_UP | (GPM_SINGLE << xmouse.clicks);
             ev->buttons = 0;
-            last_btn = 0;
+            xmouse.button = 0;
         }
         else
         {
-            // Bogus event, maybe mouse wheel
+            // no button is down: a release some terminals send after a turn of the wheel
             ev->type = 0;
         }
     }
     else
     {
         gint64 tv2;
-
-        tv2 = g_get_monotonic_time ();
-        if (tv1 != 0 && tv2 - tv1 < (gint64) double_click_speed * MC_USEC_PER_MSEC)
-        {
-            clicks++;
-            clicks %= 3;
-        }
-        else
-            clicks = 0;
 
         /* The wheel reports Shift, Meta and Ctrl in its code (4, 8, 16): it is 64-67 with them
            taken off.  The other buttons keep them as they did, unknown. */
@@ -1046,6 +1031,30 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
                 btn = 67;
         }
 
+        // a turn of the wheel is no press: no button goes down, but the clicks before it are no
+        // longer a series
+        if (btn >= 64 && btn <= 67)
+        {
+            static const int wheel[] = { GPM_B_UP, GPM_B_DOWN, GPM_B_WHEEL_LEFT,
+                                         GPM_B_WHEEL_RIGHT };
+
+            ev->type = GPM_DOWN | GPM_SINGLE;
+            ev->buttons = wheel[btn - 64];
+            xmouse.last_press = 0;
+            xmouse.clicks = 0;
+            return;
+        }
+
+        tv2 = g_get_monotonic_time ();
+        if (xmouse.last_press != 0
+            && tv2 - xmouse.last_press < (gint64) double_click_speed * MC_USEC_PER_MSEC)
+        {
+            xmouse.clicks++;
+            xmouse.clicks %= 3;
+        }
+        else
+            xmouse.clicks = 0;
+
         if (btn >= 32 && btn <= 34)
         {
             btn -= 32;
@@ -1054,7 +1063,7 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
         else
         {
             ev->type = GPM_DOWN;
-            tv1 = g_get_monotonic_time ();
+            xmouse.last_press = g_get_monotonic_time ();
         }
 
         switch (btn)
@@ -1068,30 +1077,14 @@ xmouse_get_event (Gpm_Event *ev, gboolean extended)
         case 2:
             ev->buttons = GPM_B_RIGHT;
             break;
-        case 64:
-            ev->buttons = GPM_B_UP;
-            clicks = 0;
-            break;
-        case 65:
-            ev->buttons = GPM_B_DOWN;
-            clicks = 0;
-            break;
-        case 66:
-            ev->buttons = GPM_B_WHEEL_LEFT;
-            clicks = 0;
-            break;
-        case 67:
-            ev->buttons = GPM_B_WHEEL_RIGHT;
-            clicks = 0;
-            break;
         default:
             // Nothing
             ev->type = 0;
             ev->buttons = 0;
             break;
         }
-        ev->type |= (GPM_SINGLE << clicks);
-        last_btn = ev->buttons;
+        ev->type |= (GPM_SINGLE << xmouse.clicks);
+        xmouse.button = ev->buttons;
     }
 }
 
@@ -2595,6 +2588,18 @@ key_sequence_to_printable (const char *seq, size_t len)
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/* Forget the button that is down and the clicks: mc gives up the mouse, or takes it back */
+
+void
+xmouse_reset (void)
+{
+    xmouse.last_press = 0;
+    xmouse.clicks = 0;
+    xmouse.button = 0;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /* This has to be called before init_slang or whatever routine
    calls any define_sequence */

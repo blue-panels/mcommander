@@ -39,7 +39,6 @@
 /* The wheel tilted, or turned with Shift: sideways.  GPM has no such buttons */
 #define GPM_B_WHEEL_LEFT  (1 << 6)
 #define GPM_B_WHEEL_RIGHT (1 << 7)
-#define GPM_B_WHEEL       (GPM_B_UP | GPM_B_DOWN | GPM_B_WHEEL_LEFT | GPM_B_WHEEL_RIGHT)
 
 /*** enums ***************************************************************************************/
 

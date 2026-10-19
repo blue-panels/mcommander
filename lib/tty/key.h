@@ -120,6 +120,7 @@ gboolean define_sequence (int code, const char *seq, int action);
 void init_key (void);
 void init_key_input_fd (void);
 void done_key (void);
+void xmouse_reset (void);
 
 int tty_keyname_to_keycode (const char *name, char **label);
 char *tty_keycode_to_keyname (const int keycode);
