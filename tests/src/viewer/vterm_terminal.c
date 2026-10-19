@@ -2118,6 +2118,34 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* APC, PM and SOS strings are for other terminals: none of their text reaches the screen, and
+   what comes after them is drawn as usual. */
+START_TEST (test_apc_pm_sos_strings_are_not_shown)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+    char *text;
+
+    mcview_vterm_set_size (vt, 3, 20);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "A\033_Ga=T,f=100;AAAA\033\\B"); /* APC, ended by ST (kitty graphics) */
+    FEED (vt, "\033_far2l1\007C");             /* APC, ended by BEL (far2l) */
+    FEED (vt, "\033^pm text\033\\D");          /* PM */
+    FEED (vt, "\033Xsos text\033\\E");         /* SOS */
+    FEED (vt, "\033_cancelled\030F");          /* CAN aborts the string */
+    FEED (vt, "\033[41mG");                    /* an SGR right after still works */
+
+    text = canvas_to_text (vt, 1, 20);
+    mctest_assert_str_eq (text, "ABCDEFG             \n");
+    g_free (text);
+    ck_assert_int_eq (cell_bg (vt, 0, 6), 1);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -2197,6 +2225,7 @@ main (void)
     tcase_add_test (tc_core, test_osc52_payload_is_longer_than_the_osc_buffer);
     tcase_add_test (tc_core, test_osc52_over_the_limit_is_dropped_whole);
     tcase_add_test (tc_core, test_osc52_leaves_the_other_osc_alone);
+    tcase_add_test (tc_core, test_apc_pm_sos_strings_are_not_shown);
 
     return mctest_run_all (tc_core);
 }
