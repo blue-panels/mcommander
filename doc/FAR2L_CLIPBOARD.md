@@ -26,6 +26,10 @@ the editor's and the command line's) reads it. A command that is set is used as 
   and the terminal is not asked again while M-Commander runs.
 - The text taken from the terminal goes to the clipfile like the output of
   `clipboard_paste`; at most 4 MiB are taken or given.
+- The terminal gives its clipboard only for a few seconds after it saw a paste gesture
+  of the user: Ctrl+V, Shift+Insert or the middle mouse button. A paste started another
+  way (from a menu, or by a key of another meaning) gets no text from the terminal, and
+  M-Commander pastes what its clipfile holds.
 - Keys typed while the terminal answers are read again afterwards, also keys that come
   as packets of the extensions.
 - Nothing is sent when the extensions are off (`MC_FAR2L=0`, `screen*`/`tmux*`, no answer
