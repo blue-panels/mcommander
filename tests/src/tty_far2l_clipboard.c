@@ -43,6 +43,8 @@ static size_t test_input_pos;
 
 // what the played terminal does
 static gboolean term_refuses;
+static gboolean term_own;  // the user said: use your own clipboard
+static GString *term_got_id;
 static gboolean term_silent;
 static const char *term_clip_text;
 static GString *term_got_text;
@@ -138,9 +140,12 @@ test_tty_raw_write (const char *data, size_t len)
 
             ck_assert_uint_ge (idlen, 32);  // the terminal wants a client id of 32 to 256 bytes
             ck_assert_uint_le (idlen, 256);
+            ck_assert_uint_eq (stk->len, idlen);
+            g_string_assign (term_got_id, "");
+            g_string_append_len (term_got_id, (const char *) stk->data, idlen);
             far2l_push_u32 (r, 0);
             far2l_push_u32 (r, 0);
-            far2l_push_u8 (r, term_refuses ? 0 : 1);
+            far2l_push_u8 (r, term_own ? 0xFF : term_refuses ? 0 : 1);
         }
         else if (cmd == 's')
         {
@@ -184,7 +189,10 @@ setup (void)
     input_fd = open ("/dev/null", O_RDONLY);
     ck_assert_int_ge (input_fd, 0);
     test_input_len = test_input_pos = 0;
-    term_refuses = term_silent = FALSE;
+    term_refuses = term_silent = term_own = FALSE;
+    term_got_id = g_string_new ("");
+    // mc's own passcode, which the test does not keep in the user's data directory
+    far2l_clip_id = g_strdup ("mc-test-passcode-0123456789abcdefghij");
     term_clip_text = NULL;
     term_got_text = NULL;
     term_requests = term_closes = 0;
@@ -196,6 +204,10 @@ static void
 teardown (void)
 {
     far2l_input_active = FALSE;
+    far2l_clip_own = FALSE;
+    g_free (far2l_clip_id);
+    far2l_clip_id = NULL;
+    g_string_free (term_got_id, TRUE);
     if (term_got_text != NULL)
         g_string_free (term_got_text, TRUE);
     close (input_fd);
@@ -303,6 +315,59 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* mc tells the terminal who it is by its own passcode */
+START_TEST (test_client_id)
+{
+    ck_assert (tty_far2l_clipboard_set ("x", 1));
+    ck_assert_str_eq (term_got_id->str, "mc-test-passcode-0123456789abcdefghij");
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A new passcode: 64 characters the terminal takes, and another one each time */
+START_TEST (test_new_client_id)
+{
+    char *a = far2l_clip_new_id ();
+    char *b = far2l_clip_new_id ();
+
+    ck_assert_uint_eq (strlen (a), FAR2L_CLIP_ID_LEN);
+    ck_assert (far2l_clip_id_is_valid (a, strlen (a)));
+    ck_assert_str_ne (a, b);
+    g_free (a);
+    g_free (b);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* "Use your own clipboard": mc does, and the user is not asked again */
+START_TEST (test_own_clipboard)
+{
+    term_own = TRUE;
+    ck_assert (!tty_far2l_clipboard_set ("x", 1));
+    ck_assert (!tty_far2l_clipboard_available ());
+    term_requests = 0;
+    ck_assert (!tty_far2l_clipboard_set ("x", 1));
+    ck_assert_int_eq (term_requests, 0);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A key of the extensions typed while the terminal thinks is read after the answer, too */
+START_TEST (test_typed_far2l_keys_survive)
+{
+    append_str ("\033_f2lAQIDBA\033\\");
+    ck_assert (tty_far2l_clipboard_set ("x", 1));
+    ck_assert_int_eq (test_tty_lowlevel_getch (), ESC_CHAR);
+    ck_assert_int_eq (test_tty_lowlevel_getch (), '_');
+    ck_assert_int_eq (test_tty_lowlevel_getch (), 'f');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -316,6 +381,10 @@ main (void)
     tcase_add_test (tc_core, test_no_answer);
     tcase_add_test (tc_core, test_not_negotiated);
     tcase_add_test (tc_core, test_typed_keys_survive);
+    tcase_add_test (tc_core, test_client_id);
+    tcase_add_test (tc_core, test_new_client_id);
+    tcase_add_test (tc_core, test_own_clipboard);
+    tcase_add_test (tc_core, test_typed_far2l_keys_survive);
 
     return mctest_run_all (tc_core);
 }

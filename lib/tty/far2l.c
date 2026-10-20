@@ -905,6 +905,22 @@ far2l_dnd_decode_event (const guint8 *stack, gsize len, far2l_dnd_event_t *event
 /* --------------------------------------------------------------------------------------------- */
 
 gboolean
+far2l_clip_id_is_valid (const char *id, gsize len)
+{
+    gsize i;
+
+    if (id == NULL || len < 32 || len > 256)
+        return FALSE;
+    for (i = 0; i < len; i++)
+        if (!g_ascii_isdigit (id[i]) && (id[i] < 'a' || id[i] > 'z') && id[i] != '-'
+            && id[i] != '_')
+            return FALSE;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
 far2l_dnd_name_is_safe (const char *name)
 {
     const char *p;

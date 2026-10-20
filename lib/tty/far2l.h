@@ -153,6 +153,9 @@ gboolean far2l_dnd_decode_read_reply (const far2l_reply_t *reply, guint32 asked,
 gboolean far2l_dnd_decode_event (const guint8 *stack, gsize len, far2l_dnd_event_t *event);
 void far2l_dnd_entry_free (gpointer entry);
 
+/* A client ID of the clipboard as the extensions want it: 32 to 256 of 0-9, a-z, '-' and '_' */
+gboolean far2l_clip_id_is_valid (const char *id, gsize len);
+
 /* Can name be a file name in the directory a drop lands in, and nothing else? */
 gboolean far2l_dnd_name_is_safe (const char *name);
 
@@ -187,6 +190,8 @@ guint32 far2l_dnd_max_chunk (void);
 /* A request as the terminal reads it.  cmd is what the program asked for: only
    F2L_INTERACT_DND is served; for anything else only rid and cmd are filled. */
 #define FAR2L_INTERACT_DND 'd'
+/* The clipboard: mc's terminal serves it to the programs in it from mc's own (mcterm_far2l.c). */
+#define FAR2L_INTERACT_CLIPBOARD 'c'
 
 typedef struct
 {

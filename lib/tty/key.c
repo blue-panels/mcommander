@@ -42,10 +42,13 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <termios.h>
+#include <unistd.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #else
@@ -56,6 +59,8 @@
 
 #include "lib/global.h"
 
+#include "lib/fileloc.h"
+#include "lib/mcconfig.h"
 #include "lib/vfs/vfs.h"
 
 #include "tty.h"
@@ -322,6 +327,8 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 
 static inline gboolean kitty_text_pending (void);
 static int win32_paste_start (void);
+static GByteArray *far2l_request (GByteArray *stk, gboolean wait);
+static void far2l_clip_close (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -1469,9 +1476,15 @@ skip_osc_reply (void)
    arguments come first. The answer is ESC _ far2l<base64 of a stack>, its last value the id. The
    terminal asks its user whether the client may use the clipboard, so a call may take a while. */
 
-#define FAR2L_CLIP_CLIENT_ID "mcommander-far2l-clipboard-client-0001"
-#define FAR2L_CLIP_MAX_TEXT  (4 * 1024 * 1024)
-#define FAR2L_CLIP_CF_TEXT   1
+#define FAR2L_CLIP_ID_LEN   64
+#define FAR2L_CLIP_MAX_TEXT (4 * 1024 * 1024)
+#define FAR2L_CLIP_CF_TEXT  1
+
+/* mc's client ID: a passcode the terminal keeps the user's answer for, so it is mc's own, made
+   once and kept, as far2l keeps its own in tty_clipboard/me */
+static char *far2l_clip_id = NULL;
+/* the user told the terminal that mc is to use its own clipboard: it is not asked again */
+static gboolean far2l_clip_own = FALSE;
 
 // How long the terminal may take to answer: its user may have to say yes first
 static gint64 far2l_clip_timeout = 15 * G_USEC_PER_SEC;
@@ -1510,8 +1523,9 @@ far2l_clip_request (GByteArray *stk, guint8 id)
 
 /* --------------------------------------------------------------------------------------------- */
 /* Read from the terminal until the answer with @id comes, up to @timeout_us. What else comes -
-   typed keys, other packets - is not the answer: the keys are collected in @typed to be put back,
-   the packets are dropped. NULL when there is no answer. Caller frees. */
+   typed keys, which under the extensions are APCs themselves, and the answers to other requests -
+   is not the answer: the keys are collected in @typed to be put back, the answers are dropped.
+   NULL when there is no answer. Caller frees. */
 
 static GByteArray *
 far2l_clip_wait (guint8 id, gint64 timeout_us, GString *typed)
@@ -1570,6 +1584,13 @@ far2l_clip_wait (guint8 id, gint64 timeout_us, GString *typed)
             else
                 g_free (data);
         }
+        else if (strncmp (apc->str, "f2l", 3) == 0)
+        {
+            // a key, a mouse event or a drop: it is read again once the answer is in
+            g_string_append (typed, ESC_STR "_");
+            g_string_append_len (typed, apc->str, (gssize) apc->len);
+            g_string_append (typed, ESC_STR "\\");
+        }
         g_string_free (apc, TRUE);
     }
 
@@ -1582,27 +1603,9 @@ far2l_clip_wait (guint8 id, gint64 timeout_us, GString *typed)
 static GByteArray *
 far2l_clip_call (GByteArray *stk, guint8 cmd)
 {
-    static guint8 next_id = 0;
-    GString *typed = g_string_new ("");
-    GByteArray *answer;
-    guint8 id;
-    char *req;
-
     far2l_push_u8 (stk, cmd);
     far2l_push_u8 (stk, 'c');
-    do
-        id = ++next_id;
-    while (id == 0);
-
-    req = far2l_clip_request (stk, id);
-    tty_raw_write (req, strlen (req));
-    g_free (req);
-
-    answer = far2l_clip_wait (id, far2l_clip_timeout, typed);
-    if (typed->len > 0)
-        tty_unget_input ((const unsigned char *) typed->str, typed->len);
-    g_string_free (typed, TRUE);
-    return answer;
+    return far2l_request (stk, TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1624,23 +1627,99 @@ far2l_clip_pop (GByteArray *a, unsigned int size, guint64 *value)
 /* --------------------------------------------------------------------------------------------- */
 /* Open the clipboard; TRUE when the terminal let this client in */
 
+/* A new client ID: the host name and random letters and digits, as far2l makes its own */
+
+static char *
+far2l_clip_new_id (void)
+{
+    static const char alphabet[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+    GString *id = g_string_sized_new (FAR2L_CLIP_ID_LEN);
+    const char *host = g_get_host_name ();
+    guint8 rnd[FAR2L_CLIP_ID_LEN];
+    gboolean got = FALSE;
+    int fd;
+    gsize i;
+
+    for (i = 0; host[i] != '\0' && i < FAR2L_CLIP_ID_LEN / 2; i++)
+    {
+        const char c = g_ascii_tolower (host[i]);
+
+        g_string_append_c (id, g_ascii_isalnum (c) || c == '-' ? c : '_');
+    }
+    g_string_append_c (id, '-');
+
+    fd = open ("/dev/urandom", O_RDONLY);
+    if (fd >= 0)
+    {
+        got = read (fd, rnd, sizeof (rnd)) == (ssize_t) sizeof (rnd);
+        close (fd);
+    }
+    for (i = 0; id->len < FAR2L_CLIP_ID_LEN; i++)
+    {
+        const guint r = got ? rnd[i] : (guint) g_random_int ();
+
+        g_string_append_c (id, alphabet[r % (sizeof (alphabet) - 1)]);
+    }
+    return g_string_free (id, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static const char *
+far2l_clip_client_id (void)
+{
+    char *fname, *text = NULL;
+
+    if (far2l_clip_id != NULL)
+        return far2l_clip_id;
+
+    fname = mc_config_get_full_path (MC_FAR2L_CLIENT_ID_FILE);
+    if (fname != NULL && g_file_get_contents (fname, &text, NULL, NULL))
+    {
+        g_strchomp (text);
+        if (far2l_clip_id_is_valid (text, strlen (text)))
+            far2l_clip_id = text;
+        else
+            g_free (text);
+    }
+    if (far2l_clip_id == NULL)
+    {
+        far2l_clip_id = far2l_clip_new_id ();
+        if (fname != NULL && g_file_set_contents (fname, far2l_clip_id, -1, NULL))
+            (void) chmod (fname, 0600);
+    }
+    g_free (fname);
+    return far2l_clip_id;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static gboolean
 far2l_clip_open (void)
 {
+    const char *id = far2l_clip_client_id ();
     GByteArray *stk = g_byte_array_new ();
     GByteArray *answer;
     guint64 status = 0;
 
-    g_byte_array_append (stk, (const guint8 *) FAR2L_CLIP_CLIENT_ID, strlen (FAR2L_CLIP_CLIENT_ID));
-    far2l_push_u32 (stk, (guint32) strlen (FAR2L_CLIP_CLIENT_ID));
+    g_byte_array_append (stk, (const guint8 *) id, (guint) strlen (id));
+    far2l_push_u32 (stk, (guint32) strlen (id));
     answer = far2l_clip_call (stk, 'o');
     g_byte_array_free (stk, TRUE);
     if (answer == NULL)
+    {
+        /* the user may still say yes after the wait: the close that follows the open then keeps
+           the clipboard of the terminal from staying open */
+        far2l_clip_close ();
         return FALSE;
+    }
 
     if (!far2l_clip_pop (answer, 1, &status))
         status = 0;
     g_byte_array_free (answer, TRUE);
+    // -1: mc is to keep to its own clipboard, and the user is not asked again while mc runs
+    if (status == 0xFF)
+        far2l_clip_own = TRUE;
     return status == 1;
 }
 
@@ -1650,16 +1729,50 @@ far2l_clip_open (void)
 static void
 far2l_clip_close (void)
 {
-    static const guint8 close_id = 0xFF;
     GByteArray *stk = g_byte_array_new ();
-    char *req;
 
     far2l_push_u8 (stk, 'c');
     far2l_push_u8 (stk, 'c');
-    req = far2l_clip_request (stk, close_id);
+    (void) far2l_request (stk, FALSE);
+    g_byte_array_free (stk, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Send a request of the far2l extensions to the terminal: @stk is its stack with the command on
+   top and the request id still to come. With @wait the answer is waited for, and its stack
+   comes back without the id (NULL when there is none in time; the caller frees it); without,
+   the request goes with id 0, which the terminal does not answer, and NULL comes back. Keys
+   typed meanwhile are kept. */
+
+static GByteArray *
+far2l_request (GByteArray *stk, gboolean wait)
+{
+    static guint8 next_id = 0;
+    GByteArray *answer = NULL;
+    guint8 id = 0;
+    char *req;
+
+    if (wait)
+        do
+            id = ++next_id;
+        while (id == 0);
+
+    // the id goes on top for the request only: the stack is the caller's as it was
+    req = far2l_clip_request (stk, id);
+    g_byte_array_set_size (stk, stk->len - 1);
     tty_raw_write (req, strlen (req));
     g_free (req);
-    g_byte_array_free (stk, TRUE);
+
+    if (wait)
+    {
+        GString *typed = g_string_new ("");
+
+        answer = far2l_clip_wait (id, far2l_clip_timeout, typed);
+        if (typed->len > 0)
+            tty_unget_input ((const unsigned char *) typed->str, typed->len);
+        g_string_free (typed, TRUE);
+    }
+    return answer;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1667,7 +1780,7 @@ far2l_clip_close (void)
 gboolean
 tty_far2l_clipboard_available (void)
 {
-    return far2l_input_active;
+    return far2l_input_active && !far2l_clip_own;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1679,7 +1792,7 @@ tty_far2l_clipboard_set (const char *text, size_t len)
     GByteArray *stk, *answer;
     guint64 status = 0;
 
-    if (!far2l_input_active || text == NULL || len == 0 || len > FAR2L_CLIP_MAX_TEXT)
+    if (!tty_far2l_clipboard_available () || text == NULL || len == 0 || len > FAR2L_CLIP_MAX_TEXT)
         return FALSE;
     if (!far2l_clip_open ())
         return FALSE;
@@ -1712,7 +1825,7 @@ tty_far2l_clipboard_get (char **text, size_t *len)
 
     *text = NULL;
     *len = 0;
-    if (!far2l_input_active || !far2l_clip_open ())
+    if (!tty_far2l_clipboard_available () || !far2l_clip_open ())
         return FALSE;
 
     stk = g_byte_array_new ();
