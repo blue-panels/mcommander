@@ -1585,9 +1585,9 @@ START_TEST (test_far2l_extensions_are_asked_for_and_given_up)
     ck_assert_ptr_null (mcview_vterm_take_apc (vt));
 
     mcview_vterm_set_far2l (vt, TRUE);
-    ck_assert_str_eq (reply_to (vt, "\033_far2l1\033\\"), "\033_far2lok\033\\");
+    ck_assert_str_eq (reply_to (vt, "\033_far2l1\033\\"), "\033_far2lok\a");
     ck_assert (mcview_vterm_far2l_active (vt));
-    ck_assert_str_eq (reply_to (vt, "\033_far2l1\a"), "\033_far2lok\033\\");
+    ck_assert_str_eq (reply_to (vt, "\033_far2l1\a"), "\033_far2lok\a");
 
     // what else it says on the channel is not for the screen
     FEED (vt, "\033_f2l:AAAA\033\\y\033_far2l1234567890123456789\033\\z");

@@ -871,7 +871,8 @@ mcterm_encode_key_far2l (int key, unsigned char *buf, size_t bufsz)
         stack[14] = down != 0 ? 'K' : 'k';
 
         b64 = g_base64_encode (stack, 15);
-        n += (size_t) g_snprintf ((char *) buf + n, bufsz - n, ESC_STR "_f2l:%s\a", b64);
+        // an event has no colon after f2l: far2l's decoder would stop at it
+        n += (size_t) g_snprintf ((char *) buf + n, bufsz - n, ESC_STR "_f2l%s\a", b64);
         g_free (b64);
     }
 

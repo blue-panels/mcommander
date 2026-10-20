@@ -568,13 +568,14 @@ assert_far2l (int key, unsigned int vk, unsigned int uc, unsigned int cs)
 
     ck_assert_uint_gt (len, 0);
     ck_assert_uint_eq (g_strv_length (packets), 3);  // two, and the empty rest
-    ck_assert (g_str_has_prefix (packets[0], "\033_f2l:"));
-    ck_assert (g_str_has_prefix (packets[1], "\033_f2l:"));
+    ck_assert (g_str_has_prefix (packets[0], "\033_f2l"));
+    ck_assert (g_str_has_prefix (packets[1], "\033_f2l"));
+    ck_assert (packets[0][5] != ':' && packets[1][5] != ':');  // an event has no colon
 
     for (down = 0; down < 2; down++)
     {
         gsize n;
-        guchar *st = g_base64_decode (packets[down] + 6, &n);
+        guchar *st = g_base64_decode (packets[down] + 5, &n);
 
         ck_assert_uint_eq (n, 15);
         ck_assert_int_eq (st[14], down == 0 ? 'K' : 'k');

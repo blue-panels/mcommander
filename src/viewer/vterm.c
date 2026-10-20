@@ -88,9 +88,8 @@ struct mcview_vterm_struct
     gboolean apc_overflow;
     GString *apc;
     GQueue *apc_ready;
-    gboolean
-        far2l_allowed;      // the terminal mc runs in has the extensions: the program may have them
-    gboolean far2l_active;  // ... and asked for them
+    gboolean far2l_allowed;  // the host serves the extensions: the program may have them
+    gboolean far2l_active;   // ... and asked for them
     gboolean csi_gt;
     gboolean csi_lt;
     gboolean csi_eq;
@@ -686,9 +685,9 @@ vterm_handle_utf8 (mcview_vterm_t *vt, unsigned char byte)
 
 /* --------------------------------------------------------------------------------------------- */
 /* ESC _ ... ST ended. The far2l extensions are asked for and given up with far2l1 and far2l0; the
-   answer to the first is far2lok, and only a terminal that has them itself gives it. The host is
+   answer to the first is far2lok, given when the host lets the program have them. The host is
    told of every APC that arrived whole, except a far2l1 nobody answered, and it is for the host to
-   answer what is meant for it (far2l drag and drop). Too long a one is dropped whole. */
+   answer what is meant for it (the clipboard, drag and drop). Too long a one is dropped whole. */
 
 static vterm_event_t
 vterm_finish_apc (mcview_vterm_t *vt)
@@ -707,7 +706,8 @@ vterm_finish_apc (mcview_vterm_t *vt)
         {
             vt->far2l_active = TRUE;
             ev = vterm_make (vt, VTERM_REPLY);
-            ev.reply = ESC_STR "_far2lok" ESC_STR "\\";
+            // with BEL: a far2l looks for exactly these bytes, and does not take ST
+            ev.reply = ESC_STR "_far2lok\a";
         }
         else
             keep = FALSE;
