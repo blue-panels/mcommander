@@ -58,18 +58,23 @@ terminal of its own, the emulator, and the two sides are kept apart:
 - The negotiation of M-Commander with the terminal it runs in never reaches the
   program, and the program's never reaches that terminal. The emulator takes
   `ESC _ ... ST` strings itself (before, their text was drawn on the screen).
-- A program that asks with `ESC _ far2l1 ST` is answered `ESC _ far2lok ST` only when
-  the terminal M-Commander runs in has the extensions; otherwise it gets no answer, as
+- A program that asks with `ESC _ far2l1 ST` is answered `ESC _ far2lok BEL` (BEL: a
+  far2l looks for exactly these bytes), in whatever terminal M-Commander itself runs:
+  what the extensions give a program comes from M-Commander, not from the terminal
+  outside. `MC_FAR2L=0` keeps them from the programs too, and they get no answer, as
   on any terminal without them. `far2l0` gives them up again, and the mode ends with
   the emulator's reset.
 - With the extensions on, the keys M-Commander hands to the program are packets
-  (`ESC _ f2l:<base64> BEL`, a press and a release each) with the virtual key, the
-  character and the control key state, so the program tells Ctrl-Enter from Enter and
-  Shift-Tab from Tab as far as M-Commander did. A byte of a character out of ASCII
-  and a key without a virtual key go as before, in xterm form.
-- The other requests of the extensions (clipboard, images) are not passed on; a program
-  that asks gets no answer and falls back, as it does on a terminal without them. Drag
-  and drop is passed on, see below.
+  (`ESC _ f2l<base64> BEL`, no colon after `f2l`, a press and a release each) with the
+  virtual key, the character and the control key state, so the program tells
+  Ctrl-Enter from Enter and Shift-Tab from Tab as far as M-Commander did, from a far2l,
+  kitty, Win32 or legacy terminal alike. A byte of a character out of ASCII and a key
+  without a virtual key go as before, in xterm form.
+- The clipboard requests are served from M-Commander's clipboard, with the user's
+  permission and only right after a paste key, see `FAR2L_CLIPBOARD.md`. Drag and drop
+  is passed on when the terminal outside has it, see below. The other requests (images,
+  window, notifications) get the empty answer, and the program falls back, as it does
+  on a terminal without them.
 
 ## Which input is active
 
@@ -141,8 +146,7 @@ A file dropped on the outer window over the terminal is announced to the program
 of its own, at the cell of the terminal it landed on. The program's LIST and READ are
 answered with LIST and READ of the outer offer, one chunk at a time, nothing kept in
 between; its CLOSE releases the outer offer, and so do `ESC _ far2l0 BEL`, a new binding,
-the lease running out (600 seconds) and the terminal closing. The other far2l interactions
-are answered with the empty reply, which is how a far2l says it has none.
+the lease running out (600 seconds) and the terminal closing.
 
 The terminal serves what the outer one has: plain files, one READ at a time, at most 8
 offers and chunks of at most 32 KiB. Mouse events of the extensions are not passed to the

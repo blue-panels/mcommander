@@ -426,8 +426,8 @@ tagged file, or for the file under the cursor if none is tagged. In the
 command, %f (or %p) is the name of the file, %n the name without the extension
 and %x the extension, all quoted for the shell; the other macros of the user
 menu work as they do there. Ctrl-G works only in a terminal that sends keys
-with the kitty keyboard protocol or the Win32 input mode (kitty, WezTerm, foot,
-Windows Terminal): in the others it is the interrupt key of the terminal and
+with the kitty keyboard protocol, the Win32 input mode or the far2l extensions
+(kitty, WezTerm, foot, Windows Terminal, far2l): in the others it is the interrupt key of the terminal and
 never reaches M-Commander. Alt-X g works in every terminal.
 
 **Alt-X f**
@@ -4154,6 +4154,13 @@ command and no program to run; in tmux it needs "set -g set-clipboard on". The
 text is sent in UTF-8, and a text longer than 75000 bytes is not sent. Only an
 xterm-like terminal gets it, not the Linux console. "false" by default.
 
+In a terminal with the far2l terminal extensions (far2l, f4), when neither
+*clipboard_store*
+nor
+*clipboard_paste*
+is set, a copy goes to the clipboard of the terminal and a paste reads it. The
+terminal asks its user once whether M-Commander may use the clipboard.
+
 *autodetect_codeset*
 : This option allows use the \`enca' command to autodetect codeset of text files
 in internal viewer and editor. List of valid values can be obtain by the
@@ -4240,6 +4247,21 @@ command. A program can never read the clipboard this way. "false" by
 default: any output in the terminal, a file shown with
 **cat**
 too, could change the clipboard.
+
+A program in the terminal that speaks the far2l terminal extensions (far2l, f4,
+M-Commander itself) gets its keys the way those extensions report them and may
+use the clipboard of M-Commander, whatever terminal M-Commander runs in. The
+first time a program asks for the clipboard, M-Commander asks whether it may:
+"Block", "Own clipboard", "Allow" or "Allow always", which is kept in
+~/.local/share/mc6/far2l-clients. The clipboard is read only for a few seconds
+after
+**Ctrl-V**
+or
+**Shift-Insert**
+was pressed in the terminal; at any other moment the program gets nothing, so it
+can not read the clipboard behind the user's back, as a program can with the
+query of OSC 52. A file dropped on the window of a far2l terminal over the
+terminal goes to the program too.
 
 # Parameters for external editor or viewer
 
@@ -4366,6 +4388,10 @@ nothing that needs one is available.
 **MC_SIXEL**
 : Set to 0 to say the terminal has no sixel graphics, or to 1 to say it has.
 Without the variable the terminal itself is asked.
+
+**MC_FAR2L**
+: Set to 0 to neither ask the terminal for the far2l terminal extensions nor give
+them to the programs in the built-in terminal.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : How long to wait for the rest of an escape sequence, in microseconds.

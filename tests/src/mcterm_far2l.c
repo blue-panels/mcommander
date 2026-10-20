@@ -99,8 +99,67 @@ fake_max_chunk (void)
     return 3;  // the outer terminal gives less than the program asked for
 }
 
-static const mcterm_far2l_parent_t fake_parent = { fake_is_bound, fake_list, fake_read, fake_close,
-                                                   fake_max_chunk };
+static const mcterm_far2l_parent_t fake_parent = {
+    .is_bound = fake_is_bound,
+    .list = fake_list,
+    .read = fake_read,
+    .close = fake_close,
+    .max_chunk = fake_max_chunk,
+};
+
+/* mc's clipboard, as far as the test needs it */
+static GString *fake_clip = NULL;
+static GPtrArray *fake_remembered = NULL;
+
+static char *
+fake_clip_get (gsize *len)
+{
+    *len = fake_clip->len;
+    return fake_clip->len > 0 ? g_strndup (fake_clip->str, fake_clip->len) : NULL;
+}
+
+static void
+fake_clip_set (const char *text, gsize len)
+{
+    g_string_assign (fake_clip, "");
+    g_string_append_len (fake_clip, text, (gssize) len);
+}
+
+static gboolean
+fake_clip_has_text (void)
+{
+    return fake_clip->len > 0;
+}
+
+static gboolean
+fake_clip_remembered (const char *client_id)
+{
+    guint i;
+
+    for (i = 0; i < fake_remembered->len; i++)
+        if (strcmp (g_ptr_array_index (fake_remembered, i), client_id) == 0)
+            return TRUE;
+    return FALSE;
+}
+
+static void
+fake_clip_remember (const char *client_id)
+{
+    g_ptr_array_add (fake_remembered, g_strdup (client_id));
+}
+
+static const mcterm_far2l_parent_t clip_parent = {
+    .is_bound = fake_is_bound,
+    .list = fake_list,
+    .read = fake_read,
+    .close = fake_close,
+    .max_chunk = fake_max_chunk,
+    .clip_get = fake_clip_get,
+    .clip_set = fake_clip_set,
+    .clip_has_text = fake_clip_has_text,
+    .clip_remembered = fake_clip_remembered,
+    .clip_remember = fake_clip_remember,
+};
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -393,6 +452,341 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* --------------------------------------------------------------------------------------------- */
+
+/* The clipboard: a request is its arguments, the sub-command, 'c' and the RID, pushed in this
+   order; the answer is popped from the end */
+
+static void
+push_le (GByteArray *a, guint64 v, gsize n)
+{
+    gsize i;
+
+    for (i = 0; i < n; i++)
+    {
+        const guint8 b = (guint8) (v >> (8 * i));
+
+        g_byte_array_append (a, &b, 1);
+    }
+}
+
+static guint64
+pop_le (GByteArray *a, gsize n)
+{
+    guint64 v = 0;
+    gsize i;
+
+    ck_assert_uint_ge (a->len, n);
+    for (i = n; i > 0; i--)
+        v = (v << 8) | a->data[a->len - n + i - 1];
+    g_byte_array_set_size (a, a->len - n);
+    return v;
+}
+
+/* NULL when the terminal does not answer (now) */
+static GByteArray *
+clip (mcterm_far2l_t *f, GByteArray *args, char sub, guint8 rid)
+{
+    char *body, *answer;
+    GByteArray *st = NULL;
+
+    push_le (args, (guint8) sub, 1);
+    push_le (args, 'c', 1);
+    push_le (args, rid, 1);
+    body = request_body (args);
+    answer = mcterm_far2l_apc (f, body, strlen (body));
+    g_free (body);
+    if (answer != NULL)
+    {
+        ck_assert (strncmp (answer, "\033_far2l", 7) == 0);
+        st = frame_stack (answer, 7);
+        g_free (answer);
+        ck_assert_uint_eq (pop_le (st, 1), rid);
+    }
+    return st;
+}
+
+static GByteArray *
+clip_open_args (const char *client)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    g_byte_array_append (a, (const guint8 *) client, (guint) strlen (client));
+    push_le (a, strlen (client), 4);
+    return a;
+}
+
+static GByteArray *
+clip_fmt_args (guint32 fmt)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    push_le (a, fmt, 4);
+    return a;
+}
+
+static GByteArray *
+clip_set_args (guint32 fmt, const char *data, gsize len)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    g_byte_array_append (a, (const guint8 *) data, (guint) len);
+    push_le (a, len, 4);
+    push_le (a, fmt, 4);
+    return a;
+}
+
+/* status and features of an OPEN answer */
+static gint8
+open_status (GByteArray *st)
+{
+    const gint8 status = (gint8) pop_le (st, 1);
+
+    ck_assert_uint_eq (pop_le (st, 8), 3);  // data IDs and chunks
+    g_byte_array_free (st, TRUE);
+    return status;
+}
+
+/* the text a GETDATA gives, "" for none; -1 in *size when the clipboard is not open */
+static char *
+get_text (mcterm_far2l_t *f, guint8 rid, gint64 *size)
+{
+    GByteArray *st = clip (f, clip_fmt_args (1), 'g', rid);
+    guint32 n;
+    char *text;
+
+    ck_assert_ptr_nonnull (st);
+    n = (guint32) pop_le (st, 4);
+    *size = n == 0xFFFFFFFFu ? -1 : (gint64) n;
+    if (n == 0xFFFFFFFFu)
+        n = 0;
+    ck_assert_uint_ge (st->len, n);
+    text = g_strndup ((const char *) st->data + st->len - n, n);
+    g_byte_array_set_size (st, st->len - n);
+    if (*size >= 0)
+        ck_assert_uint_eq (pop_le (st, 8) != 0, n > 0);  // the data ID
+    ck_assert_uint_eq (st->len, 0);
+    g_byte_array_free (st, TRUE);
+    return text;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static const char client_a[] = "mc-test-client-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+static const char client_b[] = "mc-test-client-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+START_TEST (test_mcterm_far2l_clipboard_access)
+{
+    mcterm_far2l_t *f;
+    char *answer;
+    GByteArray *st;
+
+    fake_clip = g_string_new ("");
+    fake_remembered = g_ptr_array_new_with_free_func (g_free);
+    f = mcterm_far2l_new (&clip_parent);
+
+    /* nothing before the extensions are on */
+    ck_assert_ptr_null (clip (f, clip_open_args (client_a), 'o', 1));
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l1", 6));
+
+    /* a client ID the protocol does not allow fails at once */
+    ck_assert_int_eq (open_status (clip (f, clip_open_args ("short"), 'o', 1)), 0);
+    ck_assert_int_eq (
+        open_status (clip (f, clip_open_args ("UPPER-case-is-not-allowed-here-x"), 'o', 1)), 0);
+
+    /* the first OPEN waits for the user; another one meanwhile fails */
+    ck_assert_ptr_null (clip (f, clip_open_args (client_a), 'o', 2));
+    ck_assert (mcterm_far2l_question_pending (f));
+    ck_assert_int_eq (open_status (clip (f, clip_open_args (client_a), 'o', 3)), 0);
+
+    /* "Block" */
+    answer = mcterm_far2l_answer (f, MCTERM_F2L_CLIP_BLOCK);
+    st = frame_stack (answer, 7);
+    g_free (answer);
+    ck_assert_uint_eq (pop_le (st, 1), 2);
+    ck_assert_int_eq (open_status (st), 0);
+    ck_assert (!mcterm_far2l_question_pending (f));
+    ck_assert_ptr_null (mcterm_far2l_answer (f, MCTERM_F2L_CLIP_ALLOW));
+
+    /* "Own clipboard" */
+    ck_assert_ptr_null (clip (f, clip_open_args (client_a), 'o', 4));
+    answer = mcterm_far2l_answer (f, MCTERM_F2L_CLIP_OWN);
+    st = frame_stack (answer, 7);
+    g_free (answer);
+    ck_assert_uint_eq (pop_le (st, 1), 4);
+    ck_assert_int_eq (open_status (st), -1);
+
+    /* "Allow": open at once, and the next OPEN is not asked about */
+    ck_assert_ptr_null (clip (f, clip_open_args (client_a), 'o', 5));
+    answer = mcterm_far2l_answer (f, MCTERM_F2L_CLIP_ALLOW);
+    st = frame_stack (answer, 7);
+    g_free (answer);
+    ck_assert_uint_eq (pop_le (st, 1), 5);
+    ck_assert_int_eq (open_status (st), 1);
+    st = clip (f, g_byte_array_new (), 'c', 6);
+    ck_assert_int_eq ((gint8) pop_le (st, 1), 1);
+    g_byte_array_free (st, TRUE);
+    ck_assert_int_eq (open_status (clip (f, clip_open_args (client_a), 'o', 7)), 1);
+    ck_assert_uint_eq (fake_remembered->len, 0);
+
+    /* far2l0 forgets it; "Allow always" is remembered past it */
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l0", 6));
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l1", 6));
+    ck_assert_ptr_null (clip (f, clip_open_args (client_a), 'o', 8));
+    answer = mcterm_far2l_answer (f, MCTERM_F2L_CLIP_ALWAYS);
+    g_free (answer);
+    ck_assert_uint_eq (fake_remembered->len, 1);
+    ck_assert_str_eq (g_ptr_array_index (fake_remembered, 0), client_a);
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l0", 6));
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l1", 6));
+    ck_assert_int_eq (open_status (clip (f, clip_open_args (client_a), 'o', 9)), 1);
+
+    /* another client is asked about on its own */
+    st = clip (f, g_byte_array_new (), 'c', 10);
+    g_byte_array_free (st, TRUE);
+    ck_assert_ptr_null (clip (f, clip_open_args (client_b), 'o', 11));
+    ck_assert (mcterm_far2l_question_pending (f));
+
+    /* a program that gives the extensions up has its question dropped */
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l0", 6));
+    ck_assert (!mcterm_far2l_question_pending (f));
+    ck_assert_ptr_null (mcterm_far2l_answer (f, MCTERM_F2L_CLIP_ALLOW));
+
+    mcterm_far2l_free (f);
+    g_ptr_array_free (fake_remembered, TRUE);
+    g_string_free (fake_clip, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_mcterm_far2l_clipboard_data)
+{
+    static const char ef[] = { 0x44, 0x04, 0, 0 };  // U+0444 in UTF-32LE
+    mcterm_far2l_t *f;
+    GByteArray *st, *args;
+    gint64 size;
+    char *text;
+    char chunk[256];
+
+    fake_clip = g_string_new ("");
+    fake_remembered = g_ptr_array_new_with_free_func (g_free);
+    g_ptr_array_add (fake_remembered, g_strdup (client_a));
+    f = mcterm_far2l_new (&clip_parent);
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l1", 6));
+
+    /* nothing works on a clipboard that is not open */
+    text = get_text (f, 1, &size);
+    ck_assert_int_eq (size, -1);
+    g_free (text);
+    st = clip (f, clip_set_args (1, "x", 1), 's', 2);
+    ck_assert_int_eq ((gint8) pop_le (st, 1), -1);
+    g_byte_array_free (st, TRUE);
+
+    ck_assert_int_eq (open_status (clip (f, clip_open_args (client_a), 'o', 3)), 1);
+    // opens do not nest
+    ck_assert_int_eq (open_status (clip (f, clip_open_args (client_a), 'o', 3)), 0);
+
+    /* text set goes to mc's clipboard, with an ID of the data under the status */
+    st = clip (f, clip_set_args (1, "hello", 5), 's', 4);
+    ck_assert_int_eq ((gint8) pop_le (st, 1), 1);
+    ck_assert_uint_ne (pop_le (st, 8), 0);
+    g_byte_array_free (st, TRUE);
+    ck_assert_str_eq (fake_clip->str, "hello");
+
+    st = clip (f, clip_fmt_args (1), 'a', 5);
+    ck_assert_uint_eq (pop_le (st, 1), 1);
+    g_byte_array_free (st, TRUE);
+
+    /* no paste key: the clipboard reads as empty, and its ID as none */
+    text = get_text (f, 6, &size);
+    ck_assert_int_eq (size, 0);
+    g_free (text);
+    st = clip (f, clip_fmt_args (1), 'i', 7);
+    ck_assert_uint_eq (pop_le (st, 8), 0);
+    g_byte_array_free (st, TRUE);
+
+    /* Alt-Ctrl-V is no paste key; Ctrl+V is */
+    mcterm_far2l_key (f, KEY_M_ALT | KEY_M_CTRL | 'v');
+    text = get_text (f, 8, &size);
+    ck_assert_int_eq (size, 0);
+    g_free (text);
+    mcterm_far2l_key (f, XCTRL ('v'));
+    text = get_text (f, 9, &size);
+    ck_assert_str_eq (text, "hello");
+    g_free (text);
+    st = clip (f, clip_fmt_args (1), 'i', 10);
+    ck_assert_uint_ne (pop_le (st, 8), 0);
+    g_byte_array_free (st, TRUE);
+
+    /* data in chunks: the ones with RID 0 are not answered, the others with the RID alone */
+    memset (chunk, 'x', sizeof (chunk));
+    args = g_byte_array_new ();
+    g_byte_array_append (args, (const guint8 *) chunk, sizeof (chunk));
+    push_le (args, sizeof (chunk) >> 8, 2);
+    ck_assert_ptr_null (clip (f, args, 'S', 0));
+    args = g_byte_array_new ();
+    g_byte_array_append (args, (const guint8 *) chunk, sizeof (chunk));
+    push_le (args, sizeof (chunk) >> 8, 2);
+    st = clip (f, args, 'S', 11);
+    ck_assert_uint_eq (st->len, 0);
+    g_byte_array_free (st, TRUE);
+    st = clip (f, clip_set_args (1, "yz", 2), 's', 12);
+    ck_assert_int_eq ((gint8) pop_le (st, 1), 1);
+    g_byte_array_free (st, TRUE);
+    ck_assert_uint_eq (fake_clip->len, 2 * sizeof (chunk) + 2);
+    ck_assert (fake_clip->str[0] == 'x' && strcmp (fake_clip->str + 2 * sizeof (chunk), "yz") == 0);
+
+    /* UTF-32 text both ways */
+    st = clip (f, clip_set_args (13, ef, sizeof (ef)), 's', 13);
+    ck_assert_int_eq ((gint8) pop_le (st, 1), 1);
+    g_byte_array_free (st, TRUE);
+    ck_assert_str_eq (fake_clip->str, "\xd1\x84");
+
+    /* a format of its own, by name, keeps its data next to the text */
+    args = g_byte_array_new ();
+    g_byte_array_append (args, (const guint8 *) "FAR_VerticalBlock_Unicode", 25);
+    push_le (args, 25, 4);
+    st = clip (f, args, 'r', 14);
+    ck_assert_uint_ge (pop_le (st, 4), 0xC000);
+    g_byte_array_free (st, TRUE);
+
+    /* CLOSE, and the clipboard is closed */
+    st = clip (f, g_byte_array_new (), 'c', 15);
+    ck_assert_int_eq ((gint8) pop_le (st, 1), 1);
+    g_byte_array_free (st, TRUE);
+    text = get_text (f, 16, &size);
+    ck_assert_int_eq (size, -1);
+    g_free (text);
+
+    /* an unknown sub-command has the empty answer */
+    st = clip (f, g_byte_array_new (), 'Z', 17);
+    ck_assert_uint_eq (st->len, 0);
+    g_byte_array_free (st, TRUE);
+
+    mcterm_far2l_free (f);
+    g_ptr_array_free (fake_remembered, TRUE);
+    g_string_free (fake_clip, TRUE);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_mcterm_far2l_clipboard_none)
+{
+    mcterm_far2l_t *f = mcterm_far2l_new (&fake_parent);
+    GByteArray *st;
+
+    /* a terminal with no clipboard to give tells the program to use its own */
+    ck_assert_ptr_null (mcterm_far2l_apc (f, "far2l1", 6));
+    ck_assert_int_eq (open_status (clip (f, clip_open_args (client_a), 'o', 1)), -1);
+    st = clip (f, clip_fmt_args (1), 'g', 2);
+    ck_assert_uint_eq (st->len, 0);
+    g_byte_array_free (st, TRUE);
+    mcterm_far2l_free (f);
+}
+END_TEST
+
 int
 main (void)
 {
@@ -405,6 +799,9 @@ main (void)
     tcase_add_test (tc_core, test_mcterm_far2l_bind);
     tcase_add_test (tc_core, test_mcterm_far2l_drop);
     tcase_add_test (tc_core, test_mcterm_far2l_no_drop_without_binding);
+    tcase_add_test (tc_core, test_mcterm_far2l_clipboard_access);
+    tcase_add_test (tc_core, test_mcterm_far2l_clipboard_data);
+    tcase_add_test (tc_core, test_mcterm_far2l_clipboard_none);
     // ***********************************
 
     return mctest_run_all (tc_core);

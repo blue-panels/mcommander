@@ -226,6 +226,10 @@ typedef struct
     int skip_row;  // the same row in @buf
 } mcterm_geom_t;
 
+/* The terminal the user is being asked about now, whether its program may use the clipboard:
+   NULL when there is none, and when the terminal went while the question was on the screen */
+static WMcTerm *far2l_asking = NULL;
+
 /*** forward declarations ************************************************************************/
 
 static cb_ret_t mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data);
@@ -237,6 +241,8 @@ static gboolean mcterm_handle_osc133_generation (WMcTerm *t);
 static void mcterm_handle_osc52_generation (WMcTerm *t);
 static gboolean mcterm_write_all (int master, const unsigned char *data, size_t len);
 static void mcterm_handle_apcs (WMcTerm *t);
+static void mcterm_far2l_question_hook (void *data);
+static gboolean mcterm_far2l_unhook (WMcTerm *t, gboolean remove);
 static void mcterm_busy_tick (WMcTerm *t);
 static void mcterm_busy_tick_set (WMcTerm *t, gboolean on);
 static gboolean mcterm_handle_stalled_internal_sync (WMcTerm *t);
@@ -2452,6 +2458,90 @@ mcterm_handle_apcs (WMcTerm *t)
                                      strlen (answer));
         g_free (answer);
     }
+
+    // the user is asked from the idle loop, never in the middle of the program's output
+    if (mcterm_far2l_question_pending (t->far2l) && !mcterm_far2l_unhook (t, FALSE))
+        add_hook (&idle_hook, mcterm_far2l_question_hook, t);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Whether the question of this terminal waits in the idle hooks; with @remove it does no more.
+   Each terminal has its own: a question of one is not taken away by another. */
+
+static gboolean
+mcterm_far2l_unhook (WMcTerm *t, gboolean remove)
+{
+    hook_t **hook = &idle_hook;
+    gboolean found = FALSE;
+
+    while (*hook != NULL)
+    {
+        hook_t *current = *hook;
+
+        if (current->hook_fn == mcterm_far2l_question_hook && current->hook_data == t)
+        {
+            found = TRUE;
+            if (!remove)
+                break;
+            *hook = current->next;
+            g_free (current);
+        }
+        else
+            hook = &current->next;
+    }
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A program in the terminal wants the clipboard: the user says whether it may have it */
+
+static void
+mcterm_far2l_question_hook (void *data)
+{
+    WMcTerm *t = (WMcTerm *) data;
+    char *answer;
+    int choice;
+
+    // one question at a time: the others wait in their hooks
+    if (far2l_asking != NULL)
+        return;
+    (void) mcterm_far2l_unhook (t, TRUE);
+    if (!mcterm_far2l_question_pending (t->far2l))
+        return;
+
+    far2l_asking = t;
+    // the first button, the safe one, is the one an Enter pressed without thinking takes
+    choice = query_dialog (_ ("Clipboard access"),
+                           _ ("A program in the terminal asks to use the clipboard.\n"
+                              "It is read only right after you press Ctrl+V or Shift+Insert."),
+                           D_NORMAL, 4, _ ("&Block"), _ ("&Own clipboard"), _ ("&Allow"),
+                           _ ("Allow al&ways"));
+    if (far2l_asking != t)
+        return;  // the terminal went meanwhile
+    far2l_asking = NULL;
+
+    switch (choice)
+    {
+    case 1:
+        choice = MCTERM_F2L_CLIP_OWN;
+        break;
+    case 2:
+        choice = MCTERM_F2L_CLIP_ALLOW;
+        break;
+    case 3:
+        choice = MCTERM_F2L_CLIP_ALWAYS;
+        break;
+    default:
+        choice = MCTERM_F2L_CLIP_BLOCK;
+        break;
+    }
+
+    answer = mcterm_far2l_answer (t->far2l, choice);
+    if (answer != NULL && t->pty_master >= 0)
+        (void) mcterm_write_all (t->pty_master, (const unsigned char *) answer, strlen (answer));
+    g_free (answer);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2470,6 +2560,7 @@ mcterm_send_encoded_key (WMcTerm *t, int key)
     // a program that asked for the far2l extensions gets its keys the way they name them
     if (mcview_vterm_far2l_active (t->vterm))
     {
+        mcterm_far2l_key (t->far2l, key);
         n = mcterm_encode_key_far2l (key, buf, sizeof (buf));
         if (n > 0)
         {
@@ -2945,6 +3036,9 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         tty_painter_remove (mcterm_paint_pictures, t);
         if (t->pictures_shown)
             tty_touch_screen (); /* the pixels go with the next refresh */
+        if (far2l_asking == t)
+            far2l_asking = NULL;
+        (void) mcterm_far2l_unhook (t, TRUE);
         mcterm_far2l_free (t->far2l);
         t->far2l = NULL;
         mcview_vterm_free (t->vterm);
@@ -3084,7 +3178,7 @@ mcterm_new (const WRect *r, const char *start_dir)
         tty_cell_size (&cell_width, &cell_height);
         mcview_vterm_set_cell_size (t->vterm, cell_width, cell_height);
         mcview_vterm_set_sixel (t->vterm, tty_has_sixel ());
-        mcview_vterm_set_far2l (t->vterm, tty_has_far2l_input ());
+        mcview_vterm_set_far2l (t->vterm, mcterm_far2l_allowed ());
     }
     tty_painter_add (mcterm_paint_pictures, t);
 

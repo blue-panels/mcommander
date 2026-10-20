@@ -24,10 +24,16 @@
 #include <config.h>
 
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "lib/global.h"
+#include "lib/event.h"
+#include "lib/fileloc.h"
+#include "lib/mcconfig.h"
+#include "lib/tty/key.h"  // KEY_M_*, KEY_IC
 
 #include "mcterm_far2l.h"
 
@@ -41,6 +47,28 @@
 #define MCTERM_F2L_PAGE         64u
 /* a whole APC of a request is at most this (the introducer, base64 and the terminator) */
 #define MCTERM_F2L_MAX_REQUEST 65536u
+
+/* The clipboard sub-commands of the extensions (FarTTY.h of far2l) */
+#define CLIP_OPEN            'o'
+#define CLIP_CLOSE           'c'
+#define CLIP_EMPTY           'e'
+#define CLIP_ISAVAIL         'a'
+#define CLIP_SETDATACHUNK    'S'
+#define CLIP_SETDATA         's'
+#define CLIP_GETDATA         'g'
+#define CLIP_GETDATAID       'i'
+#define CLIP_REGISTER_FORMAT 'r'
+/* what this terminal can: data IDs and data set in chunks */
+#define CLIP_FEAT_DATA_ID     0x1u
+#define CLIP_FEAT_CHUNKED_SET 0x2u
+#define CLIP_CF_TEXT          1u
+#define CLIP_CF_UNICODETEXT   13u
+#define CLIP_FIRST_FORMAT     0xC000u
+/* a read is allowed this long after a paste key, and each read lets the next come as late, a
+   few times (far2l's own terminal does the same) */
+#define CLIP_READ_USEC     (5 * G_USEC_PER_SEC)
+#define CLIP_READ_PROLONGS 3
+#define CLIP_MAX_DATA      (16u * 1024u * 1024u)
 
 /*** file scope type declarations ****************************************************************/
 
@@ -62,7 +90,32 @@ struct mcterm_far2l_struct
     guint32 asked_frame, asked_chunk, asked_features;
     guint16 asked_window;
     GPtrArray *offers; /* offer_t * */
+    /* the clipboard */
+    gboolean clip_open;
+    GHashTable *clip_allowed; /* client IDs the user allowed while the extensions are on */
+    char *ask_client;         /* an OPEN that waits for the user's answer */
+    guint8 ask_rid;
+    gint64 read_since; /* the last paste key, 0 for none */
+    int read_prolongs;
+    GByteArray *chunks; /* data set in chunks, for the SETDATA that ends it */
+    gboolean chunks_overflow;
 };
+
+/* a clipboard request, popped from its end */
+typedef struct
+{
+    const guint8 *b;
+    gsize len;
+    gboolean err;
+} clip_reader_t;
+
+/*** file scope variables ************************************************************************/
+
+/* the formats registered by name, and the data of every format but text: mc's clipboard holds
+   text only, the rest is kept here for as long as mc runs */
+static GHashTable *clip_format_ids = NULL;  /* char * -> GUINT_TO_POINTER (id) */
+static GHashTable *clip_format_data = NULL; /* GUINT_TO_POINTER (id) -> GByteArray * */
+static guint clip_next_format = CLIP_FIRST_FORMAT;
 
 /*** file scope functions ************************************************************************/
 
@@ -95,6 +148,95 @@ static guint32
 real_max_chunk (void)
 {
     return far2l_dnd_max_chunk ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* mc's clipboard: the clipfile, after clipboard_paste or the far2l terminal outside filled it */
+
+static char *
+real_clip_get (gsize *len)
+{
+    char *text = NULL;
+    ev_clipboard_text_from_file_t ev = { &text, FALSE, 0 };
+
+    *len = 0;
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_file_from_ext_clip", NULL);
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_text_from_file", &ev);
+    if (!ev.ret || text == NULL)
+    {
+        g_free (text);
+        return NULL;
+    }
+    *len = ev.len;
+    return text;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+real_clip_set (const char *text, gsize len)
+{
+    (void) len;  // the text ends at its NUL
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_text_to_file", (gpointer) text);
+    mc_event_raise (MCEVENT_GROUP_CORE, "clipboard_file_to_ext_clip", NULL);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+real_clip_has_text (void)
+{
+    char *fname = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
+    struct stat st;
+    const gboolean has = fname != NULL && stat (fname, &st) == 0 && st.st_size > 0;
+
+    g_free (fname);
+    return has;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+real_clip_remembered (const char *client_id)
+{
+    char *fname = mc_config_get_full_path (MC_FAR2L_CLIENTS_FILE);
+    char *text = NULL;
+    gboolean found = FALSE;
+
+    if (fname != NULL && g_file_get_contents (fname, &text, NULL, NULL))
+    {
+        char **lines = g_strsplit (text, "\n", -1);
+        char **l;
+
+        for (l = lines; *l != NULL && !found; l++)
+            found = strcmp (*l, client_id) == 0;
+        g_strfreev (lines);
+    }
+    g_free (text);
+    g_free (fname);
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+real_clip_remember (const char *client_id)
+{
+    char *fname = mc_config_get_full_path (MC_FAR2L_CLIENTS_FILE);
+    char *text = NULL;
+    char *all;
+
+    if (fname == NULL)
+        return;
+    if (!g_file_get_contents (fname, &text, NULL, NULL))
+        text = g_strdup ("");
+    all = g_strconcat (text, client_id, "\n", (char *) NULL);
+    if (g_file_set_contents (fname, all, -1, NULL))
+        (void) chmod (fname, 0600);
+    g_free (all);
+    g_free (text);
+    g_free (fname);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -470,6 +612,423 @@ append_frame (GString *out, GByteArray *reply)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* The clipboard, served as far2l's own terminal serves it (VTFar2lExtensios.cpp of far2l) */
+
+static const guint8 *
+clip_pop (clip_reader_t *r, gsize n)
+{
+    if (r->err || n > r->len)
+    {
+        r->err = TRUE;
+        return NULL;
+    }
+    r->len -= n;
+    return r->b + r->len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static guint32
+clip_pop_le (clip_reader_t *r, gsize n)
+{
+    const guint8 *p = clip_pop (r, n);
+    guint32 v = 0;
+
+    while (p != NULL && n-- > 0)
+        v = (v << 8) | p[n];
+    return v;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* pushed in the order the program pops them last to first: the value goes on top */
+
+static void
+clip_push_le (GByteArray *a, guint64 v, gsize n)
+{
+    gsize i;
+
+    for (i = 0; i < n; i++)
+    {
+        const guint8 b = (guint8) (v >> (8 * i));
+
+        g_byte_array_append (a, &b, 1);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The client ID, if it is one the protocol allows */
+
+static char *
+clip_client_id (const guint8 *id, gsize len)
+{
+    return far2l_clip_id_is_valid ((const char *) id, len) ? g_strndup ((const char *) id, len)
+                                                           : NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Any stable value that is never 0 serves as the ID of the data */
+
+static guint64
+clip_data_id (const guint8 *data, gsize len)
+{
+    guint64 h = 0xcbf29ce484222325ULL ^ (guint64) len;
+    gsize i;
+
+    for (i = 0; i < len; i++)
+        h = (h ^ data[i]) * 0x100000001b3ULL;
+    return h != 0 ? h : 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+clip_read_allowed (const mcterm_far2l_t *f)
+{
+    return f->read_since != 0 && g_get_monotonic_time () - f->read_since < CLIP_READ_USEC;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The data of @fmt on the clipboard now; NULL for none */
+
+static GByteArray *
+clip_data (mcterm_far2l_t *f, guint32 fmt)
+{
+    GByteArray *a = NULL;
+
+    if (fmt == CLIP_CF_TEXT || fmt == CLIP_CF_UNICODETEXT)
+    {
+        gsize len = 0;
+        char *text = f->parent.clip_get (&len);
+
+        if (text != NULL && len > 0)
+        {
+            if (fmt == CLIP_CF_TEXT)
+                a = g_byte_array_new_take ((guint8 *) text, len);
+            else
+            {
+                glong n = 0, i;
+                gunichar *u = g_utf8_to_ucs4 (text, (glong) len, NULL, &n, NULL);
+
+                if (u != NULL && n > 0)
+                {
+                    a = g_byte_array_new ();
+                    for (i = 0; i < n; i++)
+                        clip_push_le (a, u[i], 4);
+                }
+                g_free (u);
+                g_free (text);
+            }
+        }
+        else
+            g_free (text);
+    }
+    else if (clip_format_data != NULL)
+    {
+        const GByteArray *d = g_hash_table_lookup (clip_format_data, GUINT_TO_POINTER (fmt));
+
+        if (d != NULL)
+            a = g_byte_array_append (g_byte_array_new (), d->data, d->len);
+    }
+
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+clip_set_data (mcterm_far2l_t *f, guint32 fmt, const guint8 *data, gsize len)
+{
+    if (fmt == CLIP_CF_TEXT || fmt == CLIP_CF_UNICODETEXT)
+    {
+        char *text;
+        gsize n;
+
+        if (fmt == CLIP_CF_TEXT)
+        {
+            text = g_strndup ((const char *) data, len);
+            n = strlen (text);  // up to the first NUL, as far2l counts a text
+        }
+        else
+        {
+            gunichar *u = g_new (gunichar, len / 4 + 1);
+            gsize i, k = 0;
+            glong written = 0;
+
+            for (i = 0; i + 4 <= len; i += 4)
+            {
+                const gunichar c = (gunichar) data[i] | ((gunichar) data[i + 1] << 8)
+                    | ((gunichar) data[i + 2] << 16) | ((gunichar) data[i + 3] << 24);
+
+                if (c == 0)
+                    break;
+                u[k++] = c;
+            }
+            text = g_ucs4_to_utf8 (u, (glong) k, NULL, &written, NULL);
+            g_free (u);
+            if (text == NULL)
+                return FALSE;
+            n = (gsize) written;
+        }
+        f->parent.clip_set (text, n);
+        g_free (text);
+        return TRUE;
+    }
+
+    if (clip_format_data == NULL)
+        clip_format_data = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+                                                  (GDestroyNotify) g_byte_array_unref);
+    g_hash_table_replace (clip_format_data, GUINT_TO_POINTER (fmt),
+                          g_byte_array_append (g_byte_array_new (), data, len));
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The answer to OPEN: the status, and below it the features of this terminal */
+
+static GByteArray *
+clip_open_reply (guint8 rid, gint8 status)
+{
+    GByteArray *a = g_byte_array_new ();
+
+    clip_push_le (a, CLIP_FEAT_DATA_ID | CLIP_FEAT_CHUNKED_SET, 8);
+    clip_push_le (a, (guint8) status, 1);
+    clip_push_le (a, rid, 1);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gint8
+clip_open_now (mcterm_far2l_t *f)
+{
+    f->clip_open = TRUE;
+    f->read_prolongs = 0;
+    g_byte_array_set_size (f->chunks, 0);
+    return 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static GByteArray *
+serve_clipboard (mcterm_far2l_t *f, const guint8 *stack, gsize len)
+{
+    clip_reader_t r = { stack, len, FALSE };
+    const guint8 rid = (guint8) clip_pop_le (&r, 1);
+    guint8 sub;
+    GByteArray *a = g_byte_array_new ();
+
+    (void) clip_pop_le (&r, 1);  // the command, 'c'
+    sub = (guint8) clip_pop_le (&r, 1);
+
+    if (f->parent.clip_get == NULL)
+    {
+        // no clipboard to give: the program is to use its own
+        g_byte_array_free (a, TRUE);
+        if (sub == CLIP_OPEN)
+            return clip_open_reply (rid, -1);
+        a = g_byte_array_new ();
+        clip_push_le (a, rid, 1);
+        return a;
+    }
+
+    switch (r.err ? 0 : sub)
+    {
+    case CLIP_OPEN:
+    {
+        const guint32 n = clip_pop_le (&r, 4);
+        char *client = clip_client_id (clip_pop (&r, n), n);
+
+        g_byte_array_free (a, TRUE);
+        g_byte_array_set_size (f->chunks, 0);
+        // opens do not nest, as in far2l: the second one fails
+        if (client == NULL || f->ask_client != NULL || f->clip_open)
+        {
+            g_free (client);
+            return clip_open_reply (rid, 0);
+        }
+        if (g_hash_table_contains (f->clip_allowed, client) || f->parent.clip_remembered (client))
+        {
+            const gint8 st = clip_open_now (f);
+
+            g_free (client);
+            return clip_open_reply (rid, st);
+        }
+        // the user says it, from the idle loop: the program waits for the answer
+        f->ask_client = client;
+        f->ask_rid = rid;
+        return NULL;
+    }
+
+    case CLIP_CLOSE:
+        clip_push_le (a, f->clip_open ? 1 : (guint8) -1, 1);
+        f->clip_open = FALSE;
+        f->read_prolongs = 0;
+        g_byte_array_set_size (f->chunks, 0);
+        break;
+
+    case CLIP_EMPTY:
+        if (f->clip_open && clip_format_data != NULL)
+            g_hash_table_remove_all (clip_format_data);
+        // the text of mc's clipboard is replaced by the SETDATA that follows, not cleared now
+        clip_push_le (a, f->clip_open ? 1 : (guint8) -1, 1);
+        break;
+
+    case CLIP_ISAVAIL:
+    {
+        const guint32 fmt = clip_pop_le (&r, 4);
+        gboolean avail;
+
+        if (fmt == CLIP_CF_TEXT || fmt == CLIP_CF_UNICODETEXT)
+            avail = f->parent.clip_has_text ();
+        else
+            avail = clip_format_data != NULL
+                && g_hash_table_contains (clip_format_data, GUINT_TO_POINTER (fmt));
+        clip_push_le (a, avail && !r.err ? 1 : 0, 1);
+        break;
+    }
+
+    case CLIP_SETDATACHUNK:
+    {
+        const gsize n = (gsize) clip_pop_le (&r, 2) << 8;
+        const guint8 *data = clip_pop (&r, n);
+
+        if (!f->clip_open || r.err)
+            break;
+        if (n == 0)
+            g_byte_array_set_size (f->chunks, 0);
+        else if (f->chunks->len + n <= CLIP_MAX_DATA)
+            g_byte_array_append (f->chunks, data, (guint) n);
+        else
+            f->chunks_overflow = TRUE;
+        break;
+    }
+
+    case CLIP_SETDATA:
+    {
+        const guint32 fmt = clip_pop_le (&r, 4);
+        const guint32 n = clip_pop_le (&r, 4);
+        const guint8 *data = clip_pop (&r, n);
+        gint8 st = -1;
+
+        if (f->clip_open)
+        {
+            st = 0;
+            if (!r.err && !f->chunks_overflow && f->chunks->len + n <= CLIP_MAX_DATA)
+            {
+                g_byte_array_append (f->chunks, data, n);
+                if (clip_set_data (f, fmt, f->chunks->data, f->chunks->len))
+                    st = 1;
+            }
+            if (st == 1)
+                clip_push_le (a, clip_data_id (f->chunks->data, f->chunks->len), 8);
+            g_byte_array_set_size (f->chunks, 0);
+            f->chunks_overflow = FALSE;
+        }
+        clip_push_le (a, (guint8) st, 1);
+        break;
+    }
+
+    case CLIP_GETDATA:
+    {
+        const guint32 fmt = clip_pop_le (&r, 4);
+
+        if (!f->clip_open)
+        {
+            clip_push_le (a, 0xFFFFFFFFu, 4);
+            break;
+        }
+        {
+            const gboolean allowed = clip_read_allowed (f);
+            GByteArray *d = allowed && !r.err ? clip_data (f, fmt) : NULL;
+
+            /* not allowed is told as no data: a program is not to learn that it was refused */
+            clip_push_le (a, d != NULL ? clip_data_id (d->data, d->len) : 0, 8);
+            if (d != NULL)
+                g_byte_array_append (a, d->data, d->len);
+            clip_push_le (a, d != NULL ? d->len : 0, 4);
+            if (d != NULL)
+                g_byte_array_free (d, TRUE);
+            // each read lets the next come a while later, a few times only
+            if (allowed && f->read_prolongs < CLIP_READ_PROLONGS)
+            {
+                f->read_prolongs++;
+                f->read_since = g_get_monotonic_time ();
+            }
+        }
+        break;
+    }
+
+    case CLIP_GETDATAID:
+    {
+        const guint32 fmt = clip_pop_le (&r, 4);
+        GByteArray *d = f->clip_open && clip_read_allowed (f) && !r.err ? clip_data (f, fmt) : NULL;
+
+        clip_push_le (a, d != NULL ? clip_data_id (d->data, d->len) : 0, 8);
+        if (d != NULL)
+            g_byte_array_free (d, TRUE);
+        break;
+    }
+
+    case CLIP_REGISTER_FORMAT:
+    {
+        const guint32 n = clip_pop_le (&r, 4);
+        const guint8 *name = clip_pop (&r, n);
+        guint id = 0;
+
+        if (!r.err && n > 0 && n <= 256)
+        {
+            char *key = g_strndup ((const char *) name, n);
+            gpointer known;
+
+            if (clip_format_ids == NULL)
+                clip_format_ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+            known = g_hash_table_lookup (clip_format_ids, key);
+            id = GPOINTER_TO_UINT (known);
+            if (id == 0 && clip_next_format <= 0xFFFF)
+            {
+                id = clip_next_format++;
+                g_hash_table_insert (clip_format_ids, key, GUINT_TO_POINTER (id));
+            }
+            else
+                g_free (key);
+        }
+        clip_push_le (a, id, 4);
+        break;
+    }
+
+    default:
+        // an unknown sub-command: the empty answer says so
+        break;
+    }
+
+    clip_push_le (a, rid, 1);
+    return a;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The program gave the extensions up, or went: a question it asked is not answered, and the
+   clipboard it held is closed */
+
+static void
+clip_end (mcterm_far2l_t *f)
+{
+    g_free (f->ask_client);
+    f->ask_client = NULL;
+    f->clip_open = FALSE;
+    f->read_since = 0;
+    f->read_prolongs = 0;
+    f->chunks_overflow = FALSE;
+    g_byte_array_set_size (f->chunks, 0);
+    g_hash_table_remove_all (f->clip_allowed);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static void
 serve_stack (mcterm_far2l_t *f, const guint8 *stack, gsize len, GString *out)
@@ -482,8 +1041,18 @@ serve_stack (mcterm_far2l_t *f, const guint8 *stack, gsize len, GString *out)
     if (!far2l_request_head (stack, len, &rid, &cmd))
         return;  // not even a RID: there is nobody to answer
 
-    /* every other family of far2l interactions (the clipboard, images, ...) is not served here:
-       the empty answer is the one that says so */
+    if (cmd == FAR2L_INTERACT_CLIPBOARD)
+    {
+        reply = serve_clipboard (f, stack, len);
+        if (rid != 0)
+            append_frame (out, reply);
+        else if (reply != NULL)
+            g_byte_array_free (reply, TRUE);
+        return;
+    }
+
+    /* every other family of far2l interactions (images, ...) is not served here: the empty
+       answer is the one that says so */
     if (cmd != FAR2L_INTERACT_DND)
     {
         if (rid != 0)
@@ -529,9 +1098,17 @@ serve_stack (mcterm_far2l_t *f, const guint8 *stack, gsize len, GString *out)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-
-/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_far2l_allowed (void)
+{
+    const char *env = getenv ("MC_FAR2L");
+
+    return env == NULL || env[0] != '0';
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 mcterm_far2l_t *
@@ -548,8 +1125,15 @@ mcterm_far2l_new (const mcterm_far2l_parent_t *parent)
         f->parent.read = real_read;
         f->parent.close = real_close;
         f->parent.max_chunk = real_max_chunk;
+        f->parent.clip_get = real_clip_get;
+        f->parent.clip_set = real_clip_set;
+        f->parent.clip_has_text = real_clip_has_text;
+        f->parent.clip_remembered = real_clip_remembered;
+        f->parent.clip_remember = real_clip_remember;
     }
     f->offers = g_ptr_array_new_with_free_func (offer_free);
+    f->clip_allowed = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    f->chunks = g_byte_array_new ();
     return f;
 }
 
@@ -562,6 +1146,9 @@ mcterm_far2l_free (mcterm_far2l_t *f)
         return;
     offers_end_all (f, FAR2L_DND_CLOSE_CANCELLED);
     g_ptr_array_free (f->offers, TRUE);
+    clip_end (f);
+    g_hash_table_destroy (f->clip_allowed);
+    g_byte_array_free (f->chunks, TRUE);
     g_free (f);
 }
 
@@ -606,6 +1193,7 @@ mcterm_far2l_apc (mcterm_far2l_t *f, const char *body, gsize len)
         if (len == 6)
         {
             offers_end_all (f, FAR2L_DND_CLOSE_CANCELLED);
+            clip_end (f);
             f->bound = FALSE;
             f->on = FALSE;
         }
@@ -661,6 +1249,76 @@ mcterm_far2l_drop (mcterm_far2l_t *f, const far2l_drop_t *drop, int x, int y, ch
     *out = far2l_frame_event (ev);
     g_byte_array_free (ev, TRUE);
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mcterm_far2l_key (mcterm_far2l_t *f, int key)
+{
+    const int mods = key & KEY_M_MASK;
+    const int base = key & ~KEY_M_MASK;
+    gboolean paste;
+
+    if (f == NULL || !f->on || (mods & KEY_M_ALT) != 0)
+        return;
+
+    // Ctrl+V, with Shift or without, and Shift+Insert: the keys of a paste
+    paste = ((mods & KEY_M_CTRL) != 0 && (base == 0x16 || base == 'v' || base == 'V'))
+        || (base == KEY_IC && (mods & KEY_M_SHIFT) != 0 && (mods & KEY_M_CTRL) == 0);
+    if (paste)
+    {
+        f->read_since = g_get_monotonic_time ();
+        f->read_prolongs = 0;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcterm_far2l_question_pending (const mcterm_far2l_t *f)
+{
+    return f != NULL && f->ask_client != NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+char *
+mcterm_far2l_answer (mcterm_far2l_t *f, int answer)
+{
+    GByteArray *reply;
+    char *frame;
+    gint8 st;
+
+    if (f == NULL || f->ask_client == NULL)
+        return NULL;
+
+    switch (answer)
+    {
+    case MCTERM_F2L_CLIP_ALWAYS:
+        f->parent.clip_remember (f->ask_client);
+        MC_FALLTHROUGH;
+    case MCTERM_F2L_CLIP_ALLOW:
+        g_hash_table_add (f->clip_allowed, f->ask_client);
+        f->ask_client = NULL;
+        st = clip_open_now (f);
+        break;
+    case MCTERM_F2L_CLIP_OWN:
+        st = -1;
+        break;
+    default:
+        st = 0;
+        break;
+    }
+    g_free (f->ask_client);
+    f->ask_client = NULL;
+
+    if (f->ask_rid == 0)
+        return NULL;
+    reply = clip_open_reply (f->ask_rid, st);
+    frame = far2l_frame_reply (reply);
+    g_byte_array_free (reply, TRUE);
+    return frame;
 }
 
 /* --------------------------------------------------------------------------------------------- */

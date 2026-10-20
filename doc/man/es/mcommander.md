@@ -492,8 +492,9 @@ archivo marcado, o para el archivo bajo el cursor si no hay ninguno marcado.
 En la orden, %f (o %p) es el nombre del archivo, %n el nombre sin la extensión
 y %x la extensión, todos entrecomillados para la shell; las demás macros del
 menú de usuario funcionan como allí. Ctrl-G solo funciona en un terminal que
-envía las teclas con el protocolo de teclado de kitty o con el modo de entrada
-Win32 (kitty, WezTerm, foot, Windows Terminal): en los demás es la tecla de
+envía las teclas con el protocolo de teclado de kitty, con el modo de entrada
+Win32 o con las extensiones de far2l (kitty, WezTerm, foot, Windows Terminal,
+far2l): en los demás es la tecla de
 interrupción del terminal y nunca llega a M-Commander. Alt-X g funciona en
 todos los terminales.
 
@@ -4292,6 +4293,14 @@ El texto se envía en UTF-8, y un texto de más de 75000 bytes no se envía. Sol
 lo recibe un terminal de tipo xterm, no la consola de Linux. Por defecto
 "false".
 
+En un terminal con las extensiones de terminal de far2l (far2l, f4), cuando ni
+*clipboard_store*
+ni
+*clipboard_paste*
+están definidas, lo copiado va al portapapeles del terminal y al pegar se lee de
+él. El terminal pregunta una vez a su usuario si M-Commander puede usar el
+portapapeles.
+
 *autodetect_codeset*
 : Esta opción permite emplear la orden 'enca' para autodetectar el juego de
 caracteres de los archivos de texto para el visor y el editor interno. La
@@ -4384,6 +4393,21 @@ Así un programa nunca puede leer el portapapeles. "false" por omisión:
 cualquier salida en el terminal, también un archivo mostrado con
 **cat**,
 podría cambiar el portapapeles.
+
+Un programa en el terminal que habla las extensiones de terminal de far2l
+(far2l, f4, el propio M-Commander) recibe las teclas tal como las informan esas
+extensiones y puede usar el portapapeles de M-Commander, sea cual sea el
+terminal en que corre M-Commander. La primera vez que un programa pide el
+portapapeles, M-Commander pregunta si puede: "Block", "Own clipboard", "Allow" o
+"Allow always", que se guarda en ~/.local/share/mc6/far2l-clients. El
+portapapeles solo se lee durante unos segundos después de pulsar
+**Ctrl-V**
+o
+**Shift-Insert**
+en el terminal; en cualquier otro momento el programa no recibe nada, así que no
+puede leer el portapapeles a espaldas del usuario, como sí puede un programa con
+la consulta de OSC 52. Un archivo soltado en la ventana de un terminal far2l
+sobre el terminal también llega al programa.
 
 # Parámetros para editor o visor externo <a id="parameters-for-external-editor-or-viewer"></a>
 
@@ -4517,6 +4541,10 @@ carga ningún paquete Lua y nada que lo necesite está disponible.
 **MC_SIXEL**
 : Con el valor 0 se indica que el terminal no tiene gráficos sixel; con 1, que
 sí los tiene. Sin la variable se pregunta al propio terminal.
+
+**MC_FAR2L**
+: Con 0 no se pregunta al terminal por las extensiones de terminal de far2l ni se
+dan a los programas del terminal integrado.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Cuánto esperar el resto de una secuencia de escape, en microsegundos.
