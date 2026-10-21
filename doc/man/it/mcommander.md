@@ -430,9 +430,10 @@ senza badare a maiuscole e minuscole; \* e ? sono caratteri jolly, come nella
 ricerca rapida. Mentre la ricerca è in corso i caratteri si digitano con Alt o
 senza, e un carattere a cui non corrisponde nessun nome non viene accettato.
 Esc termina la ricerca; ogni altro tasto la termina e poi fa ciò che fa, così
-Enter apre il file trovato e il testo della riga di comando resta dov'è. I tasti
-Alt vanno alla ricerca anche quando nella
-riga di comando c'è del testo, come in Far. Il cirillico e le altre lettere
+Enter apre il file trovato e il testo della riga di comando resta dov'è. Finché la
+riga di comando contiene del testo e nessuna ricerca è in corso, i suoi tasti
+Alt (Alt-b e Alt-f, Alt-d e Alt-w, Alt-p, Alt-n e Alt-h) continuano a
+modificarla; gli altri tasti Alt vanno alla ricerca. Il cirillico e le altre lettere
 funzionano allo stesso modo con una localizzazione UTF-8 e con una a 8 bit.
 Un terminale che invia Alt come un Esc davanti al tasto invia Alt con una cifra
 come Esc e la cifra, che in M-Commander è un tasto funzione (Esc 1 è F1): lì le
@@ -440,25 +441,35 @@ cifre si digitano senza Alt nella ricerca già avviata.
 Mentre i pannelli hanno il focus, questi tasti vanno alla ricerca invece che
 alle loro azioni: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? e gli altri tasti Alt con un
 carattere dei pannelli, Alt-x, il prefisso dei comandi estesi, e i tasti Alt
-della riga di comando (Alt-p e Alt-n, Alt-b e Alt-f, Alt-h e gli altri; nella
+della riga di comando quando è vuota (Alt-p e Alt-n, Alt-h; nella
 modalità Far la cronologia della riga di comando è su Ctrl-E, Ctrl-X e Alt-F8).
 La maggior parte di queste azioni si trova nei menu, che allora non mostrano
 questi tasti, e Alt-F7, Alt-F8, Alt-F11 e Alt-F12 restano. Alt-{, Alt-} e
-Alt-\`, che cambiano schermo, mantengono le loro azioni, come ogni tasto della
-sezione
+Alt-\`, che cambiano schermo, mantengono le loro azioni, anche durante una
+ricerca, come ogni tasto della sezione
 **[dialog]**
-della mappa dei tasti. Un tasto che il file
-**mc.keymap**
-dell'utente assegna a un'azione diversa da quella della mappa di M-Commander
-mantiene quell'azione, come una macro in Far, nelle sezioni
+della mappa dei tasti. Un tasto che la mappa dell'utente assegna a un'azione
+diversa da quella della mappa senza di essa mantiene quell'azione, come una
+macro in Far, nelle sezioni
 **[filemanager]**,
 **[panel]**
 e
-**[input]**;
-una mappa dell'utente che ripete quella di M-Commander, come una sua copia, non
-ne mantiene nessuno. Così anche un tasto a cui risponde il plugin di un
-pannello di plugin. L'opzione non cambia le mappe dei tasti né la finestra Key
-Bindings. Con l'opzione disattivata, Alt con un carattere mantiene le azioni di
+**[input]**.
+I tasti si cercano come li cerca M-Commander, vince la prima assegnazione di un
+tasto, e le azioni si confrontano senza badare alle maiuscole dei loro nomi,
+così una mappa dell'utente che ripete quella di M-Commander, come una sua copia,
+non ne mantiene nessuno. Una mappa del pacchetto scelta con
+**--keymap**,
+**MC_KEYMAP**
+o
+**keymap=**
+da
+**{{pkgdatadir}}**
+non è quella propria dell'utente. Mantiene la sua azione anche un tasto a cui
+risponde il plugin di un pannello di plugin: il plugin riceve il comando che i
+pannelli assegnano al tasto, come senza l'opzione, o il tasto stesso. L'opzione
+non cambia le mappe dei tasti né la finestra Key Bindings, e i menu mostrano di
+nuovo i tasti quando la si cambia. Con l'opzione disattivata, Alt con un carattere mantiene le azioni di
 M-Commander e non avvia una ricerca.
 
 **Ctrl-G, Alt-X g**
