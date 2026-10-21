@@ -3,18 +3,21 @@
 
    Copyright (C) 2026
    Free Software Foundation, Inc.
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
 
    Written by:
    Ilia Maslakov <il.smind@gmail.com>, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -33,6 +36,7 @@
 #include <unistd.h>
 
 #include "lib/global.h"
+#include "lib/hook.h"
 
 #include "lib/strutil.h"
 #include "lib/vfs/vfs.h"
@@ -219,6 +223,83 @@ host_close_plugin_impl (mc_panel_host_t *host, const char *dir_path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A panel whose plugin asked to be elsewhere goes there when the file manager
+   waits for a key again: closing the plugin inside its own callback would pull
+   its data from under it, and the core still uses it after the callback
+   returns.  Under a dialog, the viewer or a dropped menu, which may run inside
+   that callback, the panel waits. */
+static void
+host_open_location_idle (void *data)
+{
+    int i;
+
+    (void) data;
+
+    if (filemanager == NULL || top_dlg == NULL || DIALOG (top_dlg->data) != filemanager
+        || (the_menubar != NULL && the_menubar->is_dropped))
+        return;
+
+    delete_hook (&idle_hook, host_open_location_idle);
+
+    for (i = 0; i < 2; i++)
+        if (get_panel_type (i) == view_listing)
+        {
+            WPanel *p = PANEL (get_panel_widget (i));
+            char *location = p->plugin_pending_location;
+
+            if (location != NULL)
+            {
+                p->plugin_pending_location = NULL;
+                (void) panel_navigate_to_path (p, location, TRUE, TRUE);
+                g_free (location);
+                // no key is being handled, so nothing else draws it
+                widget_draw (WIDGET (p));
+            }
+        }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+host_open_location_impl (mc_panel_host_t *host, const char *location, gboolean in_other_panel)
+{
+    WPanel *panel = (WPanel *) host->host_data;
+    WPanel *target = NULL;
+    int i;
+
+    if (panel == NULL || location == NULL || location[0] == '\0')
+        return FALSE;
+    if (panel_plugin_find_by_path (location) == NULL && !g_path_is_absolute (location))
+    {
+        message (D_ERROR, MSG_ERROR, _ ("No plugin opens %s."), location);
+        return FALSE;
+    }
+
+    if (!in_other_panel)
+    {
+        g_free (panel->plugin_pending_location);
+        panel->plugin_pending_location = g_strdup (location);
+        if (!hook_present (idle_hook, host_open_location_idle))
+            add_hook (&idle_hook, host_open_location_idle, NULL);
+        return TRUE;
+    }
+
+    // Quick view, Info or the tree in the other half: no panel to go to
+    for (i = 0; i < 2; i++)
+        if (get_panel_type (i) == view_listing && PANEL (get_panel_widget (i)) != panel)
+            target = PANEL (get_panel_widget (i));
+    if (target == NULL)
+    {
+        message (D_ERROR, MSG_ERROR, "%s",
+                 _ ("The other half of the screen shows no panel to open it in."));
+        return FALSE;
+    }
+
+    return panel_navigate_to_path (target, location, TRUE, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static int
 host_get_marked_count_impl (mc_panel_host_t *host)
 {
@@ -313,6 +394,7 @@ panel_plugin_init_host (mc_panel_host_t *host, WPanel *panel)
     host->open_diff = host_open_diff_impl;
     host->open_merge = host_open_merge_impl;
     host->open_diff_labeled = host_open_diff_labeled_impl;
+    host->open_location = host_open_location_impl;
     host->close_plugin = host_close_plugin_impl;
     host->add_history = host_add_history_impl;
     host->get_marked_count = host_get_marked_count_impl;
@@ -1181,6 +1263,9 @@ panel_plugin_close (WPanel *panel)
 
     if (panel == NULL || !panel->is_plugin_panel)
         return;
+
+    // what the plugin asked for goes with it
+    MC_PTR_FREE (panel->plugin_pending_location);
 
     if (panel->plugin != NULL && panel->plugin_data != NULL)
         panel->plugin->close (panel->plugin_data);

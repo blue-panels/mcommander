@@ -106,6 +106,7 @@ typedef struct
     mc_panel_host_t *plugin_host;           // host interface given to the plugin
     list_format_t plugin_base_list_format;  // list format active before plugin custom columns
     vfs_path_t *plugin_pre_cwd_vpath;       // panel cwd captured at activation; restored on close
+    char *plugin_pending_location;          // host->open_location() here, gone to when idle
     const panel_field_t *plugin_pre_sort_field;  // panel sort captured at activation, NULL if none
     dir_sort_options_t plugin_pre_sort_info;     // sort options that go with plugin_pre_sort_field
     GSList *stream_sources;                      // suspended sources, innermost first

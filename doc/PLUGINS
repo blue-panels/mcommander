@@ -129,6 +129,10 @@ viewer, for a conflict of a version control system; and
 host->open_diff_labeled(), open_diff() with the names to show for the
 files, so temporary copies are not shown by their own names.
 
+API 22 adds host->open_location(): a plugin opens the address of another
+plugin, or a directory, in the other panel or in its own, so that two
+plugins can lead to each other.
+
 
 3.2 Capability Flags (mc_pp_flags_t)
 
@@ -199,6 +203,18 @@ What mc provides to the plugin while the panel is active:
                               whose listing carries absolute paths so
                               that %d/%p tokens and copy targets
                               resolve against "/" (or another base)
+  open_location(host, location, in_other_panel)
+                              open the address of a plugin
+                              ("git:/home/me/src", "gh:/owner/repo") or
+                              an absolute directory in the other panel,
+                              at once, the cursor staying here; with
+                              in_other_panel FALSE in this panel, once
+                              the file manager waits for a key again
+                              (dropped if the plugin is closed first).
+                              FALSE when it cannot: no plugin has that
+                              prefix and it is no absolute path, or the
+                              other half shows no panel.  The core
+                              reports every failure itself
 
 Fields:
 

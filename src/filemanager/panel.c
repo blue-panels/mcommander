@@ -1956,6 +1956,7 @@ panel_destroy (WPanel *p)
     vfs_path_free (p->lwd_vpath, TRUE);
     vfs_path_free (p->cwd_vpath, TRUE);
     vfs_path_free (p->plugin_pre_cwd_vpath, TRUE);
+    g_free (p->plugin_pending_location);
 }
 
 /* --------------------------------------------------------------------------------------------- */
