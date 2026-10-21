@@ -1663,6 +1663,14 @@ keymap_refresh_widgets (void)
             for (l = g->widgets; l != NULL; l = g_list_next (l))
                 keymap_refresh_widget (WIDGET (l->data));
         }
+
+        /* the menus show the keys of the new keymaps: Far mode and its fast find change them */
+        {
+            WMenuBar *menubar = menubar_find (dlg);
+
+            if (menubar != NULL)
+                menubar_update_shortcuts (menubar);
+        }
     }
 }
 
