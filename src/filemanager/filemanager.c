@@ -472,17 +472,37 @@ sort_cmd (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The caption of the key of @command in @keymap, as keybind_lookup_keymap_shortcut () gives it,
+   but not of an Alt key that the fast find of Far mode takes: that key no longer runs @command */
+
+static const char *
+midnight_lookup_shortcut (const global_keymap_t *keymap, long command)
+{
+    size_t i;
+
+    if (keymap == NULL)
+        return NULL;
+
+    for (i = 0; keymap[i].key != 0; i++)
+        if (keymap[i].command == command && !keymap_far_fast_find_takes ((int) keymap[i].key))
+            return (keymap[i].caption[0] != '\0') ? keymap[i].caption : NULL;
+
+    return NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static char *
 midnight_get_shortcut (long command)
 {
     const char *ext_map;
     const char *shortcut = NULL;
 
-    shortcut = keybind_lookup_keymap_shortcut (filemanager_map, command);
+    shortcut = midnight_lookup_shortcut (filemanager_map, command);
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
-    shortcut = keybind_lookup_keymap_shortcut (panel_map, command);
+    shortcut = midnight_lookup_shortcut (panel_map, command);
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
