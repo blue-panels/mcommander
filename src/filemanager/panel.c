@@ -4029,6 +4029,24 @@ panel_far_fast_find_text (int key, char *text, size_t size)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
+ * How many bytes of the character of @key are still to come as plain keys: the rest of a UTF-8
+ * character after its lead byte, which a terminal that sends Alt as an Esc gives that way. A key
+ * of a kitty event brings its whole text.
+ */
+
+static int
+panel_far_fast_find_rest (int key)
+{
+    const int c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+
+    if (!mc_global.utf8_display || tty_key_event (key, NULL) || c < 0xC0 || c > 0xF7)
+        return 0;
+
+    return c >= 0xF0 ? 3 : c >= 0xE0 ? 2 : 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
  * The fast find of Far mode: Alt, or Alt-Shift, with a character starts the quick search and types
  * the character into it. Once the search runs every such key goes to it. Before that a key keeps
  * its action when it switches the screens, when the keymap of the user binds it to an action of
@@ -4070,9 +4088,12 @@ panel_far_fast_find (WPanel *panel, int key)
     if (!panel->quick_search.active)
     {
         start_search (panel);
-        // an empty directory has nothing to find
+        // an empty directory has nothing to find; the rest of the character is not typed either
         if (!panel->quick_search.active)
+        {
+            panel->quick_search.far_skip = panel_far_fast_find_rest (key);
             return TRUE;
+        }
         panel->quick_search.far_find = TRUE;
     }
 
@@ -5460,6 +5481,15 @@ panel_key (WPanel *panel, int key)
 {
     long command;
 
+    // the rest of the UTF-8 character of a fast find of Far that could not start
+    if (panel->quick_search.far_skip > 0)
+    {
+        panel->quick_search.far_skip--;
+        if (key >= 0x80 && key <= 0xBF)
+            return MSG_HANDLED;
+        panel->quick_search.far_skip = 0;
+    }
+
     if (is_abort_char (key))
     {
         // an Esc with no search going on is the file manager's, when its keymap has Esc
@@ -6305,6 +6335,7 @@ panel_clean_dir (WPanel *panel)
     panel->quick_search.active = FALSE;
     panel->quick_search.filtering = FALSE;
     panel->quick_search.far_find = FALSE;
+    panel->quick_search.far_skip = 0;
     if (panel->quick_search.source.list != NULL)
         dir_list_free_list (&panel->quick_search.source);
     panel->is_panelized = FALSE;
