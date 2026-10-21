@@ -154,6 +154,7 @@ typedef struct
         gboolean active;
         gboolean filtering;
         gboolean far_find;  // the fast find of Far mode, started by Alt: the case does not count
+        int far_skip;       // bytes of UTF-8 still to come after a fast find that did not start
         GString *buffer;
         GString *prev_buffer;
         char ch[MB_LEN_MAX];  // Buffer for multi-byte character
