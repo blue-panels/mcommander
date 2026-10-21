@@ -506,7 +506,8 @@ midnight_get_shortcut (long command)
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
-    ext_map = keybind_lookup_keymap_shortcut (filemanager_map, CK_ExtendedKeyMap);
+    // the prefix too: Alt-x of Far mode is a key of the fast find
+    ext_map = midnight_lookup_shortcut (filemanager_map, CK_ExtendedKeyMap);
     if (ext_map != NULL)
         shortcut = keybind_lookup_keymap_shortcut (filemanager_x_map, command);
     if (shortcut != NULL)
