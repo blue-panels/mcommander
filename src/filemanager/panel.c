@@ -5589,12 +5589,8 @@ panel_key (WPanel *panel, int key)
     }
 
     /* Let plugin handle keys not in the panel keymap (e.g. plugin-specific hotkeys). */
-    {
-        const mc_pp_result_t r = panel_plugin_key (panel, key, TRUE);
-
-        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
-            return MSG_HANDLED;
-    }
+    if (panel_plugin_key (panel, key, TRUE) == MC_PPR_OK)
+        return MSG_HANDLED;
 
     if (!command_prompt && ((key >= ' ' && key <= 255) || key == KEY_BACKSPACE))
     {
@@ -5671,14 +5667,9 @@ panel_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         return panel_key (panel, parm);
 
     case MSG_ACTION:
-    {
-        const mc_pp_result_t r =
-            panel_plugin_key (panel, parm, parm != CK_View && parm != CK_ViewRaw);
-
-        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+        if (panel_plugin_key (panel, parm, parm != CK_View && parm != CK_ViewRaw) == MC_PPR_OK)
             return MSG_HANDLED;
         return panel_execute_cmd (panel, parm);
-    }
 
     case MSG_DESTROY:
         // close plugin panel if active
