@@ -24,11 +24,14 @@
 
 #include "tests/mctest.h"
 
+#include <glib/gstdio.h>  // g_remove(), g_rmdir()
+
 #include "lib/keybind.h"
 #include "lib/mcconfig.h"
 #include "lib/tty/key.h"
 #include "lib/widget.h"
 
+#include "src/args.h"  // mc_args__keymap_file
 #include "src/keymap.h"
 
 /* --------------------------------------------------------------------------------------------- */
@@ -578,34 +581,87 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Load the keymap of Far mode with the fast find from the files, with @keymap as the --keymap */
+
+static void
+far_fast_find_load (const char *keymap)
+{
+    mc_args__keymap_file = (char *) keymap;
+    keymap_load (TRUE);
+    mc_args__keymap_file = NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_keymap_far_fast_find_user_keys)
 {
-    mc_config_t *base, *user;
+    static const char user_keymap[] =
+        /* a key of the global keymap for another action: the first binding of it wins, as the
+           keymaps look it up, though HistoryPrev comes later with the same key */
+        "[panel]\n"
+        "PanelModes = alt-y\n"
+        /* the action of the global keymap, its name in another case */
+        "[filemanager]\n"
+        "cdquick = alt-c\n"
+        /* one key of an action of the global keymap, as a copy of it would have */
+        "Find = alt-question\n"
+        /* a key the global keymap does not bind */
+        "[input]\n"
+        "WordLeft = alt-k\n";
+    char *const share_data_dir = mc_global.share_data_dir;
+    char *const sysconfig_dir = mc_global.sysconfig_dir;
+    char *share, *user, *user_file, *share_file;
 
-    base = mc_config_init (NULL, TRUE);
-    user = mc_config_init (NULL, TRUE);
+    share = g_dir_make_tmp ("mc-keymap-share-XXXXXX", NULL);
+    user = g_dir_make_tmp ("mc-keymap-user-XXXXXX", NULL);
+    ck_assert_ptr_nonnull (share);
+    ck_assert_ptr_nonnull (user);
+    user_file = g_build_filename (user, "fast.keymap", (char *) NULL);
+    share_file = g_build_filename (share, "fast.keymap", (char *) NULL);
+    ck_assert (g_file_set_contents (user_file, user_keymap, -1, NULL));
+    ck_assert (g_file_set_contents (share_file, user_keymap, -1, NULL));
 
-    mc_config_set_string_raw (base, KEYMAP_SECTION_FILEMANAGER, "CdQuick", "alt-c");
-    mc_config_set_string_raw (base, KEYMAP_SECTION_FILEMANAGER, "Find", "alt-w");
+    mc_global.share_data_dir = share;
+    mc_global.sysconfig_dir = share;
+    keymap_far_mode = TRUE;
+    keymap_far_fast_find = TRUE;
 
-    /* the same key for the same action, as a copy of the global keymap has it */
-    mc_config_set_string_raw (user, KEYMAP_SECTION_FILEMANAGER, "CdQuick", "alt-c");
-    /* a key of the base keymap for another action */
-    mc_config_set_string_raw (user, KEYMAP_SECTION_FILEMANAGER, "History", "alt-w");
-    /* a key the base keymap does not bind, in the panels and in the edit lines */
-    mc_config_set_string_raw (user, KEYMAP_SECTION_PANEL, "Search", "alt-q");
-    mc_config_set_string_raw (user, KEYMAP_SECTION_INPUT, "WordLeft", "alt-y");
-
-    keymap_far_fast_find_init (base, user);
-    ck_assert (!keymap_far_fast_find_kept (ALT ('c')));
-    ck_assert (keymap_far_fast_find_kept (ALT ('w')));
-    ck_assert (keymap_far_fast_find_kept (ALT ('q')));
+    /* a keymap of the user */
+    far_fast_find_load (user_file);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('y')), CK_PanelModes);
     ck_assert (keymap_far_fast_find_kept (ALT ('y')));
+    ck_assert (!keymap_far_fast_find_takes (ALT ('y')));
+    ck_assert (!keymap_far_fast_find_kept (ALT ('c')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('c')));
+    ck_assert (!keymap_far_fast_find_kept (ALT ('?')));
+    ck_assert (keymap_far_fast_find_kept (ALT ('k')));
     ck_assert (!keymap_far_fast_find_kept (ALT ('z')));
-
-    mc_config_deinit (user);
-    mc_config_deinit (base);
+    ck_assert (keymap_far_fast_find_takes (ALT ('z')));
+    ck_assert (!keymap_far_fast_find_takes (ALT ('}')));
     keymap_free ();
+
+    /* the same keymap, chosen from the directory of the package: it is not the user's own */
+    far_fast_find_load (share_file);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('y')), CK_PanelModes);
+    ck_assert (!keymap_far_fast_find_kept (ALT ('y')));
+    ck_assert (!keymap_far_fast_find_kept (ALT ('k')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('k')));
+    ck_assert (!keymap_far_fast_find_takes (ALT ('}')));
+    keymap_free ();
+
+    keymap_far_fast_find = FALSE;
+    keymap_far_mode = FALSE;
+    mc_global.share_data_dir = share_data_dir;
+    mc_global.sysconfig_dir = sysconfig_dir;
+
+    g_remove (user_file);
+    g_remove (share_file);
+    g_rmdir (user);
+    g_rmdir (share);
+    g_free (share_file);
+    g_free (user_file);
+    g_free (user);
+    g_free (share);
 }
 END_TEST
 
