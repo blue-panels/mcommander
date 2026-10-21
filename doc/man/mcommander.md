@@ -431,7 +431,8 @@ the cursor on, whose name begins with what is typed, whatever its case; \* and ?
 are wildcards, as in the quick search. Once the search runs, the characters go
 on with Alt or without it, and a character that no name matches is not taken.
 Esc ends the search; any other key ends it and then does what it does, so Enter
-opens the file that was found, also when there is text on the command line. The Alt keys go to the search even when there is
+opens the file that was found; text on the command line stays
+there. The Alt keys go to the search even when there is
 text on the command line, as in Far. Cyrillic and other letters work in a
 UTF-8 locale and in an 8-bit one alike. A terminal that sends Alt as an Esc in
 front of the key sends Alt with a digit as Esc and the digit, which is a
