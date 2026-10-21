@@ -1861,9 +1861,9 @@ midnight_cmdline_marks_with (int key)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
- * Does @key stay the command line's when it has text: a key it marks text with, or an Alt key of the
- * fast find of Far mode that it answers to (Alt-b, Alt-f, Alt-d, Alt-p and the others), unless a
- * search runs? On an empty command line those Alt keys are the fast find's, as in Far.
+ * Does @key stay the command line's when it has text: a key it marks text with, or an Alt key of
+ * the fast find of Far mode that it answers to (Alt-b, Alt-f, Alt-d, Alt-p and the others), unless
+ * a search runs? On an empty command line those Alt keys are the fast find's, as in Far.
  */
 
 static gboolean
