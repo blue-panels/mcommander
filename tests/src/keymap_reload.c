@@ -28,8 +28,11 @@
 
 #include "lib/keybind.h"
 #include "lib/mcconfig.h"
+#include "lib/strutil.h"
 #include "lib/tty/key.h"
 #include "lib/widget.h"
+#include "lib/vfs/vfs.h"
+#include "src/vfs/local/local.c"
 
 #include "src/args.h"  // mc_args__keymap_file
 #include "src/keymap.h"
@@ -621,6 +624,12 @@ START_TEST (test_keymap_far_fast_find_user_keys)
     ck_assert (g_file_set_contents (user_file, user_keymap, -1, NULL));
     ck_assert (g_file_set_contents (share_file, user_keymap, -1, NULL));
 
+    /* the keymap files are read through the VFS */
+    str_init_strings (NULL);
+    vfs_init ();
+    vfs_init_localfs ();
+    vfs_setup_work_dir ();
+
     mc_global.share_data_dir = share;
     mc_global.sysconfig_dir = share;
     keymap_far_mode = TRUE;
@@ -653,6 +662,8 @@ START_TEST (test_keymap_far_fast_find_user_keys)
     keymap_far_mode = FALSE;
     mc_global.share_data_dir = share_data_dir;
     mc_global.sysconfig_dir = sysconfig_dir;
+    vfs_shut ();
+    str_uninit_strings ();
 
     g_remove (user_file);
     g_remove (share_file);
