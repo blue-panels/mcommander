@@ -4029,6 +4029,34 @@ panel_far_fast_find_text (int key, char *text, size_t size)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
+ * Give @key, a command or a key as the terminal sent it, to the plugin of a plugin panel. An action
+ * the plugin did reloads the panel when @reload is TRUE or the plugin asked for it. Returns what
+ * the plugin answered, MC_PPR_NOT_SUPPORTED when the panel has no plugin that takes keys. MC_PPR_OK
+ * and MC_PPR_SKIPPED (the user turned down a dialog of the plugin) both mean the key was taken.
+ */
+
+static mc_pp_result_t
+panel_plugin_key (WPanel *panel, int key, gboolean reload)
+{
+    mc_pp_result_t r;
+
+    if (!panel->is_plugin_panel || panel->plugin == NULL || panel->plugin_data == NULL
+        || panel->plugin->handle_key == NULL)
+        return MC_PPR_NOT_SUPPORTED;
+
+    r = panel->plugin->handle_key (panel->plugin_data, key);
+    if (r == MC_PPR_OK)
+    {
+        if (reload || panel->plugin_reload_wanted)
+            panel_plugin_reload (panel);
+        panel->plugin_reload_wanted = FALSE;
+    }
+
+    return r;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
  * How many bytes of the character of @key are still to come as plain keys: the rest of a UTF-8
  * character after its lead byte, which a terminal that sends Alt as an Esc gives that way. A key
  * of a kitty event brings its whole text.
@@ -4069,13 +4097,9 @@ panel_far_fast_find (WPanel *panel, int key)
         if (keymap_far_fast_find_kept (key))
             return FALSE;
 
-        if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-            && panel->plugin->handle_key != NULL)
         {
-            const mc_pp_result_t r = panel->plugin->handle_key (panel->plugin_data, key);
+            const mc_pp_result_t r = panel_plugin_key (panel, key, TRUE);
 
-            if (r == MC_PPR_OK)
-                panel_plugin_reload (panel);
             if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
                 return TRUE;
         }
@@ -5528,44 +5552,28 @@ panel_key (WPanel *panel, int key)
     command = widget_lookup_key (WIDGET (panel), key);
     if (command != CK_IgnoreKey)
     {
-        if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-            && panel->plugin->handle_key != NULL)
-        {
-            mc_pp_result_t r;
+        const gboolean reload = command != CK_View && command != CK_ViewRaw;
+        mc_pp_result_t r;
 
-            r = panel->plugin->handle_key (panel->plugin_data, command);
-            if (r == MC_PPR_NOT_SUPPORTED && key != (int) command)
-            {
-                /* Fallback for plugin-local hotkeys that are stored as raw terminal keys
-                   (e.g. KEY_F(13)) rather than command ids (CK_*). */
-                r = panel->plugin->handle_key (panel->plugin_data, key);
-            }
-            if (r == MC_PPR_OK)
-            {
-                if ((command != CK_View && command != CK_ViewRaw) || panel->plugin_reload_wanted)
-                    panel_plugin_reload (panel);
-                panel->plugin_reload_wanted = FALSE;
-                return MSG_HANDLED;
-            }
-            // A cancelled dialog is an answer; a failure of the plugin's own is not.
-            if (r == MC_PPR_SKIPPED)
-                return MSG_HANDLED;
+        r = panel_plugin_key (panel, (int) command, reload);
+        if (r == MC_PPR_NOT_SUPPORTED && key != (int) command)
+        {
+            /* Fallback for plugin-local hotkeys that are stored as raw terminal keys
+               (e.g. KEY_F(13)) rather than command ids (CK_*). */
+            r = panel_plugin_key (panel, key, reload);
         }
+        // A cancelled dialog is an answer; a failure of the plugin's own is not.
+        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+            return MSG_HANDLED;
         return panel_execute_cmd (panel, command);
     }
 
     /* Let plugin handle keys not in the panel keymap (e.g. plugin-specific hotkeys). */
-    if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-        && panel->plugin->handle_key != NULL)
     {
-        mc_pp_result_t r;
+        const mc_pp_result_t r = panel_plugin_key (panel, key, TRUE);
 
-        r = panel->plugin->handle_key (panel->plugin_data, key);
-        if (r == MC_PPR_OK)
-        {
-            panel_plugin_reload (panel);
+        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
             return MSG_HANDLED;
-        }
     }
 
     if (!command_prompt && ((key >= ' ' && key <= 255) || key == KEY_BACKSPACE))
@@ -5643,20 +5651,14 @@ panel_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         return panel_key (panel, parm);
 
     case MSG_ACTION:
-        if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-            && panel->plugin->handle_key != NULL)
-        {
-            mc_pp_result_t r;
+    {
+        const mc_pp_result_t r =
+            panel_plugin_key (panel, parm, parm != CK_View && parm != CK_ViewRaw);
 
-            r = panel->plugin->handle_key (panel->plugin_data, parm);
-            if (r == MC_PPR_OK)
-            {
-                if (parm != CK_View && parm != CK_ViewRaw)
-                    panel_plugin_reload (panel);
-                return MSG_HANDLED;
-            }
-        }
+        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+            return MSG_HANDLED;
         return panel_execute_cmd (panel, parm);
+    }
 
     case MSG_DESTROY:
         // close plugin panel if active
