@@ -63,4 +63,24 @@ cyrillic 02-utf8 UTF-8
 cyrillic 03-koi8r KOI8-R
 cyrillic 04-cp866 CP866
 
+# A plugin panel that turns a key down: the Git panel runs coole on its hotkey,
+# Alt-q here (config/panels.git.ini), and with no coole in the image it says so
+# in a message and answers that the user turned it down (MC_PPR_SKIPPED).  For
+# a key outside the keymap of the panels that is no answer, as on master: once
+# the message is gone the key goes on to the fast find.  The Git panel needs
+# git, which the remote host has not, and the cases are local only.
+if command -v git >/dev/null 2>&1; then
+    mkdir -p 05-plugin
+    printf 'this is apple\n'  > 05-plugin/apple.txt
+    printf 'this is quince\n' > 05-plugin/quince.txt
+    git -C 05-plugin init -q
+    git -C 05-plugin add apple.txt quince.txt
+
+    cat > 05-plugin/cases.tsv <<CASES
+file	key	expect	why	transports
+cases.tsv	key Escape,type cd git:$dir/05-plugin,Enter,alt q	text: Cannot find coole executable	the Git panel takes Alt-q and puts up its message	local
+cases.tsv	key Escape,type cd git:$dir/05-plugin,Enter,alt q,key Escape,type u	text: /qu	the plugin turned the key down, so it goes on to the fast find and the letters after it too	local
+CASES
+fi
+
 echo "far cases in $dir"
