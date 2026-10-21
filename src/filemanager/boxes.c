@@ -153,6 +153,11 @@ configure_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void 
 {
     switch (msg)
     {
+    case MSG_INIT:
+        // the fast find works in Far mode only
+        widget_disable (widget_find_by_id (w, configure_far_fast_find_id), !keymap_far_mode);
+        return dlg_default_callback (w, sender, msg, parm, data);
+
     case MSG_NOTIFY:
         // message from "Single press" checkbutton
         if (sender != NULL && sender->id == configure_old_esc_mode_id)
@@ -672,10 +677,6 @@ configure_box (void)
         mc_global.vfs.preallocate_space = FALSE;
         quick_widgets[7].state = WST_DISABLED;
 #endif
-
-        // the fast find works in Far mode only
-        if (!keymap_far_mode)
-            quick_widgets[30].state = WST_DISABLED;
 
         far_mode_old = keymap_far_mode;
         far_fast_find_old = keymap_far_fast_find;
