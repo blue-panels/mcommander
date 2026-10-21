@@ -1299,13 +1299,28 @@ done:
 
 /**
  * Is @key one of the keys of the fast find of Far: Alt or Alt-Shift with a character, as the
- * terminal sends it (a byte of the charset of the terminal, or the first byte of a UTF-8 one)?
+ * terminal sends it (a byte of the charset of the terminal, or the first byte of a UTF-8 one),
+ * or a kitty event of Alt with a key that types a character mc has no key code for (a letter of
+ * a layout whose key the terminal names without the key of the base layout)?
  */
 
 gboolean
 keymap_far_fast_find_key (int key)
 {
     const int c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+
+    if (key == KEY_KITTY_EVENT)
+    {
+        tty_key_event_t ev;
+        char text[64];
+
+        if (!tty_key_event (key, &ev) || (ev.mods & TTY_KITTY_MOD_ALT) == 0
+            || (ev.mods & (TTY_KITTY_MOD_CTRL | TTY_KITTY_MOD_SUPER | TTY_KITTY_MOD_HYPER)) != 0
+            || (ev.mods & TTY_KITTY_MOD_META) != 0)
+            return FALSE;
+
+        return tty_key_event_text (&ev, text, sizeof (text)) != 0 && (unsigned char) text[0] > ' ';
+    }
 
     return (key & KEY_M_ALT) != 0 && (key & (KEY_M_CTRL | KEY_M_SUPER)) == 0 && c > ' ' && c != 0x7F
         && c <= 0xFF;
