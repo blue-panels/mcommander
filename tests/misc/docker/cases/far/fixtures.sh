@@ -15,13 +15,14 @@ rm -rf "$dir"
 mkdir -p "$dir"
 cd "$dir"
 
-mkdir -p 01-ascii/delta
+mkdir -p 01-ascii/delta 01-ascii/gamma
 printf 'this is alpha\n'   > 01-ascii/alpha.txt
 printf 'this is Apricot\n' > 01-ascii/Apricot.txt
 printf 'this is beta\n'    > 01-ascii/beta.txt
 printf 'this is bravo\n'   > 01-ascii/bravo.txt
 printf 'this is cherry\n'  > 01-ascii/cherry.txt
 printf 'inside\n'          > 01-ascii/delta/inside-delta.txt
+printf 'inside\n'          > 01-ascii/gamma/inside-gamma.txt
 
 cat > 01-ascii/cases.tsv <<'CASES'
 file	key	expect	why	transports
@@ -33,8 +34,9 @@ cases.tsv	key Escape,alt alz,F3	text: this is alpha	a letter that matches nothin
 cases.tsv	key Escape,alt ch,F3	text: this is cherry	Alt-c is no longer quick cd: it is the fast find	local
 cases.tsv	key Escape,alt c	no text: cd:	and the quick cd line does not open	local
 cases.tsv	key Escape,alt de,Enter	text: inside-delta.txt	Enter ends the search and enters the directory found	local
-cases.tsv	key Escape,type echo,alt al,F3	text: this is alpha	with text on the command line Alt still goes to the fast find	local
-cases.tsv	key Escape,type echo,alt de,Enter	text: inside-delta.txt	Enter enters the directory found and does not run the command line	local
+cases.tsv	key Escape,type echo,alt al,F3	text: this is alpha	with text on the command line an Alt key it has no action for still goes to the fast find	local
+cases.tsv	key Escape,type echo,alt ga,Enter	text: inside-gamma.txt	Enter enters the directory found and does not run the command line	local
+cases.tsv	key Escape,type ech,alt b,type X	text: Xech	with text on the command line its own Alt keys stay its own: Alt-b is a word left	local
 cases.tsv	key Escape,alt al,key Escape,alt be,F3	text: this is beta	Esc ends the search and the next Alt starts a new one	local
 CASES
 

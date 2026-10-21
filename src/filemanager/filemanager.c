@@ -1859,6 +1859,24 @@ midnight_cmdline_marks_with (int key)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * Does @key stay the command line's when it has text: a key it marks text with, or an Alt key of the
+ * fast find of Far mode that it answers to (Alt-b, Alt-f, Alt-d, Alt-p and the others), unless a
+ * search runs? On an empty command line those Alt keys are the fast find's, as in Far.
+ */
+
+static gboolean
+midnight_cmdline_keeps (int key)
+{
+    if (midnight_cmdline_marks_with (key))
+        return TRUE;
+
+    return keymap_far_fast_find_takes (key)
+        && !(get_current_type () == view_listing && current_panel->quick_search.active)
+        && widget_lookup_key (WIDGET (cmdline), key) != CK_IgnoreKey;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static cb_ret_t
 midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data)
@@ -1921,9 +1939,10 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
             return mcterm_res;
     }
 
-        // With text on the command line, the keys it marks text with stay its own, not the panel's.
+        // With text on the command line, the keys it marks text with stay its own, not the panel's,
+        // and so do its Alt keys that the fast find of Far mode would take
         if (!w->ext_mode && command_prompt && !is_cmdline_mute ()
-            && !mcterm_overlay_cmdline_is_empty () && midnight_cmdline_marks_with (parm))
+            && !mcterm_overlay_cmdline_is_empty () && midnight_cmdline_keeps (parm))
         {
             cb_ret_t v = mcterm_overlay_cmdline_key (parm);
 
