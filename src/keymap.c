@@ -1237,7 +1237,7 @@ keymap_file_is_global (const char *fname)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* Is @fname a keymap of the user's choice, not one of the two global keymaps that are always read? */
+/* Is @fname a keymap of the user's choice, not one of the global keymaps that are always read? */
 
 static gboolean
 keymap_file_is_chosen (const char *fname, const char *share_keymap, const char *sysconfig_keymap)
@@ -1340,10 +1340,10 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
- * Does @key do another thing in the live keymap @map than in the keymap @base without the keymaps of
- * the user? Both are looked up as the keys are, the first binding of a key winning, and the actions
- * are compared as commands, so the case of their names does not count. A key the user leaves
- * without an action does not count either.
+ * Does @key do another thing in the live keymap @map than in the keymap @base without the keymaps
+ * of the user? Both are looked up as the keys are, the first binding of a key winning, and the
+ * actions are compared as commands, so the case of their names does not count. A key the user
+ * leaves without an action does not count either.
  */
 
 static gboolean
@@ -1353,7 +1353,8 @@ far_fast_find_changed (const global_keymap_t *map, const GArray *base, int key)
 
     return command != CK_IgnoreKey
         && (base == NULL
-            || command != keybind_lookup_keymap_command ((const global_keymap_t *) base->data, key));
+            || command
+                != keybind_lookup_keymap_command ((const global_keymap_t *) base->data, key));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1381,7 +1382,8 @@ keymap_far_fast_find_key (int key)
         return tty_key_event (key, &ev) && ev.final == 'u' && ev.event != TTY_KITTY_RELEASE
             && (ev.mods & TTY_KITTY_MOD_ALT) != 0
             && (ev.mods
-                & (TTY_KITTY_MOD_CTRL | TTY_KITTY_MOD_SUPER | TTY_KITTY_MOD_HYPER | TTY_KITTY_MOD_META))
+                & (TTY_KITTY_MOD_CTRL | TTY_KITTY_MOD_SUPER | TTY_KITTY_MOD_HYPER
+                   | TTY_KITTY_MOD_META))
             == 0;
     }
 
