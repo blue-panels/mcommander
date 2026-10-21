@@ -491,21 +491,36 @@ senza badare a maiuscole e minuscole; * e ? sono caratteri jolly, come nella
 ricerca rapida. Mentre la ricerca è in corso i caratteri si digitano con Alt o
 senza, e un carattere a cui non corrisponde nessun nome non viene accettato.
 Esc termina la ricerca; ogni altro tasto la termina e poi fa ciò che fa, così
-Enter apre il file trovato. I tasti Alt vanno alla ricerca anche quando nella
+Enter apre il file trovato e il testo della riga di comando resta dov'è. I tasti
+Alt vanno alla ricerca anche quando nella
 riga di comando c'è del testo, come in Far. Il cirillico e le altre lettere
 funzionano allo stesso modo con una localizzazione UTF\-8 e con una a 8 bit.
 Un terminale che invia Alt come un Esc davanti al tasto invia Alt con una cifra
 come Esc e la cifra, che in M\-Commander è un tasto funzione (Esc 1 è F1): lì le
 cifre si digitano senza Alt nella ricerca già avviata.
-I pannelli cedono questi tasti: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? e gli altri
-tasti Alt con un carattere non eseguono più lì le loro azioni, e Alt\-x non è
-più il prefisso dei comandi estesi. La maggior parte di queste azioni si trova
-nei menu, e Alt\-F7, Alt\-F8, Alt\-F11 e Alt\-F12 restano. Un tasto che il file
+Mentre i pannelli hanno il focus, questi tasti vanno alla ricerca invece che
+alle loro azioni: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? e gli altri tasti Alt con un
+carattere dei pannelli, Alt\-x, il prefisso dei comandi estesi, e i tasti Alt
+della riga di comando (Alt\-p e Alt\-n, Alt\-b e Alt\-f, Alt\-h e gli altri; nella
+modalità Far la cronologia della riga di comando è su Ctrl\-E, Ctrl\-X e Alt\-F8).
+La maggior parte di queste azioni si trova nei menu, che allora non mostrano
+questi tasti, e Alt\-F7, Alt\-F8, Alt\-F11 e Alt\-F12 restano. Alt\-{, Alt\-} e
+Alt\-`, che cambiano schermo, mantengono le loro azioni, come ogni tasto della
+sezione
+\fB[dialog]\fP
+della mappa dei tasti. Un tasto che il file
 \fBmc.keymap\fP
-dell'utente assegna di nuovo mantiene la sua azione, come una macro in Far, e
-così un tasto a cui risponde il plugin di un pannello di plugin. Con l'opzione
-disattivata, Alt con un carattere mantiene le azioni di M\-Commander e non avvia
-una ricerca.
+dell'utente assegna a un'azione diversa da quella della mappa di M\-Commander
+mantiene quell'azione, come una macro in Far, nelle sezioni
+\fB[filemanager]\fP,
+\fB[panel]\fP
+e
+\fB[input]\fP;
+una mappa dell'utente che ripete quella di M\-Commander, come una sua copia, non
+ne mantiene nessuno. Così anche un tasto a cui risponde il plugin di un
+pannello di plugin. L'opzione non cambia le mappe dei tasti né la finestra Key
+Bindings. Con l'opzione disattivata, Alt con un carattere mantiene le azioni di
+M\-Commander e non avvia una ricerca.
 
 .TP
 \fBCtrl\-G, Alt\-X g\fP
