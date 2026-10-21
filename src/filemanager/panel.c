@@ -3997,8 +3997,8 @@ search_previous (WPanel *panel)
  * of the terminal; 0 when there are none. A terminal that sends keys the old way sends the byte
  * after an Esc, and the rest of a UTF-8 character after it as plain keys, which the search takes
  * as typed. A kitty terminal names the key of the base layout instead, and the text that was
- * typed with the layout is in its event; a key of the keypad has no text there, but its key code
- * is the character.
+ * typed with the layout is in its event, all of it; a key of the keypad has no text there, but its
+ * key code is the character. @size is TTY_KITTY_TEXT_BYTES, so every text of an event fits.
  */
 
 static int
@@ -4011,7 +4011,8 @@ panel_far_fast_find_text (int key, char *text, size_t size)
     {
         const size_t len = tty_key_event_text (&ev, text, size);
 
-        if (len != 0)
+        // the text the terminal sent is the whole answer: the key code stands for no text only
+        if (len != 0 || ev.text_len > 0)
             return (int) len;
     }
 
@@ -4031,8 +4032,9 @@ panel_far_fast_find_text (int key, char *text, size_t size)
 /**
  * Give @key, a command or a key as the terminal sent it, to the plugin of a plugin panel. An action
  * the plugin did reloads the panel when @reload is TRUE or the plugin asked for it. Returns what
- * the plugin answered, MC_PPR_NOT_SUPPORTED when the panel has no plugin that takes keys. MC_PPR_OK
- * and MC_PPR_SKIPPED (the user turned down a dialog of the plugin) both mean the key was taken.
+ * the plugin answered, MC_PPR_NOT_SUPPORTED when the panel has no plugin that takes keys;
+ * MC_PPR_SKIPPED means the user turned down a dialog of the plugin, and the caller decides whether
+ * that is an answer.
  */
 
 static mc_pp_result_t
@@ -4050,6 +4052,29 @@ panel_plugin_key (WPanel *panel, int key, gboolean reload)
         if (reload || panel->plugin_reload_wanted)
             panel_plugin_reload (panel);
         panel->plugin_reload_wanted = FALSE;
+    }
+
+    return r;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Give @key, which the keymap of the panels binds to @command, to the plugin of a plugin panel:
+ * the command, and the key itself when the plugin does not take the command.
+ */
+
+static mc_pp_result_t
+panel_plugin_command_key (WPanel *panel, long command, int key)
+{
+    const gboolean reload = command != CK_View && command != CK_ViewRaw;
+    mc_pp_result_t r;
+
+    r = panel_plugin_key (panel, (int) command, reload);
+    if (r == MC_PPR_NOT_SUPPORTED && key != (int) command)
+    {
+        /* Fallback for plugin-local hotkeys that are stored as raw terminal keys
+           (e.g. KEY_F(13)) rather than command ids (CK_*). */
+        r = panel_plugin_key (panel, key, reload);
     }
 
     return r;
@@ -4076,32 +4101,34 @@ panel_far_fast_find_rest (int key)
 /* --------------------------------------------------------------------------------------------- */
 /**
  * The fast find of Far mode: Alt, or Alt-Shift, with a character starts the quick search and types
- * the character into it. Once the search runs every such key goes to it. Before that a key keeps
- * its action when it switches the screens, when the keymap of the user binds it to an action of
- * its own (keymap_far_fast_find_kept ()) or when the plugin of the panel answers to it, as a macro
- * or a plugin of Far would. The keymaps themselves are not changed.
+ * the character into it. A key keeps its action, with a search going on too, when it switches the
+ * screens or the keymap of the user binds it to an action of its own (keymap_far_fast_find_takes
+ * ()), as a macro of Far would. Before the search runs a key also keeps it when the plugin of the
+ * panel answers to it, as a plugin of Far would: to the command the panels bind it to, as without
+ * the fast find, or to the key itself. The keymaps themselves are not changed.
  */
 
 static gboolean
 panel_far_fast_find (WPanel *panel, int key)
 {
-    char text[64];
+    char text[TTY_KITTY_TEXT_BYTES];
     int len, i;
 
-    if (!keymap_far_mode || !keymap_far_fast_find || !keymap_far_fast_find_key (key))
+    if (!keymap_far_fast_find_takes (key))
         return FALSE;
 
     if (!panel->quick_search.active)
     {
-        // a key of the screens, or one that the user binds to an action of his own, keeps it
-        if (keymap_far_fast_find_kept (key))
-            return FALSE;
+        const long command = widget_lookup_key (WIDGET (panel), key);
+        const mc_pp_result_t r = command != CK_IgnoreKey
+            ? panel_plugin_command_key (panel, command, key)
+            : panel_plugin_key (panel, key, TRUE);
 
+        // the plugin answered: the rest of the character is not typed anywhere either
+        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
         {
-            const mc_pp_result_t r = panel_plugin_key (panel, key, TRUE);
-
-            if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
-                return TRUE;
+            panel->quick_search.far_skip = panel_far_fast_find_rest (key);
+            return TRUE;
         }
     }
 
@@ -5552,16 +5579,8 @@ panel_key (WPanel *panel, int key)
     command = widget_lookup_key (WIDGET (panel), key);
     if (command != CK_IgnoreKey)
     {
-        const gboolean reload = command != CK_View && command != CK_ViewRaw;
-        mc_pp_result_t r;
+        const mc_pp_result_t r = panel_plugin_command_key (panel, command, key);
 
-        r = panel_plugin_key (panel, (int) command, reload);
-        if (r == MC_PPR_NOT_SUPPORTED && key != (int) command)
-        {
-            /* Fallback for plugin-local hotkeys that are stored as raw terminal keys
-               (e.g. KEY_F(13)) rather than command ids (CK_*). */
-            r = panel_plugin_key (panel, key, reload);
-        }
         // A cancelled dialog is an answer; a failure of the plugin's own is not.
         if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
             return MSG_HANDLED;
