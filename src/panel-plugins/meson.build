@@ -42,6 +42,7 @@ endif
 subdir('docker')
 subdir('git')
 subdir('k8s')
+subdir('gh')
 if have_panel_plugin_shell_link
   subdir('shell-link')
 endif

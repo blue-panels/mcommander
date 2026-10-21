@@ -59,16 +59,16 @@ Package: mcommander-plugins
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
          mcommander (= ${binary:Version})
-Suggests: git, docker.io, openssh-client
+Suggests: git, docker.io, gh, openssh-client
 Description: archive and remote system panels for M-Commander
  Panel plugins that M-Commander loads at run time.  They open an archive or a
  remote system in a panel, so that its contents are handled like ordinary
  files: tar, zip and the other formats libarchive reads, FTP, SFTP, Samba, S3,
- Git, Docker, Kubernetes, MongoDB, SQLite, systemd units and shell links over
- ssh.
+ Git, GitHub, Docker, Kubernetes, MongoDB, SQLite, systemd units and shell links
+ over ssh.
  .
- The Docker and Kubernetes panels talk to the docker and kubectl commands,
- which have to be installed separately.
+ The GitHub, Docker and Kubernetes panels talk to the gh, docker and kubectl
+ commands, which have to be installed separately.
  .
  The package also installs mcstruct, which shows a binary file as a tree of
  named fields, and the access control list editor in the Attributes menu.

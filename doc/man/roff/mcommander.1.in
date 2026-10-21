@@ -4430,6 +4430,7 @@ s3           buckets of an S3 storage
 git          the state of a repository
 docker       containers, images and their logs
 k8s          the objects of a cluster
+gh           the pull requests and issues of GitHub
 mongo        the collections of a database
 sqlite       the tables of a database
 systemd      the units of the system
