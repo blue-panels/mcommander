@@ -4032,8 +4032,9 @@ panel_far_fast_find_text (int key, char *text, size_t size)
 /**
  * The fast find of Far mode: Alt, or Alt-Shift, with a character starts the quick search and types
  * the character into it. Once the search runs every such key goes to it. Before that a key keeps
- * its action when a keymap of the user binds it (Far mode takes the rest of these keys out of the
- * keymap) or when the plugin of the panel answers to it, as a macro or a plugin of Far would.
+ * its action when it switches the screens, when the keymap of the user binds it to an action of
+ * its own (keymap_far_fast_find_kept ()) or when the plugin of the panel answers to it, as a macro
+ * or a plugin of Far would. The keymaps themselves are not changed.
  */
 
 static gboolean
@@ -4047,8 +4048,8 @@ panel_far_fast_find (WPanel *panel, int key)
 
     if (!panel->quick_search.active)
     {
-        if (keybind_lookup_keymap_command (panel_map, key) != CK_IgnoreKey
-            || keybind_lookup_keymap_command (filemanager_map, key) != CK_IgnoreKey)
+        // a key of the screens, or one that the user binds to an action of his own, keeps it
+        if (keymap_far_fast_find_kept (key))
             return FALSE;
 
         if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL

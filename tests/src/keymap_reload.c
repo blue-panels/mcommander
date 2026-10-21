@@ -537,30 +537,31 @@ START_TEST (test_keymap_far_fast_find)
     ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_History);
     keymap_free ();
 
-    /* with the fast find the panels give them all up ... */
+    /* with the fast find the keymaps keep every key: the panels give up the Alt keys with a
+       character when they are pressed */
     keymap_far_fast_find = TRUE;
     keymap_load (FALSE);
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('?')), CK_IgnoreKey);
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_IgnoreKey);
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('h')), CK_IgnoreKey);
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('x')), CK_IgnoreKey);
-    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_IgnoreKey);
-    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('s')), CK_IgnoreKey);
-    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('o')), CK_IgnoreKey);
-
-    /* ... and keep the other keys of the same actions */
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (7)),
-                      CK_Find);
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, KEY_M_ALT | KEY_F (8)),
-                      CK_History);
-    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, KEY_M_ALT | KEY_F (12)),
-                      CK_History);
-    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, XCTRL ('s')), CK_Search);
-    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('\n')),
-                      CK_PutCurrentSelected);
-
-    /* the edit lines are not the panels: their Alt keys stay */
+    ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_CdQuick);
+    ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_History);
     ck_assert_int_eq (keybind_lookup_keymap_command (input_map, ALT ('p')), CK_HistoryPrev);
+    ck_assert (keymap_far_fast_find_takes (ALT ('?')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('c')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('h')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('x')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('H')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('s')));
+    ck_assert (keymap_far_fast_find_takes (ALT ('o')));
+    /* the Alt keys of the command line too: Far has none */
+    ck_assert (keymap_far_fast_find_takes (ALT ('p')));
+
+    /* the keys of the screens stay */
+    ck_assert (!keymap_far_fast_find_takes (ALT ('}')));
+    ck_assert (!keymap_far_fast_find_takes (ALT ('{')));
+
+    /* and so do the keys that are not Alt with a character */
+    ck_assert (!keymap_far_fast_find_takes (KEY_M_ALT | KEY_F (7)));
+    ck_assert (!keymap_far_fast_find_takes (XCTRL ('s')));
+    ck_assert (!keymap_far_fast_find_takes (ALT ('\n')));
     keymap_free ();
 
     /* without Far mode the fast find does nothing */
@@ -568,9 +569,43 @@ START_TEST (test_keymap_far_fast_find)
     keymap_load (FALSE);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('?')), CK_Find);
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_CdQuick);
+    ck_assert (!keymap_far_fast_find_takes (ALT ('c')));
     keymap_free ();
 
     keymap_far_fast_find = FALSE;
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_keymap_far_fast_find_user_keys)
+{
+    mc_config_t *base, *user;
+
+    base = mc_config_init (NULL, TRUE);
+    user = mc_config_init (NULL, TRUE);
+
+    mc_config_set_string_raw (base, KEYMAP_SECTION_FILEMANAGER, "CdQuick", "alt-c");
+    mc_config_set_string_raw (base, KEYMAP_SECTION_FILEMANAGER, "Find", "alt-w");
+
+    /* the same key for the same action, as a copy of the global keymap has it */
+    mc_config_set_string_raw (user, KEYMAP_SECTION_FILEMANAGER, "CdQuick", "alt-c");
+    /* a key of the base keymap for another action */
+    mc_config_set_string_raw (user, KEYMAP_SECTION_FILEMANAGER, "History", "alt-w");
+    /* a key the base keymap does not bind, in the panels and in the edit lines */
+    mc_config_set_string_raw (user, KEYMAP_SECTION_PANEL, "Search", "alt-q");
+    mc_config_set_string_raw (user, KEYMAP_SECTION_INPUT, "WordLeft", "alt-y");
+
+    keymap_far_fast_find_init (base, user);
+    ck_assert (!keymap_far_fast_find_kept (ALT ('c')));
+    ck_assert (keymap_far_fast_find_kept (ALT ('w')));
+    ck_assert (keymap_far_fast_find_kept (ALT ('q')));
+    ck_assert (keymap_far_fast_find_kept (ALT ('y')));
+    ck_assert (!keymap_far_fast_find_kept (ALT ('z')));
+
+    mc_config_deinit (user);
+    mc_config_deinit (base);
+    keymap_free ();
 }
 END_TEST
 
@@ -599,6 +634,7 @@ main (void)
     tcase_add_test (tc_core, test_keymap_far_mode_select_all_default_button);
     tcase_add_test (tc_core, test_keymap_far_fast_find_key);
     tcase_add_test (tc_core, test_keymap_far_fast_find);
+    tcase_add_test (tc_core, test_keymap_far_fast_find_user_keys);
 
     return mctest_run_all (tc_core);
 }

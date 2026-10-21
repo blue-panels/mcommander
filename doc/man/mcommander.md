@@ -431,20 +431,34 @@ the cursor on, whose name begins with what is typed, whatever its case; \* and ?
 are wildcards, as in the quick search. Once the search runs, the characters go
 on with Alt or without it, and a character that no name matches is not taken.
 Esc ends the search; any other key ends it and then does what it does, so Enter
-opens the file that was found. The Alt keys go to the search even when there is
+opens the file that was found, also when there is text on the command line. The Alt keys go to the search even when there is
 text on the command line, as in Far. Cyrillic and other letters work in a
 UTF-8 locale and in an 8-bit one alike. A terminal that sends Alt as an Esc in
 front of the key sends Alt with a digit as Esc and the digit, which is a
 function key in M-Commander (Esc 1 is F1): there the digits go into the search
 without Alt, once it runs.
-The panels give these keys up: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? and the rest of
-the Alt keys with a character no longer run their actions there, and Alt-x is
-no longer the prefix of the extended commands. Most of the actions are in the
-menus, and Alt-F7, Alt-F8, Alt-F11 and Alt-F12 stay. A key that the
+While the panels have the focus, these keys go to the search instead of their
+actions: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? and the rest of the Alt keys with a
+character of the panels, Alt-x, the prefix of the extended commands, and the
+Alt keys of the command line (Alt-p and Alt-n, Alt-b and Alt-f, Alt-h and the
+others; in Far mode the history of the command line is on Ctrl-E, Ctrl-X and
+Alt-F8). Most of the actions are in the menus, which then do not show these
+keys, and Alt-F7, Alt-F8, Alt-F11 and Alt-F12 stay. Alt-{, Alt-} and Alt-\`,
+which switch the screens, keep their actions, and so does any key of the
+**[dialog]**
+section of the keymap. A key that the
 **mc.keymap**
-of the user binds again keeps its action, as a macro does in Far, and so does a
-key that the plugin of a plugin panel answers to. With the check box off, Alt
-with a character keeps the actions of M-Commander and does not start a search.
+of the user binds to another action than the keymap of M-Commander does keeps
+that action, as a macro does in Far, in the
+**[filemanager]**,
+**[panel]**
+and
+**[input]**
+sections; a keymap of the user that repeats the keymap of M-Commander, as a
+copy of it does, keeps none. So does a key that the plugin of a plugin panel
+answers to. The keymaps themselves and the Key Bindings dialog are not changed
+by the option. With the check box off, Alt with a character keeps the actions
+of M-Commander and does not start a search.
 
 **Ctrl-G, Alt-X g**
 : applies a command to the files: it asks for a command and runs it for every

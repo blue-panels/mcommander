@@ -117,6 +117,9 @@ typedef struct global_keymap_ini_t
 
 /*** file scope variables ************************************************************************/
 
+/* Far mode: the Alt keys with a character that keep their action over the fast find of Far */
+static GHashTable *far_fast_find_kept = NULL;
+
 /* midnight */
 static const global_keymap_ini_t default_filemanager_keymap[] = {
     { "ChangePanel", "tab; ctrl-i" },
@@ -1011,55 +1014,6 @@ create_default_keymap (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Take the keys of the fast find of Far out of a section of the keymap: in Far no Alt key with a
-   character runs a command in the panels, they all type into the fast find */
-
-static void
-remove_far_fast_find_keys (mc_config_t *keymap, const char *section)
-{
-    gchar **actions, **action;
-
-    actions = mc_config_get_keys (keymap, section, NULL);
-
-    for (action = actions; *action != NULL; action++)
-    {
-        gchar **values, **value;
-        GString *kept;
-        gboolean removed = FALSE;
-
-        values = mc_config_get_string_list (keymap, section, *action, NULL);
-        if (values == NULL)
-            continue;
-
-        kept = g_string_new (NULL);
-        for (value = values; *value != NULL; value++)
-        {
-            const char *name = g_strstrip (*value);
-
-            if (*name == '\0')
-                continue;
-            if (keymap_far_fast_find_key (tty_keyname_to_keycode (name, NULL)))
-            {
-                removed = TRUE;
-                continue;
-            }
-            if (kept->len != 0)
-                g_string_append (kept, "; ");
-            g_string_append (kept, name);
-        }
-
-        if (removed)
-            mc_config_set_string_raw (keymap, section, *action, kept->str);
-
-        g_string_free (kept, TRUE);
-        g_strfreev (values);
-    }
-
-    g_strfreev (actions);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 /* Put the keys of Far mode over the keymap; does nothing while the mode is off */
 
 static void
@@ -1080,14 +1034,6 @@ apply_far_mode_keymap (mc_config_t *keymap)
     create_default_keymap_section (keymap, KEYMAP_SECTION_EDITOR, far_editor_keymap);
 #endif
     create_default_keymap_section (keymap, KEYMAP_SECTION_VIEWER, far_viewer_keymap);
-
-    /* The fast find takes the Alt keys with a character from the panels here, under the keymaps of
-       the user: a key that the user binds again keeps its action, as a macro of Far does */
-    if (keymap_far_fast_find)
-    {
-        remove_far_fast_find_keys (keymap, KEYMAP_SECTION_FILEMANAGER);
-        remove_far_fast_find_keys (keymap, KEYMAP_SECTION_PANEL);
-    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1219,6 +1165,42 @@ load_setup_init_config_from_file (mc_config_t **config, const char *fname, gbool
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The keymap without the keymaps of the user: the default keymap, the global keymaps over it
+   when @load_from_file, and Far mode over them */
+
+static mc_config_t *
+load_setup_get_keymap_base_config (gboolean load_from_file)
+{
+    mc_config_t *keymap_config;
+
+    // 0) Create default keymap
+    keymap_config = create_default_keymap ();
+
+    if (load_from_file)
+    {
+        char *fname;
+
+        // load and merge global keymaps
+
+        // 1) /usr/share/mcommander (mc_global.share_data_dir)
+        fname = g_build_filename (mc_global.share_data_dir, GLOBAL_KEYMAP_FILE, (char *) NULL);
+        load_setup_init_config_from_file (&keymap_config, fname, TRUE);
+        g_free (fname);
+
+        // 2) /etc/mcommander (mc_global.sysconfig_dir)
+        fname = g_build_filename (mc_global.sysconfig_dir, GLOBAL_KEYMAP_FILE, (char *) NULL);
+        load_setup_init_config_from_file (&keymap_config, fname, TRUE);
+        g_free (fname);
+    }
+
+    // Far mode goes over the global keymaps, which carry every key of the default keymap
+    apply_far_mode_keymap (keymap_config);
+
+    return keymap_config;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mc_config_t *
 load_setup_get_keymap_profile_config (gboolean load_from_file)
 {
@@ -1229,27 +1211,14 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
     char *share_keymap, *sysconfig_keymap;
     char *fname, *fname2;
 
-    // 0) Create default keymap
-    keymap_config = create_default_keymap ();
+    // 0) to 2): the default keymap, the global keymaps and Far mode over them
+    keymap_config = load_setup_get_keymap_base_config (load_from_file);
     if (!load_from_file)
-    {
-        apply_far_mode_keymap (keymap_config);
         return keymap_config;
-    }
 
-    // load and merge global keymaps
-
-    // 1) /usr/share/mcommander (mc_global.share_data_dir)
     share_keymap = g_build_filename (mc_global.share_data_dir, GLOBAL_KEYMAP_FILE, (char *) NULL);
-    load_setup_init_config_from_file (&keymap_config, share_keymap, TRUE);
-
-    // 2) /etc/mcommander (mc_global.sysconfig_dir)
     sysconfig_keymap =
         g_build_filename (mc_global.sysconfig_dir, GLOBAL_KEYMAP_FILE, (char *) NULL);
-    load_setup_init_config_from_file (&keymap_config, sysconfig_keymap, TRUE);
-
-    // Far mode goes over the global keymaps, which carry every key of the default keymap
-    apply_far_mode_keymap (keymap_config);
 
     // then load and merge one of user-defined keymap
 
@@ -1297,6 +1266,46 @@ done:
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* The Alt keys of the fast find of Far in @section of @keymap, each with the name of its action */
+
+static GHashTable *
+far_fast_find_bindings (mc_config_t *keymap, const char *section)
+{
+    GHashTable *keys;
+    gchar **actions, **action;
+
+    keys = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
+    actions = mc_config_get_keys (keymap, section, NULL);
+
+    for (action = actions; *action != NULL; action++)
+    {
+        gchar **values, **value;
+
+        values = mc_config_get_string_list (keymap, section, *action, NULL);
+        if (values == NULL)
+            continue;
+
+        for (value = values; *value != NULL; value++)
+        {
+            const char *name = g_strstrip (*value);
+            int key;
+
+            if (*name == '\0')
+                continue;
+            key = tty_keyname_to_keycode (name, NULL);
+            if (keymap_far_fast_find_key (key))
+                g_hash_table_insert (keys, GINT_TO_POINTER (key), g_strdup (*action));
+        }
+
+        g_strfreev (values);
+    }
+
+    g_strfreev (actions);
+    return keys;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -1330,6 +1339,84 @@ keymap_far_fast_find_key (int key)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * Find the Alt keys with a character that keep their action over the fast find of Far, from the
+ * whole keymap @keymap and the keymap without the keymaps of the user @base: every one of the
+ * dialogs (the screens are switched with them), and every one of the file manager, the panels and
+ * the edit lines that the user binds to another action than @base does. A keymap of the user that
+ * repeats @base, as a copy of the global keymap does, keeps none.
+ */
+
+void
+keymap_far_fast_find_init (mc_config_t *base, mc_config_t *keymap)
+{
+    static const char *const sections[] = {
+        KEYMAP_SECTION_FILEMANAGER,
+        KEYMAP_SECTION_PANEL,
+        KEYMAP_SECTION_INPUT,
+    };
+    GHashTable *keys;
+    GHashTableIter iter;
+    gpointer key, action;
+    size_t i;
+
+    if (far_fast_find_kept != NULL)
+        g_hash_table_destroy (far_fast_find_kept);
+    far_fast_find_kept = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+    keys = far_fast_find_bindings (keymap, KEYMAP_SECTION_DIALOG);
+    g_hash_table_iter_init (&iter, keys);
+    while (g_hash_table_iter_next (&iter, &key, NULL))
+        g_hash_table_add (far_fast_find_kept, key);
+    g_hash_table_destroy (keys);
+
+    for (i = 0; i < G_N_ELEMENTS (sections); i++)
+    {
+        GHashTable *base_keys;
+
+        base_keys = far_fast_find_bindings (base, sections[i]);
+        keys = far_fast_find_bindings (keymap, sections[i]);
+
+        g_hash_table_iter_init (&iter, keys);
+        while (g_hash_table_iter_next (&iter, &key, &action))
+        {
+            const char *base_action = g_hash_table_lookup (base_keys, key);
+
+            if (base_action == NULL || strcmp (base_action, (const char *) action) != 0)
+                g_hash_table_add (far_fast_find_kept, key);
+        }
+
+        g_hash_table_destroy (keys);
+        g_hash_table_destroy (base_keys);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Does @key, an Alt key of the fast find of Far, keep its action instead of starting the search?
+ */
+
+gboolean
+keymap_far_fast_find_kept (int key)
+{
+    return far_fast_find_kept != NULL
+        && g_hash_table_contains (far_fast_find_kept, GINT_TO_POINTER (key));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Does the fast find of Far take @key from the panels: Far mode and the fast find are on, @key is
+ * Alt with a character and it does not keep its action?
+ */
+
+gboolean
+keymap_far_fast_find_takes (int key)
+{
+    return keymap_far_mode && keymap_far_fast_find && keymap_far_fast_find_key (key)
+        && !keymap_far_fast_find_kept (key);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 void
 keymap_load (gboolean load_from_file)
@@ -1344,6 +1431,12 @@ keymap_load (gboolean load_from_file)
 
     if (mc_global_keymap != NULL)
     {
+        mc_config_t *base;
+
+        base = load_setup_get_keymap_base_config (load_from_file);
+        keymap_far_fast_find_init (base, mc_global_keymap);
+        mc_config_deinit (base);
+
 #define LOAD_KEYMAP(s, km)                                                                         \
     km##_keymap = g_array_new (TRUE, FALSE, sizeof (global_keymap_t));                             \
     load_keymap_from_section (KEYMAP_SECTION_##s, km##_keymap, mc_global_keymap)
@@ -1416,6 +1509,12 @@ keymap_load (gboolean load_from_file)
 void
 keymap_free (void)
 {
+    if (far_fast_find_kept != NULL)
+    {
+        g_hash_table_destroy (far_fast_find_kept);
+        far_fast_find_kept = NULL;
+    }
+
 #define FREE_KEYMAP(km)                                                                            \
     if (km##_keymap != NULL)                                                                       \
         g_array_free (km##_keymap, TRUE);                                                          \
