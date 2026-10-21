@@ -3997,57 +3997,35 @@ search_previous (WPanel *panel)
  * The bytes that Alt (or Alt-Shift) with @key types into the fast find of Far mode, in the charset
  * of the terminal; 0 when there are none. A terminal that sends keys the old way sends the byte
  * after an Esc, and the rest of a UTF-8 character after it as plain keys, which the search takes
- * as typed. A kitty terminal names the key of the base layout instead, and the character of the
- * layout that was typed with is in its event.
+ * as typed. A kitty terminal names the key of the base layout instead, and the text that was
+ * typed with the layout is in its event; a key of the keypad has no text there, but its key code
+ * is the character.
  */
 
 static int
 panel_far_fast_find_text (int key, char *text, size_t size)
 {
     tty_key_event_t ev;
-    gunichar c;
-    char utf8[6];
-    gsize len;
+    int c;
 
-    if (!tty_key_event (key, &ev) || ev.final != 'u')
+    if (tty_key_event (key, &ev))
     {
-        text[0] = (char) (key & 0xFF);
-        return 1;
+        const size_t len = tty_key_event_text (&ev, text, size);
+
+        if (len != 0)
+            return (int) len;
     }
 
-    if (ev.text_len > 0)
-        c = ev.text[0];
-    else if ((ev.mods & TTY_KITTY_MOD_SHIFT) != 0 && ev.shifted != 0)
-        c = ev.shifted;
-    else
-        c = ev.key;
-
-    // the functional keys of kitty are in the private use area
-    if (c <= ' ' || c == 0x7F || (c >= 0xE000 && c <= 0xF8FF) || !g_unichar_validate (c))
+    c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+    if (c <= ' ' || c == 0x7F || c > 0xFF || size == 0)
         return 0;
 
-    len = (gsize) g_unichar_to_utf8 (c, utf8);
-    if (mc_global.utf8_display)
-    {
-        if (len > size)
-            return 0;
-        memcpy (text, utf8, len);
-    }
-    else
-    {
-        char *bytes;
+    // Alt-Shift with a letter may come as the key of the small letter with Shift
+    if ((key & KEY_M_SHIFT) != 0 && c >= 'a' && c <= 'z')
+        c = c - 'a' + 'A';
 
-        bytes = g_locale_from_utf8 (utf8, (gssize) len, NULL, &len, NULL);
-        if (bytes == NULL || len == 0 || len > size)
-        {
-            g_free (bytes);
-            return 0;
-        }
-        memcpy (text, bytes, len);
-        g_free (bytes);
-    }
-
-    return (int) len;
+    text[0] = (char) c;
+    return 1;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -4061,7 +4039,7 @@ panel_far_fast_find_text (int key, char *text, size_t size)
 static gboolean
 panel_far_fast_find (WPanel *panel, int key)
 {
-    char text[MB_LEN_MAX];
+    char text[64];
     int len, i;
 
     if (!keymap_far_mode || !keymap_far_fast_find || !keymap_far_fast_find_key (key))
