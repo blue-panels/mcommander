@@ -228,6 +228,7 @@ open it.
 | `02-utf8`   | Alt with Cyrillic letters, as the Esc and the bytes of UTF-8     |
 | `03-koi8r`  | the same names in KOI8-R, run under `-l ru_RU.KOI8-R`            |
 | `04-cp866`  | the same names in CP866, run under `-l ru_RU.CP866`              |
+| `05-plugin` | a plugin panel that turns the key down: the Git panel, its coole hotkey on Alt-q and no coole, so the key goes on to the fast find |
 
 `cases/far/config/ini` turns Far mode and its fast find on. A name in KOI8-R
 is only found by the bytes a KOI8-R terminal sends, so each of the Cyrillic
