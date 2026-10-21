@@ -1846,7 +1846,10 @@ mcterm_overlay_handle_key (Widget *w, int parm, mcterm_overlay_command_cb_t exec
 
         if (mcterm_overlay_panel_focused (focused))
         {
-            if (parm == '\n' && command_prompt && !input_is_empty (cmdline))
+            // Enter in the fast find of Far mode is the panel's: it opens the file found
+            if (parm == '\n' && command_prompt && !input_is_empty (cmdline)
+                && !(get_current_type () == view_listing
+                     && panel_far_fast_find_running (current_panel)))
                 return execute_cmdline_enter (data);
 
             cmd = widget_lookup_key (w, parm);

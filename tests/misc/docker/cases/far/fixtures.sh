@@ -34,6 +34,7 @@ cases.tsv	key Escape,alt ch,F3	text: this is cherry	Alt-c is no longer quick cd:
 cases.tsv	key Escape,alt c	no text: cd:	and the quick cd line does not open	local
 cases.tsv	key Escape,alt de,Enter	text: inside-delta.txt	Enter ends the search and enters the directory found	local
 cases.tsv	key Escape,type echo,alt al,F3	text: this is alpha	with text on the command line Alt still goes to the fast find	local
+cases.tsv	key Escape,type echo,alt de,Enter	text: inside-delta.txt	Enter enters the directory found and does not run the command line	local
 cases.tsv	key Escape,alt al,key Escape,alt be,F3	text: this is beta	Esc ends the search and the next Alt starts a new one	local
 CASES
 
