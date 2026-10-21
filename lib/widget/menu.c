@@ -60,6 +60,7 @@ struct menu_entry_t
     hotkey_t text;
     long command;
     char *shortcut;
+    gboolean own_shortcut;  // set by menu_entry_set_shortcut (), not taken from the keymap
 };
 
 struct menu_t
@@ -923,6 +924,7 @@ menu_entry_new (const char *name, long command)
     entry->text = hotkey_new (name);
     entry->command = command;
     entry->shortcut = NULL;
+    entry->own_shortcut = FALSE;
 
     return entry;
 }
@@ -936,6 +938,7 @@ menu_entry_set_shortcut (menu_entry_t *entry, const char *shortcut)
     {
         g_free (entry->shortcut);
         entry->shortcut = g_strdup (shortcut);
+        entry->own_shortcut = TRUE;
     }
 }
 
@@ -1090,6 +1093,46 @@ menubar_arrange (WMenuBar *menubar)
         menu->start_x = start_x;
         start_x += len + gap;
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Take the shortcuts of the entries from the keymap again, as after a change of the key bindings:
+ * menu_arrange () fills a missing one only, so an entry would keep showing a key that now does
+ * another thing, and would not show a key bound to it later. An entry given its own shortcut by
+ * menu_entry_set_shortcut () keeps it.
+ */
+
+void
+menubar_update_shortcuts (WMenuBar *menubar)
+{
+    Widget *owner;
+    GList *i;
+
+    owner = WIDGET (WIDGET (menubar)->owner);
+    if (owner == NULL)
+        return;
+
+    for (i = menubar->menu; i != NULL; i = g_list_next (i))
+    {
+        menu_t *menu = MENU (i->data);
+        GList *e;
+
+        for (e = menu->entries; e != NULL; e = g_list_next (e))
+        {
+            menu_entry_t *entry = MENUENTRY (e->data);
+
+            if (entry != NULL && !entry->own_shortcut)
+            {
+                g_free (entry->shortcut);
+                entry->shortcut = NULL;
+            }
+        }
+
+        menu_arrange (menu, DIALOG (owner)->get_shortcut);
+    }
+
+    menubar_arrange (menubar);
 }
 
 /* --------------------------------------------------------------------------------------------- */
