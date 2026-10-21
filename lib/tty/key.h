@@ -68,6 +68,8 @@
 
 /* The most code points of the text of a key event; a longer text is not kept */
 #define TTY_KITTY_TEXT_MAX 512
+/* The most bytes that text takes in the charset of the terminal */
+#define TTY_KITTY_TEXT_BYTES (TTY_KITTY_TEXT_MAX * 6)
 
 /*** enums ***************************************************************************************/
 

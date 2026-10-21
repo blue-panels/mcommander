@@ -605,7 +605,7 @@ static int kitty_event_code;
 static guint kitty_flags_wanted = 0;
 static guint kitty_flags_sent = 0;
 /* The rest of the text of the last kitty key, given as single bytes */
-static unsigned char kitty_text[TTY_KITTY_TEXT_MAX * 6];
+static unsigned char kitty_text[TTY_KITTY_TEXT_BYTES];
 static size_t kitty_text_len = 0;
 static size_t kitty_text_pos = 0;
 /* How many more times the last key comes: a Win32 input record with a repeat count */
@@ -4077,9 +4077,10 @@ tty_key_event_take (int key, tty_key_event_t *ev)
 /**
  * The text that the key of @ev types, in the charset of the terminal, into @buf of @size bytes:
  * the whole text the terminal sent with it, else the character of the key (its shifted form with
- * Shift). The modifiers do not count, so Alt with a letter gives the letter. Returns the length;
- * 0 for a key that types nothing (a functional key, a control character) or a text that does
- * not fit.
+ * Shift; the capital of a letter when the terminal does not report the alternate keys). The
+ * modifiers do not count, so Alt with a letter gives the letter. Returns the length; 0 for a key
+ * that types nothing (a functional key, a control character) or a text that does not fit: a
+ * buffer of TTY_KITTY_TEXT_BYTES takes any text.
  */
 
 size_t
@@ -4093,10 +4094,15 @@ tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
     if (ev->text_len > 0)
         return kitty_codepoints_to_bytes (ev->text, ev->text_len, buf, size);
 
-    if ((ev->mods & KITTY_MOD_SHIFT) != 0 && ev->shifted != 0)
-        c = ev->shifted;
-    else
-        c = ev->key;
+    c = ev->key;
+    if ((ev->mods & KITTY_MOD_SHIFT) != 0)
+    {
+        if (ev->shifted != 0)
+            c = ev->shifted;
+        else if (g_unichar_islower (c))
+            // without the alternate keys (flag 4) the terminal does not say what Shift types
+            c = g_unichar_toupper (c);
+    }
 
     // the functional keys of kitty are in the private use area
     if (c >= 0xE000 && c <= 0xF8FF)
