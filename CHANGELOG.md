@@ -51,7 +51,7 @@ The releases of this fork, newest first.
   not take a character that matches nothing, goes on without Alt, and ends on
   Esc or on any other key, which then does what it does. The panels give the
   Alt keys with a character up to it, unless the keymap of the user binds them
-  again. The sandbox has the cases of it in UTF-8, KOI8-R and CP866: a case
+  to another action; a command line with text keeps its own Alt keys. The sandbox has the cases of it in UTF-8, KOI8-R and CP866: a case
   directory may name its charset, and the alt step types with Alt.
 
 ## 6.1.0 - 2026-09-26
