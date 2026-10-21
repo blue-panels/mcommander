@@ -480,32 +480,43 @@ wyszukiwaniu. Gdy wyszukiwanie trwa, znaki można wpisywać z Alt lub bez niego,
 a znak, do którego nie pasuje żadna nazwa, nie jest przyjmowany. Esc kończy
 wyszukiwanie; każdy inny klawisz kończy je, a potem robi to, co zwykle, więc
 Enter otwiera znaleziony plik, a tekst wiersza poleceń zostaje na miejscu.
-Klawisze Alt trafiają do wyszukiwania także
-wtedy, gdy w wierszu poleceń jest tekst, jak w Far. Cyrylica i inne litery
+Dopóki w wierszu poleceń jest tekst i nie trwa wyszukiwanie, jego własne
+klawisze Alt (Alt\-b i Alt\-f, Alt\-d i Alt\-w, Alt\-p, Alt\-n i Alt\-h) nadal go
+edytują; pozostałe klawisze Alt trafiają do wyszukiwania. Cyrylica i inne litery
 działają tak samo w locale UTF\-8 i w 8\-bitowym. Terminal, który wysyła Alt
 jako Esc przed klawiszem, wysyła Alt z cyfrą jako Esc i cyfrę, a to w
 M\-Commanderze klawisz funkcyjny (Esc 1 to F1): tam cyfry wpisuje się do
 trwającego już wyszukiwania bez Alt.
 Gdy panele mają fokus, te klawisze trafiają do wyszukiwania zamiast do swoich
 działań: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? i pozostałe klawisze Alt ze znakiem
-paneli, Alt\-x, przedrostek poleceń rozszerzonych, oraz klawisze Alt wiersza
-poleceń (Alt\-p i Alt\-n, Alt\-b i Alt\-f, Alt\-h i inne; w trybie Far historia
+paneli, Alt\-x, przedrostek poleceń rozszerzonych, oraz klawisze Alt pustego wiersza
+poleceń (Alt\-p i Alt\-n, Alt\-h; w trybie Far historia
 wiersza poleceń jest pod Ctrl\-E, Ctrl\-X i Alt\-F8). Większość tych działań jest
 w menu, które wtedy nie pokazuje tych klawiszy, a Alt\-F7, Alt\-F8, Alt\-F11 i
 Alt\-F12 zostają. Alt\-{, Alt\-} i Alt\-`, które przełączają ekrany, zachowują
-swoje działania, podobnie jak każdy klawisz sekcji
+swoje działania, także w trakcie wyszukiwania, podobnie jak każdy klawisz sekcji
 \fB[dialog]\fP
-mapy klawiszy. Klawisz, który plik
-\fBmc.keymap\fP
-użytkownika przypisuje innemu działaniu niż mapa klawiszy M\-Commandera,
-zachowuje to działanie, jak makro w Far, w sekcjach
+mapy klawiszy. Klawisz, który mapa użytkownika przypisuje innemu działaniu
+niż mapa bez niej, zachowuje to działanie, jak makro w Far, w sekcjach
 \fB[filemanager]\fP,
 \fB[panel]\fP
 i
-\fB[input]\fP;
-mapa użytkownika, która powtarza mapę M\-Commandera, jak jej kopia, nie
-zachowuje żadnego. Podobnie klawisz, na który odpowiada wtyczka panelu
-wtyczki. Opcja nie zmienia map klawiszy ani okna Key Bindings. Gdy opcja jest
+\fB[input]\fP\&.
+Klawisze są wyszukiwane tak, jak wyszukuje je M\-Commander, wygrywa pierwsze
+przypisanie klawisza, a działania porównuje się bez względu na wielkość liter
+ich nazw, więc mapa użytkownika, która powtarza mapę M\-Commandera, jak jej
+kopia, nie zachowuje żadnego. Mapa pakietu wybrana przez
+\fB\-\-keymap\fP,
+\fBMC_KEYMAP\fP
+lub
+\fBkeymap=\fP
+z
+\fB{{pkgdatadir}}\fP
+nie jest własną mapą użytkownika. Swoje działanie zachowuje też klawisz, na
+który odpowiada wtyczka panelu wtyczki: wtyczka dostaje polecenie, które panele
+przypisują temu klawiszowi, jak bez opcji, albo sam klawisz. Opcja nie zmienia
+map klawiszy ani okna Key Bindings, a menu znów pokazują klawisze, gdy się ją
+przełącza. Gdy opcja jest
 wyłączona, Alt ze znakiem zachowuje działania M\-Commandera i nie zaczyna
 wyszukiwania.
 

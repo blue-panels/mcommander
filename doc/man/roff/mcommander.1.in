@@ -498,8 +498,9 @@ are wildcards, as in the quick search. Once the search runs, the characters go
 on with Alt or without it, and a character that no name matches is not taken.
 Esc ends the search; any other key ends it and then does what it does, so Enter
 opens the file that was found; text on the command line stays
-there. The Alt keys go to the search even when there is
-text on the command line, as in Far. Cyrillic and other letters work in a
+there. While the command line has text, its own Alt keys (Alt\-b and Alt\-f,
+Alt\-d and Alt\-w, Alt\-p, Alt\-n and Alt\-h) keep editing it, as long as no search
+runs; the other Alt keys go to the search. Cyrillic and other letters work in a
 UTF\-8 locale and in an 8\-bit one alike. A terminal that sends Alt as an Esc in
 front of the key sends Alt with a digit as Esc and the digit, which is a
 function key in M\-Commander (Esc 1 is F1): there the digits go into the search
@@ -507,24 +508,34 @@ without Alt, once it runs.
 While the panels have the focus, these keys go to the search instead of their
 actions: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? and the rest of the Alt keys with a
 character of the panels, Alt\-x, the prefix of the extended commands, and the
-Alt keys of the command line (Alt\-p and Alt\-n, Alt\-b and Alt\-f, Alt\-h and the
-others; in Far mode the history of the command line is on Ctrl\-E, Ctrl\-X and
-Alt\-F8). Most of the actions are in the menus, which then do not show these
-keys, and Alt\-F7, Alt\-F8, Alt\-F11 and Alt\-F12 stay. Alt\-{, Alt\-} and Alt\-`,
-which switch the screens, keep their actions, and so does any key of the
+Alt keys of the command line when it is empty (Alt\-p and Alt\-n, Alt\-h; in Far
+mode the history of the command line is on Ctrl\-E, Ctrl\-X and Alt\-F8). Most of
+the actions are in the menus, which then do not show these keys, and Alt\-F7,
+Alt\-F8, Alt\-F11 and Alt\-F12 stay. Alt\-{, Alt\-} and Alt\-`, which switch the
+screens, keep their actions, in a search too, and so does any key of the
 \fB[dialog]\fP
-section of the keymap. A key that the
-\fBmc.keymap\fP
-of the user binds to another action than the keymap of M\-Commander does keeps
-that action, as a macro does in Far, in the
+section of the keymap. A key that the keymap of the user binds to another
+action than the keymap without it does keeps that action, as a macro does in
+Far, in the
 \fB[filemanager]\fP,
 \fB[panel]\fP
 and
 \fB[input]\fP
-sections; a keymap of the user that repeats the keymap of M\-Commander, as a
-copy of it does, keeps none. So does a key that the plugin of a plugin panel
-answers to. The keymaps themselves and the Key Bindings dialog are not changed
-by the option. With the check box off, Alt with a character keeps the actions
+sections. The keys are looked up as M\-Commander looks them up, the first
+binding of a key winning, and the actions are compared whatever the case of
+their names, so a keymap of the user that repeats the keymap of M\-Commander, as
+a copy of it does, keeps none. A keymap of the package that is chosen with
+\fB\-\-keymap\fP,
+\fBMC_KEYMAP\fP
+or
+\fBkeymap=\fP
+from
+\fB{{pkgdatadir}}\fP
+is not the user's own. A key that the plugin of a plugin panel answers to also
+keeps its action: the plugin gets the command that the panels bind the key to,
+as without the option, or the key itself. The keymaps themselves and the Key
+Bindings dialog are not changed by the option, and the menus show the keys anew
+when it is switched. With the check box off, Alt with a character keeps the actions
 of M\-Commander and does not start a search.
 
 .TP
