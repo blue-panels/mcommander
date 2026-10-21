@@ -458,6 +458,18 @@ START_TEST (test_kitty_event_text)
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
     ck_assert_int_eq (text[0], 'A');
 
+    /* with Shift and no alternate keys reported, the capital of the letter */
+    ck_assert (seq_event (ESC_STR "[97;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
+    ck_assert_int_eq (text[0], 'A');
+    ck_assert (seq_event (ESC_STR "[1092;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 2);
+    ck_assert (memcmp (text, "\xD0\xA4", 2) == 0);
+    /* a key that is not a letter stays as it is */
+    ck_assert (seq_event (ESC_STR "[49;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
+    ck_assert_int_eq (text[0], '1');
+
     /* a functional key types nothing: the plus of the keypad, Enter, a release */
     ck_assert (seq_event (ESC_STR "[57413;3u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
@@ -465,6 +477,28 @@ START_TEST (test_kitty_event_text)
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
     ck_assert (seq_event (ESC_STR "[97;3:3u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_event_long_text)
+{
+    tty_key_event_t ev;
+    char text[TTY_KITTY_TEXT_BYTES];
+    GString *seq;
+    int i;
+
+    /* a text longer than any small buffer comes whole, not as the letter of the key */
+    seq = g_string_new (ESC_STR "[97;3;98");
+    for (i = 1; i < 65; i++)
+        g_string_append (seq, ":98");
+    g_string_append_c (seq, 'u');
+    ck_assert (seq_event (seq->str, &ev));
+    g_string_free (seq, TRUE);
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 65);
+    for (i = 0; i < 65; i++)
+        ck_assert_int_eq (text[i], 'b');
 }
 END_TEST
 
@@ -986,6 +1020,7 @@ main (void)
     tcase_add_test (tc_core, test_kitty_release_dropped_before_key);
     tcase_add_test (tc_core, test_kitty_text_bytes);
     tcase_add_test (tc_core, test_kitty_event_text);
+    tcase_add_test (tc_core, test_kitty_event_long_text);
     tcase_add_test (tc_core, test_kitty_flags_base);
     tcase_add_test (tc_core, test_kitty_held_modifiers);
     tcase_add_test (tc_core, test_getch_skips_modifiers);
