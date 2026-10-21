@@ -4124,8 +4124,9 @@ panel_far_fast_find (WPanel *panel, int key)
             ? panel_plugin_command_key (panel, command, key)
             : panel_plugin_key (panel, key, TRUE);
 
-        // the plugin answered: the rest of the character is not typed anywhere either
-        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+        // the plugin answered, as panel_key () takes it: the rest of the character is not typed
+        // anywhere either
+        if (r == MC_PPR_OK || (r == MC_PPR_SKIPPED && command != CK_IgnoreKey))
         {
             panel->quick_search.far_skip = panel_far_fast_find_rest (key);
             return TRUE;
