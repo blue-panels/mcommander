@@ -6220,6 +6220,19 @@ panel_dir_list_callback (dir_list_cb_state_t state, void *data)
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
+/**
+ * Is the fast find of Far mode running in @panel? Enter then ends it and opens the file found,
+ * whatever the command line holds.
+ */
+
+gboolean
+panel_far_fast_find_running (const WPanel *panel)
+{
+    return panel != NULL && panel->quick_search.active && panel->quick_search.far_find;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 file_entry_t *
 panel_current_entry (const WPanel *panel)
 {
