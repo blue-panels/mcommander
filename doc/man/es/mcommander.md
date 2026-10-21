@@ -498,21 +498,36 @@ mayúsculas de minúsculas; \* y ? son comodines, como en la búsqueda rápida.
 Mientras la búsqueda sigue, los caracteres se escriben con Alt o sin él, y un
 carácter con el que no coincide ningún nombre no se acepta. Esc termina la
 búsqueda; cualquier otra tecla la termina y después hace lo suyo, de modo que
-Enter abre el archivo encontrado. Las teclas Alt van a la búsqueda aunque haya
+Enter abre el archivo encontrado y el texto de la línea de órdenes se queda
+en ella. Las teclas Alt van a la búsqueda aunque haya
 texto en la línea de órdenes, como en Far. El cirílico y otras letras
 funcionan igual con una configuración regional UTF-8 que con una de 8 bits.
 Un terminal que envía Alt como un Esc delante de la tecla envía Alt con un
 dígito como Esc y el dígito, que en M-Commander es una tecla de función (Esc 1
 es F1): allí los dígitos se escriben sin Alt en la búsqueda ya iniciada.
-Los paneles ceden estas teclas: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? y las demás
-teclas Alt con un carácter ya no ejecutan allí sus acciones, y Alt-x ya no es
-el prefijo de las órdenes extendidas. La mayoría de esas acciones están en los
-menús, y Alt-F7, Alt-F8, Alt-F11 y Alt-F12 se mantienen. Una tecla que el
+Mientras los paneles tienen el foco, estas teclas van a la búsqueda en lugar
+de a sus acciones: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? y las demás teclas Alt con
+un carácter de los paneles, Alt-x, el prefijo de las órdenes extendidas, y las
+teclas Alt de la línea de órdenes (Alt-p y Alt-n, Alt-b y Alt-f, Alt-h y las
+demás; en el modo Far el historial de la línea de órdenes está en Ctrl-E,
+Ctrl-X y Alt-F8). La mayoría de esas acciones están en los menús, que entonces
+no muestran esas teclas, y Alt-F7, Alt-F8, Alt-F11 y Alt-F12 se mantienen.
+Alt-{, Alt-} y Alt-\`, que cambian de pantalla, conservan sus acciones, igual
+que cualquier tecla de la sección
+**[dialog]**
+del mapa de teclas. Una tecla que el
 **mc.keymap**
-del usuario vuelve a asignar conserva su acción, como una macro en Far, y lo
-mismo una tecla a la que responde el complemento de un panel de complemento.
-Con la opción desactivada, Alt con un carácter conserva las acciones de
-M-Commander y no inicia una búsqueda.
+del usuario asigna a otra acción que el mapa de teclas de M-Commander conserva
+esa acción, como una macro en Far, en las secciones
+**[filemanager]**,
+**[panel]**
+e
+**[input]**;
+un mapa del usuario que repite el de M-Commander, como una copia suya, no
+conserva ninguna. Lo mismo una tecla a la que responde el complemento de un
+panel de complemento. La opción no cambia los mapas de teclas ni el diálogo Key
+Bindings. Con la opción desactivada, Alt con un carácter conserva las acciones
+de M-Commander y no inicia una búsqueda.
 
 **Ctrl-G, Alt-X g**
 : aplican una orden a los archivos: piden una orden y la ejecutan para cada

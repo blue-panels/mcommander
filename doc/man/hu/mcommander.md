@@ -435,23 +435,39 @@ kis- és nagybetűktől függetlenül; a \* és a ? helyettesítő karakter, aho
 gyorskeresésben. Amíg a keresés tart, a karakterek Alt-tal és anélkül is
 gépelhetők, és az a karakter, amelyre egyetlen név sem illeszkedik, nem kerül
 be. Az Esc befejezi a keresést; minden más billentyű befejezi, majd végrehajtja
-a saját műveletét, így az Enter megnyitja a megtalált fájlt. Az Alt
+a saját műveletét, így az Enter megnyitja a megtalált fájlt, a parancssor
+szövege pedig
+megmarad. Az Alt
 billentyűk akkor is a keresésbe kerülnek, ha a parancssorban szöveg van,
 ahogy a Farban. A cirill és más betűk UTF-8 és 8 bites locale alatt egyaránt
 működnek. Az a terminál, amely az Altot a billentyű előtti Esc-ként küldi, az
 Altot egy számjeggyel Esc-ként és számjegyként küldi, ez pedig az
 M-Commanderben funkcióbillentyű (az Esc 1 az F1): ott a számjegyek Alt nélkül
 kerülnek a már futó keresésbe.
-A panelek átadják ezeket a billentyűket: az Alt-c, Alt-s, Alt-o, Alt-h,
-Alt-? és a többi karakteres Alt billentyű ott már nem futtatja a műveletét,
-és az Alt-x már nem a bővített parancsok előtagja. A műveletek többsége a
-menükben megvan, az Alt-F7, Alt-F8, Alt-F11 és Alt-F12 pedig megmarad. Az a
-billentyű, amelyet a felhasználó
+Amíg a paneleken van a fókusz, ezek a billentyűk a műveletük helyett a
+keresésbe kerülnek: a panelek Alt-c, Alt-s, Alt-o, Alt-h, Alt-? és többi
+karakteres Alt billentyűje, az Alt-x, a bővített parancsok előtagja, és a
+parancssor Alt billentyűi (Alt-p és Alt-n, Alt-b és Alt-f, Alt-h és a többi; Far
+módban a parancssor előzményei a Ctrl-E, Ctrl-X és Alt-F8 billentyűkön vannak).
+A műveletek többsége a menükben megvan, amelyek ilyenkor nem mutatják ezeket a
+billentyűket, az Alt-F7, Alt-F8, Alt-F11 és Alt-F12 pedig megmarad. Az Alt-{,
+Alt-} és Alt-\`, amelyek a képernyőket váltják, megtartják a műveletüket, ahogy
+a billentyűkiosztás
+**[dialog]**
+szakaszának bármely billentyűje is. Az a billentyű, amelyet a felhasználó
 **mc.keymap**
-fájlja újra hozzárendel, megtartja a műveletét, ahogy egy makró a Farban, és
-ugyanígy az is, amelyre egy bővítménypanel bővítménye válaszol. Ha az opció
-ki van kapcsolva, az Alt egy karakterrel megtartja az M-Commander műveleteit,
-és nem indít keresést.
+fájlja más műveletre köt, mint az M-Commander kiosztása, megtartja ezt a
+műveletet, ahogy egy makró a Farban, a
+**[filemanager]**,
+**[panel]**
+és
+**[input]**
+szakaszban; a felhasználó olyan kiosztása, amely megismétli az M-Commanderét,
+ahogy egy másolata, egyet sem tart meg. Ugyanígy az a billentyű is, amelyre egy
+bővítménypanel bővítménye válaszol. Az opció nem változtatja meg sem a
+kiosztásokat, sem a Key Bindings párbeszédablakot. Ha az opció ki van
+kapcsolva, az Alt egy karakterrel megtartja az M-Commander műveleteit, és nem
+indít keresést.
 
 **Ctrl-G, Alt-X g**
 : parancsot alkalmaz a fájlokra: bekér egy parancsot, és lefuttatja minden
