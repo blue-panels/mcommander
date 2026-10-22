@@ -70,6 +70,7 @@ struct menu_t
     size_t max_entry_len;   // cached max length of entry texts (text + shortcut)
     size_t max_hotkey_len;  // cached max length of shortcuts
     unsigned int current;   // pointer to current menu entry
+    unsigned int top;       // the first entry shown when the menu is taller than the screen
     char *help_node;
 };
 
@@ -122,17 +123,93 @@ menu_arrange (menu_t *menu, dlg_shortcut_str get_shortcut)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+menu_entry_selectable (const menu_t *menu, int idx)
+{
+    const menu_entry_t *entry = MENUENTRY (g_list_nth_data (menu->entries, idx));
+
+    return entry != NULL && entry->command != CK_IgnoreKey;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The entry that can be selected nearest to idx in the direction of step, else in the other one */
+static unsigned int
+menu_selectable_near (const menu_t *menu, int idx, int step)
+{
+    const int count = (int) g_list_length (menu->entries);
+    int i;
+
+    for (i = idx; i >= 0 && i < count; i += step)
+        if (menu_entry_selectable (menu, i))
+            return (unsigned int) i;
+
+    for (i = idx - step; i >= 0 && i < count; i -= step)
+        if (menu_entry_selectable (menu, i))
+            return (unsigned int) i;
+
+    return menu->current;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The entries of the dropped menu that fit between its frames on the screen */
+static unsigned int
+menubar_drop_lines (const WMenuBar *menubar, const menu_t *menu)
+{
+    const unsigned int count = g_list_length (menu->entries);
+    const int room = LINES - CONST_WIDGET (menubar)->rect.y - 3;
+
+    return MIN (count, (unsigned int) MAX (1, room));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Scroll the menu so that the current entry is in the view; whether it has moved */
+static gboolean
+menubar_fit_top (const WMenuBar *menubar, menu_t *menu)
+{
+    const unsigned int count = g_list_length (menu->entries);
+    const unsigned int lines = menubar_drop_lines (menubar, menu);
+    const unsigned int old_top = menu->top;
+
+    if (menu->current < menu->top)
+        menu->top = menu->current;
+    else if (menu->current >= menu->top + lines)
+        menu->top = menu->current - lines + 1;
+    menu->top = MIN (menu->top, count - lines);
+
+    return menu->top != old_top;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The column of the left frame of the dropped menu */
+static int
+menubar_drop_column (const WMenuBar *menubar, const menu_t *menu)
+{
+    const int cols = CONST_WIDGET (menubar)->rect.cols;
+    int column = menu->start_x - 1;
+
+    if (column + menu->max_entry_len + 4 > (gsize) cols)
+        column = cols - menu->max_entry_len - 4;
+
+    return column;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 menubar_paint_idx (const WMenuBar *menubar, unsigned int idx, int color)
 {
     const WRect *w = &CONST_WIDGET (menubar)->rect;
     const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
     const menu_entry_t *entry = MENUENTRY (g_list_nth_data (menu->entries, idx));
-    const int y = 2 + idx;
-    int x = menu->start_x;
+    const int y = 2 + (int) idx - (int) menu->top;
+    const int x = menubar_drop_column (menubar, menu) + 1;
 
-    if (x + menu->max_entry_len + 3 > (gsize) w->cols)
-        x = w->cols - menu->max_entry_len - 3;
+    if (idx < menu->top || idx >= menu->top + menubar_drop_lines (menubar, menu))
+        return;
 
     if (entry == NULL)
     {
@@ -184,23 +261,47 @@ static void
 menubar_draw_drop (const WMenuBar *menubar)
 {
     const WRect *w = &CONST_WIDGET (menubar)->rect;
-    const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
-    const unsigned int count = g_list_length (menu->entries);
-    int column = menu->start_x - 1;
+    menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+    const unsigned int lines = menubar_drop_lines (menubar, menu);
+    const int column = menubar_drop_column (menubar, menu);
+    WRect r = { w->y + 2, w->x + column + menu->max_entry_len + 3, MAX (1, lines), 1 };
     unsigned int i;
 
-    if (column + menu->max_entry_len + 4 > (gsize) w->cols)
-        column = w->cols - menu->max_entry_len - 4;
-
     if (mc_global.tty.shadows)
-        tty_draw_box_shadow (w->y + 1, w->x + column, count + 2, menu->max_entry_len + 4,
+        tty_draw_box_shadow (w->y + 1, w->x + column, lines + 2, menu->max_entry_len + 4,
                              CORE_SHADOW_COLOR);
 
     tty_setcolor (MENU_FRAME_COLOR);
-    tty_draw_box (w->y + 1, w->x + column, count + 2, menu->max_entry_len + 4, FALSE);
+    tty_draw_box (w->y + 1, w->x + column, lines + 2, menu->max_entry_len + 4, FALSE);
 
-    for (i = 0; i < count; i++)
-        menubar_paint_idx (menubar, i, i == menu->current ? MENU_SELECTED_COLOR : MENU_ENTRY_COLOR);
+    for (i = menu->top; i < menu->top + lines; i++)
+        if (i != menu->current)
+            menubar_paint_idx (menubar, i, MENU_ENTRY_COLOR);
+
+    // on the right frame; the current entry last, to leave the cursor on it
+    scrollbar_show (menubar->bar, &r, (long) g_list_length (menu->entries), (long) lines,
+                    (long) menu->top, MENU_FRAME_COLOR);
+    menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Make idx the current entry of the dropped menu, scrolled to it when it is out of the view */
+static void
+menubar_select_entry (const WMenuBar *menubar, unsigned int idx)
+{
+    menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+
+    if (idx == menu->current)
+        return;
+
+    menubar_paint_idx (menubar, menu->current, MENU_ENTRY_COLOR);
+    menu->current = idx;
+
+    if (menubar_fit_top (menubar, menu))
+        menubar_draw_drop (menubar);
+    else
+        menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -255,7 +356,10 @@ menubar_draw (const WMenuBar *menubar)
     }
 
     if (menubar->is_dropped)
+    {
+        menubar_fit_top (menubar, MENU (g_list_nth_data (menubar->menu, menubar->current)));
         menubar_draw_drop (menubar);
+    }
     else
         widget_gotoyx (menubar, 0,
                        MENU (g_list_nth_data (menubar->menu, menubar->current))->start_x);
@@ -317,6 +421,7 @@ menubar_finish (WMenuBar *menubar)
     Widget *w = WIDGET (menubar);
 
     menubar->is_dropped = FALSE;
+    menubar->bar->drag = -1;
     w->rect.lines = 1;
     widget_want_hotkey (w, FALSE);
     widget_set_options (w, WOP_SELECTABLE, FALSE);
@@ -372,20 +477,20 @@ menubar_execute (WMenuBar *menubar)
 static void
 menubar_down (WMenuBar *menubar)
 {
-    menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+    const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
     const unsigned int len = g_list_length (menu->entries);
-    menu_entry_t *entry;
+    unsigned int idx = menu->current;
 
-    menubar_paint_idx (menubar, menu->current, MENU_ENTRY_COLOR);
+    if (len == 0)
+        return;
 
     do
     {
-        menu->current = (menu->current + 1) % len;
-        entry = MENUENTRY (g_list_nth_data (menu->entries, menu->current));
+        idx = (idx + 1) % len;
     }
-    while ((entry == NULL) || (entry->command == CK_IgnoreKey));
+    while (!menu_entry_selectable (menu, idx) && idx != menu->current);
 
-    menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
+    menubar_select_entry (menubar, idx);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -393,23 +498,34 @@ menubar_down (WMenuBar *menubar)
 static void
 menubar_up (WMenuBar *menubar)
 {
-    menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+    const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
     const unsigned int len = g_list_length (menu->entries);
-    menu_entry_t *entry;
+    unsigned int idx = menu->current;
 
-    menubar_paint_idx (menubar, menu->current, MENU_ENTRY_COLOR);
+    if (len == 0)
+        return;
 
     do
     {
-        if (menu->current == 0)
-            menu->current = len - 1;
-        else
-            menu->current--;
-        entry = MENUENTRY (g_list_nth_data (menu->entries, menu->current));
+        idx = (idx == 0 ? len : idx) - 1;
     }
-    while ((entry == NULL) || (entry->command == CK_IgnoreKey));
+    while (!menu_entry_selectable (menu, idx) && idx != menu->current);
 
-    menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
+    menubar_select_entry (menubar, idx);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A page of the dropped menu up or down, as far as there are entries */
+static void
+menubar_page (WMenuBar *menubar, gboolean down)
+{
+    const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+    const int count = (int) g_list_length (menu->entries);
+    const int page = MAX (1, (int) menubar_drop_lines (menubar, menu) - 1);
+    const int idx = CLAMP ((int) menu->current + (down ? page : -page), 0, count - 1);
+
+    menubar_select_entry (menubar, menu_selectable_near (menu, idx, down ? 1 : -1));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -419,28 +535,9 @@ menubar_first (WMenuBar *menubar)
 {
     if (menubar->is_dropped)
     {
-        menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+        const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
 
-        if (menu->current == 0)
-            return;
-
-        menubar_paint_idx (menubar, menu->current, MENU_ENTRY_COLOR);
-
-        menu->current = 0;
-
-        while (TRUE)
-        {
-            menu_entry_t *entry;
-
-            entry = MENUENTRY (g_list_nth_data (menu->entries, menu->current));
-
-            if ((entry == NULL) || (entry->command == CK_IgnoreKey))
-                menu->current++;
-            else
-                break;
-        }
-
-        menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
+        menubar_select_entry (menubar, menu_selectable_near (menu, 0, 1));
     }
     else
     {
@@ -456,25 +553,10 @@ menubar_last (WMenuBar *menubar)
 {
     if (menubar->is_dropped)
     {
-        menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
-        const unsigned int len = g_list_length (menu->entries);
-        menu_entry_t *entry;
+        const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+        const int len = (int) g_list_length (menu->entries);
 
-        if (menu->current == len - 1)
-            return;
-
-        menubar_paint_idx (menubar, menu->current, MENU_ENTRY_COLOR);
-
-        menu->current = len;
-
-        do
-        {
-            menu->current--;
-            entry = MENUENTRY (g_list_nth_data (menu->entries, menu->current));
-        }
-        while ((entry == NULL) || (entry->command == CK_IgnoreKey));
-
-        menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
+        menubar_select_entry (menubar, menu_selectable_near (menu, len - 1, -1));
     }
     else
     {
@@ -581,6 +663,14 @@ menubar_execute_cmd (WMenuBar *menubar, long command)
         else
             menubar_drop (menubar, menubar->current);
         break;
+    case CK_PageUp:
+        if (menubar->is_dropped)
+            menubar_page (menubar, FALSE);
+        break;
+    case CK_PageDown:
+        if (menubar->is_dropped)
+            menubar_page (menubar, TRUE);
+        break;
     case CK_Home:
         menubar_first (menubar);
         break;
@@ -658,6 +748,32 @@ menubar_free_menu (WMenuBar *menubar)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The scrollbar has moved: the entries go with it, the current one kept among them when there
+   is one to select there */
+static void
+menubar_scrolled (WMenuBar *menubar)
+{
+    menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+    const unsigned int lines = menubar_drop_lines (menubar, menu);
+    unsigned int idx;
+
+    menu->top = (unsigned int) scrollbar_get_pos (menubar->bar);
+
+    if (menu->current < menu->top)
+        idx = menu_selectable_near (menu, (int) menu->top, 1);
+    else if (menu->current >= menu->top + lines)
+        idx = menu_selectable_near (menu, (int) (menu->top + lines - 1), -1);
+    else
+        idx = menu->current;
+
+    if (idx >= menu->top && idx < menu->top + lines)
+        menu->current = idx;
+
+    menubar_draw_drop (menubar);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static cb_ret_t
 menubar_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data)
 {
@@ -702,8 +818,16 @@ menubar_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *d
         menubar_refresh (menubar);
         return MSG_HANDLED;
 
+    case MSG_NOTIFY:
+        if (sender != WIDGET (menubar->bar) || !menubar->is_dropped)
+            return MSG_NOT_HANDLED;
+        menubar_scrolled (menubar);
+        return MSG_HANDLED;
+
     case MSG_DESTROY:
         menubar_free_menu (menubar);
+        widget_destroy (WIDGET (menubar->bar));
+        menubar->bar = NULL;
         return MSG_HANDLED;
 
     default:
@@ -736,7 +860,6 @@ menubar_get_menu_by_x_coord (const WMenuBar *menubar, int x)
 static gboolean
 menubar_mouse_on_menu (const WMenuBar *menubar, int y, int x)
 {
-    const WRect *w = &CONST_WIDGET (menubar)->rect;
     menu_t *menu;
     int left_x, right_x, bottom_y;
 
@@ -744,15 +867,10 @@ menubar_mouse_on_menu (const WMenuBar *menubar, int y, int x)
         return FALSE;
 
     menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
-    left_x = menu->start_x;
+    left_x = menubar_drop_column (menubar, menu) + 1;
     right_x = left_x + menu->max_entry_len + 2;
-    if (right_x > w->cols - 1)
-    {
-        left_x = w->cols - 1 - (menu->max_entry_len + 2);
-        right_x = w->cols - 1;
-    }
 
-    bottom_y = g_list_length (menu->entries) + 2;  // skip bar and top frame
+    bottom_y = menubar_drop_lines (menubar, menu) + 2;  // skip bar and top frame
 
     return (x >= left_x && x < right_x && y > 1 && y < bottom_y);
 }
@@ -770,7 +888,28 @@ menubar_mouse_on_menu_entry (const WMenuBar *menubar, int y, int x)
 
     menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
 
-    return (MENUENTRY (g_list_nth_data (menu->entries, y - 2)) != NULL);
+    return (MENUENTRY (g_list_nth_data (menu->entries, y - 2 + menu->top)) != NULL);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The mouse is on the scrollbar of the dropped menu, or drags its thumb wherever it goes */
+static gboolean
+menubar_mouse_on_bar (const WMenuBar *menubar, int y, int x)
+{
+    const menu_t *menu;
+
+    if (!menubar->is_dropped)
+        return FALSE;
+
+    if (menubar->bar->drag >= 0)
+        return TRUE;
+
+    menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+
+    return (scrollbar_needed (menubar->bar)
+            && x == menubar_drop_column (menubar, menu) + (int) menu->max_entry_len + 3 && y >= 2
+            && y < 2 + (int) menubar_drop_lines (menubar, menu));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -778,19 +917,11 @@ menubar_mouse_on_menu_entry (const WMenuBar *menubar, int y, int x)
 static void
 menubar_change_selected_item (WMenuBar *menubar, int y)
 {
-    menu_t *menu;
-    menu_entry_t *entry;
+    const menu_t *menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
+    const int idx = y - 2 + (int) menu->top;  // skip bar and top frame
 
-    y -= 2;  // skip bar and top frame
-    menu = MENU (g_list_nth_data (menubar->menu, menubar->current));
-    entry = MENUENTRY (g_list_nth_data (menu->entries, y));
-
-    if (entry != NULL && entry->command != CK_IgnoreKey)
-    {
-        menubar_paint_idx (menubar, menu->current, MENU_ENTRY_COLOR);
-        menu->current = y;
-        menubar_paint_idx (menubar, menu->current, MENU_SELECTED_COLOR);
-    }
+    if (menu_entry_selectable (menu, idx))
+        menubar_select_entry (menubar, (unsigned int) idx);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -803,6 +934,13 @@ menubar_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
     WMenuBar *menubar = MENUBAR (w);
     gboolean mouse_on_drop;
     gboolean mouse_on_entry;
+
+    if (menubar_mouse_on_bar (menubar, event->y, event->x))
+    {
+        was_drag = FALSE;
+        scrollbar_mouse (menubar->bar, msg, event->y - 2);
+        return;
+    }
 
     mouse_on_drop = menubar_mouse_on_menu (menubar, event->y, event->x);
     mouse_on_entry = menubar_mouse_on_menu_entry (menubar, event->y, event->x);
@@ -966,6 +1104,7 @@ menu_new (const char *name, GList *entries, const char *help_node)
     menu->max_entry_len = 1;
     menu->max_hotkey_len = 0;
     menu->current = 0;
+    menu->top = 0;
     menu->help_node = g_strdup (help_node);
 
     return menu;
@@ -1006,6 +1145,8 @@ menubar_new (GList *menu)
     w->pos_flags = WPOS_KEEP_HORZ | WPOS_KEEP_TOP;
     w->options |= WOP_TOP_SELECT;
     w->keymap = menu_map;
+    menubar->bar = scrollbar_new (0, 0, 1, SCROLLBAR_VERTICAL);
+    scrollbar_set_client (menubar->bar, w);
     menubar_set_menu (menubar, menu);
 
     return menubar;
