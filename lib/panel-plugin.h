@@ -15,7 +15,7 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-#define MC_PANEL_PLUGIN_API_VERSION 21
+#define MC_PANEL_PLUGIN_API_VERSION 22
 #define MC_PANEL_PLUGIN_ENTRY       "mc_panel_plugin_register"
 
 /* Sides of host->open_diff_labeled() that are copies, to look at only */
@@ -207,6 +207,17 @@ typedef struct mc_panel_host_t
     gboolean (*open_diff_labeled) (struct mc_panel_host_t *host, const char *left_path,
                                    const char *left_label, const char *right_path,
                                    const char *right_label, int read_only);
+
+    /* API 22: open @location, the address of a plugin ("git:/home/me/src",
+       "gh:/owner/repo/pulls") or an absolute directory, in the other panel or,
+       with @in_other_panel FALSE, in this one.  The other panel goes there at once
+       and the cursor stays here; FALSE when it could not, and the core has said
+       why.  This panel goes there once the file manager waits for a key again,
+       so the plugin may go on using its data, and show dialogs, until then; TRUE
+       says only that the request is taken, and the core reports a failure.  The
+       request is dropped if the plugin is closed first. */
+    gboolean (*open_location) (struct mc_panel_host_t *host, const char *location,
+                               gboolean in_other_panel);
 } mc_panel_host_t;
 
 /* What the plugin provides (callback table) */

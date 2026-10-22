@@ -90,6 +90,7 @@ pkg_postinst() {
 	optfeature "the Git panel" dev-vcs/git
 	optfeature "the Docker panel" app-containers/docker-cli
 	optfeature "the Kubernetes panel" sys-cluster/kubectl
+	optfeature "the GitHub panel" dev-util/github-cli
 	optfeature "shell links where libssh2 cannot serve the host" net-misc/openssh
 
 	if use lua; then

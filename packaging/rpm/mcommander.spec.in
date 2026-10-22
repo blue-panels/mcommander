@@ -53,6 +53,7 @@ distribution mc.
 %package plugins
 Summary:         Archive and remote system panels for M-Commander
 Requires:        %{name}%{?_isa} = %{version}-%{release}
+Suggests:        gh
 Suggests:        git-core
 Suggests:        moby-engine
 Suggests:        openssh-clients
@@ -61,10 +62,10 @@ Suggests:        openssh-clients
 Panel plugins that M-Commander loads at run time.  They open an archive or a
 remote system in a panel, so that its contents are handled like ordinary
 files: tar, zip and the other formats libarchive reads, FTP, SFTP, Samba, S3,
-Git, Docker, Kubernetes, MongoDB, SQLite, systemd units and shell links over
-ssh.  The Docker and Kubernetes panels talk to the docker and kubectl
-commands, which have to be installed separately.  The package also adds the
-access control list editor to the Attributes menu.
+Git, GitHub, Docker, Kubernetes, MongoDB, SQLite, systemd units and shell
+links over ssh.  The GitHub, Docker and Kubernetes panels talk to the gh,
+docker and kubectl commands, which have to be installed separately.  The
+package also adds the access control list editor to the Attributes menu.
 
 %package lua
 Summary:         Lua runtime and scripts for M-Commander

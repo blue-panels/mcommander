@@ -88,6 +88,7 @@ package_mcommander-plugins() {
   optdepends=('git: the Git panel'
               'docker: the Docker panel'
               'kubectl: the Kubernetes panel'
+              'github-cli: the GitHub panel'
               'openssh: shell links where libssh2 cannot serve the host')
 
   meson install -C build --destdir "${pkgdir}"
