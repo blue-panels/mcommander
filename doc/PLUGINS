@@ -849,6 +849,9 @@ Panel plugins:
 - core first passes the mapped command id to handle_key()
 - if the plugin returns MC_PPR_NOT_SUPPORTED and the raw key differs,
   core retries with the raw key
+- CK_PluginConsole (Alt-F3) reaches handle_key() as well: open the
+  console of the plugin.  The button bar names it "Console" while Alt
+  is held
 - CK_DirSize (Ctrl-Space) reaches handle_key() as well: count the sizes
   of the marked directories, of every directory of this level when the
   cursor is on "..", or of the one under the cursor, and return

@@ -257,6 +257,7 @@ static const global_keymap_ini_t default_panel_keymap[] = {
     { "Search", "ctrl-s; alt-s" },
     { "QuickFilter", "alt-shift-s" },
     { "PanelOtherSync", "alt-i" },
+    { "PluginConsole", "alt-f3" },
     {
         NULL,
         NULL,
