@@ -1,26 +1,24 @@
 /*
-   MongoDB panel plugin -- cluster/db/collection/document navigation.
+   Panel plugin mongo for the M-Commander
+   navigation of clusters, databases, collections and documents
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   Written by:
-   Ilia Maslakov <il.smind@gmail.com>, 2026
+   This file is part of M-Commander.
 
-   This file is part of the Midnight Commander.
+   M-Commander is free software: you can redistribute it
+   and/or modify it under the terms of the GNU General Public License as
+   published by the Free Software Foundation, either version 3 of the License,
+   or (at your option) any later version.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 #include <config.h>
@@ -64,6 +62,7 @@ static mc_pp_result_t mongo_handle_key (void *plugin_data, int key);
 static mc_pp_result_t mongo_reload (void *plugin_data);
 static mc_pp_result_t mongo_get_help_info (void *plugin_data, const char **filename,
                                            const char **node);
+static void mongo_shutdown (void);
 
 const mc_panel_plugin_t *mc_panel_plugin_register (void);
 
@@ -100,6 +99,7 @@ static const mc_panel_plugin_t mongo_plugin = {
     .create_item = mongo_create_item,
     .configure = mongo_configure,
     .get_help_info = mongo_get_help_info,
+    .shutdown = mongo_shutdown,
 
     .default_sort_id = "name",
 };
@@ -292,6 +292,10 @@ mongo_handle_key (void *plugin_data, int key)
     if (key == CK_EditNew && data->level == MONGO_LEVEL_CLUSTERS)
         return mongo_create_connection (data);
 
+    // Alt-F3 by default: mongosh for the cluster, the database and the collection under the cursor
+    if (key == CK_PluginConsole)
+        return mongo_console_open (data);
+
     if (key == CK_Move)
     {
         if (data->level == MONGO_LEVEL_COLLS)
@@ -336,6 +340,14 @@ mongo_reload (void *plugin_data)
         mongo_reload_current_page (data);
 
     return MC_PPR_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mongo_shutdown (void)
+{
+    mongo_console_shutdown ();
 }
 
 /* --------------------------------------------------------------------------------------------- */

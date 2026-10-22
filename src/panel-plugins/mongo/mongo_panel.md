@@ -28,6 +28,11 @@
       connect_timeout_ms           TCP connect
       socket_timeout_ms            operation socket
       op_max_time_ms               per-query maxTimeMS
+      coole                        the query editor for Alt-F3;
+                                   empty: found in PATH
+      mongosh                      the mongosh program coole runs
+                                   the queries with; empty: found
+                                   in PATH
 
     The [General] options above are edited from the Manage Plugins
     dialog (Options menu): select the MongoDB row and press Enter or
@@ -82,8 +87,38 @@
                       afterwards to fill in fields.
       F8              Delete the marked documents (deleteMany).
 
+    On every level:
+      Alt-F3          The query editor, see below.
+
     Going up one level (".." or "*page:prev") always restores cursor
     onto the entry you just left.
+
+  The query editor
+
+    Alt-F3 runs coole, the editor of queries for mongosh ("coole
+    -Q"), for the cluster and the database under the cursor, or
+    the open ones, in a screen of its own beside the panels, the
+    editors and the viewers. coole has the whole screen and every
+    key but Alt-F3, which comes back to the panels. In coole F5
+    runs the query under the cursor, Ctrl-F5 the whole file, and
+    the result is shown at the bottom; the queries of a database
+    are kept in ~/.local/share/coole/queries/<database>.js.
+
+    Alt-F3 is the command PluginConsole of the [panel] section of
+    the keymap, and can be bound to another key there.
+
+    Without coole, Alt-F3 runs mongosh itself there, connected to
+    the database: the shell of MongoDB at its prompt, without the
+    editor; .exit closes it. With neither, Alt-F3 says what to
+    install.
+
+    One coole runs per cluster and database: Alt-F3 again brings
+    back the same one. Its screen stays in the list of screens
+    (Alt-`) until coole is quit.
+
+    The URI, with its password, goes to coole in its environment
+    (MC_MONGO_URI, MC_MONGO_DB, MC_MONGOSH), never on a command
+    line, where ps would show it; so does it to mongosh.
 
   Read-only clusters
 
