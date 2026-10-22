@@ -1,26 +1,24 @@
 /*
-   MongoDB panel plugin -- libmongoc wrapper.
+   Panel plugin mongo for the M-Commander
+   libmongoc wrapper
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   Written by:
-   Ilia Maslakov <il.smind@gmail.com>, 2026
+   This file is part of M-Commander.
 
-   This file is part of the Midnight Commander.
+   M-Commander is free software: you can redistribute it
+   and/or modify it under the terms of the GNU General Public License as
+   published by the Free Software Foundation, either version 3 of the License,
+   or (at your option) any later version.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 #include <config.h>
@@ -33,10 +31,39 @@
 #include "lib/global.h"
 
 #include "mongo_conn.h"
+#include "mongo_scram.h"
+
+#ifdef HAVE_MONGOC_DEFAULT_STREAM_INITIATOR
+/* libmongoc exports its default initiator but declares it in a private
+   header only; a custom initiator has no other way to get a stream that
+   honours the URI's TLS options. meson checks that the symbol is there. */
+mongoc_stream_t *mongoc_client_default_stream_initiator (const mongoc_uri_t *uri,
+                                                         const mongoc_host_list_t *host,
+                                                         void *user_data, bson_error_t *error);
+#endif
+
+/*** file scope type declarations ****************************************************************/
+
+/* Credentials for a client that authenticates each new stream by itself. */
+typedef struct
+{
+    mongoc_client_t *client;
+    char *user;
+    char *password;
+    /* the authSource of the URI; NULL for the one libmongoc resolves, which
+       takes the TXT record of a mongodb+srv URI into account */
+    char *source;
+    mongo_scram_cache_t cache;
+    /* why the last stream failed after the workaround was tried on it */
+    char *error;
+} scram_ctx_t;
 
 /*** file scope variables ************************************************************************/
 
 static gboolean mongoc_inited = FALSE;
+
+/* mongoc_client_t * -> scram_ctx_t *, for the clients that use scram_stream_initiator */
+static GHashTable *scram_ctxs = NULL;
 
 /*** file scope functions ************************************************************************/
 
@@ -111,6 +138,222 @@ build_id_range_filter (bson_t *filter, const bson_value_t *lo, const bson_value_
         bson_concat (filter, extra);
 }
 
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+scram_ctx_free (gpointer p)
+{
+    scram_ctx_t *ctx = (scram_ctx_t *) p;
+
+    if (ctx == NULL)
+        return;
+    g_free (ctx->user);
+    if (ctx->password != NULL)
+        memset (ctx->password, 0, strlen (ctx->password));
+    g_free (ctx->password);
+    g_free (ctx->source);
+    mongo_scram_cache_clear (&ctx->cache);
+    g_free (ctx->error);
+    g_free (ctx);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+#ifdef HAVE_MONGOC_DEFAULT_STREAM_INITIATOR
+/* Open the connection as libmongoc does, then authenticate it with the
+   SCRAM conversation of mongo_scram.c before libmongoc's own handshake. */
+static mongoc_stream_t *
+scram_stream_initiator (const mongoc_uri_t *uri, const mongoc_host_list_t *host, void *user_data,
+                        bson_error_t *error)
+{
+    scram_ctx_t *ctx = (scram_ctx_t *) user_data;
+    mongoc_stream_t *stream;
+    const char *source;
+    char *msg = NULL;
+    int timeout_ms;
+    mongo_scram_result_t result;
+
+    stream = mongoc_client_default_stream_initiator (uri, host, ctx->client, error);
+    if (stream == NULL)
+        return NULL;
+
+    /* connectTimeoutMS=0 means no timeout, which is -1 to a stream */
+    timeout_ms = mongoc_uri_get_option_as_int32 (uri, MONGOC_URI_CONNECTTIMEOUTMS, 10000);
+    if (timeout_ms <= 0)
+        timeout_ms = -1;
+
+    source = ctx->source != NULL ? ctx->source : mongoc_uri_get_auth_source (uri);
+    result = mongo_scram_auth_stream (stream, ctx->user, ctx->password, source, timeout_ms,
+                                      &ctx->cache, &msg);
+    if (result == MONGO_SCRAM_OK)
+        return stream;
+
+    if (result == MONGO_SCRAM_FAILED)
+    {
+        g_free (ctx->error);
+        ctx->error = g_strdup (msg != NULL ? msg : "Authentication failed.");
+    }
+    bson_set_error (error, MONGOC_ERROR_CLIENT, MONGOC_ERROR_CLIENT_AUTHENTICATE, "%s",
+                    msg != NULL ? msg : "Authentication failed.");
+    g_free (msg);
+    mongoc_stream_destroy (stream);
+    return NULL;
+}
+#endif
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* SASLprep leaves printable ASCII as it is; mongo_scram.c does no SASLprep. */
+static gboolean
+is_printable_ascii (const char *s)
+{
+    for (; *s != '\0'; s++)
+        if ((unsigned char) *s < 0x20 || (unsigned char) *s > 0x7e)
+            return FALSE;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* libmongoc rejects a SCRAM-SHA-256 salt shorter than 28 bytes, which some
+   proxies in front of Cosmos DB send; such a failure is worth a retry with
+   the conversation of mongo_scram.c. The error is a SCRAM one when
+   libmongoc stops on the salt, an authentication one when the server then
+   stumbles over libmongoc starting anew. */
+static gboolean
+scram_fallback_applies (const mongoc_uri_t *uri, const bson_error_t *err)
+{
+#ifdef HAVE_MONGOC_DEFAULT_STREAM_INITIATOR
+    const char *mech;
+    const char *password;
+
+    if (err->domain != MONGOC_ERROR_SCRAM
+        && (err->domain != MONGOC_ERROR_CLIENT || err->code != MONGOC_ERROR_CLIENT_AUTHENTICATE))
+        return FALSE;
+
+    password = mongoc_uri_get_password (uri);
+    if (mongoc_uri_get_username (uri) == NULL || password == NULL || !is_printable_ascii (password))
+        return FALSE;
+
+    mech = mongoc_uri_get_auth_mechanism (uri);
+    return mech == NULL || g_ascii_strcasecmp (mech, "SCRAM-SHA-256") == 0;
+#else
+    (void) uri;
+    (void) err;
+    return FALSE;
+#endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mongoc_uri_t *
+uri_open (const char *uri_str, const mongo_config_t *cfg, bson_error_t *err)
+{
+    mongoc_uri_t *uri;
+
+    uri = mongoc_uri_new_with_error (uri_str, err);
+    if (uri != NULL && cfg != NULL)
+    {
+        mongoc_uri_set_option_as_int32 (uri, MONGOC_URI_SERVERSELECTIONTIMEOUTMS,
+                                        cfg->server_selection_timeout_ms);
+        mongoc_uri_set_option_as_int32 (uri, MONGOC_URI_CONNECTTIMEOUTMS, cfg->connect_timeout_ms);
+        mongoc_uri_set_option_as_int32 (uri, MONGOC_URI_SOCKETTIMEOUTMS, cfg->socket_timeout_ms);
+    }
+    return uri;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A client on @uri that has answered a ping; with @ctx its streams are
+   authenticated by scram_stream_initiator. */
+static mongoc_client_t *
+client_open (const mongoc_uri_t *uri, scram_ctx_t *ctx, bson_error_t *err)
+{
+    mongoc_client_t *client;
+    bson_t ping = BSON_INITIALIZER;
+    bson_t reply;
+    gboolean ok;
+
+#if MONGOC_CHECK_VERSION(1, 24, 0)
+    client = mongoc_client_new_from_uri_with_error (uri, err);
+#else
+    client = mongoc_client_new_from_uri (uri);
+    if (client == NULL)
+        bson_set_error (err, MONGOC_ERROR_CLIENT, MONGOC_ERROR_CLIENT_INVALID_ENCRYPTION_ARG,
+                        "mongoc_client_new_from_uri failed");
+#endif
+    if (client == NULL)
+        return NULL;
+
+#ifdef HAVE_MONGOC_DEFAULT_STREAM_INITIATOR
+    if (ctx != NULL)
+    {
+        ctx->client = client;
+        mongoc_client_set_stream_initiator (client, scram_stream_initiator, ctx);
+    }
+#else
+    (void) ctx;
+#endif
+
+    /* Ping so auth / network failures surface here, not on first query. */
+    BSON_APPEND_INT32 (&ping, "ping", 1);
+    ok = mongoc_client_command_simple (client, "admin", &ping, NULL, &reply, err);
+    bson_destroy (&ping);
+    bson_destroy (&reply);
+    if (!ok)
+    {
+        mongoc_client_destroy (client);
+        return NULL;
+    }
+
+    return client;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The retry of mongo_conn_connect. On failure @why_out tells why when the
+   workaround got as far as a proof, and stays NULL when it did not apply. */
+static mongoc_client_t *
+client_open_scram (const char *uri_str, const mongoc_uri_t *orig, const mongo_config_t *cfg,
+                   char **why_out)
+{
+    char *bare_str;
+    mongoc_uri_t *bare;
+    scram_ctx_t *ctx;
+    mongoc_client_t *client;
+    bson_error_t err;
+    bson_iter_t it;
+
+    *why_out = NULL;
+
+    bare_str = mongo_conn_uri_without_auth (uri_str);
+    bare = uri_open (bare_str, cfg, &err);
+    g_free (bare_str);
+    if (bare == NULL)
+        return NULL;
+
+    ctx = g_new0 (scram_ctx_t, 1);
+    ctx->user = g_strdup (mongoc_uri_get_username (orig));
+    ctx->password = g_strdup (mongoc_uri_get_password (orig));
+    if (bson_iter_init_find_case (&it, mongoc_uri_get_credentials (orig), MONGOC_URI_AUTHSOURCE)
+        && BSON_ITER_HOLDS_UTF8 (&it))
+        ctx->source = g_strdup (bson_iter_utf8 (&it, NULL));
+
+    client = client_open (bare, ctx, &err);
+    mongoc_uri_destroy (bare);
+    if (client == NULL)
+    {
+        *why_out = g_steal_pointer (&ctx->error);
+        scram_ctx_free (ctx);
+        return NULL;
+    }
+
+    if (scram_ctxs == NULL)
+        scram_ctxs = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, scram_ctx_free);
+    g_hash_table_insert (scram_ctxs, client, ctx);
+    return client;
+}
+
 /*** public functions ****************************************************************************/
 
 void
@@ -125,14 +368,73 @@ mongo_conn_global_init (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+char *
+mongo_conn_uri_without_auth (const char *uri_str)
+{
+    static const char *const auth_opts[] = {
+        MONGOC_URI_AUTHMECHANISM,
+        MONGOC_URI_AUTHSOURCE,
+        MONGOC_URI_AUTHMECHANISMPROPERTIES,
+    };
+    const char *hosts, *p, *at = NULL, *query;
+    GString *out;
+    char **opts;
+    char sep = '?';
+
+    hosts = strstr (uri_str, "://");
+    if (hosts == NULL)
+        return g_strdup (uri_str);
+    hosts += 3;
+
+    /* An '@' in the user info is percent-encoded, so the last one before the
+       path ends the user info. */
+    for (p = hosts; *p != '\0' && *p != '/' && *p != '?'; p++)
+        if (*p == '@')
+            at = p;
+
+    out = g_string_new_len (uri_str, hosts - uri_str);
+    if (at != NULL)
+        hosts = at + 1;
+
+    query = strchr (hosts, '?');
+    if (query == NULL)
+    {
+        g_string_append (out, hosts);
+        return g_string_free (out, FALSE);
+    }
+    g_string_append_len (out, hosts, query - hosts);
+
+    opts = g_strsplit (query + 1, "&", -1);
+    for (char **o = opts; *o != NULL; o++)
+    {
+        const char *eq = strchr (*o, '=');
+        const size_t key_len = eq != NULL ? (size_t) (eq - *o) : strlen (*o);
+        gboolean drop = key_len == 0;
+
+        for (size_t i = 0; i < G_N_ELEMENTS (auth_opts) && !drop; i++)
+            drop = strlen (auth_opts[i]) == key_len
+                && g_ascii_strncasecmp (*o, auth_opts[i], key_len) == 0;
+        if (!drop)
+        {
+            g_string_append_c (out, sep);
+            g_string_append (out, *o);
+            sep = '&';
+        }
+    }
+    g_strfreev (opts);
+
+    return g_string_free (out, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 mongoc_client_t *
 mongo_conn_connect (const mongo_cluster_t *cluster, const mongo_config_t *cfg, char **err_out)
 {
     bson_error_t err;
     mongoc_uri_t *uri;
     mongoc_client_t *client;
-    bson_t ping = BSON_INITIALIZER;
-    bson_t reply;
+    char *why = NULL;
 
     if (err_out != NULL)
         *err_out = NULL;
@@ -145,7 +447,7 @@ mongo_conn_connect (const mongo_cluster_t *cluster, const mongo_config_t *cfg, c
 
     mongo_conn_global_init ();
 
-    uri = mongoc_uri_new_with_error (cluster->uri, &err);
+    uri = uri_open (cluster->uri, cfg, &err);
     if (uri == NULL)
     {
         if (err_out != NULL)
@@ -153,44 +455,15 @@ mongo_conn_connect (const mongo_cluster_t *cluster, const mongo_config_t *cfg, c
         return NULL;
     }
 
-    if (cfg != NULL)
-    {
-        mongoc_uri_set_option_as_int32 (uri, MONGOC_URI_SERVERSELECTIONTIMEOUTMS,
-                                        cfg->server_selection_timeout_ms);
-        mongoc_uri_set_option_as_int32 (uri, MONGOC_URI_CONNECTTIMEOUTMS, cfg->connect_timeout_ms);
-        mongoc_uri_set_option_as_int32 (uri, MONGOC_URI_SOCKETTIMEOUTMS, cfg->socket_timeout_ms);
-    }
-
-#if MONGOC_CHECK_VERSION(1, 24, 0)
-    client = mongoc_client_new_from_uri_with_error (uri, &err);
-#else
-    client = mongoc_client_new_from_uri (uri);
-    if (client == NULL)
-        bson_set_error (&err, MONGOC_ERROR_CLIENT, MONGOC_ERROR_CLIENT_INVALID_ENCRYPTION_ARG,
-                        "mongoc_client_new_from_uri failed");
-#endif
+    client = client_open (uri, NULL, &err);
+    if (client == NULL && scram_fallback_applies (uri, &err))
+        client = client_open_scram (cluster->uri, uri, cfg, &why);
     mongoc_uri_destroy (uri);
-    if (client == NULL)
-    {
-        if (err_out != NULL)
-            *err_out = g_strdup (err.message);
-        return NULL;
-    }
 
-    /* Ping so auth / network failures surface here, not on first query. */
-    BSON_APPEND_INT32 (&ping, "ping", 1);
-    if (!mongoc_client_command_simple (client, "admin", &ping, NULL, &reply, &err))
-    {
-        if (err_out != NULL)
-            *err_out = g_strdup (err.message);
-        bson_destroy (&ping);
-        bson_destroy (&reply);
-        mongoc_client_destroy (client);
-        return NULL;
-    }
-    bson_destroy (&ping);
-    bson_destroy (&reply);
-
+    /* libmongoc's message unless the retry got further than libmongoc did */
+    if (client == NULL && err_out != NULL)
+        *err_out = why != NULL ? g_steal_pointer (&why) : g_strdup (err.message);
+    g_free (why);
     return client;
 }
 
@@ -199,8 +472,12 @@ mongo_conn_connect (const mongo_cluster_t *cluster, const mongo_config_t *cfg, c
 void
 mongo_conn_disconnect (mongoc_client_t *client)
 {
-    if (client != NULL)
-        mongoc_client_destroy (client);
+    if (client == NULL)
+        return;
+
+    mongoc_client_destroy (client);
+    if (scram_ctxs != NULL)
+        g_hash_table_remove (scram_ctxs, client);
 }
 
 /* --------------------------------------------------------------------------------------------- */

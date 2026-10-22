@@ -22,6 +22,10 @@ mongoc_client_t *mongo_conn_connect (const mongo_cluster_t *cluster, const mongo
 
 void mongo_conn_disconnect (mongoc_client_t *client);
 
+/* @uri_str without the user info and the auth options, so that libmongoc
+   leaves the authentication to the plugin. Caller g_free. */
+char *mongo_conn_uri_without_auth (const char *uri_str);
+
 /* Sorted database names, excluding admin/local/config. Caller g_strfreev. */
 char **mongo_conn_list_databases (mongoc_client_t *client, char **err_out);
 
