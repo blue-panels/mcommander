@@ -41,6 +41,10 @@ typedef enum
     VTERM_DCH,               /* param1=count; delete chars at cursor, shift left, fill right */
     VTERM_ICH,               /* param1=count; insert blanks at cursor, shift right, drop at edge */
     VTERM_RI,                /* ESC M: reverse index -- scroll region down, cursor up */
+    VTERM_IL,                /* param1=count; insert lines at the cursor, the region below down */
+    VTERM_DL,                /* param1=count; delete lines at the cursor, the region below up */
+    VTERM_SU,                /* param1=count; scroll the region up */
+    VTERM_SD,                /* param1=count; scroll the region down */
     VTERM_REPLY,             /* the program asked what the terminal is; ev.reply is the answer */
     VTERM_CONSUMED,
 } vterm_result_t;

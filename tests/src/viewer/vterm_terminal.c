@@ -201,6 +201,77 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_il_dl_move_the_lines_of_the_region)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 6, 10);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "\033[1;1HA\033[2;1HB\033[3;1HC\033[4;1HD\033[5;1HE\033[6;1HF");
+    FEED (vt, "\033[2;5r");       /* region of rows 1..4, 0-based */
+    FEED (vt, "\033[3;4H\033[L"); /* IL at row 2: C D down, E out of the region */
+    ck_assert_uint_eq (cell_ch (vt, 0, 0), 'A');
+    ck_assert_uint_eq (cell_ch (vt, 1, 0), 'B');
+    ck_assert_uint_eq (cell_ch (vt, 2, 0), ' ');
+    ck_assert_uint_eq (cell_ch (vt, 3, 0), 'C');
+    ck_assert_uint_eq (cell_ch (vt, 4, 0), 'D');
+    ck_assert_uint_eq (cell_ch (vt, 5, 0), 'F');
+    ck_assert_int_eq (mcview_vterm_cursor_col (vt), 0);
+
+    FEED (vt, "\033[3;1H\033[2M"); /* DL 2 at row 2: D up, blanks at the bottom of the region */
+    ck_assert_uint_eq (cell_ch (vt, 2, 0), 'D');
+    ck_assert_uint_eq (cell_ch (vt, 3, 0), ' ');
+    ck_assert_uint_eq (cell_ch (vt, 4, 0), ' ');
+    ck_assert_uint_eq (cell_ch (vt, 5, 0), 'F');
+
+    /* out of the region: nothing */
+    FEED (vt, "\033[6;1H\033[L");
+    ck_assert_uint_eq (cell_ch (vt, 5, 0), 'F');
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_su_sd_scroll_the_region)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 5, 10);
+    mcview_vterm_reset (vt);
+
+    FEED (vt, "\033[1;1HA\033[2;1HB\033[3;1HC\033[4;1HD\033[5;1HE");
+    FEED (vt, "\033[2;4r"); /* rows 1..3 */
+    FEED (vt, "\033[S");
+    ck_assert_uint_eq (cell_ch (vt, 0, 0), 'A');
+    ck_assert_uint_eq (cell_ch (vt, 1, 0), 'C');
+    ck_assert_uint_eq (cell_ch (vt, 2, 0), 'D');
+    ck_assert_uint_eq (cell_ch (vt, 3, 0), ' ');
+    ck_assert_uint_eq (cell_ch (vt, 4, 0), 'E');
+
+    FEED (vt, "\033[2T");
+    ck_assert_uint_eq (cell_ch (vt, 1, 0), ' ');
+    ck_assert_uint_eq (cell_ch (vt, 2, 0), ' ');
+    ck_assert_uint_eq (cell_ch (vt, 3, 0), 'C');
+    ck_assert_uint_eq (cell_ch (vt, 4, 0), 'E');
+
+    /* CSI T with more parameters is the mouse highlight of xterm: no scrolling */
+    FEED (vt, "\033[1;1;1;1;1T");
+    ck_assert_uint_eq (cell_ch (vt, 3, 0), 'C');
+
+    /* CSI > 3 T resets the title modes of xterm, and CSI > 3 S is no scroll either */
+    FEED (vt, "\033[>3T\033[>3S\033[>3L\033[>3M");
+    ck_assert_uint_eq (cell_ch (vt, 3, 0), 'C');
+    ck_assert_uint_eq (cell_ch (vt, 4, 0), 'E');
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_vpa_moves_row_only)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -2156,6 +2227,8 @@ main (void)
     tcase_add_test (tc_core, test_bracketed_paste_mode);
     tcase_add_test (tc_core, test_scroll_region_lf_at_bottom_scrolls_up);
     tcase_add_test (tc_core, test_scroll_region_lf_above_region_advances_cursor);
+    tcase_add_test (tc_core, test_il_dl_move_the_lines_of_the_region);
+    tcase_add_test (tc_core, test_su_sd_scroll_the_region);
     tcase_add_test (tc_core, test_vpa_moves_row_only);
     tcase_add_test (tc_core, test_ech_erases_with_attrs_cursor_stays);
     tcase_add_test (tc_core, test_ich_shifts_the_tail_right);
