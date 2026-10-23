@@ -526,6 +526,7 @@ about_box (void)
 {
     char *label_cp_display;
     char *label_cp_source;
+    char *label_input;
 
     char *version = g_strdup_printf ("%s %s", PACKAGE_NAME, mc_global.mc_version);
     char *package_copyright = mc_get_package_copyright ();
@@ -537,6 +538,8 @@ about_box (void)
     label_cp_source =
         g_strdup_printf (_ ("Selected source (file I/O) codepage: %s"), name_cp_source);
 
+    label_input = g_strdup_printf (_ ("Keyboard input: %s"), tty_input_protocol ());
+
     quick_widget_t quick_widgets[] = {
         QUICK_LABEL (version, NULL),
         QUICK_SEPARATOR (TRUE),
@@ -546,6 +549,7 @@ about_box (void)
         QUICK_SEPARATOR (TRUE),
         QUICK_LABEL (label_cp_display, NULL),
         QUICK_LABEL (label_cp_source, NULL),
+        QUICK_LABEL (label_input, NULL),
         QUICK_START_BUTTONS (TRUE, TRUE),
         QUICK_BUTTON (_ ("&OK"), B_ENTER, NULL, NULL),
         QUICK_END,
@@ -572,6 +576,7 @@ about_box (void)
     g_free (package_copyright);
     g_free (label_cp_display);
     g_free (label_cp_source);
+    g_free (label_input);
 }
 
 /* --------------------------------------------------------------------------------------------- */

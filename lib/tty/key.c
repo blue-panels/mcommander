@@ -42,10 +42,13 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <termios.h>
+#include <unistd.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #else
@@ -56,12 +59,15 @@
 
 #include "lib/global.h"
 
+#include "lib/fileloc.h"
+#include "lib/mcconfig.h"
 #include "lib/vfs/vfs.h"
 
 #include "tty.h"
 #include "tty-internal.h"  // mouse_enabled
 #include "mouse.h"
 #include "key.h"
+#include "far2l.h"
 
 #include "lib/widget.h"  // mc_refresh()
 
@@ -321,6 +327,8 @@ typedef int (*ph_pqc_f) (unsigned short, PhCursorInfo_t *);
 
 static inline gboolean kitty_text_pending (void);
 static int win32_paste_start (void);
+static GByteArray *far2l_request (GByteArray *stk, gboolean wait);
+static void far2l_clip_close (void);
 
 /*** file scope variables ************************************************************************/
 
@@ -597,6 +605,14 @@ static gboolean kitty_keyboard_active = FALSE;
 static gboolean win32_input_active = FALSE;
 /* The high half of a UTF-16 pair a Win32 input record gave, waiting for the low one */
 static gunichar win32_high_surrogate = 0;
+/* far2l extensions: every key comes as APC f2l <base64 of a stack of values> ST. The stack is
+   popped from its end, so the last byte is the command: 'K'/'k' is a key press/release with
+   the character (u32), control key state (u32), scan code (u16), virtual key (u16) and
+   repeat count (u16), 'C'/'c' the short form with a u16 character, a u16 control key state
+   and a u8 virtual key. The state and the virtual key are the ones of Win32 input mode. */
+#define FAR2L_MAX_PACKET 512
+
+static gboolean far2l_input_active = FALSE;
 /* The kitty event of the key get_key_code () gave last */
 static tty_key_event_t kitty_event;
 static gboolean kitty_event_valid = FALSE;
@@ -1455,6 +1471,387 @@ skip_osc_reply (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* far2l clipboard. A request is ESC _ far2l: <base64 of a stack> BEL; the last value of the stack
+   is the id of the request, before it the class ('c', the clipboard) and the command, and the
+   arguments come first. The answer is ESC _ far2l<base64 of a stack>, its last value the id. The
+   terminal asks its user whether the client may use the clipboard, so a call may take a while. */
+
+#define FAR2L_CLIP_ID_LEN   64
+#define FAR2L_CLIP_MAX_TEXT (4 * 1024 * 1024)
+#define FAR2L_CLIP_CF_TEXT  1
+
+/* mc's client ID: a passcode the terminal keeps the user's answer for, so it is mc's own, made
+   once and kept, as far2l keeps its own in tty_clipboard/me */
+static char *far2l_clip_id = NULL;
+/* the user told the terminal that mc is to use its own clipboard: it is not asked again */
+static gboolean far2l_clip_own = FALSE;
+
+// How long the terminal may take to answer: its user may have to say yes first
+static gint64 far2l_clip_timeout = 15 * G_USEC_PER_SEC;
+
+static void
+far2l_push_u8 (GByteArray *stk, guint8 v)
+{
+    g_byte_array_append (stk, &v, 1);
+}
+
+static void
+far2l_push_u32 (GByteArray *stk, guint32 v)
+{
+    guint8 b[4];
+    int i;
+
+    for (i = 0; i < 4; i++)
+        b[i] = (guint8) (v >> (8 * i));
+    g_byte_array_append (stk, b, 4);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The request, ready to write; the id is added to the stack. Caller frees. */
+
+static char *
+far2l_clip_request (GByteArray *stk, guint8 id)
+{
+    char *b64, *req;
+
+    far2l_push_u8 (stk, id);
+    b64 = g_base64_encode (stk->data, stk->len);
+    req = g_strconcat (ESC_STR "_far2l:", b64, "\a", (char *) NULL);
+    g_free (b64);
+    return req;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read from the terminal until the answer with @id comes, up to @timeout_us. What else comes -
+   typed keys, which under the extensions are APCs themselves, and the answers to other requests -
+   is not the answer: the keys are collected in @typed to be put back, the answers are dropped.
+   NULL when there is no answer. Caller frees. */
+
+static GByteArray *
+far2l_clip_wait (guint8 id, gint64 timeout_us, GString *typed)
+{
+    const gint64 deadline = g_get_monotonic_time () + timeout_us;
+    GByteArray *answer = NULL;
+
+    while (answer == NULL && g_get_monotonic_time () < deadline)
+    {
+        int c = getch_with_timeout (50 * MC_USEC_PER_MSEC);
+        GString *apc;
+        gboolean esc = FALSE, done = FALSE;
+
+        if (c == -1)
+            continue;
+        if (c != ESC_CHAR)
+        {
+            g_string_append_c (typed, (char) c);
+            continue;
+        }
+
+        c = getch_with_timeout (KITTY_CSI_TIMEOUT);
+        if (c != '_')
+        {
+            // an Escape or Alt-key, or the start of a CSI: not ours
+            g_string_append_c (typed, ESC_CHAR);
+            if (c != -1)
+                g_string_append_c (typed, (char) c);
+            continue;
+        }
+
+        apc = g_string_new ("");
+        while (!done)
+        {
+            c = getch_with_timeout (KITTY_CSI_TIMEOUT);
+            if (c == -1 || c == '\a' || (esc && c == '\\'))
+                done = TRUE;
+            else if (c == ESC_CHAR)
+                esc = TRUE;
+            else
+            {
+                esc = FALSE;
+                if (apc->len < FAR2L_CLIP_MAX_TEXT * 2)
+                    g_string_append_c (apc, (char) c);
+            }
+        }
+
+        if (strncmp (apc->str, "far2l", 5) == 0 && apc->str[5] != '\0' && apc->str[5] != ':'
+            && strcmp (apc->str + 5, "ok") != 0)
+        {
+            gsize len = 0;
+            guchar *data = g_base64_decode (apc->str + 5, &len);
+
+            if (data != NULL && len > 0 && data[len - 1] == id)
+                answer = g_byte_array_new_take (data, len - 1);
+            else
+                g_free (data);
+        }
+        else if (strncmp (apc->str, "f2l", 3) == 0)
+        {
+            // a key, a mouse event or a drop: it is read again once the answer is in
+            g_string_append (typed, ESC_STR "_");
+            g_string_append_len (typed, apc->str, (gssize) apc->len);
+            g_string_append (typed, ESC_STR "\\");
+        }
+        g_string_free (apc, TRUE);
+    }
+
+    return answer;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Send one clipboard command and take its answer, keeping what the user typed meanwhile */
+
+static GByteArray *
+far2l_clip_call (GByteArray *stk, guint8 cmd)
+{
+    far2l_push_u8 (stk, cmd);
+    far2l_push_u8 (stk, 'c');
+    return far2l_request (stk, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+far2l_clip_pop (GByteArray *a, unsigned int size, guint64 *value)
+{
+    unsigned int i;
+
+    if (a->len < size)
+        return FALSE;
+    *value = 0;
+    for (i = 0; i < size; i++)
+        *value |= (guint64) a->data[a->len - 1 - i] << (8 * (size - 1 - i));
+    g_byte_array_set_size (a, a->len - size);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Open the clipboard; TRUE when the terminal let this client in */
+
+/* A new client ID: the host name and random letters and digits, as far2l makes its own */
+
+static char *
+far2l_clip_new_id (void)
+{
+    static const char alphabet[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+    GString *id = g_string_sized_new (FAR2L_CLIP_ID_LEN);
+    const char *host = g_get_host_name ();
+    guint8 rnd[FAR2L_CLIP_ID_LEN];
+    gboolean got = FALSE;
+    int fd;
+    gsize i;
+
+    for (i = 0; host[i] != '\0' && i < FAR2L_CLIP_ID_LEN / 2; i++)
+    {
+        const char c = g_ascii_tolower (host[i]);
+
+        g_string_append_c (id, g_ascii_isalnum (c) || c == '-' ? c : '_');
+    }
+    g_string_append_c (id, '-');
+
+    fd = open ("/dev/urandom", O_RDONLY);
+    if (fd >= 0)
+    {
+        got = read (fd, rnd, sizeof (rnd)) == (ssize_t) sizeof (rnd);
+        close (fd);
+    }
+    for (i = 0; id->len < FAR2L_CLIP_ID_LEN; i++)
+    {
+        const guint r = got ? rnd[i] : (guint) g_random_int ();
+
+        g_string_append_c (id, alphabet[r % (sizeof (alphabet) - 1)]);
+    }
+    return g_string_free (id, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static const char *
+far2l_clip_client_id (void)
+{
+    char *fname, *text = NULL;
+
+    if (far2l_clip_id != NULL)
+        return far2l_clip_id;
+
+    fname = mc_config_get_full_path (MC_FAR2L_CLIENT_ID_FILE);
+    if (fname != NULL && g_file_get_contents (fname, &text, NULL, NULL))
+    {
+        g_strchomp (text);
+        if (far2l_clip_id_is_valid (text, strlen (text)))
+            far2l_clip_id = text;
+        else
+            g_free (text);
+    }
+    if (far2l_clip_id == NULL)
+    {
+        far2l_clip_id = far2l_clip_new_id ();
+        if (fname != NULL && g_file_set_contents (fname, far2l_clip_id, -1, NULL))
+            (void) chmod (fname, 0600);
+    }
+    g_free (fname);
+    return far2l_clip_id;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+far2l_clip_open (void)
+{
+    const char *id = far2l_clip_client_id ();
+    GByteArray *stk = g_byte_array_new ();
+    GByteArray *answer;
+    guint64 status = 0;
+
+    g_byte_array_append (stk, (const guint8 *) id, (guint) strlen (id));
+    far2l_push_u32 (stk, (guint32) strlen (id));
+    answer = far2l_clip_call (stk, 'o');
+    g_byte_array_free (stk, TRUE);
+    if (answer == NULL)
+    {
+        /* the user may still say yes after the wait: the close that follows the open then keeps
+           the clipboard of the terminal from staying open */
+        far2l_clip_close ();
+        return FALSE;
+    }
+
+    if (!far2l_clip_pop (answer, 1, &status))
+        status = 0;
+    g_byte_array_free (answer, TRUE);
+    // -1: mc is to keep to its own clipboard, and the user is not asked again while mc runs
+    if (status == 0xFF)
+        far2l_clip_own = TRUE;
+    return status == 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Close it; the terminal says nothing worth waiting for */
+
+static void
+far2l_clip_close (void)
+{
+    GByteArray *stk = g_byte_array_new ();
+
+    far2l_push_u8 (stk, 'c');
+    far2l_push_u8 (stk, 'c');
+    (void) far2l_request (stk, FALSE);
+    g_byte_array_free (stk, TRUE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Send a request of the far2l extensions to the terminal: @stk is its stack with the command on
+   top and the request id still to come. With @wait the answer is waited for, and its stack
+   comes back without the id (NULL when there is none in time; the caller frees it); without,
+   the request goes with id 0, which the terminal does not answer, and NULL comes back. Keys
+   typed meanwhile are kept. */
+
+static GByteArray *
+far2l_request (GByteArray *stk, gboolean wait)
+{
+    static guint8 next_id = 0;
+    GByteArray *answer = NULL;
+    guint8 id = 0;
+    char *req;
+
+    if (wait)
+        do
+            id = ++next_id;
+        while (id == 0);
+
+    // the id goes on top for the request only: the stack is the caller's as it was
+    req = far2l_clip_request (stk, id);
+    g_byte_array_set_size (stk, stk->len - 1);
+    tty_raw_write (req, strlen (req));
+    g_free (req);
+
+    if (wait)
+    {
+        GString *typed = g_string_new ("");
+
+        answer = far2l_clip_wait (id, far2l_clip_timeout, typed);
+        if (typed->len > 0)
+            tty_unget_input ((const unsigned char *) typed->str, typed->len);
+        g_string_free (typed, TRUE);
+    }
+    return answer;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+tty_far2l_clipboard_available (void)
+{
+    return far2l_input_active && !far2l_clip_own;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/** Put the text on the clipboard of a far2l terminal. FALSE when there is none, or it refused. */
+
+gboolean
+tty_far2l_clipboard_set (const char *text, size_t len)
+{
+    GByteArray *stk, *answer;
+    guint64 status = 0;
+
+    if (!tty_far2l_clipboard_available () || text == NULL || len == 0 || len > FAR2L_CLIP_MAX_TEXT)
+        return FALSE;
+    if (!far2l_clip_open ())
+        return FALSE;
+
+    stk = g_byte_array_new ();
+    g_byte_array_append (stk, (const guint8 *) text, len);
+    far2l_push_u32 (stk, (guint32) len);
+    far2l_push_u32 (stk, FAR2L_CLIP_CF_TEXT);
+    answer = far2l_clip_call (stk, 's');
+    g_byte_array_free (stk, TRUE);
+    far2l_clip_close ();
+
+    if (answer == NULL)
+        return FALSE;
+    if (!far2l_clip_pop (answer, 1, &status))
+        status = 0;
+    g_byte_array_free (answer, TRUE);
+    return status == 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/** Take the text off the clipboard of a far2l terminal, which asks its user first. FALSE when
+    there is none. The text is NUL-terminated; caller frees. */
+
+gboolean
+tty_far2l_clipboard_get (char **text, size_t *len)
+{
+    GByteArray *stk, *answer;
+    guint64 n = 0;
+
+    *text = NULL;
+    *len = 0;
+    if (!tty_far2l_clipboard_available () || !far2l_clip_open ())
+        return FALSE;
+
+    stk = g_byte_array_new ();
+    far2l_push_u32 (stk, FAR2L_CLIP_CF_TEXT);
+    answer = far2l_clip_call (stk, 'g');
+    g_byte_array_free (stk, TRUE);
+    far2l_clip_close ();
+
+    if (answer == NULL)
+        return FALSE;
+    if (far2l_clip_pop (answer, 4, &n) && n != 0xFFFFFFFF && n > 0 && n <= FAR2L_CLIP_MAX_TEXT
+        && answer->len >= n)
+    {
+        size_t l = (size_t) n;
+
+        // the text is C's, and ends in NULs the terminal counted
+        while (l > 0 && answer->data[answer->len - n + l - 1] == '\0')
+            l--;
+        *text = g_strndup ((const char *) answer->data + answer->len - n, l);
+        *len = l;
+    }
+    g_byte_array_free (answer, TRUE);
+    return *text != NULL && *len > 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Is the pending sequence plus @c the start of a CSI sequence with numeric parameters? */
 
 static gboolean
@@ -2167,6 +2564,27 @@ kitty_live_code (const tty_key_event_t *ev)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* The mc key of the key event just parsed into kitty_event from the live input, which becomes
+   the event of the last key. -1 when it is no key. */
+
+static int
+key_live_event_code (void)
+{
+    int code;
+
+    // a half of a UTF-16 pair is a key only with the other half
+    if (!win32_join_pair (&kitty_event))
+        return -1;
+
+    kitty_event_valid = TRUE;
+    kitty_track_modifiers (&kitty_event);
+    code = kitty_live_code (&kitty_event);
+    if (win32_record_repeat > 1 && kitty_event.event != TTY_KITTY_RELEASE && code >= 0)
+        key_repeat_left = win32_record_repeat - 1;
+    return code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /* Read the rest of a CSI sequence after the pending bytes and @c, and decode it.
    Returns -1 for a sequence that is no key at all, KEY_KITTY_EVENT for a key mc has no code for. */
 
@@ -2210,23 +2628,234 @@ kitty_read_csi (int c)
                 kitty_mod_keys = 0;
             }
             else if (key_parse_csi (params->str, params->len, &kitty_event))
-            {
-                // a half of a UTF-16 pair is a key only with the other half
-                if (win32_join_pair (&kitty_event))
-                {
-                    kitty_event_valid = TRUE;
-                    kitty_track_modifiers (&kitty_event);
-                    code = kitty_live_code (&kitty_event);
-                    if (win32_record_repeat > 1 && kitty_event.event != TTY_KITTY_RELEASE
-                        && code >= 0)
-                        key_repeat_left = win32_record_repeat - 1;
-                }
-            }
+                code = key_live_event_code ();
             break;
         }
     }
 
     g_string_free (params, TRUE);
+    return code;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Is the pending sequence, which is ESC alone, plus @c the start of an APC? */
+
+static gboolean
+far2l_apc_started (int c)
+{
+    return c == '_' && seq_append != NULL && seq_append - seq_buffer == 1
+        && seq_buffer[0] == ESC_CHAR;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Pop @size bytes, little endian, off the end of the far2l stack */
+
+static gboolean
+far2l_pop (const guchar *data, gsize *len, unsigned int size, unsigned int *value)
+{
+    unsigned int i;
+
+    if (*len < size)
+        return FALSE;
+
+    *value = 0;
+    for (i = 0; i < size; i++)
+        *value |= (unsigned int) data[*len - 1 - i] << (8 * (size - 1 - i));
+    *len -= size;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* A far2l mouse record as the xterm SGR reports mc asks for when it has no far2l: they go back to
+   the keyboard and are read as such. A terminal with the extensions sends its mouse only this
+   way. The state of the buttons is the one of the Windows console: 1 left, 2 right, 4 middle;
+   the wheel turn is in the upper 16 bits. -1: no mc event. */
+
+/* far2l_mouse_key () gave the event back to the keyboard as an xterm report: read again */
+#define FAR2L_KEY_REREAD    (-2)
+
+#define FAR2L_MOUSE_MOVED   0x1
+#define FAR2L_MOUSE_WHEELED 0x4
+
+static int
+far2l_mouse_key (unsigned int flags, unsigned int buttons, int x, int y)
+{
+    static unsigned int last_buttons = 0;
+    /* Windows button bits and the xterm button number of each */
+    static const struct
+    {
+        unsigned int bit;
+        int number;
+    } map[] = { { 0x1, 0 }, { 0x4, 1 }, { 0x2, 2 } };
+    char report[96];
+    size_t len = 0;
+    unsigned int now = buttons & 0x7;
+    size_t i;
+
+    if (!mouse_enabled
+        || (use_mouse_p != MOUSE_XTERM_NORMAL_TRACKING
+            && use_mouse_p != MOUSE_XTERM_BUTTON_EVENT_TRACKING))
+        return -1;
+
+    x = x < 0 ? 1 : x + 1;
+    y = y < 0 ? 1 : y + 1;
+
+    if ((flags & FAR2L_MOUSE_WHEELED) != 0)
+    {
+        const int delta = (gint16) (buttons >> 16);
+
+        if (delta != 0)
+            len = (size_t) g_snprintf (report, sizeof (report), ESC_STR "[<%d;%d;%dM",
+                                       delta > 0 ? 64 : 65, x, y);
+    }
+    else if ((flags & FAR2L_MOUSE_MOVED) != 0)
+    {
+        // a move counts while a button is held, and only when mc asked for it
+        if (use_mouse_p == MOUSE_XTERM_BUTTON_EVENT_TRACKING)
+            for (i = 0; i < G_N_ELEMENTS (map); i++)
+                if ((now & map[i].bit) != 0)
+                {
+                    len = (size_t) g_snprintf (report, sizeof (report), ESC_STR "[<%d;%d;%dM",
+                                               32 + map[i].number, x, y);
+                    break;
+                }
+    }
+    else
+    {
+        const unsigned int pressed = now & ~last_buttons, released = last_buttons & ~now;
+
+        for (i = 0; i < G_N_ELEMENTS (map) && len + 24 < sizeof (report); i++)
+            if ((pressed & map[i].bit) != 0)
+                len += (size_t) g_snprintf (report + len, sizeof (report) - len,
+                                            ESC_STR "[<%d;%d;%dM", map[i].number, x, y);
+        // which button went up does not matter to mc, one release is enough
+        if (released != 0)
+            len += (size_t) g_snprintf (report + len, sizeof (report) - len, ESC_STR "[<0;%d;%dm",
+                                        x, y);
+    }
+    last_buttons = now;
+
+    if (len == 0)
+        return -1;
+
+    tty_unget_input ((const unsigned char *) report, len);
+    return FAR2L_KEY_REREAD;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The key of a far2l key packet: the one of the Win32 input record with its fields */
+
+static int
+far2l_key_code (unsigned int vk, unsigned int sc, unsigned int uc, gboolean press, unsigned int cs,
+                unsigned int rep)
+{
+    char record[96];
+    const int len = g_snprintf (record, sizeof (record), "%u;%u;%u;%u;%u;%u_", vk, sc, uc,
+                                press ? 1U : 0U, cs, rep);
+
+    if (!win32_parse_record (record, (size_t) len, &kitty_event))
+        return -1;
+    return key_live_event_code ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Read the rest of an APC after ESC _, up to BEL or ESC \, and decode it as a far2l packet.
+   -1: no key (a release no one asked for, a reply, a resize packet, a packet that is not ours).
+   A key packet is read as the Win32 input record with the same fields. */
+
+static int
+far2l_read_apc (void)
+{
+    char payload[FAR2L_MAX_PACKET + 1];
+    size_t n = 0;
+    gboolean esc = FALSE, done = FALSE;
+    guchar *data;
+    gsize len = 0;
+    unsigned int cmd = 0, uc = 0, cs = 0, sc = 0, vk = 0, rep = 0;
+    const char *b64;
+    int code = -1;
+
+    while (!done)
+    {
+        const int ch = getch_with_timeout (KITTY_CSI_TIMEOUT);
+
+        if (ch == -1)
+            return -1;
+        if (ch == '\a' || (esc && ch == '\\'))
+            done = TRUE;
+        else if (ch == ESC_CHAR)
+            esc = TRUE;
+        else
+        {
+            if (esc && n < FAR2L_MAX_PACKET)
+                payload[n++] = (char) ESC_CHAR;
+            esc = FALSE;
+            if (n < FAR2L_MAX_PACKET)
+                payload[n++] = (char) ch;
+            else
+                n = FAR2L_MAX_PACKET + 1;  // too long for a key: read it out, drop it
+        }
+    }
+    if (n > FAR2L_MAX_PACKET)
+        return -1;
+    payload[n] = '\0';
+
+    if (strncmp (payload, "f2l", 3) != 0)
+        return -1;
+    b64 = payload + 3;
+    if (*b64 == ':')
+        b64++;
+
+    data = g_base64_decode (b64, &len);
+    if (data == NULL)
+        return -1;
+
+    // a file drop: nothing to press, the drop is handed over from tty_get_event()
+    if (len > 0 && data[len - 1] == 'D')
+    {
+        code = far2l_dnd_event (data, len) ? MCKEY_FAR2L_DND : -1;
+        g_free (data);
+        return code;
+    }
+
+    if (far2l_pop (data, &len, 1, &cmd))
+    {
+        if (cmd == 'K' || cmd == 'k')
+        {
+            if (far2l_pop (data, &len, 4, &uc) && far2l_pop (data, &len, 4, &cs)
+                && far2l_pop (data, &len, 2, &sc) && far2l_pop (data, &len, 2, &vk)
+                && far2l_pop (data, &len, 2, &rep))
+                code = far2l_key_code (vk, sc, uc, cmd == 'K', cs, rep);
+        }
+        else if (cmd == 'M')
+        {
+            unsigned int flags = 0, buttons = 0, y = 0, x = 0;
+
+            if (far2l_pop (data, &len, 4, &flags) && far2l_pop (data, &len, 4, &cs)
+                && far2l_pop (data, &len, 4, &buttons) && far2l_pop (data, &len, 2, &y)
+                && far2l_pop (data, &len, 2, &x))
+                code = far2l_mouse_key (flags, buttons, (gint16) x, (gint16) y);
+        }
+        else if (cmd == 'm')
+        {
+            // the short form: the upper byte of the button state is squeezed next to the lower
+            unsigned int flags = 0, buttons = 0, y = 0, x = 0;
+
+            if (far2l_pop (data, &len, 1, &flags) && far2l_pop (data, &len, 1, &cs)
+                && far2l_pop (data, &len, 2, &buttons) && far2l_pop (data, &len, 2, &y)
+                && far2l_pop (data, &len, 2, &x))
+                code = far2l_mouse_key (flags, (buttons & 0xFF) | ((buttons & 0xFF00) << 8),
+                                        (gint16) x, (gint16) y);
+        }
+        else if (cmd == 'C' || cmd == 'c')
+        {
+            if (far2l_pop (data, &len, 2, &uc) && far2l_pop (data, &len, 2, &cs)
+                && far2l_pop (data, &len, 1, &vk))
+                code = far2l_key_code (vk, 0, uc, cmd == 'C', cs, 1);
+        }
+    }
+
+    g_free (data);
     return code;
 }
 
@@ -3245,6 +3874,32 @@ nodelay_try_again:
             continue;
         }
 
+        // A far2l packet: ESC _ is not Alt-_ once the terminal sends its keys that way
+        if (far2l_input_active && far2l_apc_started (c))
+        {
+            c = far2l_read_apc ();
+            pending_keys = seq_append = NULL;
+            if (c == FAR2L_KEY_REREAD)
+            {
+                // the mouse event is in the keyboard's input again
+                this = NULL;
+                return get_key_code (no_delay);
+            }
+            if (c == -1 || c == KEY_KITTY_EVENT || c == MCKEY_MODIFIERS || c == MCKEY_FAR2L_DND)
+            {
+                this = NULL;
+                kitty_event_code = c;
+                // a dropped release must not leave the next key waiting for the select timeout
+                if (c == -1 && tty_lowlevel_input_pending ())
+                {
+                    kitty_event_valid = FALSE;
+                    goto nodelay_try_again;
+                }
+                return c;
+            }
+            goto done;
+        }
+
         // No match found. Is it one of our ESC <key> specials?
         if ((parent != NULL) && (parent->action == MCKEY_ESCAPE))
         {
@@ -3881,6 +4536,11 @@ tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block)
         xmouse_get_event (event, extended);
         c = (event->type != 0) ? EV_MOUSE : EV_NONE;
     }
+    else if (c == MCKEY_FAR2L_DND)
+    {
+        far2l_dnd_dispatch ();
+        c = EV_NONE;
+    }
     else if (c == MCKEY_BRACKETED_PASTING_START && tty_paste_as_block)
         c = tty_paste_next ();
     else if (c == MCKEY_BRACKETED_PASTING_START)
@@ -4030,8 +4690,8 @@ tty_kitty_modifiers (void)
     guint mods = 0;
     int i;
 
-    // Win32 input mode always reports the modifier keys
-    if (!win32_input_active
+    // Win32 input mode and the far2l extensions always report the modifier keys
+    if (!win32_input_active && !far2l_input_active
         && (!kitty_keyboard_active
             || (kitty_flags_sent & KITTY_KEYBOARD_MODIFIERS) != KITTY_KEYBOARD_MODIFIERS))
         return 0;
@@ -4189,7 +4849,7 @@ disable_bracketed_paste (void)
 void
 enable_kitty_keyboard (void)
 {
-    if (kitty_keyboard_active || win32_input_active)
+    if (kitty_keyboard_active || win32_input_active || far2l_input_active)
         return;
 
     /* Windows Terminal knows both. Its kitty protocol (1.25) sends the text of a key that is not
@@ -4259,6 +4919,55 @@ disable_kitty_keyboard (void)
     fflush (stdout);
     kitty_keyboard_active = FALSE;
     kitty_mod_keys = 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+enable_far2l_input (void)
+{
+    if (far2l_input_active || !tty_has_far2l_input ())
+        return;
+
+    printf (ESC_STR "_far2l1" ESC_STR "\\");
+    fflush (stdout);
+    far2l_input_active = TRUE;
+    win32_high_surrogate = 0;
+    key_repeat_left = 0;
+    kitty_mod_keys = 0;
+    // files dropped on the terminal window come with the extensions
+    far2l_dnd_bind ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+disable_far2l_input (void)
+{
+    if (!far2l_input_active)
+        return;
+
+    far2l_dnd_unbind ();
+    // ST ends it: a terminal that takes only ST would stay in far2l mode after the exit
+    printf (ESC_STR "_far2l0" ESC_STR "\\");
+    fflush (stdout);
+    far2l_input_active = FALSE;
+    key_repeat_left = 0;
+    kitty_mod_keys = 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+const char *
+tty_input_protocol (void)
+{
+    if (far2l_input_active)
+        return "far2l";
+    if (kitty_keyboard_active)
+        return "kitty";
+    if (win32_input_active)
+        return "win32";
+    return "legacy";
 }
 
 /* --------------------------------------------------------------------------------------------- */

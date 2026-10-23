@@ -93,6 +93,8 @@ static const struct
     { &mc_data_str, EDIT_SYNTAX_FILE },
     { &mc_data_str, EDIT_HOME_CLIP_FILE },
     { &mc_data_str, MC_MACRO_FILE },
+    { &mc_data_str, MC_FAR2L_CLIENT_ID_FILE },
+    { &mc_data_str, MC_FAR2L_CLIENTS_FILE },
 
     // cache
     { &mc_cache_str, "mc.log" },

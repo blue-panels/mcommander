@@ -1,4 +1,5 @@
 lib_tests = {
+  'far2l': 'far2l.c',
   'key': 'key.c',
   'library_independ': 'library_independ.c',
   'mc_build_filename': 'mc_build_filename.c',

@@ -48,6 +48,9 @@
    tty_kitty_modifiers () gives them. */
 #define MCKEY_MODIFIERS -7
 
+/* Return code for a file drop announced by a far2l terminal (see far2l.h) */
+#define MCKEY_FAR2L_DND -8
+
 /* A kitty key event mc has no key code for: a release, a media key, a key with Super. The
    widget that wants it reads it with tty_key_event (). */
 #define KEY_KITTY_EVENT 0xFFF
@@ -127,6 +130,10 @@ char *tty_keycode_to_keyname (const int keycode);
 /* mouse support */
 int tty_get_event (struct Gpm_Event *event, gboolean redo_event, gboolean block);
 gboolean is_idle (void);
+/* The clipboard of a terminal that speaks the far2l extensions */
+gboolean tty_far2l_clipboard_available (void);
+gboolean tty_far2l_clipboard_set (const char *text, size_t len);
+gboolean tty_far2l_clipboard_get (char **text, size_t *len);
 int tty_getch (void);
 GString *tty_paste_take (void);
 
@@ -179,6 +186,12 @@ void enable_kitty_keyboard (void);
 void disable_kitty_keyboard (void);
 /* Ask the terminal for the kitty flags 2, 8 and 16 in @flags on top of mc's own, or for no more */
 void tty_kitty_keyboard_want (guint flags);
+/* far2l extensions, if the terminal knows them: every key comes as APC f2l <base64> ST.
+   Kitty and Win32 input mode stay off while they are on. */
+void enable_far2l_input (void);
+void disable_far2l_input (void);
+/* Which of them the keys come in now: "far2l", "kitty", "win32" or "legacy" */
+const char *tty_input_protocol (void);
 
 /*** inline functions ****************************************************************************/
 

@@ -424,8 +424,8 @@ file marcato, o per il file sotto il cursore se nessuno è marcato. Nel
 comando, %f (o %p) è il nome del file, %n il nome senza estensione e %x
 l'estensione, tutti quotati per la shell; le altre macro del menu utente
 funzionano come lì. Ctrl-G funziona solo in un terminale che invia i tasti con
-il protocollo di tastiera di kitty o con la modalità di input Win32 (kitty,
-WezTerm, foot, Windows Terminal): negli altri è il tasto di interruzione del
+il protocollo di tastiera di kitty, con la modalità di input Win32 o con le
+estensioni di far2l (kitty, WezTerm, foot, Windows Terminal, far2l): negli altri è il tasto di interruzione del
 terminale e non arriva mai a M-Commander. Alt-X g funziona in ogni terminale.
 
 **Esc**
@@ -3916,6 +3916,14 @@ viene inviato in UTF-8, e un testo più lungo di 75000 byte non viene inviato.
 Lo riceve solo un terminale di tipo xterm, non la console di Linux. Il valore
 predefinito è "false".
 
+In un terminale con le estensioni di terminale di far2l (far2l, f4), quando né
+*clipboard_store*
+né
+*clipboard_paste*
+sono impostati, una copia va negli appunti del terminale e un incolla li legge.
+Il terminale chiede una volta al suo utente se M-Commander può usare gli
+appunti.
+
 *autodetect_codeset*
 : Con questa opzione il programma usa il comando 'enca' per riconoscere da sé
 il set di caratteri dei file di testo nel visualizzatore e nell'editor
@@ -4010,6 +4018,21 @@ predefinito: qualsiasi uscita nel terminale, anche un file mostrato con
 **cat**,
 potrebbe cambiare gli appunti.
 
+Un programma nel terminale che parla le estensioni di terminale di far2l
+(far2l, f4, lo stesso M-Commander) riceve i tasti come li riportano queste
+estensioni e può usare gli appunti di M-Commander, in qualunque terminale giri
+M-Commander. La prima volta che un programma chiede gli appunti, M-Commander
+chiede se può: "Block", "Own clipboard", "Allow" o "Allow always", che resta in
+~/.local/share/mc6/far2l-clients. Gli appunti si leggono solo per pochi secondi
+dopo aver premuto
+**Ctrl-V**
+o
+**Shift-Insert**
+nel terminale; in ogni altro momento il programma non riceve nulla, quindi non
+può leggere gli appunti alle spalle dell'utente, come invece può un programma
+con la richiesta di OSC 52. Anche un file trascinato sulla finestra di un
+terminale far2l sopra il terminale arriva al programma.
+
 # Database di terminali <a id="terminal-databases"></a>
 
 Il M-Commander fornisce una maniera per correggere il database
@@ -4091,6 +4114,10 @@ disponibile.
 **MC_SIXEL**
 : Con il valore 0 si dichiara che il terminale non ha la grafica sixel, con 1
 che ce l'ha. Senza la variabile viene interrogato il terminale stesso.
+
+**MC_FAR2L**
+: Con 0 il terminale non viene interrogato sulle estensioni di terminale di far2l
+e queste non vengono date ai programmi del terminale integrato.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Quanto attendere il resto di una sequenza di escape, in microsecondi.

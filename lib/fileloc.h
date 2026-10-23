@@ -73,19 +73,24 @@
 
 #define MC_INPUTRC_FILE                 "inputrc"
 
-#define MC_CONFIG_FILE                  "ini"
-#define MC_EXT_FILE                     "extensions.ini"
-#define MC_EXT_OLD_FILE                 "mc.ext"
-#define MC_MAGIC_FILE                   "magic.ini"
-#define MC_FILEPOS_FILE                 "filepos"
-#define MC_HISTORY_FILE                 "history"
-#define MC_HOTLIST_FILE                 "hotlist"
-#define MC_USERMENU_FILE                "menu"
-#define MC_TREESTORE_FILE               "Tree"
-#define MC_PANELS_FILE                  "panels.ini"
-#define MC_FHL_INI_FILE                 "filehighlight.ini"
+/* far2l extensions: mc's passcode to the terminal's clipboard, and the programs in mc's terminal
+   the user allowed for good to use mc's */
+#define MC_FAR2L_CLIENT_ID_FILE "far2l-client-id"
+#define MC_FAR2L_CLIENTS_FILE   "far2l-clients"
 
-#define MC_SKINS_DIR                    "skins"
+#define MC_CONFIG_FILE          "ini"
+#define MC_EXT_FILE             "extensions.ini"
+#define MC_EXT_OLD_FILE         "mc.ext"
+#define MC_MAGIC_FILE           "magic.ini"
+#define MC_FILEPOS_FILE         "filepos"
+#define MC_HISTORY_FILE         "history"
+#define MC_HOTLIST_FILE         "hotlist"
+#define MC_USERMENU_FILE        "menu"
+#define MC_TREESTORE_FILE       "Tree"
+#define MC_PANELS_FILE          "panels.ini"
+#define MC_FHL_INI_FILE         "filehighlight.ini"
+
+#define MC_SKINS_DIR            "skins"
 
 /* editor home directory */
 #define EDIT_HOME_DIR "mcedit"

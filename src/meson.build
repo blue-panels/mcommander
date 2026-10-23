@@ -45,6 +45,7 @@ libinternal_sources = files(
   'filemanager/command.c',
   'filemanager/dir.c',
   'filemanager/dir_watch.c',
+  'filemanager/dnd.c',
   'filemanager/ext.c',
   'filemanager/file.c',
   'filemanager/filegui.c',
@@ -93,6 +94,7 @@ libinternal_sources = files(
 
   'mcterm/mcterm.c',
   'mcterm/mcterm_cwd.c',
+  'mcterm/mcterm_far2l.c',
   'mcterm/mcterm_filter.c',
   'mcterm/mcterm_key.c',
   'mcterm/mcterm_proto.c',

@@ -429,8 +429,8 @@ kijelölt fájlra, vagy ha nincs kijelölt fájl, a kurzor alatti fájlra. A
 parancsban a %f (vagy %p) a fájl neve, a %n a név kiterjesztés nélkül, a %x a
 kiterjesztés, mind a shellnek idézőjelezve; a felhasználói menü többi makrója
 ugyanúgy működik, mint ott. A Ctrl-G csak olyan terminálban működik, amely a
-kitty keyboard protokollal vagy a Win32 input móddal küldi a billentyűket
-(kitty, WezTerm, foot, Windows Terminal): a többiben ez a terminál megszakító
+kitty keyboard protokollal, a Win32 input móddal vagy a far2l kiterjesztésekkel
+küldi a billentyűket (kitty, WezTerm, foot, Windows Terminal, far2l): a többiben ez a terminál megszakító
 billentyűje, és el sem jut az M-Commanderig. Az Alt-X g minden terminálban
 működik.
 
@@ -3936,6 +3936,14 @@ beállítás kell hozzá. A szöveg UTF-8-ban megy, a 75000 bájtnál hosszabb s
 nem megy el. Csak xterm-szerű terminál kapja meg, a Linux konzol nem.
 Alapértelmezés: "false".
 
+Egy far2l terminálkiterjesztéseket ismerő terminálban (far2l, f4), ha sem a
+*clipboard_store*,
+sem a
+*clipboard_paste*
+nincs beállítva, a másolás a terminál vágólapjára kerül, a beillesztés pedig
+onnan olvas. A terminál egyszer megkérdezi a felhasználóját, hogy az
+M-Commander használhatja-e a vágólapot.
+
 *autodetect_codeset*
 : Ezzel a beállítással a program az 'enca' paranccsal állapítja meg a
 szövegfájlok kódlapját a belső fájlnézőben és a szerkesztőben. Az érvényes
@@ -4029,6 +4037,21 @@ szerint "false": a terminál bármely kimenete, egy
 **cat**
 paranccsal kiírt fájl is, megváltoztathatná a vágólapot.
 
+A terminálban futó program, amely ismeri a far2l terminálkiterjesztéseket
+(far2l, f4, maga az M-Commander), úgy kapja a billentyűket, ahogy ezek a
+kiterjesztések jelentik, és használhatja az M-Commander vágólapját, bármilyen
+terminálban fut is az M-Commander. Amikor egy program először kéri a vágólapot,
+az M-Commander megkérdezi, megkaphatja-e: "Block", "Own clipboard", "Allow" vagy
+"Allow always"; az utóbbit a ~/.local/share/mc6/far2l-clients fájl őrzi. A
+vágólapot csak néhány másodpercig lehet olvasni azután, hogy a terminálban
+megnyomták a
+**Ctrl-V**
+vagy a
+**Shift-Insert**
+billentyűt; máskor a program semmit sem kap, így a felhasználó háta mögött nem
+olvashatja a vágólapot, ahogy egy program az OSC 52 lekérdezésével megteheti.
+Egy far2l terminál ablakára a terminál fölé ejtett fájl is a programhoz jut.
+
 # Terminál adatbázisok <a id="terminal-databases"></a>
 
 A M-Commander lehetőséget nyújt a terminál adatbázis root jogok
@@ -4106,6 +4129,11 @@ Lua csomag sem töltődik be, és semmi nem érhető el, aminek szüksége van r
 **MC_SIXEL**
 : A 0 érték azt mondja, hogy a terminál nem tud sixel grafikát, az 1 pedig
 azt, hogy tud. A változó nélkül a program magát a terminált kérdezi meg.
+
+**MC_FAR2L**
+: 0 értékkel az M-Commander nem kérdezi a terminált a far2l
+terminálkiterjesztésekről, és nem is adja őket a beépített terminál
+programjainak.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Mennyit várjon egy vezérlőszekvencia hátralévő részére, mikroszekundumban.

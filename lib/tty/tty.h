@@ -188,6 +188,9 @@ extern gboolean tty_has_kitty_keyboard (void);
 extern gboolean tty_has_win32_input (void);
 /* Pixels per cell, 0 when the terminal did not say. */
 extern void tty_cell_size (int *width, int *height);
+/* The terminal answered APC far2l1 with APC far2lok: it has the far2l extensions and
+   sends every key as an APC f2l packet. MC_FAR2L=0 turns the question off. */
+extern gboolean tty_has_far2l_input (void);
 
 /* Clear screen */
 extern void tty_clear_screen (void);
