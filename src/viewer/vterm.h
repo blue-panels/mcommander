@@ -91,6 +91,10 @@ gboolean mcview_vterm_in_alt_screen (const mcview_vterm_t *vt);
 gboolean mcview_vterm_app_cursor_keys (const mcview_vterm_t *vt);
 /* Whether the program asked for bracketed paste (ESC[?2004h) and did not turn it off. */
 gboolean mcview_vterm_bracketed_paste (const mcview_vterm_t *vt);
+/* The mouse the program asked for: 9 presses, 1000 presses and releases, 1002 drags too, 1003
+   moves too; 0 none.  mouse_sgr: told as ESC[<b;x;yM rather than in bytes (DECSET 1006). */
+int mcview_vterm_mouse_mode (const mcview_vterm_t *vt);
+gboolean mcview_vterm_mouse_sgr (const mcview_vterm_t *vt);
 /* The kitty keyboard flags the program set on the current screen (CSI > flags u), 0 if none. */
 guint mcview_vterm_kitty_flags (const mcview_vterm_t *vt);
 mcview_terminal_buffer_t *mcview_vterm_buf (mcview_vterm_t *vt);

@@ -3280,12 +3280,104 @@ mcterm_exit_status (WMcTerm *t, int *code)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The button of an event as xterm counts it: 0 left, 1 middle, 2 right */
+static int
+mcterm_mouse_button (const mouse_event_t *event)
+{
+    if ((event->buttons & GPM_B_MIDDLE) != 0)
+        return 1;
+    if ((event->buttons & GPM_B_RIGHT) != 0)
+        return 2;
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A program that asked for the mouse, DECSET 1000 and the like, gets it as xterm tells it, and
+   the terminal screen neither marks nor scrolls: coole, mcedit, htop work their own mouse.  TRUE
+   when the event went to the program, or is none it wants. */
+static gboolean
+mcterm_mouse_to_program (WMcTerm *t, mouse_msg_t msg, const mouse_event_t *event)
+{
+    const int mode = t->vterm != NULL ? mcview_vterm_mouse_mode (t->vterm) : 0;
+    const WRect *r = &WIDGET (t)->rect;
+    mcterm_geom_t g;
+    gboolean release = FALSE;
+    char seq[32];
+    int b, x, y, len;
+    ssize_t ignored;
+
+    if (mode == 0 || t->pty_master < 0 || !mcterm_geometry (t, &g))
+        return FALSE;
+    /* Rows of the history or the rows that matched a filter are on the screen, not those of the
+       program: the mouse is the terminal's, to scroll and to mark them. */
+    if (g.compose)
+        return FALSE;
+
+    switch (msg)
+    {
+    case MSG_MOUSE_DOWN:
+        widget_select (WIDGET (t));
+        b = mcterm_mouse_button (event);
+        break;
+    case MSG_MOUSE_UP:
+        if (mode == 9)
+            return TRUE;
+        b = mcterm_mouse_button (event);
+        release = TRUE;
+        break;
+    case MSG_MOUSE_DRAG:
+        if (mode != 1002 && mode != 1003)
+            return TRUE;
+        b = mcterm_mouse_button (event) + 32;
+        break;
+    case MSG_MOUSE_SCROLL_UP:
+        b = 64;
+        break;
+    case MSG_MOUSE_SCROLL_DOWN:
+        b = 65;
+        break;
+    case MSG_MOUSE_SCROLL_LEFT:
+        b = 66;
+        break;
+    case MSG_MOUSE_SCROLL_RIGHT:
+        b = 67;
+        break;
+    default:
+        // a click is a press and a release, told already
+        return TRUE;
+    }
+
+    // the cell of the screen of the program, from 1
+    x = CLAMP (event->x, 0, r->cols - 1) + 1;
+    y = CLAMP (g.top_row + event->y - g.blank_above, 0, r->lines - 1) + 1;
+
+    if (mcview_vterm_mouse_sgr (t->vterm))
+        len = g_snprintf (seq, sizeof (seq), "\033[<%d;%d;%d%c", b, x, y, release ? 'm' : 'M');
+    else
+    {
+        // in bytes: a release is the button 3, and a place past 223 cannot be told
+        if (release)
+            b = 3;
+        len = g_snprintf (seq, sizeof (seq), "\033[M%c%c%c", (char) (32 + b),
+                          (char) (32 + MIN (x, 223)), (char) (32 + MIN (y, 223)));
+    }
+    ignored = write (t->pty_master, seq, (size_t) len);
+    (void) ignored;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 mcterm_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
 {
     WMcTerm *t = (WMcTerm *) w;
     gint64 row;
     int col;
+
+    if (mcterm_mouse_to_program (t, msg, event))
+        return;
 
     switch (msg)
     {

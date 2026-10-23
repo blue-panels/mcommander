@@ -272,6 +272,33 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_mouse_modes_the_program_asks_for)
+{
+    mcview_vterm_t *vt = mcview_vterm_new ();
+
+    mcview_vterm_set_size (vt, 5, 20);
+    mcview_vterm_reset (vt);
+
+    ck_assert_int_eq (mcview_vterm_mouse_mode (vt), 0);
+    FEED (vt, "\033[?1002;1006h");
+    ck_assert_int_eq (mcview_vterm_mouse_mode (vt), 1002);
+    ck_assert (mcview_vterm_mouse_sgr (vt));
+    /* turning off another mode leaves this one */
+    FEED (vt, "\033[?1000l");
+    ck_assert_int_eq (mcview_vterm_mouse_mode (vt), 1002);
+    FEED (vt, "\033[?1002;1006l");
+    ck_assert_int_eq (mcview_vterm_mouse_mode (vt), 0);
+    ck_assert (!mcview_vterm_mouse_sgr (vt));
+    FEED (vt, "\033[?1000h");
+    mcview_vterm_reset (vt);
+    ck_assert_int_eq (mcview_vterm_mouse_mode (vt), 0);
+
+    mcview_vterm_free (vt);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_vpa_moves_row_only)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
@@ -2229,6 +2256,7 @@ main (void)
     tcase_add_test (tc_core, test_scroll_region_lf_above_region_advances_cursor);
     tcase_add_test (tc_core, test_il_dl_move_the_lines_of_the_region);
     tcase_add_test (tc_core, test_su_sd_scroll_the_region);
+    tcase_add_test (tc_core, test_mouse_modes_the_program_asks_for);
     tcase_add_test (tc_core, test_vpa_moves_row_only);
     tcase_add_test (tc_core, test_ech_erases_with_attrs_cursor_stays);
     tcase_add_test (tc_core, test_ich_shifts_the_tail_right);
