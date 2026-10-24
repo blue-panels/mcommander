@@ -6282,14 +6282,15 @@ panel_dir_list_callback (dir_list_cb_state_t state, void *data)
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * Is the fast find of Far mode running in @panel? Enter then ends it and opens the file found,
- * whatever the command line holds.
+ * Is the fast find of Far mode running in the current panel? Enter then ends it and opens the file
+ * found, whatever the command line holds.
  */
 
 gboolean
-panel_far_fast_find_running (const WPanel *panel)
+panel_far_fast_find_running (void)
 {
-    return panel != NULL && panel->quick_search.active && panel->quick_search.far_find;
+    return get_current_type () == view_listing && current_panel != NULL
+        && current_panel->quick_search.active && current_panel->quick_search.far_find;
 }
 
 /* --------------------------------------------------------------------------------------------- */

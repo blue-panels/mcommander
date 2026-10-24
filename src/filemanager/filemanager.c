@@ -1962,9 +1962,7 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
             return MSG_NOT_HANDLED;
 
         // Enter in the fast find of Far mode is the panel's: it opens the file found
-        if (parm == '\n' && !is_cmdline_mute ()
-            && !(get_current_type () == view_listing
-                 && panel_far_fast_find_running (current_panel)))
+        if (parm == '\n' && !is_cmdline_mute () && !panel_far_fast_find_running ())
         {
             if (exec_cmdline_enter () == MSG_HANDLED)
                 return MSG_HANDLED;
