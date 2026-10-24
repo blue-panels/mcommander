@@ -32,26 +32,38 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-#define POSTGRES_MAINTENANCE_DB_DEFAULT "postgres"
+/*** enums ***************************************************************************************/
+
+/* What names the server: the fields of the dialog, a URL, or a service of pg_service.conf */
+typedef enum
+{
+    POSTGRES_BY_HOST = 0,
+    POSTGRES_BY_URL,
+    POSTGRES_BY_SERVICE,
+} postgres_connect_by_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
 
-/* One [Connection.<name>] section. The keys but name, maintenance_db, description and read_only
-   are the keywords of libpq; NULL is a keyword not set, which libpq then takes from the
-   environment. */
+/* One [Connection.<name>] section. A field NULL is not given to libpq, which then takes it from
+   the service file or the environment, the way psql does. */
 typedef struct
 {
     char *name;
-    char *service;
-    char *host;
-    char *hostaddr;
+    postgres_connect_by_t connect_by;
+    char *url;      // postgresql://...; POSTGRES_BY_URL only
+    char *service;  // POSTGRES_BY_SERVICE only
+    char *host;     // POSTGRES_BY_HOST only, with port
     char *port;
+    char *database;  // with show_all_databases, where the list of databases is read
     char *user;
-    char *dbname;  // one database: the list of databases is left out
     char *sslmode;
-    char *maintenance_db;  // where the list of databases is read; NULL: "postgres"
     char *description;
-    gboolean read_only;
+    gboolean show_all_databases;  // FALSE: the panel has only the database
+    gboolean save_password;       // the password goes to ~/.pgpass once it has connected
+    gboolean read_only;           // the query editor opens read-only transactions
+
+    char *password;           // typed in this session, never written to postgres.ini
+    gboolean password_saved;  // that password has gone to ~/.pgpass already
 } postgres_connection_t;
 
 typedef struct
@@ -76,6 +88,8 @@ void postgres_config_free (postgres_config_t *cfg);
 
 postgres_connection_t *postgres_connection_copy (const postgres_connection_t *c);
 void postgres_connection_free (gpointer p);
+/* The fields of @c freed and zeroed, the password wiped */
+void postgres_connection_clear (postgres_connection_t *c);
 
 postgres_connection_t *postgres_config_find (const postgres_config_t *cfg, const char *name);
 

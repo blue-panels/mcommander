@@ -137,6 +137,8 @@ src/panel-plugins/panelize/panelize_config.c
 src/panel-plugins/panelize/panelize_dlg.c
 src/panel-plugins/postgres/postgres.c
 src/panel-plugins/postgres/postgres_config.c
+src/panel-plugins/postgres/postgres_conn.c
+src/panel-plugins/postgres/postgres_conndlg.c
 src/panel-plugins/postgres/postgres_connections.c
 src/panel-plugins/postgres/postgres_settings.c
 src/panel-plugins/postgres/postgres_ui.c

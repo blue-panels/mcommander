@@ -3,13 +3,16 @@
 ```
   PostgreSQL Panel Plugin
 
-  The PostgreSQL plugin shows the servers of PostgreSQL as panel
-  contents: connection -> database -> schema -> relation.
+  The PostgreSQL plugin shows the servers of PostgreSQL as
+  panel contents: connection -> database -> schema ->
+  relation. It reads the catalog of PostgreSQL 10 and newer;
+  an older server is refused when it is connected to.
 
   Opening the plugin
 
-    Alt-F1 / Alt-F2 -> PostgreSQL   The list of connections of
-                                    ~/.config/mc6/postgres.ini.
+    Alt-F1 / Alt-F2 -> PostgreSQL
+                    The list of connections of
+                    ~/.config/mc6/postgres.ini.
 
   Configuration: ~/.config/mc6/postgres.ini
 
@@ -32,27 +35,50 @@
     Enter or F4.
 
     [Connection.<name>]
-      service         a service of pg_service.conf
-      host            host name, address or socket directory
-      hostaddr        numeric address, no name lookup
-      port            port
-      user            user name
-      sslmode         disable, prefer, require, verify-full...
-      dbname          only this database: the list of
-                      databases is left out
-      maintenance_db  the database the list of databases is
-                      read from (default postgres)
-      description     a note
-      read_only       true: the query editor opens read-only
-                      transactions
+      connect_by          host, url or service: what names
+                          the server
+      host, port          host name, address or directory of
+                          sockets, and port (connect_by=host)
+      url                 postgresql://user@host:port/db?...
+                          (connect_by=url)
+      service             a service of pg_service.conf
+                          (connect_by=service)
+      database            the database; with
+                          show_all_databases, the one the
+                          list of databases is read from;
+                          empty: what libpq takes, the
+                          name of the user
+      show_all_databases  false: the panel has only the
+                          database
+      user, sslmode       the user, the SSL mode of libpq
+      save_password       true: a password typed for the
+                          connection goes to ~/.pgpass once
+                          it has connected
+      description         a note
+      read_only           true: the query editor opens
+                          read-only transactions
 
-    The keys but the last four are those of libpq. A key not
-    given is left to libpq: the service file and the PG*
-    variables of the environment, the way psql does it.
-    service= is the preferred way to name a server.
+    A field not given is left to libpq: the service file and
+    the PG* variables of the environment, as psql does.
 
-    The file has no passwords: libpq reads them from ~/.pgpass
-    or from the service file.
+    No password is kept in postgres.ini. libpq reads it from
+    ~/.pgpass (or $PGPASSFILE) or from the service file. When
+    the server asks for one there is none of, the plugin asks
+    for it and keeps it for the session; with save_password it
+    is written to ~/.pgpass, for the host, the port and the
+    user, any database, at mode 0600.
+
+  The dialog of a connection
+
+    Connect by chooses Host, URL or Service; the fields the
+    choice does not use are disabled. With Host the URL is the
+    one the fields make, read-only; going from URL back to
+    Host fills the fields from the URL. Test connection
+    connects with what is in the fields and tells the version
+    of the server, or the error of libpq; it asks for a
+    password the server wants and the fields have not got, and
+    leaves it in the Password field. Ctrl-C gives up the wait
+    for a server.
 
   Hierarchy and keys
 

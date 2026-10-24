@@ -61,16 +61,17 @@ static const struct
     const char *key;
     gsize offset;
 } connection_keys[] = {
+    { "url", G_STRUCT_OFFSET (postgres_connection_t, url) },
     { "service", G_STRUCT_OFFSET (postgres_connection_t, service) },
     { "host", G_STRUCT_OFFSET (postgres_connection_t, host) },
-    { "hostaddr", G_STRUCT_OFFSET (postgres_connection_t, hostaddr) },
     { "port", G_STRUCT_OFFSET (postgres_connection_t, port) },
+    { "database", G_STRUCT_OFFSET (postgres_connection_t, database) },
     { "user", G_STRUCT_OFFSET (postgres_connection_t, user) },
-    { "dbname", G_STRUCT_OFFSET (postgres_connection_t, dbname) },
     { "sslmode", G_STRUCT_OFFSET (postgres_connection_t, sslmode) },
-    { "maintenance_db", G_STRUCT_OFFSET (postgres_connection_t, maintenance_db) },
     { "description", G_STRUCT_OFFSET (postgres_connection_t, description) },
 };
+
+static const char *const connect_by_names[] = { "host", "url", "service" };
 
 /*** file scope functions ************************************************************************/
 
@@ -166,15 +167,27 @@ postgres_config_path (void)
 /* --------------------------------------------------------------------------------------------- */
 
 void
+postgres_connection_clear (postgres_connection_t *c)
+{
+    g_free (c->name);
+    for (gsize i = 0; i < G_N_ELEMENTS (connection_keys); i++)
+        g_free (*connection_field (c, i));
+    if (c->password != NULL)
+        memset (c->password, 0, strlen (c->password));
+    g_free (c->password);
+    memset (c, 0, sizeof (*c));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
 postgres_connection_free (gpointer p)
 {
     postgres_connection_t *c = (postgres_connection_t *) p;
 
     if (c == NULL)
         return;
-    g_free (c->name);
-    for (gsize i = 0; i < G_N_ELEMENTS (connection_keys); i++)
-        g_free (*connection_field (c, i));
+    postgres_connection_clear (c);
     g_free (c);
 }
 
@@ -189,7 +202,11 @@ postgres_connection_copy (const postgres_connection_t *c)
     copy->name = g_strdup (c->name);
     for (gsize i = 0; i < G_N_ELEMENTS (connection_keys); i++)
         *connection_field (copy, i) = g_strdup (*connection_field ((postgres_connection_t *) c, i));
+    copy->connect_by = c->connect_by;
+    copy->show_all_databases = c->show_all_databases;
+    copy->save_password = c->save_password;
     copy->read_only = c->read_only;
+    copy->password = g_strdup (c->password);
     return copy;
 }
 
@@ -252,6 +269,16 @@ postgres_config_load (void)
         c->name = g_strdup (name);
         for (gsize i = 0; i < G_N_ELEMENTS (connection_keys); i++)
             *connection_field (c, i) = config_get_string (ini, *g, connection_keys[i].key);
+        {
+            char *by = config_get_string (ini, *g, "connect_by");
+
+            for (gsize i = 0; i < G_N_ELEMENTS (connect_by_names); i++)
+                if (g_strcmp0 (by, connect_by_names[i]) == 0)
+                    c->connect_by = (postgres_connect_by_t) i;
+            g_free (by);
+        }
+        c->show_all_databases = mc_config_get_bool (ini, *g, "show_all_databases", TRUE);
+        c->save_password = mc_config_get_bool (ini, *g, "save_password", FALSE);
         c->read_only = mc_config_get_bool (ini, *g, "read_only", FALSE);
         g_ptr_array_add (cfg->connections, c);
     }
@@ -346,9 +373,12 @@ postgres_config_save_connection (const postgres_connection_t *c, const char *old
     }
 
     sect = g_strconcat (SECT_CONNECTION_, c->name, (char *) NULL);
+    mc_config_set_string (ini, sect, "connect_by", connect_by_names[c->connect_by]);
     for (gsize i = 0; i < G_N_ELEMENTS (connection_keys); i++)
         config_set_string (ini, sect, connection_keys[i].key,
                            *connection_field ((postgres_connection_t *) c, i));
+    mc_config_set_bool (ini, sect, "show_all_databases", c->show_all_databases);
+    mc_config_set_bool (ini, sect, "save_password", c->save_password);
     mc_config_set_bool (ini, sect, "read_only", c->read_only);
     g_free (sect);
     return config_save (ini, path, err_out);

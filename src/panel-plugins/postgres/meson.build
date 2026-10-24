@@ -2,6 +2,8 @@ postgres_plugin_dir = panel_plugins_dir / 'postgres'
 shared_module('mc-panel-postgres',
   'postgres.c',
   'postgres_config.c',
+  'postgres_conn.c',
+  'postgres_conndlg.c',
   'postgres_connections.c',
   'postgres_settings.c',
   'postgres_ui.c',

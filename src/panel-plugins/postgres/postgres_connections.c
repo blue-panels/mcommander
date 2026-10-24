@@ -41,7 +41,7 @@ postgres_create_connection (postgres_data_t *data)
     char *err = NULL;
 
     c = g_new0 (postgres_connection_t, 1);
-    if (!postgres_connection_dialog_run (c, TRUE))
+    if (!postgres_connection_dialog_run (data->host, data->cfg, c, TRUE))
     {
         postgres_connection_free (c);
         return MC_PPR_SKIPPED;
@@ -87,7 +87,7 @@ postgres_edit_connection (postgres_data_t *data)
         return MC_PPR_SKIPPED;
 
     edited = postgres_connection_copy (orig);
-    if (!postgres_connection_dialog_run (edited, FALSE))
+    if (!postgres_connection_dialog_run (data->host, data->cfg, edited, FALSE))
     {
         postgres_connection_free (edited);
         return MC_PPR_SKIPPED;

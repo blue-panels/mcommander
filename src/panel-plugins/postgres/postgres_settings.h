@@ -29,14 +29,17 @@
 #define MC_PANEL_POSTGRES_SETTINGS_H
 
 #include "lib/global.h"
+#include "lib/panel-plugin.h"  // mc_panel_host_t
 
 #include "postgres_config.h"
 
 /*** declarations of public functions ************************************************************/
 
 /* The editor of one connection: on OK with a valid name @c is changed in place and TRUE is
-   returned; the caller saves it. @is_new only chooses the title. */
-gboolean postgres_connection_dialog_run (postgres_connection_t *c, gboolean is_new);
+   returned; the caller saves it. "Test connection" connects with what is in the fields, with the
+   timeouts of @cfg; @is_new only chooses the title. */
+gboolean postgres_connection_dialog_run (mc_panel_host_t *host, const postgres_config_t *cfg,
+                                         postgres_connection_t *c, gboolean is_new);
 
 /* The general options; on OK @cfg is changed and [General] of postgres.ini written. */
 gboolean postgres_settings_dialog_run (postgres_config_t *cfg);
