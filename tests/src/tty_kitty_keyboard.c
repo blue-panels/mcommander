@@ -465,10 +465,13 @@ START_TEST (test_kitty_event_text)
     ck_assert (seq_event (ESC_STR "[1092;4u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 2);
     ck_assert (memcmp (text, "\xD0\xA4", 2) == 0);
-    /* a key that is not a letter stays as it is */
+    /* a key that is not a letter types what the layout says, which the terminal does not tell */
     ck_assert (seq_event (ESC_STR "[49;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+    /* it does with the alternate keys */
+    ck_assert (seq_event (ESC_STR "[49:33;4u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
-    ck_assert_int_eq (text[0], '1');
+    ck_assert_int_eq (text[0], '!');
 
     /* a functional key types nothing: the plus of the keypad, Enter, a release */
     ck_assert (seq_event (ESC_STR "[57413;3u", &ev));

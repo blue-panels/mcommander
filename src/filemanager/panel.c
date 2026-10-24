@@ -3998,8 +3998,9 @@ search_previous (WPanel *panel)
  * of the terminal; 0 when there are none. A terminal that sends keys the old way sends the byte
  * after an Esc, and the rest of a UTF-8 character after it as plain keys, which the search takes
  * as typed. A kitty terminal names the key of the base layout instead, and the text that was
- * typed with the layout is in its event, all of it; a key of the keypad has no text there, but its
- * key code is the character. @size is TTY_KITTY_TEXT_BYTES, so every text of an event fits.
+ * typed with the layout is in its event, all of it; a key of the keypad, which kitty names in the
+ * private use area, has no text there, but its key code is the character. @size is
+ * TTY_KITTY_TEXT_BYTES, so every text of an event fits.
  */
 
 static int
@@ -4012,8 +4013,8 @@ panel_far_fast_find_text (int key, char *text, size_t size)
     {
         const size_t len = tty_key_event_text (&ev, text, size);
 
-        // the text the terminal sent is the whole answer: the key code stands for no text only
-        if (len != 0 || ev.text_len > 0)
+        // the event is the whole answer, but for a key of the keypad
+        if (len != 0 || ev.text_len > 0 || ev.key < 0xE000 || ev.key > 0xF8FF)
             return (int) len;
     }
 

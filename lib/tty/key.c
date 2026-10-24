@@ -4079,8 +4079,9 @@ tty_key_event_take (int key, tty_key_event_t *ev)
  * the whole text the terminal sent with it, else the character of the key (its shifted form with
  * Shift; the capital of a letter when the terminal does not report the alternate keys). The
  * modifiers do not count, so Alt with a letter gives the letter. Returns the length; 0 for a key
- * that types nothing (a functional key, a control character) or a text that does not fit: a
- * buffer of TTY_KITTY_TEXT_BYTES takes any text.
+ * that types nothing (a functional key, a control character), for Shift with a key that is no
+ * letter when the terminal does not say what it types, or for a text that does not fit: a buffer
+ * of TTY_KITTY_TEXT_BYTES takes any text.
  */
 
 size_t
@@ -4097,11 +4098,14 @@ tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
     c = ev->key;
     if ((ev->mods & KITTY_MOD_SHIFT) != 0)
     {
+        // without the alternate keys (flag 4) the terminal does not say what Shift types: it
+        // depends on the layout but for the capital of a letter
         if (ev->shifted != 0)
             c = ev->shifted;
         else if (g_unichar_islower (c))
-            // without the alternate keys (flag 4) the terminal does not say what Shift types
             c = g_unichar_toupper (c);
+        else
+            return 0;
     }
 
     // the functional keys of kitty are in the private use area
