@@ -32,6 +32,7 @@
 #include "lib/panel-plugin.h"  // mc_panel_host_t, mc_pp_result_t
 
 #include "postgres_config.h"
+#include "postgres_conn.h"  // PGconn
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
@@ -43,9 +44,18 @@
 typedef enum
 {
     POSTGRES_LEVEL_CONNECTIONS = 0,
+    POSTGRES_LEVEL_DATABASES,
 } postgres_level_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
+
+/* An entry of the panel below the connections */
+typedef struct
+{
+    char *name;
+    char *owner;
+    gint64 size;  // bytes, -1: not known
+} postgres_item_t;
 
 typedef struct
 {
@@ -53,10 +63,27 @@ typedef struct
     postgres_config_t *cfg;
     postgres_level_t level;
 
+    postgres_connection_t *connection;  // the open one, in cfg
+    PGconn *conn;
+    GPtrArray *items;  // postgres_item_t *, of the level
+
     char *focus_after_up;  // the entry the cursor goes to when the list is read next
 } postgres_data_t;
 
 /*** declarations of public functions ************************************************************/
+
+/* postgres_nav.c */
+
+mc_pp_result_t postgres_get_items (void *plugin_data, void *list);
+mc_pp_result_t postgres_chdir (void *plugin_data, const char *path);
+const postgres_item_t *postgres_find_item (const postgres_data_t *data, const char *name);
+void postgres_session_close (postgres_data_t *data);
+
+/* postgres_columns.c */
+
+const mc_panel_column_t *postgres_get_columns (void *plugin_data, size_t *count);
+const char *postgres_get_column_value (void *plugin_data, const char *fname, const char *column_id);
+const char *postgres_get_default_format (void *plugin_data);
 
 /* postgres_connections.c */
 

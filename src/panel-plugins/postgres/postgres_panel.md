@@ -91,4 +91,22 @@
                       Renaming rewrites its section.
       F8              Delete the marked connections, or the
                       one under the cursor, from postgres.ini.
+      Enter           Connect, list the databases.
+
+    On the list of databases:
+      Enter           Open the database.
+      ..              Close the connection, back to the list
+                      of connections.
+
+    The list has the databases the user may connect to,
+    without the templates, with their size and owner.
+    Without "Show all databases" it has the database of the
+    connection only.
+    The connection of the panel is read-only and bounded by
+    statement_timeout; Ctrl-C cancels a query of the panel. A
+    connection found lost is opened again once.
+
+    Below the connections the panel changes nothing: F4, F6,
+    F7, F8 say so. The objects are changed with SQL in the
+    query editor.
 ```

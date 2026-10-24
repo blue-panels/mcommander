@@ -32,21 +32,18 @@
 #include <config.h>
 
 #include <string.h>
-#include <sys/stat.h>
-#include <time.h>
 
 #include "lib/global.h"
 #include "lib/keybind.h"  // CK_Edit
 #include "lib/panel-plugin.h"
 
 #include "postgres_internal.h"
+#include "postgres_ui.h"
 
 /*** forward declarations ************************************************************************/
 
 static void *postgres_open (mc_panel_host_t *host, const char *open_path);
 static void postgres_close (void *plugin_data);
-static mc_pp_result_t postgres_get_items (void *plugin_data, void *list);
-static mc_pp_result_t postgres_chdir (void *plugin_data, const char *path);
 static mc_pp_result_t postgres_handle_key (void *plugin_data, int key);
 static mc_pp_result_t postgres_create_item (void *plugin_data);
 static mc_pp_result_t postgres_delete_items (void *plugin_data, const char **names, int count);
@@ -77,6 +74,9 @@ static const mc_panel_plugin_t postgres_plugin = {
     .delete_items = postgres_delete_items,
     .get_title = postgres_get_title,
     .get_focus_name = postgres_get_focus_name,
+    .get_columns = postgres_get_columns,
+    .get_column_value = postgres_get_column_value,
+    .get_default_format = postgres_get_default_format,
     .configure = postgres_configure,
     .get_help_info = postgres_get_help_info,
 
@@ -112,46 +112,10 @@ postgres_close (void *plugin_data)
 {
     postgres_data_t *data = (postgres_data_t *) plugin_data;
 
+    postgres_session_close (data);
     postgres_config_free (data->cfg);
     g_free (data->focus_after_up);
     g_free (data);
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static mc_pp_result_t
-postgres_get_items (void *plugin_data, void *list)
-{
-    postgres_data_t *data = (postgres_data_t *) plugin_data;
-    time_t now = time (NULL);
-
-    switch (data->level)
-    {
-    case POSTGRES_LEVEL_CONNECTIONS:
-        for (guint i = 0; i < data->cfg->connections->len; i++)
-        {
-            const postgres_connection_t *c = g_ptr_array_index (data->cfg->connections, i);
-
-            mc_pp_add_entry (list, c->name, S_IFDIR | 0755, 0, now);
-        }
-        return MC_PPR_OK;
-
-    default:
-        return MC_PPR_FAILED;
-    }
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static mc_pp_result_t
-postgres_chdir (void *plugin_data, const char *path)
-{
-    postgres_data_t *data = (postgres_data_t *) plugin_data;
-
-    if (strcmp (path, "..") == 0)
-        return data->level == POSTGRES_LEVEL_CONNECTIONS ? MC_PPR_CLOSE : MC_PPR_FAILED;
-
-    return MC_PPR_FAILED;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -167,6 +131,17 @@ postgres_handle_key (void *plugin_data, int key)
             return postgres_edit_connection (data);
         if (key == CK_EditNew)
             return postgres_create_connection (data);
+        return MC_PPR_NOT_SUPPORTED;
+    }
+
+    // below the connections the panel only reads: its objects are changed by SQL in coole
+    if (key == CK_Edit || key == CK_EditNew || key == CK_Delete || key == CK_MakeDir
+        || key == CK_Move)
+    {
+        postgres_message (data->host, FALSE,
+                          _ ("The panel only shows the objects of the database: change them with "
+                             "SQL in the query editor."));
+        return MC_PPR_OK;
     }
     return MC_PPR_NOT_SUPPORTED;
 }
@@ -200,9 +175,17 @@ postgres_delete_items (void *plugin_data, const char **names, int count)
 static const char *
 postgres_get_title (void *plugin_data)
 {
-    (void) plugin_data;
+    static char title[256];
+    postgres_data_t *data = (postgres_data_t *) plugin_data;
 
-    return _ ("PostgreSQL connections");
+    switch (data->level)
+    {
+    case POSTGRES_LEVEL_DATABASES:
+        g_snprintf (title, sizeof (title), _ ("%s: databases"), data->connection->name);
+        return title;
+    default:
+        return _ ("PostgreSQL connections");
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
