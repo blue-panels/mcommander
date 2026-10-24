@@ -658,6 +658,14 @@ START_TEST (test_keymap_far_fast_find_user_keys)
     ck_assert (!keymap_far_fast_find_takes (ALT ('}')));
     keymap_free ();
 
+    /* the same keymap in the directory of the configuration: the administrator's, so it keeps */
+    mc_global.share_data_dir = user;
+    far_fast_find_load (share_file);
+    ck_assert (keymap_far_fast_find_kept (ALT ('y')));
+    ck_assert (keymap_far_fast_find_kept (ALT ('k')));
+    ck_assert (!keymap_far_fast_find_takes (ALT ('k')));
+    keymap_free ();
+
     keymap_far_fast_find = FALSE;
     keymap_far_mode = FALSE;
     mc_global.share_data_dir = share_data_dir;

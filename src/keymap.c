@@ -1213,31 +1213,28 @@ far_fast_find_set_base (mc_config_t *cfg)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/** Is @fname a keymap of the package, in the directory of its data or of its configuration? */
+/**
+ * Is @fname a keymap of the package, in the directory of its data? A keymap in the directory of
+ * the configuration is the administrator's, and it is the user's own for the fast find of Far.
+ */
 
 static gboolean
 keymap_file_is_global (const char *fname)
 {
-    const char *const dirs[] = { mc_global.share_data_dir, mc_global.sysconfig_dir };
-    gboolean global = FALSE;
-    char *dir;
-    size_t i;
+    gboolean global;
+    char *dir, *d;
+
+    if (mc_global.share_data_dir == NULL || *mc_global.share_data_dir == '\0')
+        return FALSE;
 
     dir = g_path_get_dirname (fname);
     canonicalize_pathname (dir);
-
-    for (i = 0; i < G_N_ELEMENTS (dirs) && !global; i++)
-        if (dirs[i] != NULL && *dirs[i] != '\0')
-        {
-            char *d;
-
-            d = g_strdup (dirs[i]);
-            canonicalize_pathname (d);
-            global = strcmp (d, dir) == 0;
-            g_free (d);
-        }
-
+    d = g_strdup (mc_global.share_data_dir);
+    canonicalize_pathname (d);
+    global = strcmp (d, dir) == 0;
+    g_free (d);
     g_free (dir);
+
     return global;
 }
 
@@ -1378,7 +1375,18 @@ far_fast_find_set_kept (void)
     size_t i, k;
 
     if (far_fast_find_kept_keys != NULL)
+    {
         g_hash_table_destroy (far_fast_find_kept_keys);
+        far_fast_find_kept_keys = NULL;
+    }
+
+    // nothing asks for them without the fast find
+    if (!keymap_far_mode || !keymap_far_fast_find)
+    {
+        far_fast_find_free_base ();
+        return;
+    }
+
     far_fast_find_kept_keys = g_hash_table_new (g_direct_hash, g_direct_equal);
 
     for (k = 0; dialog_map != NULL && dialog_map[k].key != 0; k++)
