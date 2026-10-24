@@ -4075,17 +4075,15 @@ tty_key_event_take (int key, tty_key_event_t *ev)
 
 /* --------------------------------------------------------------------------------------------- */
 /**
- * The text that the key of @ev types, in the charset of the terminal, into @buf of @size bytes:
- * the whole text the terminal sent with it, else the character of the key (its shifted form with
- * Shift; the capital of a letter when the terminal does not report the alternate keys). The
- * modifiers do not count, so Alt with a letter gives the letter. Returns the length; 0 for a key
- * that types nothing (a functional key, a control character), for Shift with a key that is no
- * letter when the terminal does not say what it types, or for a text that does not fit: a buffer
- * of TTY_KITTY_TEXT_BYTES takes any text.
+ * The first character that the key of @ev types: the first of the text the terminal sent with it,
+ * else the character of the key (its shifted form with Shift; the capital of a letter when the
+ * terminal does not report the alternate keys). The modifiers do not count. 0 for a key that types
+ * nothing (a functional key) and for Shift with a key that is no letter when the terminal does not
+ * say what it types.
  */
 
-size_t
-tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
+gunichar
+tty_key_event_char (const tty_key_event_t *ev)
 {
     gunichar c;
 
@@ -4093,7 +4091,7 @@ tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
         return 0;
 
     if (ev->text_len > 0)
-        return kitty_codepoints_to_bytes (ev->text, ev->text_len, buf, size);
+        return ev->text[0];
 
     c = ev->key;
     if ((ev->mods & KITTY_MOD_SHIFT) != 0)
@@ -4112,7 +4110,30 @@ tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
     if (c >= 0xE000 && c <= 0xF8FF)
         return 0;
 
-    return kitty_codepoints_to_bytes (&c, 1, buf, size);
+    return c;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * The text that the key of @ev types, in the charset of the terminal, into @buf of @size bytes:
+ * the whole text the terminal sent with it, else the character of tty_key_event_char (). Returns
+ * the length; 0 for a key that types nothing, a control character, or a text that does not fit: a
+ * buffer of TTY_KITTY_TEXT_BYTES takes any text.
+ */
+
+size_t
+tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
+{
+    gunichar c;
+
+    if (ev->final != 'u' || ev->event == TTY_KITTY_RELEASE)
+        return 0;
+
+    if (ev->text_len > 0)
+        return kitty_codepoints_to_bytes (ev->text, ev->text_len, buf, size);
+
+    c = tty_key_event_char (ev);
+    return c == 0 ? 0 : kitty_codepoints_to_bytes (&c, 1, buf, size);
 }
 
 /* --------------------------------------------------------------------------------------------- */

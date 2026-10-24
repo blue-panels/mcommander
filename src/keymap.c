@@ -1405,37 +1405,59 @@ far_fast_find_set_kept (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * Can a name begin with @c, as the fast find of Far takes it: a letter or a digit of any script, a
+ * dot, an underscore or a hyphen? Alt with another character keeps its action.
+ */
+
+static gboolean
+far_fast_find_name_char (gunichar c)
+{
+    if (c < 0x80)
+        return g_ascii_isalnum ((char) c) || c == '.' || c == '_' || c == '-';
+
+    return g_unichar_isalnum (c);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
 /**
- * Is @key one of the keys of the fast find of Far: Alt or Alt-Shift with a character, as the
- * terminal sends it (a byte of the charset of the terminal, or the first byte of a UTF-8 one),
- * or a kitty event of Alt with a key mc has no key code for (a letter of a layout whose key the
- * terminal names without the key of the base layout), which counts when it types a character?
+ * Is @key one of the keys of the fast find of Far: Alt or Alt-Shift with a character a name can
+ * begin with (far_fast_find_name_char ()), as the terminal sends it (a byte of the charset of the
+ * terminal, or the first byte of a UTF-8 one), or a kitty event of Alt with a key mc has no key
+ * code for (a letter of a layout whose key the terminal names without the key of the base layout)?
+ * A kitty event decides by the character it types: the key code is the key of the base layout.
  */
 
 gboolean
 keymap_far_fast_find_key (int key)
 {
     const int c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+    tty_key_event_t ev;
 
     // the panel takes the text of the event once, when it types into the search
     if (key == KEY_KITTY_EVENT)
-    {
-        tty_key_event_t ev;
-
         return tty_key_event (key, &ev) && ev.final == 'u' && ev.event != TTY_KITTY_RELEASE
             && (ev.mods & TTY_KITTY_MOD_ALT) != 0
             && (ev.mods
                 & (TTY_KITTY_MOD_CTRL | TTY_KITTY_MOD_SUPER | TTY_KITTY_MOD_HYPER
                    | TTY_KITTY_MOD_META))
-            == 0;
-    }
+            == 0
+            && far_fast_find_name_char (tty_key_event_char (&ev));
 
-    return (key & KEY_M_ALT) != 0 && (key & (KEY_M_CTRL | KEY_M_SUPER)) == 0 && c > ' ' && c != 0x7F
-        && c <= 0xFF;
+    if ((key & KEY_M_ALT) == 0 || (key & (KEY_M_CTRL | KEY_M_SUPER)) != 0 || c <= ' ' || c == 0x7F
+        || c > 0xFF)
+        return FALSE;
+
+    // a key of the keypad has no character in its event, but its key code is the character
+    if (tty_key_event (key, &ev) && tty_key_event_char (&ev) != 0)
+        return far_fast_find_name_char (tty_key_event_char (&ev));
+
+    // a byte of an 8-bit charset or the lead byte of UTF-8 does not say what character it is
+    return c >= 0x80 || far_fast_find_name_char ((gunichar) c);
 }
 
 /* --------------------------------------------------------------------------------------------- */

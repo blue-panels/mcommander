@@ -448,6 +448,11 @@ START_TEST (test_kitty_event_text)
     /* a text that does not fit is not cut */
     ck_assert_uint_eq (tty_key_event_text (&ev, text, 2), 0);
 
+    /* the first character of the text, not the key of the base layout: Alt with the key of ';'
+       in a Russian layout types a letter */
+    ck_assert (seq_event (ESC_STR "[1078::59;3;1078u", &ev));
+    ck_assert_uint_eq (tty_key_event_char (&ev), 0x436);
+
     /* Alt with a Cyrillic letter and no key of the base layout: the letter of the key */
     ck_assert (seq_event (ESC_STR "[1092;3u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 2);
@@ -476,6 +481,7 @@ START_TEST (test_kitty_event_text)
     /* a functional key types nothing: the plus of the keypad, Enter, a release */
     ck_assert (seq_event (ESC_STR "[57413;3u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+    ck_assert_uint_eq (tty_key_event_char (&ev), 0);
     ck_assert (seq_event (ESC_STR "[13;3u", &ev));
     ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
     ck_assert (seq_event (ESC_STR "[97;3:3u", &ev));

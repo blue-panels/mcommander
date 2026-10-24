@@ -513,7 +513,9 @@ START_TEST (test_keymap_far_fast_find_key)
     ck_assert (keymap_far_fast_find_key (ALT ('A')));
     ck_assert (keymap_far_fast_find_key (KEY_M_ALT | KEY_M_SHIFT | 'a'));
     ck_assert (keymap_far_fast_find_key (ALT ('7')));
-    ck_assert (keymap_far_fast_find_key (ALT ('?')));
+    ck_assert (keymap_far_fast_find_key (ALT ('.')));
+    ck_assert (keymap_far_fast_find_key (ALT ('_')));
+    ck_assert (keymap_far_fast_find_key (ALT ('-')));
     ck_assert (keymap_far_fast_find_key (ALT (0xC6)));
     ck_assert (keymap_far_fast_find_key (ALT (0xD0)));
 
@@ -523,6 +525,12 @@ START_TEST (test_keymap_far_fast_find_key)
     ck_assert (!keymap_far_fast_find_key (ALT ('\n')));
     ck_assert (!keymap_far_fast_find_key (ALT ('\t')));
     ck_assert (!keymap_far_fast_find_key (ALT (0x7F)));
+    /* a name does not begin with them */
+    ck_assert (!keymap_far_fast_find_key (ALT ('?')));
+    ck_assert (!keymap_far_fast_find_key (ALT ('\\')));
+    ck_assert (!keymap_far_fast_find_key (ALT ('|')));
+    ck_assert (!keymap_far_fast_find_key (ALT ('/')));
+    ck_assert (!keymap_far_fast_find_key (ALT ('}')));
     ck_assert (!keymap_far_fast_find_key (KEY_M_ALT | KEY_M_CTRL | 'a'));
     ck_assert (!keymap_far_fast_find_key (KEY_M_ALT | KEY_F (7)));
     ck_assert (!keymap_far_fast_find_key (KEY_M_ALT | KEY_BACKSPACE));
@@ -550,7 +558,6 @@ START_TEST (test_keymap_far_fast_find)
     ck_assert_int_eq (keybind_lookup_keymap_command (filemanager_map, ALT ('c')), CK_CdQuick);
     ck_assert_int_eq (keybind_lookup_keymap_command (panel_map, ALT ('H')), CK_History);
     ck_assert_int_eq (keybind_lookup_keymap_command (input_map, ALT ('p')), CK_HistoryPrev);
-    ck_assert (keymap_far_fast_find_takes (ALT ('?')));
     ck_assert (keymap_far_fast_find_takes (ALT ('c')));
     ck_assert (keymap_far_fast_find_takes (ALT ('h')));
     ck_assert (keymap_far_fast_find_takes (ALT ('x')));
@@ -559,6 +566,9 @@ START_TEST (test_keymap_far_fast_find)
     ck_assert (keymap_far_fast_find_takes (ALT ('o')));
     /* the Alt keys of the command line too: Far has none */
     ck_assert (keymap_far_fast_find_takes (ALT ('p')));
+
+    /* Find stays on Alt-?: a name does not begin with it */
+    ck_assert (!keymap_far_fast_find_takes (ALT ('?')));
 
     /* the keys of the screens stay */
     ck_assert (!keymap_far_fast_find_takes (ALT ('}')));
