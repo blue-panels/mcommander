@@ -174,6 +174,7 @@ static const char *panel_format (WPanel *panel);
 static gboolean do_enter (WPanel *panel);
 static void goto_parent_dir (WPanel *panel);
 static void goto_root_dir (WPanel *panel);
+static cb_ret_t panel_execute_cmd (WPanel *panel, long command);
 static panel_magic_open_result_t panel_magic_open_local_file (WPanel *panel, const char *fname,
                                                               const vfs_path_t *full_name_vpath,
                                                               const char *action_name,
@@ -4119,25 +4120,37 @@ panel_far_fast_find (WPanel *panel, int key)
     if (!keymap_far_fast_find_takes (key))
         return FALSE;
 
-    if (!panel->quick_search.active)
-    {
-        const long command = widget_lookup_key (WIDGET (panel), key);
-        const mc_pp_result_t r = command != CK_IgnoreKey
-            ? panel_plugin_command_key (panel, command, key)
-            : panel_plugin_key (panel, key, TRUE);
-
-        // the plugin answered, as panel_key () takes it: the rest of the character is not typed
-        // anywhere either
-        if (r == MC_PPR_OK || (r == MC_PPR_SKIPPED && command != CK_IgnoreKey))
-        {
-            panel->quick_search.far_skip = panel_far_fast_find_rest (key);
-            return TRUE;
-        }
-    }
-
+    // a key that types nothing is the panel's, which gives it to the plugin
     len = panel_far_fast_find_text (key, text, sizeof (text));
     if (len == 0)
         return FALSE;
+
+    // the lead byte of a UTF-8 character after an Esc is no key of a plugin: a dialog of the
+    // plugin would take the rest of the character as typed
+    if (!panel->quick_search.active && panel_far_fast_find_rest (key) == 0)
+    {
+        const long command = widget_lookup_key (WIDGET (panel), key);
+
+        if (command == CK_IgnoreKey)
+        {
+            if (panel_plugin_key (panel, key, TRUE) == MC_PPR_OK)
+                return TRUE;
+        }
+        else
+        {
+            // the answer of the plugin as panel_key () takes it: a failure of the plugin's own
+            // leaves the key to its command
+            const mc_pp_result_t r = panel_plugin_command_key (panel, command, key);
+
+            if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+                return TRUE;
+            if (r == MC_PPR_FAILED)
+            {
+                (void) panel_execute_cmd (panel, command);
+                return TRUE;
+            }
+        }
+    }
 
     if (!panel->quick_search.active)
     {
