@@ -45,6 +45,8 @@ typedef enum
 {
     POSTGRES_LEVEL_CONNECTIONS = 0,
     POSTGRES_LEVEL_DATABASES,
+    POSTGRES_LEVEL_SCHEMAS,
+    POSTGRES_LEVEL_RELATIONS,
 } postgres_level_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
@@ -55,6 +57,8 @@ typedef struct
     char *name;
     char *owner;
     gint64 size;  // bytes, -1: not known
+    char kind;    // of a relation: relkind of pg_class
+    gint64 rows;  // of a relation: the estimate of the statistics, -1: none
 } postgres_item_t;
 
 typedef struct
@@ -65,6 +69,7 @@ typedef struct
 
     postgres_connection_t *connection;  // the open one, in cfg
     PGconn *conn;
+    char *schema;      // the open one
     GPtrArray *items;  // postgres_item_t *, of the level
 
     char *focus_after_up;  // the entry the cursor goes to when the list is read next
@@ -78,6 +83,8 @@ mc_pp_result_t postgres_get_items (void *plugin_data, void *list);
 mc_pp_result_t postgres_chdir (void *plugin_data, const char *path);
 const postgres_item_t *postgres_find_item (const postgres_data_t *data, const char *name);
 void postgres_session_close (postgres_data_t *data);
+/* The name of the kind of a relation: "table", "view"... */
+const char *postgres_relkind_name (char kind);
 
 /* postgres_columns.c */
 

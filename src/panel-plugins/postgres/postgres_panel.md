@@ -94,9 +94,27 @@
       Enter           Connect, list the databases.
 
     On the list of databases:
-      Enter           Open the database.
+      Enter           Open the database: its schemas.
       ..              Close the connection, back to the list
                       of connections.
+
+    On the list of schemas:
+      Enter           The relations of the schema.
+
+    On the list of relations:
+      Type            table, partitioned, view, matview,
+                      foreign or sequence.
+      Rows~           The estimate of the statistics of the
+                      server (reltuples), not a count: empty
+                      before the first ANALYZE.
+      Size            pg_total_relation_size, with the
+                      indexes and TOAST.
+
+    The system schemas, pg_catalog, information_schema and
+    pg_toast, are shown with show_system_schemas only; the
+    temporary schemas of the sessions never. A partition is
+    not in the list: its rows are those of its parent, whose
+    Rows~ and Size sum the partitions under it.
 
     The list has the databases the user may connect to,
     without the templates, with their size and owner.

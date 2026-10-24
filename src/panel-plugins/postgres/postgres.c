@@ -183,6 +183,14 @@ postgres_get_title (void *plugin_data)
     case POSTGRES_LEVEL_DATABASES:
         g_snprintf (title, sizeof (title), _ ("%s: databases"), data->connection->name);
         return title;
+    case POSTGRES_LEVEL_SCHEMAS:
+        g_snprintf (title, sizeof (title), _ ("%s/%s: schemas"), data->connection->name,
+                    PQdb (data->conn));
+        return title;
+    case POSTGRES_LEVEL_RELATIONS:
+        g_snprintf (title, sizeof (title), _ ("%s/%s/%s: relations"), data->connection->name,
+                    PQdb (data->conn), data->schema);
+        return title;
     default:
         return _ ("PostgreSQL connections");
     }

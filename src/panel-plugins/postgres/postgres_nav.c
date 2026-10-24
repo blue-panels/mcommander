@@ -49,6 +49,34 @@
     "WHERE d.datallowconn AND NOT d.datistemplate "                                                \
     "AND pg_catalog.has_database_privilege (d.oid, 'CONNECT') ORDER BY 1"
 
+/* $1: the system schemas too. The temporary schemas of the sessions are never shown. */
+#define SQL_SCHEMAS                                                                                \
+    "SELECT n.nspname, pg_catalog.pg_get_userbyid (n.nspowner) FROM pg_catalog.pg_namespace n "    \
+    "WHERE n.nspname !~ '^pg_(toast_)?temp_' "                                                     \
+    "AND ($1::boolean OR (n.nspname !~ '^pg_' AND n.nspname <> 'information_schema')) ORDER BY 1"
+
+/* The partitions of the partitioned table c.oid, at every level, as p */
+#define SQL_PARTITIONS_OF_C                                                                        \
+    "(WITH RECURSIVE t (oid) AS (SELECT inhrelid FROM pg_catalog.pg_inherits "                     \
+    "WHERE inhparent = c.oid UNION ALL SELECT i.inhrelid FROM pg_catalog.pg_inherits i "           \
+    "JOIN t ON i.inhparent = t.oid) SELECT oid FROM t) "
+
+/* $1: the schema. A partition is left out: its rows are those of its parent, whose size and
+   estimate of rows are the sums of the partitions under it, those partitioned in turn too. */
+#define SQL_RELATIONS                                                                              \
+    "SELECT c.relname, c.relkind, pg_catalog.pg_get_userbyid (c.relowner), "                       \
+    "CASE WHEN c.relkind IN ('r', 'm', 'S') THEN pg_catalog.pg_total_relation_size (c.oid) "       \
+    "WHEN c.relkind = 'p' THEN (SELECT sum (pg_catalog.pg_total_relation_size (p.oid)) "           \
+    "FROM pg_catalog.pg_class p WHERE p.relkind <> 'p' AND p.oid IN " SQL_PARTITIONS_OF_C          \
+    ") END, "                                                                                      \
+    "CASE WHEN c.relkind IN ('r', 'm', 'f') AND c.reltuples >= 0 THEN c.reltuples::bigint "        \
+    "WHEN c.relkind = 'p' THEN (SELECT sum (p.reltuples) FILTER (WHERE p.reltuples >= 0) "         \
+    "FROM pg_catalog.pg_class p WHERE p.relkind <> 'p' AND p.oid IN " SQL_PARTITIONS_OF_C          \
+    ")::bigint END "                                                                               \
+    "FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "         \
+    "WHERE n.nspname = $1 AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S') "                        \
+    "AND NOT c.relispartition ORDER BY 1"
+
 /*** file scope functions ************************************************************************/
 
 static void
@@ -182,6 +210,105 @@ read_databases (postgres_data_t *data)
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+read_schemas (postgres_data_t *data)
+{
+    const char *params[1];
+    GPtrArray *items;
+    PGresult *res;
+
+    params[0] = data->cfg->show_system_schemas ? "true" : "false";
+    res = query (data, SQL_SCHEMAS, 1, params);
+    if (res == NULL)
+        return FALSE;
+
+    items = g_ptr_array_new_with_free_func (item_free);
+    for (int i = 0; i < PQntuples (res); i++)
+    {
+        postgres_item_t *it = item_new (PQgetvalue (res, i, 0));
+
+        it->owner = g_strdup (field (res, i, 1));
+        g_ptr_array_add (items, it);
+    }
+    PQclear (res);
+    items_take (data, items);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+read_relations (postgres_data_t *data, const char *schema)
+{
+    const char *params[1] = { schema };
+    GPtrArray *items;
+    PGresult *res;
+
+    res = query (data, SQL_RELATIONS, 1, params);
+    if (res == NULL)
+        return FALSE;
+
+    items = g_ptr_array_new_with_free_func (item_free);
+    for (int i = 0; i < PQntuples (res); i++)
+    {
+        postgres_item_t *it = item_new (PQgetvalue (res, i, 0));
+
+        it->kind = PQgetvalue (res, i, 1)[0];
+        it->owner = g_strdup (field (res, i, 2));
+        it->size = field_int (res, i, 3);
+        it->rows = field_int (res, i, 4);
+        g_ptr_array_add (items, it);
+    }
+    PQclear (res);
+    items_take (data, items);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The connection goes to @name, unless it is there already; the one it was on stays until the
+   new one is open */
+static mc_pp_result_t
+enter_database (postgres_data_t *data, const char *name)
+{
+    if (strcmp (PQdb (data->conn), name) != 0)
+    {
+        PGconn *conn;
+        char *err = NULL;
+
+        conn = postgres_conn_open (data->host, data->cfg, data->connection, name, &err);
+        if (conn == NULL)
+        {
+            if (err != NULL)
+                postgres_message (data->host, TRUE, _ ("Cannot connect to \"%s\":\n%s"), name, err);
+            g_free (err);
+            return MC_PPR_FAILED;
+        }
+        PQfinish (data->conn);
+        data->conn = conn;
+    }
+
+    if (!read_schemas (data))
+        return MC_PPR_FAILED;
+    data->level = POSTGRES_LEVEL_SCHEMAS;
+    return MC_PPR_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mc_pp_result_t
+enter_schema (postgres_data_t *data, const char *name)
+{
+    if (!read_relations (data, name))
+        return MC_PPR_FAILED;
+    g_free (data->schema);
+    data->schema = g_strdup (name);
+    data->level = POSTGRES_LEVEL_RELATIONS;
+    return MC_PPR_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mc_pp_result_t
 enter_connection (postgres_data_t *data, const char *name)
 {
@@ -222,6 +349,31 @@ postgres_session_close (postgres_data_t *data)
         PQfinish (data->conn);
     data->conn = NULL;
     data->connection = NULL;
+    g_clear_pointer (&data->schema, g_free);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+const char *
+postgres_relkind_name (char kind)
+{
+    switch (kind)
+    {
+    case 'r':
+        return "table";
+    case 'p':
+        return "partitioned";
+    case 'v':
+        return "view";
+    case 'm':
+        return "matview";
+    case 'f':
+        return "foreign";
+    case 'S':
+        return "sequence";
+    default:
+        return "";
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -265,8 +417,11 @@ postgres_get_items (void *plugin_data, void *list)
         {
             const postgres_item_t *it = g_ptr_array_index (data->items, i);
 
-            mc_pp_add_entry (list, it->name, S_IFDIR | 0755, it->size >= 0 ? (off_t) it->size : 0,
-                             now);
+            // a relation is a file: Enter on it opens the query editor, F3 shows it
+            mc_pp_add_entry (list, it->name,
+                             data->level == POSTGRES_LEVEL_RELATIONS ? S_IFREG | 0644
+                                                                     : S_IFDIR | 0755,
+                             it->size >= 0 ? (off_t) it->size : 0, now);
         }
     return MC_PPR_OK;
 }
@@ -288,6 +443,20 @@ postgres_chdir (void *plugin_data, const char *path)
             postgres_session_close (data);
             data->level = POSTGRES_LEVEL_CONNECTIONS;
             return MC_PPR_OK;
+        case POSTGRES_LEVEL_SCHEMAS:
+            // the list of databases is read again, from the database left
+            if (!read_databases (data))
+                return MC_PPR_FAILED;
+            set_focus (data, PQdb (data->conn));
+            data->level = POSTGRES_LEVEL_DATABASES;
+            return MC_PPR_OK;
+        case POSTGRES_LEVEL_RELATIONS:
+            if (!read_schemas (data))
+                return MC_PPR_FAILED;
+            set_focus (data, data->schema);
+            g_clear_pointer (&data->schema, g_free);
+            data->level = POSTGRES_LEVEL_SCHEMAS;
+            return MC_PPR_OK;
         default:
             return MC_PPR_FAILED;
         }
@@ -296,6 +465,10 @@ postgres_chdir (void *plugin_data, const char *path)
     {
     case POSTGRES_LEVEL_CONNECTIONS:
         return enter_connection (data, path);
+    case POSTGRES_LEVEL_DATABASES:
+        return enter_database (data, path);
+    case POSTGRES_LEVEL_SCHEMAS:
+        return enter_schema (data, path);
     default:
         return MC_PPR_FAILED;
     }
