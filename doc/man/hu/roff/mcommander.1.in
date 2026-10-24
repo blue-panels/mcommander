@@ -507,8 +507,11 @@ továbbra is azt szerkesztik; a többi Alt billentyű a keresésbe kerül. A cir
 Altot egy számjeggyel Esc\-ként és számjegyként küldi, ez pedig az
 M\-Commanderben funkcióbillentyű (az Esc 1 az F1): ott a számjegyek Alt nélkül
 kerülnek a már futó keresésbe.
+Az Alt csak olyan karaktert vesz át, amellyel egy név kezdődhet: bármely írás
+betűjét vagy számjegyét, a pontot, az aláhúzást vagy a kötőjelet; minden más
+karakterrel, például Alt\-\e vagy Alt\-|, az Alt megtartja a saját műveletét.
 Amíg a paneleken van a fókusz, ezek a billentyűk a műveletük helyett a
-keresésbe kerülnek: a panelek Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? és többi
+keresésbe kerülnek: a panelek Alt\-c, Alt\-s, Alt\-o, Alt\-h és többi
 karakteres Alt billentyűje, az Alt\-x, a bővített parancsok előtagja, és a
 üres parancssor Alt billentyűi (Alt\-p és Alt\-n, Alt\-h; Far
 módban a parancssor előzményei a Ctrl\-E, Ctrl\-X és Alt\-F8 billentyűkön vannak).

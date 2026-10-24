@@ -45,9 +45,9 @@ The releases of this fork, newest first.
   changes from its base, with Shift-F3 for the diff of the whole branch. Quick
   view shows the description of a commit, as F3 does.
 - Far mode can have the fast find of Far: with the new "Alt-letter fast find"
-  check box (far_fast_find), off by default, Alt or Alt-Shift with a character,
-  Cyrillic among them, in a UTF-8 locale or an 8-bit one, starts the search in
-  the panel. It finds a name by its beginning whatever its case, does
+  check box (far_fast_find), off by default, Alt or Alt-Shift with a letter or
+  a digit, Cyrillic among them, a dot, an underscore or a hyphen, in a UTF-8
+  locale or an 8-bit one, starts the search in the panel. It finds a name by its beginning whatever its case, does
   not take a character that matches nothing, goes on without Alt, and ends on
   Esc or on any other key, which then does what it does. The panels give the
   Alt keys with a character up to it, unless the keymap of the user binds them

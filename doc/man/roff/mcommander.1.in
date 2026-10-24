@@ -505,8 +505,11 @@ UTF\-8 locale and in an 8\-bit one alike. A terminal that sends Alt as an Esc in
 front of the key sends Alt with a digit as Esc and the digit, which is a
 function key in M\-Commander (Esc 1 is F1): there the digits go into the search
 without Alt, once it runs.
+Alt takes only a character a name can begin with: a letter or a digit of any
+script, a dot, an underscore or a hyphen; Alt with any other character, such
+as Alt\-\e or Alt\-|, keeps its action.
 While the panels have the focus, these keys go to the search instead of their
-actions: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? and the rest of the Alt keys with a
+actions: Alt\-c, Alt\-s, Alt\-o, Alt\-h and the rest of the Alt keys with a
 character of the panels, Alt\-x, the prefix of the extended commands, and the
 Alt keys of the command line when it is empty (Alt\-p and Alt\-n, Alt\-h; in Far
 mode the history of the command line is on Ctrl\-E, Ctrl\-X and Alt\-F8). Most of

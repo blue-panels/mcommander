@@ -499,8 +499,11 @@ funzionano allo stesso modo con una localizzazione UTF\-8 e con una a 8 bit.
 Un terminale che invia Alt come un Esc davanti al tasto invia Alt con una cifra
 come Esc e la cifra, che in M\-Commander è un tasto funzione (Esc 1 è F1): lì le
 cifre si digitano senza Alt nella ricerca già avviata.
+Alt prende solo un carattere con cui può cominciare un nome: una lettera o una
+cifra di qualsiasi alfabeto, un punto, un trattino basso o un trattino; Alt con
+ogni altro carattere, come Alt\-\e o Alt\-|, mantiene la sua azione.
 Mentre i pannelli hanno il focus, questi tasti vanno alla ricerca invece che
-alle loro azioni: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? e gli altri tasti Alt con un
+alle loro azioni: Alt\-c, Alt\-s, Alt\-o, Alt\-h e gli altri tasti Alt con un
 carattere dei pannelli, Alt\-x, il prefisso dei comandi estesi, e i tasti Alt
 della riga di comando quando è vuota (Alt\-p e Alt\-n, Alt\-h; nella
 modalità Far la cronologia della riga di comando è su Ctrl\-E, Ctrl\-X e Alt\-F8).

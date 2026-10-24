@@ -586,8 +586,11 @@ funcionan igual con una configuración regional UTF\-8 que con una de 8 bits.
 Un terminal que envía Alt como un Esc delante de la tecla envía Alt con un
 dígito como Esc y el dígito, que en M\-Commander es una tecla de función (Esc 1
 es F1): allí los dígitos se escriben sin Alt en la búsqueda ya iniciada.
+Alt solo toma un carácter con el que puede empezar un nombre: una letra o un
+dígito de cualquier alfabeto, un punto, un guion bajo o un guion; Alt con
+cualquier otro carácter, como Alt\-\e o Alt\-|, conserva su acción.
 Mientras los paneles tienen el foco, estas teclas van a la búsqueda en lugar
-de a sus acciones: Alt\-c, Alt\-s, Alt\-o, Alt\-h, Alt\-? y las demás teclas Alt con
+de a sus acciones: Alt\-c, Alt\-s, Alt\-o, Alt\-h y las demás teclas Alt con
 un carácter de los paneles, Alt\-x, el prefijo de las órdenes extendidas, y las
 teclas Alt de la línea de órdenes cuando está vacía (Alt\-p y Alt\-n, Alt\-h; en
 el modo Far el historial de la línea de órdenes está en Ctrl\-E,

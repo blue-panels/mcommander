@@ -427,8 +427,11 @@ działają tak samo w locale UTF-8 i w 8-bitowym. Terminal, który wysyła Alt
 jako Esc przed klawiszem, wysyła Alt z cyfrą jako Esc i cyfrę, a to w
 M-Commanderze klawisz funkcyjny (Esc 1 to F1): tam cyfry wpisuje się do
 trwającego już wyszukiwania bez Alt.
+Alt przyjmuje tylko znak, od którego może zaczynać się nazwa: literę lub cyfrę
+dowolnego pisma, kropkę, podkreślenie lub łącznik; Alt z każdym innym znakiem,
+na przykład Alt-\\ lub Alt-|, zachowuje swoje działanie.
 Gdy panele mają fokus, te klawisze trafiają do wyszukiwania zamiast do swoich
-działań: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? i pozostałe klawisze Alt ze znakiem
+działań: Alt-c, Alt-s, Alt-o, Alt-h i pozostałe klawisze Alt ze znakiem
 paneli, Alt-x, przedrostek poleceń rozszerzonych, oraz klawisze Alt pustego wiersza
 poleceń (Alt-p i Alt-n, Alt-h; w trybie Far historia
 wiersza poleceń jest pod Ctrl-E, Ctrl-X i Alt-F8). Większość tych działań jest
