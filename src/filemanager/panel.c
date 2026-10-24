@@ -3575,8 +3575,8 @@ panel_quick_search_new_handler (const WPanel *panel)
 
     case_sensitive = panels_qsearch_case_sensitive (panel->sort_info.case_sensitive);
 
-    // the fast find of Far finds a name whatever its case is
-    if (panel->quick_search.far_find && !panel->quick_search.filtering)
+    // a search the fast find of Far typed into finds a name whatever its case is
+    if (panel->quick_search.far_nocase)
         case_sensitive = FALSE;
 
     return quick_search_new (panel->quick_search.buffer->str, panel->quick_search.filtering,
@@ -4164,6 +4164,8 @@ panel_far_fast_find (WPanel *panel, int key)
         panel->quick_search.far_find = TRUE;
     }
 
+    panel->quick_search.far_nocase = TRUE;
+
     for (i = 0; i < len; i++)
     {
         if (panel->quick_search.filtering)
@@ -4222,6 +4224,7 @@ stop_search (WPanel *panel)
     panel_quick_filter_restore (panel);
     panel->quick_search.active = FALSE;
     panel->quick_search.far_find = FALSE;
+    panel->quick_search.far_nocase = FALSE;
 
     /* if user overrdied search string, we need to store it
        to the quick_search.prev_buffer */
@@ -6363,6 +6366,7 @@ panel_clean_dir (WPanel *panel)
     panel->quick_search.active = FALSE;
     panel->quick_search.filtering = FALSE;
     panel->quick_search.far_find = FALSE;
+    panel->quick_search.far_nocase = FALSE;
     panel->quick_search.far_skip = 0;
     if (panel->quick_search.source.list != NULL)
         dir_list_free_list (&panel->quick_search.source);
