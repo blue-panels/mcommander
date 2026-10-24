@@ -4098,7 +4098,7 @@ panel_far_fast_find_rest (int key)
     if (!mc_global.utf8_display || tty_key_event (key, NULL) || c < 0xC0 || c > 0xF7)
         return 0;
 
-    return c >= 0xF0 ? 3 : c >= 0xE0 ? 2 : 1;
+    return g_utf8_skip[c] - 1;
 }
 
 /* --------------------------------------------------------------------------------------------- */
