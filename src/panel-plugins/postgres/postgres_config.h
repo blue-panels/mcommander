@@ -72,6 +72,7 @@ typedef struct
     int connect_timeout;    // seconds, 0: none
     int statement_timeout;  // seconds, 0: none
     gboolean show_system_schemas;
+    int preview_rows;  // the rows F3 shows after the SQL of a relation, 0: none
 
     /* coole, the editor of queries, and psql for Alt-F3; NULL or empty: looked up in PATH */
     char *coole_path;

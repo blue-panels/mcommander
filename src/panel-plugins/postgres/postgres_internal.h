@@ -87,6 +87,10 @@ void postgres_session_close (postgres_data_t *data);
    query run once more. NULL with a message shown on failure. */
 PGresult *postgres_query (postgres_data_t *data, const char *sql, int nparams,
                           const char *const *params);
+/* The same, the error in @err_out instead of a message; NULL with no error is a connection the
+   user gave up */
+PGresult *postgres_query_err (postgres_data_t *data, const char *sql, int nparams,
+                              const char *const *params, char **err_out);
 /* The name of the kind of a relation: "table", "view"... */
 const char *postgres_relkind_name (char kind);
 

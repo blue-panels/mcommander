@@ -23,6 +23,9 @@
                            (default 10, 0: no limit)
       statement_timeout    seconds a query of the panel may
                            take (default 30, 0: no limit)
+      preview_rows         the rows F3 shows below the SQL
+                           of a table or a view (default
+                           100, 0: none)
       show_system_schemas  true also lists pg_catalog,
                            information_schema and pg_toast
       coole                the query editor; empty: found
@@ -121,7 +124,9 @@
                       and options; CREATE SEQUENCE. Every
                       name is qualified with its schema. It
                       is not a dump: the owner, the grants
-                      and the policies are left out.
+                      and the policies are left out. Below
+                      it, the first preview_rows rows of a
+                      table or a view, as psql shows them.
       F5              Copy that SQL to the other panel.
       Enter           The query editor, told of the relation.
 
@@ -153,16 +158,23 @@
     Alt-F3 runs coole, the editor of queries ("coole -Q"), for
     the connection and the database under the cursor, or the
     open ones, in a screen of its own beside the panels; in it
-    Alt-F3 comes back. Enter on a relation does the same. In
-    coole F5 runs the statement under the cursor, and the rows
-    of a relation are read there: the panel has none. The
-    queries of a database are kept in
+    Alt-F3 comes back. Enter on a relation does the same and
+    tells coole of the relation: coole runs SELECT * on it
+    with LIMIT 100, and puts that query in the file of
+    queries when the file is empty. In coole F5 runs the
+    statement under the cursor. The panel has no level of
+    rows: F3 shows the first ones only. The queries of a
+    database are kept in
     ~/.local/share/coole/queries/postgres/<connection>/<db>.sql.
 
     Without coole, Alt-F3 runs psql there, connected; with
     neither it says what to install. One of them runs per
     connection and database: Alt-F3 again brings back the same
-    one, until it is quit.
+    one, until it is quit. coole learns of a relation when it
+    starts only: Enter on another relation of the same
+    connection and database brings back the coole that runs,
+    with what it had. Quit it (F10) to start it for the new
+    one.
 
     What to connect to goes to it in its environment, the PG*
     variables of libpq as the connection of the panel has

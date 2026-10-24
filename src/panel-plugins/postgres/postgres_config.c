@@ -52,6 +52,7 @@
 
 #define DEFAULT_CONNECT_TIMEOUT   10
 #define DEFAULT_STATEMENT_TIMEOUT 30
+#define DEFAULT_PREVIEW_ROWS      100
 
 /*** file scope variables ************************************************************************/
 
@@ -236,6 +237,7 @@ postgres_config_load (void)
     cfg = g_new0 (postgres_config_t, 1);
     cfg->connect_timeout = DEFAULT_CONNECT_TIMEOUT;
     cfg->statement_timeout = DEFAULT_STATEMENT_TIMEOUT;
+    cfg->preview_rows = DEFAULT_PREVIEW_ROWS;
     cfg->connections = g_ptr_array_new_with_free_func (postgres_connection_free);
 
     path = postgres_config_path ();
@@ -250,6 +252,8 @@ postgres_config_load (void)
     cfg->statement_timeout = MAX (
         0, mc_config_get_int (ini, SECT_GENERAL, "statement_timeout", DEFAULT_STATEMENT_TIMEOUT));
     cfg->show_system_schemas = mc_config_get_bool (ini, SECT_GENERAL, "show_system_schemas", FALSE);
+    cfg->preview_rows =
+        MAX (0, mc_config_get_int (ini, SECT_GENERAL, "preview_rows", DEFAULT_PREVIEW_ROWS));
     cfg->coole_path = config_get_string (ini, SECT_GENERAL, "coole");
     cfg->psql_path = config_get_string (ini, SECT_GENERAL, "psql");
 
@@ -337,6 +341,7 @@ postgres_config_save_general (const postgres_config_t *cfg, char **err_out)
     mc_config_set_int (ini, SECT_GENERAL, "connect_timeout", cfg->connect_timeout);
     mc_config_set_int (ini, SECT_GENERAL, "statement_timeout", cfg->statement_timeout);
     mc_config_set_bool (ini, SECT_GENERAL, "show_system_schemas", cfg->show_system_schemas);
+    mc_config_set_int (ini, SECT_GENERAL, "preview_rows", cfg->preview_rows);
     config_set_string (ini, SECT_GENERAL, "coole", cfg->coole_path);
     config_set_string (ini, SECT_GENERAL, "psql", cfg->psql_path);
     return config_save (ini, path, err_out);

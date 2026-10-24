@@ -29,6 +29,8 @@
  *  part written by the server itself (format_type, pg_get_expr, pg_get_constraintdef,
  *  pg_get_indexdef...). A view is pg_get_viewdef. It is what the table is, not a dump: the
  *  owner, the grants, the policies and the statistics are left out.
+ *
+ *  Below the SQL of a table or a view come its first rows, as psql shows them.
  */
 
 #include <config.h>
@@ -36,6 +38,7 @@
 #include <string.h>
 
 #include "lib/global.h"
+#include "lib/strutil.h"  // str_fit_to_term
 
 #include "postgres_internal.h"
 
@@ -91,6 +94,9 @@
 #define SQL_SEQUENCE                                                                               \
     "SELECT pg_catalog.format_type (seqtypid, NULL), seqincrement, seqmin, seqmax, seqstart, "     \
     "seqcache, seqcycle FROM pg_catalog.pg_sequence WHERE seqrelid = $1"
+
+/* the widest a column of the rows is written, in columns of the terminal */
+#define ROWS_CELL_WIDTH 40
 
 /*** file scope type declarations ****************************************************************/
 
@@ -328,6 +334,127 @@ ddl_sequence (ddl_t *d)
     return TRUE;
 }
 
+/* A value of a row on one line: the control characters are spaces */
+static char *
+cell_text (const PGresult *res, int row, int col)
+{
+    char *text = g_strdup (PQgetvalue (res, row, col));
+
+    for (char *p = text; *p != '\0'; p++)
+        if ((unsigned char) *p < ' ' || *p == '\177')
+            *p = ' ';
+    return text;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+is_numeric_type (Oid type)
+{
+    // int8, int2, int4, oid, float4, float8, numeric
+    return type == 20 || type == 21 || type == 23 || type == 26 || type == 700 || type == 701
+        || type == 1700;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+rows_cell (GString *out, const char *text, int width, gboolean right)
+{
+    g_string_append_c (out, ' ');
+    g_string_append (out, str_fit_to_term (text, width, right ? J_RIGHT_FIT : J_LEFT_FIT));
+    g_string_append_c (out, ' ');
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The first rows of a table or a view, a table of text with a column for a column */
+static void
+ddl_rows (ddl_t *d)
+{
+    int limit = d->data->cfg->preview_rows;
+    char *sql, *err = NULL;
+    PGresult *res;
+    int nrows, ncols;
+    char ***cells;
+    int *widths;
+
+    if (limit <= 0)
+        return;
+
+    sql = g_strdup_printf ("SELECT * FROM %s LIMIT %d", d->qname, limit);
+    res = postgres_query_err (d->data, sql, 0, NULL, &err);
+    g_free (sql);
+    if (res == NULL)
+    {
+        // no SELECT on the table is no reason to keep its SQL from the user: said in the file
+        g_string_append (d->out, "\n-- the rows could not be read");
+        if (err != NULL)
+        {
+            g_string_append (d->out, ": ");
+            for (const char *p = err; *p != '\0'; p++)
+                if (*p == '\n')
+                    g_string_append (d->out, "\n-- ");
+                else
+                    g_string_append_c (d->out, *p);
+        }
+        g_string_append_c (d->out, '\n');
+        g_free (err);
+        return;
+    }
+
+    nrows = PQntuples (res);
+    ncols = PQnfields (res);
+    cells = g_new0 (char **, nrows);
+    widths = g_new0 (int, ncols);
+
+    for (int c = 0; c < ncols; c++)
+        widths[c] = MIN (str_term_width1 (PQfname (res, c)), ROWS_CELL_WIDTH);
+    for (int r = 0; r < nrows; r++)
+    {
+        cells[r] = g_new0 (char *, ncols + 1);
+        for (int c = 0; c < ncols; c++)
+        {
+            cells[r][c] = cell_text (res, r, c);
+            widths[c] = MAX (widths[c], MIN (str_term_width1 (cells[r][c]), ROWS_CELL_WIDTH));
+        }
+    }
+
+    g_string_append_printf (d->out, "\n-- the first %d rows of %s\n\n", limit, d->qname);
+    for (int c = 0; c < ncols; c++)
+    {
+        if (c > 0)
+            g_string_append_c (d->out, '|');
+        rows_cell (d->out, PQfname (res, c), widths[c], FALSE);
+    }
+    g_string_append_c (d->out, '\n');
+    for (int c = 0; c < ncols; c++)
+    {
+        if (c > 0)
+            g_string_append_c (d->out, '+');
+        for (int i = 0; i < widths[c] + 2; i++)
+            g_string_append_c (d->out, '-');
+    }
+    g_string_append_c (d->out, '\n');
+    for (int r = 0; r < nrows; r++)
+    {
+        for (int c = 0; c < ncols; c++)
+        {
+            if (c > 0)
+                g_string_append_c (d->out, '|');
+            rows_cell (d->out, cells[r][c], widths[c], is_numeric_type (PQftype (res, c)));
+        }
+        g_string_append_c (d->out, '\n');
+        g_strfreev (cells[r]);
+    }
+    g_string_append_printf (d->out, "(%d %s)\n", nrows, nrows == 1 ? "row" : "rows");
+
+    g_free (cells);
+    g_free (widths);
+    PQclear (res);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 
 char *
@@ -382,6 +509,8 @@ postgres_ddl (postgres_data_t *data, const char *name)
         append_literal (d.out, comment);
         g_string_append (d.out, ";\n");
     }
+    if (ok && kind != 'S')
+        ddl_rows (&d);
     PQclear (rel);
 
     if (!ok)

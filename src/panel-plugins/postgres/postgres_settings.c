@@ -34,9 +34,9 @@
 
 /*** file scope functions ************************************************************************/
 
-/* @text as a number of seconds, 0 or more */
+/* @text as a whole number, 0 or more */
 static gboolean
-parse_seconds (const char *text, int *out)
+parse_count (const char *text, int *out)
 {
     char *end = NULL;
     long v;
@@ -71,14 +71,16 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
 {
     char *r_default = NULL, *r_connect = NULL, *r_statement = NULL, *r_coole = NULL;
     char *r_psql = NULL;
-    char buf_connect[16], buf_statement[16];
+    char *r_rows = NULL;
+    char buf_connect[16], buf_statement[16], buf_rows[16];
     gboolean show_system = cfg->show_system_schemas;
-    int connect_timeout, statement_timeout;
+    int connect_timeout, statement_timeout, preview_rows;
     gboolean ok;
     int rc;
 
     g_snprintf (buf_connect, sizeof (buf_connect), "%d", cfg->connect_timeout);
     g_snprintf (buf_statement, sizeof (buf_statement), "%d", cfg->statement_timeout);
+    g_snprintf (buf_rows, sizeof (buf_rows), "%d", cfg->preview_rows);
 
     {
         quick_widget_t quick_widgets[] = {
@@ -93,6 +95,9 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
             QUICK_LABELED_INPUT (N_ ("Statement timeout (s, 0: none):"), input_label_left,
                                  buf_statement, "postgres-statement-timeout", &r_statement, NULL,
                                  FALSE, FALSE, INPUT_COMPLETE_NONE),
+            QUICK_LABELED_INPUT (N_ ("Rows shown by F3 (0: none):"), input_label_left,
+                                 buf_rows, "postgres-preview-rows", &r_rows, NULL, FALSE, FALSE,
+                                 INPUT_COMPLETE_NONE),
             QUICK_CHECKBOX (N_ ("Show &system schemas"), &show_system, NULL),
             QUICK_SEPARATOR (TRUE),
             QUICK_LABELED_INPUT (N_ ("coole, the query editor (empty: from PATH):"),
@@ -123,11 +128,12 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
 
     ok = rc == B_ENTER;
     if (ok
-        && !(parse_seconds (r_connect, &connect_timeout)
-             && parse_seconds (r_statement, &statement_timeout)))
+        && !(parse_count (r_connect, &connect_timeout)
+             && parse_count (r_statement, &statement_timeout)
+             && parse_count (r_rows, &preview_rows)))
     {
         message (D_ERROR, _ ("PostgreSQL settings"), "%s",
-                 _ ("A timeout is a whole number of seconds, 0 for none."));
+                 _ ("A timeout and the rows are whole numbers, 0 for none."));
         ok = FALSE;
     }
 
@@ -141,6 +147,7 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
         r_default = r_coole = r_psql = NULL;
         cfg->connect_timeout = connect_timeout;
         cfg->statement_timeout = statement_timeout;
+        cfg->preview_rows = preview_rows;
         cfg->show_system_schemas = show_system;
 
         ok = postgres_config_save_general (cfg, &err);
@@ -152,6 +159,7 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
     g_free (r_default);
     g_free (r_connect);
     g_free (r_statement);
+    g_free (r_rows);
     g_free (r_coole);
     g_free (r_psql);
     return ok;

@@ -310,7 +310,8 @@ enter_connection (postgres_data_t *data, const char *name)
 /*** public functions ****************************************************************************/
 
 PGresult *
-postgres_query (postgres_data_t *data, const char *sql, int nparams, const char *const *params)
+postgres_query_err (postgres_data_t *data, const char *sql, int nparams, const char *const *params,
+                    char **err_out)
 {
     PGresult *res;
     char *err = NULL;
@@ -333,6 +334,21 @@ postgres_query (postgres_data_t *data, const char *sql, int nparams, const char 
             res = postgres_conn_query (data->conn, sql, nparams, params, &err, NULL);
         }
     }
+    if (res != NULL)
+        g_clear_pointer (&err, g_free);
+    *err_out = err;
+    return res;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+PGresult *
+postgres_query (postgres_data_t *data, const char *sql, int nparams, const char *const *params)
+{
+    PGresult *res;
+    char *err = NULL;
+
+    res = postgres_query_err (data, sql, nparams, params, &err);
     if (res == NULL && err != NULL)
         postgres_message (data->host, TRUE, "%s", err);
     g_free (err);
