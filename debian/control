@@ -19,6 +19,7 @@ Build-Depends: debhelper-compat (= 13),
                libsqlite3-dev,
                libmongoc-dev,
                libbson-dev,
+               libpq-dev,
                liblua5.4-dev,
                libx11-dev,
                libgpm-dev [linux-any],
@@ -59,13 +60,13 @@ Package: mcommander-plugins
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
          mcommander (= ${binary:Version})
-Suggests: git, docker.io, gh, openssh-client
+Suggests: git, docker.io, gh, openssh-client, postgresql-client
 Description: archive and remote system panels for M-Commander
  Panel plugins that M-Commander loads at run time.  They open an archive or a
  remote system in a panel, so that its contents are handled like ordinary
  files: tar, zip and the other formats libarchive reads, FTP, SFTP, Samba, S3,
- Git, GitHub, Docker, Kubernetes, MongoDB, SQLite, systemd units and shell links
- over ssh.
+ Git, GitHub, Docker, Kubernetes, MongoDB, PostgreSQL, SQLite, systemd units and
+ shell links over ssh.
  .
  The GitHub, Docker and Kubernetes panels talk to the gh, docker and kubectl
  commands, which have to be installed separately.
