@@ -425,7 +425,9 @@ enum
     CK_MergeRightOff,
     CK_MergeBase,
     CK_ConflictNext,
-    CK_ConflictPrev
+    CK_ConflictPrev,
+    // the console of the plugin in the panel, mongosh say
+    CK_PluginConsole
 };
 
 /*** structures declarations (and typedefs of structures)*****************************************/

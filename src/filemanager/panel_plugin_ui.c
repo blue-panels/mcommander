@@ -47,6 +47,7 @@
 #ifdef USE_DIFF_VIEW
 #include "src/diffviewer/ydiff.h"
 #endif
+#include "src/mcterm/mcterm_screen.h"
 
 #include "dir.h"
 #include "layout.h"
@@ -384,6 +385,39 @@ host_set_cwd_impl (mc_panel_host_t *host, const char *path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+#ifdef ENABLE_MCTERM
+static void *
+host_terminal_open_impl (mc_panel_host_t *host, const mc_pp_terminal_t *spec)
+{
+    (void) host;
+
+    if (spec == NULL || spec->argv == NULL || spec->argv[0] == NULL)
+        return NULL;
+    return mcterm_screen_new (spec->title, spec->dir, spec->argv, spec->env, spec->on_close,
+                              spec->data);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+host_terminal_show_impl (mc_panel_host_t *host, void *terminal)
+{
+    (void) host;
+    return mcterm_screen_show ((mcterm_screen_t *) terminal);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+host_terminal_forget_impl (mc_panel_host_t *host, void *terminal)
+{
+    (void) host;
+    mcterm_screen_forget ((mcterm_screen_t *) terminal);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+#endif
+
 static void
 panel_plugin_init_host (mc_panel_host_t *host, WPanel *panel)
 {
@@ -395,6 +429,11 @@ panel_plugin_init_host (mc_panel_host_t *host, WPanel *panel)
     host->open_merge = host_open_merge_impl;
     host->open_diff_labeled = host_open_diff_labeled_impl;
     host->open_location = host_open_location_impl;
+#ifdef ENABLE_MCTERM
+    host->terminal_open = host_terminal_open_impl;
+    host->terminal_show = host_terminal_show_impl;
+    host->terminal_forget = host_terminal_forget_impl;
+#endif
     host->close_plugin = host_close_plugin_impl;
     host->add_history = host_add_history_impl;
     host->get_marked_count = host_get_marked_count_impl;

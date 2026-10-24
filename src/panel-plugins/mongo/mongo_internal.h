@@ -128,6 +128,14 @@ gboolean mongo_build_bucket_view (mongo_data_t *data);
 mongo_bucket_t *mongo_bucket_view_find (mongo_data_t *data, const char *label);
 gboolean mongo_stack_has_user_pushed (const mongo_data_t *data);
 
+/*** mongo_console.c ****************************************************************************/
+
+/* Show the query editor coole, or mongosh without it, for the cluster and the database under
+   the cursor, or the open ones; started the first time. */
+mc_pp_result_t mongo_console_open (mongo_data_t *data);
+/* Before the plugin is unloaded: the screens stay, but no longer call back. */
+void mongo_console_shutdown (void);
+
 /*** mongo_filter.c (panel glue) ****************************************************************/
 
 void mongo_run_filter_dialog (mongo_data_t *data);

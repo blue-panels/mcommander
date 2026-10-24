@@ -1,26 +1,24 @@
 /*
-   MongoDB panel plugin -- config loader.
+   Panel plugin mongo for the M-Commander
+   the loader of mongo.ini
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   Written by:
-   Ilia Maslakov <il.smind@gmail.com>, 2026
+   This file is part of M-Commander.
 
-   This file is part of the Midnight Commander.
-
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 #include <config.h>
@@ -113,6 +111,14 @@ mongo_config_save_general (const mongo_config_t *cfg, char **err_out)
     mc_config_set_int (ini, SECT_GENERAL, "connect_timeout_ms", cfg->connect_timeout_ms);
     mc_config_set_int (ini, SECT_GENERAL, "socket_timeout_ms", cfg->socket_timeout_ms);
     mc_config_set_int (ini, SECT_GENERAL, "op_max_time_ms", cfg->op_max_time_ms);
+    if (cfg->coole_path != NULL && cfg->coole_path[0] != '\0')
+        mc_config_set_string (ini, SECT_GENERAL, "coole", cfg->coole_path);
+    else
+        mc_config_del_key (ini, SECT_GENERAL, "coole");
+    if (cfg->mongosh_path != NULL && cfg->mongosh_path[0] != '\0')
+        mc_config_set_string (ini, SECT_GENERAL, "mongosh", cfg->mongosh_path);
+    else
+        mc_config_del_key (ini, SECT_GENERAL, "mongosh");
 
     ok = mc_config_save_file (ini, &gerr);
     mc_config_deinit (ini);
@@ -296,6 +302,8 @@ mongo_config_load (void)
         mc_config_get_int (ini, SECT_GENERAL, "socket_timeout_ms", DEFAULT_SOCKET_TIMEOUT_MS);
     cfg->op_max_time_ms =
         mc_config_get_int (ini, SECT_GENERAL, "op_max_time_ms", DEFAULT_OP_MAX_TIME_MS);
+    cfg->coole_path = mc_config_get_string (ini, SECT_GENERAL, "coole", "");
+    cfg->mongosh_path = mc_config_get_string (ini, SECT_GENERAL, "mongosh", "");
 
     cfg->bucket_leaf_size =
         mc_config_get_int (ini, SECT_GENERAL, "bucket_leaf_size", DEFAULT_BUCKET_LEAF_SIZE);
@@ -363,6 +371,8 @@ mongo_config_free (mongo_config_t *cfg)
     if (cfg == NULL)
         return;
     g_free (cfg->default_cluster);
+    g_free (cfg->coole_path);
+    g_free (cfg->mongosh_path);
     if (cfg->clusters != NULL)
         g_ptr_array_free (cfg->clusters, TRUE);
     g_free (cfg);

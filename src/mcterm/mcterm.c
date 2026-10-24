@@ -176,6 +176,9 @@ struct WMcTerm
     gboolean scroll_allowed;
     // Whether the host types elsewhere; without that the arrows are the shell's.
     gboolean typing_elsewhere;
+    /* A program runs in place of the shell: its output starts at the top, stays there when it
+       is gone, and its exit is always reported. */
+    gboolean program;
     mcterm_sel_t sel;
     /* Only the rows that matched are drawn, the view moving among them alone. */
     mcterm_filter_t filter;
@@ -502,9 +505,11 @@ mcterm_pty_ready_cb (int fd, void *info)
         }
 
         // A shell that could not be started stays on screen with what it said about it.
-        if (t->on_shell_exit != NULL && t->shell_spoke
-            && !(t->child_pid == -1 && WIFEXITED (t->child_exit_status)
-                 && WEXITSTATUS (t->child_exit_status) == 127))
+        if (t->on_shell_exit != NULL
+            && (t->program
+                || (t->shell_spoke
+                    && !(t->child_pid == -1 && WIFEXITED (t->child_exit_status)
+                         && WEXITSTATUS (t->child_exit_status) == 127))))
         {
             t->on_shell_exit (t->on_shell_exit_data);
             // Out of the wait for a key, for the dialog loop to see it was closed.
@@ -844,20 +849,14 @@ mcterm_resolve_top_row_for_buf (const WMcTerm *t, const mcview_terminal_buffer_t
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* In the child: the pty for the controlling terminal and stdio, and nothing else of mc's. */
 static void
-mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t *rc)
+mcterm_child_take_pty (int pty_slave)
 {
-    const char *shell;
-    char tty_name[MC_MAXPATHLEN];
-
-    /* exec() preserves SIG_IGN; the child shell needs normal signal handling. */
+    /* exec() preserves SIG_IGN; the child needs normal signal handling. */
     signal (SIGINT, SIG_DFL);
     signal (SIGQUIT, SIG_DFL);
     signal (SIGPIPE, SIG_DFL);
-
-    /* Read while the slave fd is still open; it is closed further down. */
-    if (ttyname_r (pty_slave, tty_name, sizeof (tty_name)) != 0)
-        tty_name[0] = '\0';
 
     if (setsid () < 0)
         _exit (1);
@@ -871,7 +870,7 @@ mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t
     if (pty_slave > STDERR_FILENO)
         close (pty_slave);
 
-    /* Close all fds inherited from MC so they do not leak into the shell. */
+    /* Close all fds inherited from MC so they do not leak into the child. */
 #ifdef HAVE_CLOSEFROM
     /* The descriptor limit can be enormous (e.g. on Arch Linux). Closing
        the open descriptors in bulk avoids scanning every possible number. */
@@ -887,6 +886,21 @@ mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t
             close (i);
     }
 #endif
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t *rc)
+{
+    const char *shell;
+    char tty_name[MC_MAXPATHLEN];
+
+    /* Read while the slave fd is still open; it is closed further down. */
+    if (ttyname_r (pty_slave, tty_name, sizeof (tty_name)) != 0)
+        tty_name[0] = '\0';
+
+    mcterm_child_take_pty (pty_slave);
 
     shell = (mc_global.shell != NULL) ? mc_global.shell->path : NULL;
     if (shell == NULL || *shell == '\0')
@@ -923,6 +937,37 @@ mcterm_exec_shell (int pty_slave, const char *start_dir, const mcterm_shell_rc_t
         execv (shell, (char *const *) argv);
     }
 
+    _exit (127);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The child side of mcterm_new_program(): everything was made ready before fork(), so that
+   nothing here allocates or takes a lock another thread may have held. */
+static void
+mcterm_exec_program (int pty_slave, const char *start_dir, const char *path,
+                     const char *const *argv, char *const *envp)
+{
+    mcterm_child_take_pty (pty_slave);
+
+    if (start_dir != NULL && chdir (start_dir) != 0)
+    {
+        static const char msg[] = "mc: cannot enter the directory of the program\r\n";
+        ssize_t ignored;
+
+        ignored = write (STDERR_FILENO, msg, sizeof (msg) - 1);
+        (void) ignored;
+    }
+
+    if (path != NULL)
+        execve (path, (char *const *) argv, envp);
+    {
+        static const char msg[] = "mc: cannot start the program\r\n";
+        ssize_t ignored;
+
+        ignored = write (STDERR_FILENO, msg, sizeof (msg) - 1);
+        (void) ignored;
+    }
     _exit (127);
 }
 
@@ -1294,7 +1339,8 @@ mcterm_fit_content (const WMcTerm *t, const mcview_terminal_buffer_t *buf, int c
     *content_rows = (effective_max >= *top_row) ? (effective_max - *top_row + 1) : 0;
     if (*content_rows > lines)
         *content_rows = lines;
-    *blank_above = (!mcview_vterm_in_alt_screen (t->vterm) && *content_rows < lines)
+    // the shell's output stands on the command line; a program's starts at the top
+    *blank_above = (!t->program && !mcview_vterm_in_alt_screen (t->vterm) && *content_rows < lines)
         ? (lines - *content_rows)
         : 0;
 
@@ -2317,7 +2363,8 @@ mcterm_do_draw (WMcTerm *t)
         t->paint_pending = TRUE;
     }
 
-    if (t->child_dead)
+    // a program's last words stay on the screen, where its host says it has gone
+    if (t->child_dead && !t->program)
     {
         int row;
 
@@ -2811,7 +2858,7 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
             return MSG_NOT_HANDLED;
         if (t->child_dead || t->pty_master < 0)
             return MSG_NOT_HANDLED;
-        if ((parm == 0x0F || parm == XCTRL ('O'))
+        if (!t->program && (parm == 0x0F || parm == XCTRL ('O'))
             && (t->vterm == NULL || !mcview_vterm_in_alt_screen (t->vterm)))
             return MSG_NOT_HANDLED;
         return mcterm_send_encoded_key (t, parm) ? MSG_HANDLED : MSG_NOT_HANDLED;
@@ -2829,13 +2876,14 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         if (mcterm_query_key (t, parm) == MSG_HANDLED)
             return MSG_HANDLED;
 
-        /* Alt-screen applications own Ctrl+O. */
-        if ((parm == 0x0F || parm == XCTRL ('O'))
+        /* Alt-screen applications own Ctrl+O, and so does a program in place of the shell:
+           it gets every key itself, on either screen. */
+        if (!t->program && (parm == 0x0F || parm == XCTRL ('O'))
             && (t->vterm == NULL || !mcview_vterm_in_alt_screen (t->vterm)))
             return MSG_NOT_HANDLED;
 
         // An alt-screen application gets every key itself.
-        if (t->vterm != NULL && !mcview_vterm_in_alt_screen (t->vterm)
+        if (!t->program && t->vterm != NULL && !mcview_vterm_in_alt_screen (t->vterm)
             && mcterm_execute_cmd (t, mcterm_key_command (t, parm), parm) == MSG_HANDLED)
             return MSG_HANDLED;
 
@@ -2845,7 +2893,7 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
 
     case MSG_ACTION:
         // The button bar names the terminal's commands while no panel is on screen.
-        if (t->vterm == NULL || mcview_vterm_in_alt_screen (t->vterm))
+        if (t->program || t->vterm == NULL || mcview_vterm_in_alt_screen (t->vterm))
             return MSG_NOT_HANDLED;
         return mcterm_execute_cmd (t, parm, 0);
 
@@ -2962,53 +3010,40 @@ mcterm_save_options (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
-WMcTerm *
-mcterm_new (const WRect *r, const char *start_dir)
+/* openpty() sized for @r and fork(): the parent gets the pid and @master, the child 0 and
+   @slave; -1 when either failed. */
+static pid_t
+mcterm_fork_pty (const WRect *r, int *master, int *slave)
 {
-    WMcTerm *t;
-    Widget *w;
-    int master = -1, slave = -1;
+    struct winsize ws;
     pid_t pid;
-    const shell_type_t shell_type = (mc_global.shell != NULL) ? mc_global.shell->type : SHELL_NONE;
-    char *token;
-    mcterm_shell_rc_t *shell_rc;
 
-    mcterm_key_table_init (mc_global.profile_name, mc_global.main_config);
-
-    token = g_strdup_printf ("%08x%08x", g_random_int (), g_random_int ());
-    shell_rc = mcterm_shell_rc_new (shell_type, token);
-
-    {
-        struct winsize ws;
-
-        mcterm_winsize (r, &ws);
-        if (openpty (&master, &slave, NULL, NULL, &ws) < 0)
-        {
-            mcterm_shell_rc_free (shell_rc);
-            g_free (token);
-            return NULL;
-        }
-    }
+    mcterm_winsize (r, &ws);
+    if (openpty (master, slave, NULL, NULL, &ws) < 0)
+        return -1;
 
     pid = fork ();
     if (pid < 0)
     {
-        close (master);
-        close (slave);
-        mcterm_shell_rc_free (shell_rc);
-        g_free (token);
-        return NULL;
+        close (*master);
+        close (*slave);
+        return -1;
     }
-
     if (pid == 0)
-    {
-        close (master);
-        mcterm_exec_shell (slave, start_dir, shell_rc);
-        /* not reached */
-    }
+        close (*master);
+    else
+        close (*slave);
+    return pid;
+}
 
-    close (slave);
-    slave = -1;
+/* --------------------------------------------------------------------------------------------- */
+
+/* The widget around a child already started on the pty @master. */
+static WMcTerm *
+mcterm_widget_new (const WRect *r, int master, pid_t pid, char *token, mcterm_shell_rc_t *shell_rc)
+{
+    WMcTerm *t;
+    Widget *w;
 
     t = g_new0 (WMcTerm, 1);
     w = WIDGET (t);
@@ -3055,6 +3090,41 @@ mcterm_new (const WRect *r, const char *start_dir)
 
     add_select_channel (master, mcterm_pty_ready_cb, t);
 
+    return t;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+WMcTerm *
+mcterm_new (const WRect *r, const char *start_dir)
+{
+    WMcTerm *t;
+    int master = -1, slave = -1;
+    pid_t pid;
+    const shell_type_t shell_type = (mc_global.shell != NULL) ? mc_global.shell->type : SHELL_NONE;
+    char *token;
+    mcterm_shell_rc_t *shell_rc;
+
+    mcterm_key_table_init (mc_global.profile_name, mc_global.main_config);
+
+    token = g_strdup_printf ("%08x%08x", g_random_int (), g_random_int ());
+    shell_rc = mcterm_shell_rc_new (shell_type, token);
+
+    pid = mcterm_fork_pty (r, &master, &slave);
+    if (pid < 0)
+    {
+        mcterm_shell_rc_free (shell_rc);
+        g_free (token);
+        return NULL;
+    }
+    if (pid == 0)
+    {
+        mcterm_exec_shell (slave, start_dir, shell_rc);
+        /* not reached */
+    }
+
+    t = mcterm_widget_new (r, master, pid, token, shell_rc);
+
     if (shell_rc != NULL)
         mcterm_arm_protocol (t);
     else
@@ -3065,6 +3135,58 @@ mcterm_new (const WRect *r, const char *start_dir)
             mcterm_enable_osc7 (t, master, setup);
     }
 
+    return t;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+WMcTerm *
+mcterm_new_program (const WRect *r, const char *start_dir, const char *const *argv,
+                    const char *const *env)
+{
+    WMcTerm *t;
+    int master = -1, slave = -1;
+    pid_t pid;
+    char *path;
+    char **envp;
+
+    if (argv == NULL || argv[0] == NULL)
+        return NULL;
+
+    mcterm_key_table_init (mc_global.profile_name, mc_global.main_config);
+
+    path = g_find_program_in_path (argv[0]);
+    if (path == NULL)
+        return NULL;
+
+    envp = g_environ_setenv (g_get_environ (), "TERM", "xterm-256color", TRUE);
+    for (; env != NULL && *env != NULL; env++)
+    {
+        const char *eq = strchr (*env, '=');
+
+        if (eq != NULL)
+        {
+            char *name = g_strndup (*env, (gsize) (eq - *env));
+
+            envp = g_environ_setenv (envp, name, eq + 1, TRUE);
+            g_free (name);
+        }
+    }
+
+    pid = mcterm_fork_pty (r, &master, &slave);
+    if (pid == 0)
+    {
+        mcterm_exec_program (slave, start_dir, path, argv, envp);
+        /* not reached */
+    }
+    g_free (path);
+    g_strfreev (envp);
+    if (pid < 0)
+        return NULL;
+
+    t = mcterm_widget_new (r, master, pid, NULL, NULL);
+    t->program = TRUE;
+    t->typing_elsewhere = FALSE;
     return t;
 }
 
@@ -3127,12 +3249,135 @@ mcterm_is_alive (const WMcTerm *t)
 
 /* --------------------------------------------------------------------------------------------- */
 
+gboolean
+mcterm_exit_status (WMcTerm *t, int *code)
+{
+    *code = -1;
+
+    if (t == NULL || !t->child_dead)
+        return FALSE;
+
+    /* The pty is closed a moment before the child can be reaped. */
+    if (t->child_pid > 0)
+    {
+        const pid_t r = waitpid (t->child_pid, &t->child_exit_status, WNOHANG);
+
+        if (r == 0)
+            return FALSE;
+        // gone without a status to read: the code is not known
+        if (r < 0)
+            t->child_exit_status = -1;
+        t->child_pid = -1;
+    }
+    if (t->child_exit_status == -1)
+        return TRUE;
+    if (WIFEXITED (t->child_exit_status))
+        *code = WEXITSTATUS (t->child_exit_status);
+    else if (WIFSIGNALED (t->child_exit_status))
+        *code = 128 + WTERMSIG (t->child_exit_status);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The button of an event as xterm counts it: 0 left, 1 middle, 2 right */
+static int
+mcterm_mouse_button (const mouse_event_t *event)
+{
+    if ((event->buttons & GPM_B_MIDDLE) != 0)
+        return 1;
+    if ((event->buttons & GPM_B_RIGHT) != 0)
+        return 2;
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A program that asked for the mouse, DECSET 1000 and the like, gets it as xterm tells it, and
+   the terminal screen neither marks nor scrolls: coole, mcedit, htop work their own mouse.  TRUE
+   when the event went to the program, or is none it wants. */
+static gboolean
+mcterm_mouse_to_program (WMcTerm *t, mouse_msg_t msg, const mouse_event_t *event)
+{
+    const int mode = t->vterm != NULL ? mcview_vterm_mouse_mode (t->vterm) : 0;
+    const WRect *r = &WIDGET (t)->rect;
+    mcterm_geom_t g;
+    gboolean release = FALSE;
+    char seq[32];
+    int b, x, y, len;
+    ssize_t ignored;
+
+    if (mode == 0 || t->pty_master < 0 || !mcterm_geometry (t, &g))
+        return FALSE;
+    /* Rows of the history or the rows that matched a filter are on the screen, not those of the
+       program: the mouse is the terminal's, to scroll and to mark them. */
+    if (g.compose)
+        return FALSE;
+
+    switch (msg)
+    {
+    case MSG_MOUSE_DOWN:
+        widget_select (WIDGET (t));
+        b = mcterm_mouse_button (event);
+        break;
+    case MSG_MOUSE_UP:
+        if (mode == 9)
+            return TRUE;
+        b = mcterm_mouse_button (event);
+        release = TRUE;
+        break;
+    case MSG_MOUSE_DRAG:
+        if (mode != 1002 && mode != 1003)
+            return TRUE;
+        b = mcterm_mouse_button (event) + 32;
+        break;
+    case MSG_MOUSE_SCROLL_UP:
+        b = 64;
+        break;
+    case MSG_MOUSE_SCROLL_DOWN:
+        b = 65;
+        break;
+    case MSG_MOUSE_SCROLL_LEFT:
+        b = 66;
+        break;
+    case MSG_MOUSE_SCROLL_RIGHT:
+        b = 67;
+        break;
+    default:
+        // a click is a press and a release, told already
+        return TRUE;
+    }
+
+    // the cell of the screen of the program, from 1
+    x = CLAMP (event->x, 0, r->cols - 1) + 1;
+    y = CLAMP (g.top_row + event->y - g.blank_above, 0, r->lines - 1) + 1;
+
+    if (mcview_vterm_mouse_sgr (t->vterm))
+        len = g_snprintf (seq, sizeof (seq), "\033[<%d;%d;%d%c", b, x, y, release ? 'm' : 'M');
+    else
+    {
+        // in bytes: a release is the button 3, and a place past 223 cannot be told
+        if (release)
+            b = 3;
+        len = g_snprintf (seq, sizeof (seq), "\033[M%c%c%c", (char) (32 + b),
+                          (char) (32 + MIN (x, 223)), (char) (32 + MIN (y, 223)));
+    }
+    ignored = write (t->pty_master, seq, (size_t) len);
+    (void) ignored;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static void
 mcterm_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
 {
     WMcTerm *t = (WMcTerm *) w;
     gint64 row;
     int col;
+
+    if (mcterm_mouse_to_program (t, msg, event))
+        return;
 
     switch (msg)
     {

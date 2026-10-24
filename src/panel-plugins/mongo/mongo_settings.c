@@ -1,26 +1,24 @@
 /*
-   MongoDB panel plugin -- general-options settings dialog.
+   Panel plugin mongo for the M-Commander
+   the dialog of the general options
 
    Copyright (C) 2026
-   Free Software Foundation, Inc.
+   Ilia Maslakov il.smind@gmail.com
 
-   Written by:
-   Ilia Maslakov <il.smind@gmail.com>, 2026
+   This file is part of M-Commander.
 
-   This file is part of the Midnight Commander.
+   M-Commander is free software: you can redistribute it
+   and/or modify it under the terms of the GNU General Public License as
+   published by the Free Software Foundation, either version 3 of the License,
+   or (at your option) any later version.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   along with this program.  If not, see https://www.gnu.org/licenses/.
  */
 
 #include <config.h>
@@ -173,7 +171,7 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
 {
     static const char *strategy_items[2] = { N_ ("&auto"), N_ ("&none") };
 
-    char *r_default = NULL;
+    char *r_default = NULL, *r_coole = NULL, *r_mongosh = NULL;
     char *r_leaf = NULL, *r_fanout = NULL;
     char *r_srvsel = NULL, *r_connect = NULL, *r_socket = NULL, *r_opmax = NULL;
     int r_strategy;
@@ -217,6 +215,15 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
                                  INPUT_COMPLETE_NONE),
             QUICK_LABELED_INPUT (N_ ("Op max time (ms):"), input_label_left, buf_opmax,
                                  "mongo-opmax", &r_opmax, NULL, FALSE, FALSE, INPUT_COMPLETE_NONE),
+            QUICK_SEPARATOR (TRUE),
+            QUICK_LABELED_INPUT (N_ ("coole, the query editor (empty: from PATH):"),
+                                 input_label_above,
+                                 cfg->coole_path != NULL ? cfg->coole_path : "", "mongo-coole",
+                                 &r_coole, NULL, FALSE, FALSE, INPUT_COMPLETE_FILENAMES),
+            QUICK_LABELED_INPUT (N_ ("mongosh (empty: from PATH):"), input_label_above,
+                                 cfg->mongosh_path != NULL ? cfg->mongosh_path : "",
+                                 "mongo-mongosh", &r_mongosh, NULL, FALSE, FALSE,
+                                 INPUT_COMPLETE_FILENAMES),
             QUICK_BUTTONS_OK_CANCEL,
             QUICK_END,
             // clang-format on
@@ -236,6 +243,8 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
 
     if (rc != B_ENTER)
     {
+        g_free (r_coole);
+        g_free (r_mongosh);
         g_free (r_default);
         g_free (r_leaf);
         g_free (r_fanout);
@@ -259,6 +268,8 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
         {
             message (D_ERROR, _ ("MongoDB settings"), "%s",
                      _ ("Numeric fields must be valid; leaf size > 0, fanout >= 2."));
+            g_free (r_coole);
+            g_free (r_mongosh);
             g_free (r_default);
             g_free (r_leaf);
             g_free (r_fanout);
@@ -279,8 +290,14 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
         cfg->connect_timeout_ms = connect;
         cfg->socket_timeout_ms = socket_to;
         cfg->op_max_time_ms = opmax;
+        g_free (cfg->coole_path);
+        cfg->coole_path = g_strdup (r_coole != NULL ? g_strstrip (r_coole) : "");
+        g_free (cfg->mongosh_path);
+        cfg->mongosh_path = g_strdup (r_mongosh != NULL ? g_strstrip (r_mongosh) : "");
     }
 
+    g_free (r_coole);
+    g_free (r_mongosh);
     g_free (r_default);
     g_free (r_leaf);
     g_free (r_fanout);

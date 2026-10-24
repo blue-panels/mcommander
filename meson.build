@@ -359,6 +359,11 @@ if not get_option('panel_plugin_mongo').disabled()
       mongoc = declare_dependency(dependencies: [mongoc2, bson2])
     endif
   endif
+  # private to libmongoc but exported; the plugin's SCRAM workaround needs it
+  if mongoc.found()
+    conf.set('HAVE_MONGOC_DEFAULT_STREAM_INITIATOR',
+             cc.has_function('mongoc_client_default_stream_initiator', dependencies: mongoc) ? 1 : false)
+  endif
   if get_option('panel_plugin_mongo').enabled() and not mongoc.found()
     error('MongoDB panel plugin requested but no MongoDB C driver was found:\n' +
           'neither libmongoc-1.0 >= 1.21 with libbson-1.0 >= 1.21, nor mongoc2 >= 2.0 with bson2 >= 2.0.')

@@ -158,6 +158,8 @@ struct mcview_vterm_struct
 
     gboolean app_cursor_keys;
     gboolean bracketed_paste;  // DECSET 2004: a paste goes in ESC[200~ ... ESC[201~
+    int mouse_mode;      // DECSET 9, 1000, 1002, 1003: the mouse the program asked for; 0 none
+    gboolean mouse_sgr;  // DECSET 1006: told as ESC[<b;x;yM, not in bytes
 
     gboolean insert_mode;  // IRM: a printed character pushes the rest of the line right
 
@@ -386,6 +388,18 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
             case 2004:
                 vt->bracketed_paste = (final_byte == 'h');
                 break;
+            case 9:
+            case 1000:
+            case 1002:
+            case 1003:
+                if (final_byte == 'h')
+                    vt->mouse_mode = vt->params[i];
+                else if (vt->mouse_mode == vt->params[i])
+                    vt->mouse_mode = 0;
+                break;
+            case 1006:
+                vt->mouse_sgr = (final_byte == 'h');
+                break;
             case 1049:
                 if (final_byte == 'h')
                     type = VTERM_ALT_SCREEN_ENTER;
@@ -397,6 +411,11 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
             }
         return vterm_make (vt, type);
     }
+
+    /* CSI > ... T (the title modes of xterm), CSI > 4 ; 1 m (modifyOtherKeys) and the like are
+       none of the plain sequences below with the same final byte. */
+    if (vt->csi_gt || vt->csi_lt || vt->csi_eq)
+        return vterm_make (vt, VTERM_CONSUMED);
 
     p0 = (vt->param_count > 0) ? vt->params[0] : 0;
     p1 = (vt->param_count > 1) ? vt->params[1] : 0;
@@ -537,6 +556,26 @@ vterm_dispatch_csi (mcview_vterm_t *vt, unsigned char final_byte)
     case '@': /* ICH -- insert blank characters, shift right */
     {
         vterm_event_t ev = vterm_make (vt, VTERM_ICH);
+        ev.param1 = (p0 > 0) ? p0 : 1;
+        return ev;
+    }
+
+    /* The lines and the scrolling of the region: slang and ncurses move what is on the screen with
+       them, as terminfo of xterm-256color says the terminal can, rather than draw it again. */
+    case 'L': /* IL -- insert lines */
+    case 'M': /* DL -- delete lines */
+    case 'S': /* SU -- scroll up */
+    case 'T': /* SD -- scroll down; with more parameters, the mouse highlight of xterm */
+    {
+        vterm_event_t ev;
+
+        if (final_byte == 'T' && p1 > 0)
+            return vterm_make (vt, VTERM_CONSUMED);
+        ev = vterm_make (vt,
+                         final_byte == 'L'       ? VTERM_IL
+                             : final_byte == 'M' ? VTERM_DL
+                             : final_byte == 'S' ? VTERM_SU
+                                                 : VTERM_SD);
         ev.param1 = (p0 > 0) ? p0 : 1;
         return ev;
     }
@@ -1576,6 +1615,8 @@ mcview_vterm_reset (mcview_vterm_t *vt)
     vt->utf8_expected = 0;
     vt->app_cursor_keys = FALSE;
     vt->bracketed_paste = FALSE;
+    vt->mouse_mode = 0;
+    vt->mouse_sgr = FALSE;
     vt->cursor_row = 0;
     vt->cursor_col = 0;
     vt->scroll_top = 0;
@@ -2297,6 +2338,48 @@ mcview_vterm_apply_event (mcview_vterm_t *vt, const vterm_event_t *ev)
         }
         break;
 
+    case VTERM_IL:
+    case VTERM_DL:
+        /* From the line of the cursor to the bottom of the region; a cursor out of the region
+           does nothing, as in xterm */
+        if (vt->cursor_row >= vt->scroll_top && vt->cursor_row <= vt->scroll_bottom)
+        {
+            const int span = vt->scroll_bottom - vt->cursor_row + 1;
+            const int n = MIN (ev->param1, span);
+            int i;
+
+            for (i = 0; i < n; i++)
+                if (ev->type == VTERM_IL)
+                    mcview_terminal_buffer_scroll_down (vt->buf, vt->cursor_row, vt->scroll_bottom,
+                                                        vt->term_cols, &ev->ansi);
+                else
+                    mcview_terminal_buffer_scroll_up (vt->buf, vt->cursor_row, vt->scroll_bottom,
+                                                      vt->term_cols, &ev->ansi);
+            vterm_images_shift (vt, vt->cursor_row, vt->scroll_bottom,
+                                ev->type == VTERM_IL ? n : -n);
+            vt->cursor_col = 0;
+        }
+        break;
+
+    case VTERM_SU:
+    case VTERM_SD:
+    {
+        const int span = vt->scroll_bottom - vt->scroll_top + 1;
+        const int n = MIN (ev->param1, span);
+        int i;
+
+        for (i = 0; i < n; i++)
+            if (ev->type == VTERM_SU)
+                mcview_vterm_scroll_up (vt, vt->scroll_top, vt->scroll_bottom, &ev->ansi);
+            else
+            {
+                mcview_terminal_buffer_scroll_down (vt->buf, vt->scroll_top, vt->scroll_bottom,
+                                                    vt->term_cols, &ev->ansi);
+                vterm_images_shift (vt, vt->scroll_top, vt->scroll_bottom, 1);
+            }
+    }
+    break;
+
     case VTERM_SGR:
     case VTERM_CONSUMED:
     default:
@@ -2397,6 +2480,22 @@ gboolean
 mcview_vterm_bracketed_paste (const mcview_vterm_t *vt)
 {
     return vt->bracketed_paste;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+int
+mcview_vterm_mouse_mode (const mcview_vterm_t *vt)
+{
+    return vt->mouse_mode;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mcview_vterm_mouse_sgr (const mcview_vterm_t *vt)
+{
+    return vt->mouse_sgr;
 }
 
 /* --------------------------------------------------------------------------------------------- */

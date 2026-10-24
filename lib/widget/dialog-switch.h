@@ -20,6 +20,8 @@ extern WDialog *filemanager;
 
 void dialog_switch_add (WDialog *h);
 void dialog_switch_remove (WDialog *h);
+/* Bring @h, a screen in the list, to the front. */
+void dialog_switch_to (WDialog *h);
 size_t dialog_switch_num (void);
 /* Apply @fn to every screen, the one in front included. */
 void dialog_switch_foreach (GFunc fn, gpointer user_data);

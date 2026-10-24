@@ -97,6 +97,7 @@ libinternal_sources = files(
   'mcterm/mcterm_key.c',
   'mcterm/mcterm_proto.c',
   'mcterm/mcterm_select.c',
+  'mcterm/mcterm_screen.c',
   'mcterm/mcterm_setup.c',
 )
 

@@ -2112,6 +2112,7 @@ midnight_set_buttonbar (WButtonBar *b)
         { CK_PanelToggleRight, N_ ("ButtonBar|Right") },
         { CK_PluginDriveLeft, N_ ("ButtonBar|Left") },
         { CK_PluginDriveRight, N_ ("ButtonBar|Right") },
+        { CK_PluginConsole, N_ ("ButtonBar|Console") },
         { CK_ViewRaw, N_ ("ButtonBar|View") },
         { CK_EditNew, N_ ("ButtonBar|Edit") },
         { CK_CopySingle, N_ ("ButtonBar|Copy") },

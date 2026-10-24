@@ -15,7 +15,7 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-#define MC_PANEL_PLUGIN_API_VERSION 22
+#define MC_PANEL_PLUGIN_API_VERSION 23
 #define MC_PANEL_PLUGIN_ENTRY       "mc_panel_plugin_register"
 
 /* Sides of host->open_diff_labeled() that are copies, to look at only */
@@ -167,6 +167,17 @@ typedef struct mc_panel_column_t
     gboolean use_in_user_format;
 } mc_panel_column_t;
 
+/* API 23: a program in a terminal screen of its own, see host->terminal_open() */
+typedef struct mc_pp_terminal_t
+{
+    const char *title;             /* in the list of screens; argv[0] when NULL */
+    const char *dir;               /* where the program starts; NULL for mc's directory */
+    const char *const *argv;       /* argv[0] is looked up in PATH */
+    const char *const *env;        /* "NAME=value" added to its environment, or NULL */
+    void (*on_close) (void *data); /* the screen is gone, and the handle with it */
+    void *data;
+} mc_pp_terminal_t;
+
 /* What mc provides to the plugin */
 typedef struct mc_panel_host_t
 {
@@ -218,6 +229,26 @@ typedef struct mc_panel_host_t
        request is dropped if the plugin is closed first. */
     gboolean (*open_location) (struct mc_panel_host_t *host, const char *location,
                                gboolean in_other_panel);
+
+    /* API 23: start @spec->argv on the whole of a terminal screen of its own,
+       which joins the list of screens (Alt-`) beside the editors and the
+       viewers once it is shown; show it right away, a screen never shown is
+       never closed.  The program, an editor say, reads every key but the one of
+       PluginConsole in the [panel] keymap, Alt-F3, which goes back to the
+       panels.  When it ends with code 0 the screen
+       goes with it; otherwise the screen says how it ended and closes on a
+       key.  @spec->on_close is called as the screen goes, and the handle is
+       invalid from that call on.  NULL when argv[0] is not found or the
+       program could not be started.  The strings of @spec are copied.  NULL in a build without the
+       terminal. */
+    void *(*terminal_open) (struct mc_panel_host_t *host, const mc_pp_terminal_t *spec);
+    /* Bring the screen to the front; returns when the user leaves it.  FALSE
+       when the program had been quit while the screen was not in front: the
+       screen is gone then, on_close called, and the handle no more. */
+    gboolean (*terminal_show) (struct mc_panel_host_t *host, void *terminal);
+    /* The screen stays but on_close is no longer called: for a plugin that goes
+       away before its screens, in shutdown() say. */
+    void (*terminal_forget) (struct mc_panel_host_t *host, void *terminal);
 } mc_panel_host_t;
 
 /* What the plugin provides (callback table) */

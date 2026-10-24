@@ -42,8 +42,16 @@ void mcterm_load_options (void);
 void mcterm_save_options (void);
 
 WMcTerm *mcterm_new (const WRect *r, const char *start_dir);
+/* A terminal running @argv in place of the shell, with "NAME=value" pairs of @env added to its
+   environment: it reads every key itself, and the exit callback is called however it ends.
+   NULL when @argv[0] is not found, or the program could not be started. */
+WMcTerm *mcterm_new_program (const WRect *r, const char *start_dir, const char *const *argv,
+                             const char *const *env);
 void mcterm_free (WMcTerm *t);
 gboolean mcterm_is_alive (const WMcTerm *t);
+/* The exit code of a program that has gone in @code, 128 + the signal that killed it, -1 when
+   it is not known. FALSE, without waiting, while it runs or has not been reaped yet. */
+gboolean mcterm_exit_status (WMcTerm *t, int *code);
 gboolean mcterm_in_alt_screen (const WMcTerm *t);
 void mcterm_scroll_to_end (WMcTerm *t);
 void mcterm_set_scroll_allowed (WMcTerm *t, gboolean allowed);

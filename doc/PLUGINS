@@ -133,6 +133,12 @@ API 22 adds host->open_location(): a plugin opens the address of another
 plugin, or a directory, in the other panel or in its own, so that two
 plugins can lead to each other.
 
+API 23 adds host->terminal_open() and its companions: a plugin starts a
+program, a database shell say, in a terminal screen of its own that
+stands in the list of screens beside the editors and the viewers.  The
+command CK_PluginConsole (PluginConsole in [panel], Alt-F3 by default)
+reaches handle_key() for a plugin to open its console with.
+
 
 3.2 Capability Flags (mc_pp_flags_t)
 
@@ -215,6 +221,34 @@ What mc provides to the plugin while the panel is active:
                               prefix and it is no absolute path, or the
                               other half shows no panel.  The core
                               reports every failure itself
+  terminal_open(host, spec)
+                              start spec->argv (argv[0] looked up in
+                              PATH, spec->env added to its environment)
+                              on the whole of a terminal screen of its
+                              own; NULL when argv[0] is not found or it
+                              cannot start, or in a build without the
+                              terminal (the pointer is NULL then).  The
+                              screen is not shown yet; show it at once,
+                              a screen never shown is never closed.  It
+                              goes when the program has gone: at once
+                              after an exit with code 0,
+                              on a key otherwise, with how it ended on
+                              its bottom row; spec->on_close(spec->data)
+                              is called then and the handle is invalid
+                              from that call on
+  terminal_show(host, terminal)
+                              bring the screen to the front; returns
+                              when the user leaves it.  FALSE when the
+                              program had been quit while the screen
+                              was not in front: the screen is gone,
+                              on_close called, and the handle no more
+  terminal_forget(host, terminal)
+                              on_close is no longer called; for a plugin
+                              that goes away before its screens
+
+  The program in a terminal screen, an editor say, reads every key but
+  the one of PluginConsole in [panel] (Alt-F3), which goes back to the
+  panels.
 
 Fields:
 
@@ -849,6 +883,9 @@ Panel plugins:
 - core first passes the mapped command id to handle_key()
 - if the plugin returns MC_PPR_NOT_SUPPORTED and the raw key differs,
   core retries with the raw key
+- CK_PluginConsole (Alt-F3) reaches handle_key() as well: open the
+  console of the plugin, with host->terminal_open() say.  The button bar
+  names it "Console" while Alt is held
 - CK_DirSize (Ctrl-Space) reaches handle_key() as well: count the sizes
   of the marked directories, of every directory of this level when the
   cursor is on "..", or of the one under the cursor, and return
