@@ -472,22 +472,12 @@ sort_cmd (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The caption of the key of @command in @keymap, as keybind_lookup_keymap_shortcut () gives it,
-   but not of an Alt key that the fast find of Far mode takes: that key no longer runs @command */
+/* A key that the fast find of Far mode takes does not run its command: the menus do not show it */
 
-static const char *
-midnight_lookup_shortcut (const global_keymap_t *keymap, long command)
+static gboolean
+midnight_shortcut_runs (long key)
 {
-    size_t i;
-
-    if (keymap == NULL)
-        return NULL;
-
-    for (i = 0; keymap[i].key != 0; i++)
-        if (keymap[i].command == command && !keymap_far_fast_find_takes ((int) keymap[i].key))
-            return (keymap[i].caption[0] != '\0') ? keymap[i].caption : NULL;
-
-    return NULL;
+    return !keymap_far_fast_find_takes ((int) key);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -498,16 +488,17 @@ midnight_get_shortcut (long command)
     const char *ext_map;
     const char *shortcut = NULL;
 
-    shortcut = midnight_lookup_shortcut (filemanager_map, command);
+    shortcut = keybind_lookup_keymap_shortcut_if (filemanager_map, command, midnight_shortcut_runs);
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
-    shortcut = midnight_lookup_shortcut (panel_map, command);
+    shortcut = keybind_lookup_keymap_shortcut_if (panel_map, command, midnight_shortcut_runs);
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
     // the prefix too: Alt-x of Far mode is a key of the fast find
-    ext_map = midnight_lookup_shortcut (filemanager_map, CK_ExtendedKeyMap);
+    ext_map = keybind_lookup_keymap_shortcut_if (filemanager_map, CK_ExtendedKeyMap,
+                                                 midnight_shortcut_runs);
     if (ext_map != NULL)
         shortcut = keybind_lookup_keymap_shortcut (filemanager_x_map, command);
     if (shortcut != NULL)

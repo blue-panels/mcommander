@@ -450,6 +450,8 @@ const char *keybind_lookup_actionname (long action);
 const char *keybind_lookup_actiondesc (long action);
 keybind_action_flags_t keybind_lookup_action_flags (long action);
 const char *keybind_lookup_keymap_shortcut (const global_keymap_t *keymap, long action);
+const char *keybind_lookup_keymap_shortcut_if (const global_keymap_t *keymap, long action,
+                                               gboolean (*key_ok) (long key));
 long keybind_lookup_keymap_command (const global_keymap_t *keymap, long key);
 
 /*** inline functions ****************************************************************************/
