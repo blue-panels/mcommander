@@ -39,6 +39,9 @@ endif
 if sqlite3.found()
   subdir('sqlite')
 endif
+if libpq.found()
+  subdir('postgres')
+endif
 subdir('docker')
 subdir('git')
 subdir('k8s')

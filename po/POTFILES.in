@@ -135,6 +135,11 @@ src/panel-plugins/mongo/mongo_wizard.c
 src/panel-plugins/panelize/panelize.c
 src/panel-plugins/panelize/panelize_config.c
 src/panel-plugins/panelize/panelize_dlg.c
+src/panel-plugins/postgres/postgres.c
+src/panel-plugins/postgres/postgres_config.c
+src/panel-plugins/postgres/postgres_connections.c
+src/panel-plugins/postgres/postgres_settings.c
+src/panel-plugins/postgres/postgres_ui.c
 src/panel-plugins/s3/s3.c
 src/panel-plugins/s3/s3_connect_status.c
 src/panel-plugins/s3/s3_connection.c
