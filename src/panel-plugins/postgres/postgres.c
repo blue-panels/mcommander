@@ -47,6 +47,8 @@ static void postgres_close (void *plugin_data);
 static mc_pp_result_t postgres_handle_key (void *plugin_data, int key);
 static mc_pp_result_t postgres_create_item (void *plugin_data);
 static mc_pp_result_t postgres_delete_items (void *plugin_data, const char **names, int count);
+static mc_pp_result_t postgres_get_local_copy (void *plugin_data, const char *fname,
+                                               char **local_path);
 static const char *postgres_get_title (void *plugin_data);
 static const char *postgres_get_focus_name (void *plugin_data);
 static mc_pp_result_t postgres_get_help_info (void *plugin_data, const char **filename,
@@ -62,8 +64,8 @@ static const mc_panel_plugin_t postgres_plugin = {
     .display_name = N_ ("PostgreSQL"),
     .proto = "postgres",
     .prefix = "postgres:",
-    .flags = MC_PPF_NAVIGATE | MC_PPF_DELETE | MC_PPF_CREATE | MC_PPF_CUSTOM_TITLE
-        | MC_PPF_SHOW_IN_DRIVE_MENU,
+    .flags = MC_PPF_NAVIGATE | MC_PPF_GET_FILES | MC_PPF_DELETE | MC_PPF_CREATE
+        | MC_PPF_CUSTOM_TITLE | MC_PPF_SHOW_IN_DRIVE_MENU,
 
     .open = postgres_open,
     .close = postgres_close,
@@ -72,6 +74,7 @@ static const mc_panel_plugin_t postgres_plugin = {
     .handle_key = postgres_handle_key,
     .create_item = postgres_create_item,
     .delete_items = postgres_delete_items,
+    .get_local_copy = postgres_get_local_copy,
     .get_title = postgres_get_title,
     .get_focus_name = postgres_get_focus_name,
     .get_columns = postgres_get_columns,
@@ -168,6 +171,33 @@ postgres_delete_items (void *plugin_data, const char **names, int count)
     if (data->level == POSTGRES_LEVEL_CONNECTIONS)
         return postgres_delete_connections (data, names, count);
     return MC_PPR_NOT_SUPPORTED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* F3 and F5 on a relation: its SQL, rebuilt from the catalog, in a file named after it with .sql */
+static mc_pp_result_t
+postgres_get_local_copy (void *plugin_data, const char *fname, char **local_path)
+{
+    postgres_data_t *data = (postgres_data_t *) plugin_data;
+    char *ddl, *sql_name;
+    gboolean ok;
+
+    if (data->level != POSTGRES_LEVEL_RELATIONS || postgres_find_item (data, fname) == NULL)
+        return MC_PPR_NOT_SUPPORTED;
+
+    ddl = postgres_ddl (data, fname);
+    if (ddl == NULL)
+        return MC_PPR_FAILED;
+
+    ok = mc_pp_write_temp_file ("mc-postgres-XXXXXX", ddl, -1, local_path);
+    g_free (ddl);
+    if (!ok)
+        return MC_PPR_FAILED;
+    sql_name = g_strconcat (fname, ".sql", (char *) NULL);
+    mc_pp_rename_with_ext (local_path, sql_name);
+    g_free (sql_name);
+    return MC_PPR_OK;
 }
 
 /* --------------------------------------------------------------------------------------------- */

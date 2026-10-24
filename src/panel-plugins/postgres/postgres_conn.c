@@ -26,7 +26,7 @@
  *
  *  The panel waits for the server, but not blindly: libpq is driven by PQconnectPoll and
  *  PQsendQueryParams, and the wait for its socket is cut in pieces of a tenth of a second, so that
- *  Ctrl-C gives up a connection and cancels a query. The connection reads the catalog only: it
+ *  Ctrl-G gives up a connection and cancels a query. The connection reads the catalog only: it
  *  is opened with default_transaction_read_only, and statement_timeout and connect_timeout of
  *  [General] bound it.
  */
@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>  // realpath
 #include <string.h>
+#include <sys/socket.h>  // shutdown
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -53,6 +54,9 @@
 /*** file scope macro definitions ****************************************************************/
 
 #define WAIT_SLICE_MS 100
+
+/* how long the answer to a cancel is waited for before the connection is given up */
+#define CANCEL_WAIT_S 5
 
 /*** file scope type declarations ****************************************************************/
 
@@ -78,7 +82,7 @@ param_add (GPtrArray *keys, GPtrArray *values, const char *key, const char *valu
 /* --------------------------------------------------------------------------------------------- */
 
 /* Wait for @fd to take a write or to have something to read, until @deadline (monotonic
-   microseconds, 0: none) or Ctrl-C */
+   microseconds, 0: none) or Ctrl-G */
 static wait_result_t
 wait_socket (int fd, gboolean for_write, gint64 deadline)
 {
@@ -112,6 +116,21 @@ wait_socket (int fd, gboolean for_write, gint64 deadline)
         if (r < 0 && errno != EINTR)
             return WAIT_ERROR;
     }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* PQcancel of libpq before 17 blocks until the server has read the request, with no limit: it
+   runs beside, and the query waits for its answer CANCEL_WAIT_S at most */
+static gpointer
+cancel_thread (gpointer data)
+{
+    PGcancel *cancel = (PGcancel *) data;
+    char buf[256];
+
+    (void) PQcancel (cancel, buf, sizeof (buf));
+    PQfreeCancel (cancel);
+    return NULL;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -195,7 +214,8 @@ conn_try (const postgres_config_t *cfg, const postgres_connection_t *c, const ch
 
     keys = g_ptr_array_new ();
     values = g_ptr_array_new ();
-    options = g_string_new ("-c default_transaction_read_only=on");
+    // an empty search_path makes the server qualify every name it writes, as for pg_dump
+    options = g_string_new ("-c default_transaction_read_only=on -c search_path=");
     if (cfg->statement_timeout > 0)
         g_string_append_printf (options, " -c statement_timeout=%ds", cfg->statement_timeout);
 
@@ -537,13 +557,16 @@ postgres_conn_open (mc_panel_host_t *host, const postgres_config_t *cfg, postgre
 
 PGresult *
 postgres_conn_query (PGconn *conn, const char *sql, int nparams, const char *const *params,
-                     char **err_out)
+                     char **err_out, gboolean *cancelled_out)
 {
     PGresult *res, *last = NULL;
     char *err = NULL;
-    gboolean cancelled = FALSE;
+    gboolean cancelled = FALSE, abandoned = FALSE;
+    gint64 deadline = 0;
 
     *err_out = NULL;
+    if (cancelled_out != NULL)
+        *cancelled_out = FALSE;
 
     if (PQsendQueryParams (conn, sql, nparams, NULL, params, NULL, NULL, 0) == 0)
     {
@@ -551,11 +574,8 @@ postgres_conn_query (PGconn *conn, const char *sql, int nparams, const char *con
         return NULL;
     }
 
+    // the connection blocks: the query, a few hundred bytes, has gone out whole
     tty_enable_interrupt_key ();
-
-    while (PQflush (conn) == 1)
-        if (wait_socket (PQsocket (conn), TRUE, 0) != WAIT_READY)
-            break;
 
     while (TRUE)
     {
@@ -563,23 +583,32 @@ postgres_conn_query (PGconn *conn, const char *sql, int nparams, const char *con
         {
             wait_result_t w;
 
-            w = wait_socket (PQsocket (conn), FALSE, 0);
+            w = wait_socket (PQsocket (conn), FALSE, deadline);
             if (w == WAIT_INTERRUPTED && !cancelled)
             {
                 PGcancel *cancel = PQgetCancel (conn);
-                char buf[256];
 
                 // the server answers it with an error of the query, which is read as any other
                 if (cancel != NULL)
-                {
-                    (void) PQcancel (cancel, buf, sizeof (buf));
-                    PQfreeCancel (cancel);
-                }
+                    g_thread_unref (g_thread_new ("postgres-cancel", cancel_thread, cancel));
                 cancelled = TRUE;
-                tty_disable_interrupt_key ();
+                deadline = g_get_monotonic_time () + (gint64) CANCEL_WAIT_S * G_USEC_PER_SEC;
                 continue;
             }
-            if (w == WAIT_ERROR || PQconsumeInput (conn) == 0)
+            if (w == WAIT_INTERRUPTED || w == WAIT_TIMEOUT)
+            {
+                // no answer to the cancel, or the user gave up waiting for it: the socket is shut,
+                // libpq finds the connection broken
+                (void) shutdown (PQsocket (conn), SHUT_RDWR);
+                abandoned = TRUE;
+            }
+            else if (w == WAIT_ERROR)
+            {
+                // the socket cannot be waited for: shut too, or PQgetResult would wait on it in
+                // libpq, with no limit
+                (void) shutdown (PQsocket (conn), SHUT_RDWR);
+            }
+            if (PQconsumeInput (conn) == 0)
             {
                 g_free (err);
                 err = conn_error (conn);
@@ -621,8 +650,12 @@ postgres_conn_query (PGconn *conn, const char *sql, int nparams, const char *con
         if (cancelled)
         {
             g_free (err);
-            err = g_strdup (_ ("Cancelled."));
+            err = g_strdup (
+                abandoned ? _ ("Cancelled. The server did not answer: the connection is closed.")
+                          : _ ("Cancelled."));
         }
+        if (cancelled_out != NULL)
+            *cancelled_out = cancelled;
         *err_out = err;
         return NULL;
     }

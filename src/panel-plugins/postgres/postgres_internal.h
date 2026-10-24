@@ -83,8 +83,18 @@ mc_pp_result_t postgres_get_items (void *plugin_data, void *list);
 mc_pp_result_t postgres_chdir (void *plugin_data, const char *path);
 const postgres_item_t *postgres_find_item (const postgres_data_t *data, const char *name);
 void postgres_session_close (postgres_data_t *data);
+/* A query of the panel: a connection found lost is opened again, to the same database, and the
+   query run once more. NULL with a message shown on failure. */
+PGresult *postgres_query (postgres_data_t *data, const char *sql, int nparams,
+                          const char *const *params);
 /* The name of the kind of a relation: "table", "view"... */
 const char *postgres_relkind_name (char kind);
+
+/* postgres_ddl.c */
+
+/* The SQL that makes the relation @name of the open schema, rebuilt from the catalog; NULL with
+   a message shown on failure */
+char *postgres_ddl (postgres_data_t *data, const char *name);
 
 /* postgres_columns.c */
 

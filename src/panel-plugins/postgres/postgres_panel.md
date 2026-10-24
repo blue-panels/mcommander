@@ -77,7 +77,7 @@
     connects with what is in the fields and tells the version
     of the server, or the error of libpq; it asks for a
     password the server wants and the fields have not got, and
-    leaves it in the Password field. Ctrl-C gives up the wait
+    leaves it in the Password field. Ctrl-G gives up the wait
     for a server.
 
   Hierarchy and keys
@@ -109,6 +109,20 @@
                       before the first ANALYZE.
       Size            pg_total_relation_size, with the
                       indexes and TOAST.
+      F3              The SQL of the relation, rebuilt from
+                      the catalog: CREATE TABLE with its
+                      columns, defaults, identity and
+                      generated columns, collations and
+                      constraints, PARTITION BY and the
+                      partitions, the indexes, the triggers,
+                      the comments; CREATE VIEW or
+                      MATERIALIZED VIEW from pg_get_viewdef;
+                      CREATE FOREIGN TABLE with its server
+                      and options; CREATE SEQUENCE. Every
+                      name is qualified with its schema. It
+                      is not a dump: the owner, the grants
+                      and the policies are left out.
+      F5              Copy that SQL to the other panel.
 
     The system schemas, pg_catalog, information_schema and
     pg_toast, are shown with show_system_schemas only; the
@@ -121,8 +135,10 @@
     Without "Show all databases" it has the database of the
     connection only.
     The connection of the panel is read-only and bounded by
-    statement_timeout; Ctrl-C cancels a query of the panel. A
-    connection found lost is opened again once.
+    statement_timeout; Ctrl-G cancels a query of the panel. A
+    server that does not answer the cancel within 5 seconds
+    has the connection closed. A connection found lost is
+    opened again once.
 
     Below the connections the panel changes nothing: F4, F6,
     F7, F8 say so. The objects are changed with SQL in the

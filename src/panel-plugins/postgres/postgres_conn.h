@@ -38,17 +38,19 @@
 /*** declarations of public functions ************************************************************/
 
 /* Connect to @database of @c, or to the database of @c when NULL; a status window says what it
-   waits for, Ctrl-C gives up. A server that asks for a password the connection has not got
+   waits for, Ctrl-G gives up. A server that asks for a password the connection has not got
    asks for it here, and it is kept in @c for the session; with save_password it goes to
    ~/.pgpass once it has worked. NULL with @err_out (the caller's to free) on failure; *@err_out
    NULL is the user who gave up. */
 PGconn *postgres_conn_open (mc_panel_host_t *host, const postgres_config_t *cfg,
                             postgres_connection_t *c, const char *database, char **err_out);
 
-/* Run @sql with @nparams text parameters, Ctrl-C cancelling it. The result of the last command,
-   PGRES_TUPLES_OK or PGRES_COMMAND_OK, else NULL with @err_out. */
+/* Run @sql with @nparams text parameters, Ctrl-G cancelling it. The result of the last command,
+   PGRES_TUPLES_OK or PGRES_COMMAND_OK, else NULL with @err_out, and @cancelled_out TRUE when it
+   was the user who stopped it. A server that does not answer the cancel within some seconds, or
+   a second Ctrl-G, has the connection closed: it is CONNECTION_BAD then. */
 PGresult *postgres_conn_query (PGconn *conn, const char *sql, int nparams,
-                               const char *const *params, char **err_out);
+                               const char *const *params, char **err_out, gboolean *cancelled_out);
 
 /* The URL of the fields of @c: what libpq is given in POSTGRES_BY_HOST, without the password */
 char *postgres_conn_url (const postgres_connection_t *c);

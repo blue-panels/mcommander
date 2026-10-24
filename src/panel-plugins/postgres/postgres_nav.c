@@ -131,38 +131,6 @@ set_focus (postgres_data_t *data, const char *name)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* A query of the panel: a connection found lost is opened again, to the same database, and the
-   query run once more. NULL with a message shown on failure. */
-static PGresult *
-query (postgres_data_t *data, const char *sql, int nparams, const char *const *params)
-{
-    PGresult *res;
-    char *err = NULL;
-
-    res = postgres_conn_query (data->conn, sql, nparams, params, &err);
-    if (res == NULL && PQstatus (data->conn) == CONNECTION_BAD)
-    {
-        char *db = g_strdup (PQdb (data->conn));
-        PGconn *conn;
-
-        g_free (err);
-        conn = postgres_conn_open (data->host, data->cfg, data->connection, db, &err);
-        g_free (db);
-        if (conn != NULL)
-        {
-            PQfinish (data->conn);
-            data->conn = conn;
-            res = postgres_conn_query (data->conn, sql, nparams, params, &err);
-        }
-    }
-    if (res == NULL && err != NULL)
-        postgres_message (data->host, TRUE, "%s", err);
-    g_free (err);
-    return res;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 static void
 items_take (postgres_data_t *data, GPtrArray *items)
 {
@@ -189,7 +157,7 @@ read_databases (postgres_data_t *data)
         return TRUE;
     }
 
-    res = query (data, SQL_DATABASES, 0, NULL);
+    res = postgres_query (data, SQL_DATABASES, 0, NULL);
     if (res == NULL)
     {
         g_ptr_array_free (items, TRUE);
@@ -218,7 +186,7 @@ read_schemas (postgres_data_t *data)
     PGresult *res;
 
     params[0] = data->cfg->show_system_schemas ? "true" : "false";
-    res = query (data, SQL_SCHEMAS, 1, params);
+    res = postgres_query (data, SQL_SCHEMAS, 1, params);
     if (res == NULL)
         return FALSE;
 
@@ -244,7 +212,7 @@ read_relations (postgres_data_t *data, const char *schema)
     GPtrArray *items;
     PGresult *res;
 
-    res = query (data, SQL_RELATIONS, 1, params);
+    res = postgres_query (data, SQL_RELATIONS, 1, params);
     if (res == NULL)
         return FALSE;
 
@@ -340,6 +308,38 @@ enter_connection (postgres_data_t *data, const char *name)
 }
 
 /*** public functions ****************************************************************************/
+
+PGresult *
+postgres_query (postgres_data_t *data, const char *sql, int nparams, const char *const *params)
+{
+    PGresult *res;
+    char *err = NULL;
+    gboolean cancelled;
+
+    res = postgres_conn_query (data->conn, sql, nparams, params, &err, &cancelled);
+    // a query the user cancelled is not run again
+    if (res == NULL && !cancelled && PQstatus (data->conn) == CONNECTION_BAD)
+    {
+        char *db = g_strdup (PQdb (data->conn));
+        PGconn *conn;
+
+        g_free (err);
+        conn = postgres_conn_open (data->host, data->cfg, data->connection, db, &err);
+        g_free (db);
+        if (conn != NULL)
+        {
+            PQfinish (data->conn);
+            data->conn = conn;
+            res = postgres_conn_query (data->conn, sql, nparams, params, &err, NULL);
+        }
+    }
+    if (res == NULL && err != NULL)
+        postgres_message (data->host, TRUE, "%s", err);
+    g_free (err);
+    return res;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 void
 postgres_session_close (postgres_data_t *data)
