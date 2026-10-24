@@ -3570,8 +3570,16 @@ panel_do_set_filter (WPanel *panel)
 static mc_search_t *
 panel_quick_search_new_handler (const WPanel *panel)
 {
+    gboolean case_sensitive;
+
+    case_sensitive = panels_qsearch_case_sensitive (panel->sort_info.case_sensitive);
+
+    // the fast find of Far finds a name whatever its case is
+    if (panel->quick_search.far_find && !panel->quick_search.filtering)
+        case_sensitive = FALSE;
+
     return quick_search_new (panel->quick_search.buffer->str, panel->quick_search.filtering,
-                             panels_qsearch_case_sensitive (panel->sort_info.case_sensitive));
+                             case_sensitive);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3985,6 +3993,175 @@ search_previous (WPanel *panel)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * The bytes that Alt (or Alt-Shift) with @key types into the fast find of Far mode, in the charset
+ * of the terminal; 0 when there are none. A terminal that sends keys the old way sends the byte
+ * after an Esc, and the rest of a UTF-8 character after it as plain keys, which the search takes
+ * as typed. A kitty terminal names the key of the base layout instead, and the text that was
+ * typed with the layout is in its event, all of it; a key of the keypad has no text there, but its
+ * key code is the character. @size is TTY_KITTY_TEXT_BYTES, so every text of an event fits.
+ */
+
+static int
+panel_far_fast_find_text (int key, char *text, size_t size)
+{
+    tty_key_event_t ev;
+    int c;
+
+    if (tty_key_event (key, &ev))
+    {
+        const size_t len = tty_key_event_text (&ev, text, size);
+
+        // the text the terminal sent is the whole answer: the key code stands for no text only
+        if (len != 0 || ev.text_len > 0)
+            return (int) len;
+    }
+
+    c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+    if (c <= ' ' || c == 0x7F || c > 0xFF || size == 0)
+        return 0;
+
+    // Alt-Shift with a letter may come as the key of the small letter with Shift
+    if ((key & KEY_M_SHIFT) != 0 && c >= 'a' && c <= 'z')
+        c = c - 'a' + 'A';
+
+    text[0] = (char) c;
+    return 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Give @key, a command or a key as the terminal sent it, to the plugin of a plugin panel. An action
+ * the plugin did reloads the panel when @reload is TRUE or the plugin asked for it. Returns what
+ * the plugin answered, MC_PPR_NOT_SUPPORTED when the panel has no plugin that takes keys;
+ * MC_PPR_SKIPPED means the user turned down a dialog of the plugin, and the caller decides whether
+ * that is an answer.
+ */
+
+static mc_pp_result_t
+panel_plugin_key (WPanel *panel, int key, gboolean reload)
+{
+    mc_pp_result_t r;
+
+    if (!panel->is_plugin_panel || panel->plugin == NULL || panel->plugin_data == NULL
+        || panel->plugin->handle_key == NULL)
+        return MC_PPR_NOT_SUPPORTED;
+
+    r = panel->plugin->handle_key (panel->plugin_data, key);
+    if (r == MC_PPR_OK)
+    {
+        if (reload || panel->plugin_reload_wanted)
+            panel_plugin_reload (panel);
+        panel->plugin_reload_wanted = FALSE;
+    }
+
+    return r;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Give @key, which the keymap of the panels binds to @command, to the plugin of a plugin panel:
+ * the command, and the key itself when the plugin does not take the command.
+ */
+
+static mc_pp_result_t
+panel_plugin_command_key (WPanel *panel, long command, int key)
+{
+    const gboolean reload = command != CK_View && command != CK_ViewRaw;
+    mc_pp_result_t r;
+
+    r = panel_plugin_key (panel, (int) command, reload);
+    if (r == MC_PPR_NOT_SUPPORTED && key != (int) command)
+    {
+        /* Fallback for plugin-local hotkeys that are stored as raw terminal keys
+           (e.g. KEY_F(13)) rather than command ids (CK_*). */
+        r = panel_plugin_key (panel, key, reload);
+    }
+
+    return r;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * How many bytes of the character of @key are still to come as plain keys: the rest of a UTF-8
+ * character after its lead byte, which a terminal that sends Alt as an Esc gives that way. A key
+ * of a kitty event brings its whole text.
+ */
+
+static int
+panel_far_fast_find_rest (int key)
+{
+    const int c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+
+    if (!mc_global.utf8_display || tty_key_event (key, NULL) || c < 0xC0 || c > 0xF7)
+        return 0;
+
+    return c >= 0xF0 ? 3 : c >= 0xE0 ? 2 : 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * The fast find of Far mode: Alt, or Alt-Shift, with a character starts the quick search and types
+ * the character into it. A key keeps its action, with a search going on too, when it switches the
+ * screens or the keymap of the user binds it to an action of its own (keymap_far_fast_find_takes
+ * ()), as a macro of Far would. Before the search runs a key also keeps it when the plugin of the
+ * panel answers to it, as a plugin of Far would: to the command the panels bind it to, as without
+ * the fast find, or to the key itself. The keymaps themselves are not changed.
+ */
+
+static gboolean
+panel_far_fast_find (WPanel *panel, int key)
+{
+    char text[TTY_KITTY_TEXT_BYTES];
+    int len, i;
+
+    if (!keymap_far_fast_find_takes (key))
+        return FALSE;
+
+    if (!panel->quick_search.active)
+    {
+        const long command = widget_lookup_key (WIDGET (panel), key);
+        const mc_pp_result_t r = command != CK_IgnoreKey
+            ? panel_plugin_command_key (panel, command, key)
+            : panel_plugin_key (panel, key, TRUE);
+
+        // the plugin answered, as panel_key () takes it: the rest of the character is not typed
+        // anywhere either
+        if (r == MC_PPR_OK || (r == MC_PPR_SKIPPED && command != CK_IgnoreKey))
+        {
+            panel->quick_search.far_skip = panel_far_fast_find_rest (key);
+            return TRUE;
+        }
+    }
+
+    len = panel_far_fast_find_text (key, text, sizeof (text));
+    if (len == 0)
+        return FALSE;
+
+    if (!panel->quick_search.active)
+    {
+        start_search (panel);
+        // an empty directory has nothing to find; the rest of the character is not typed either
+        if (!panel->quick_search.active)
+        {
+            panel->quick_search.far_skip = panel_far_fast_find_rest (key);
+            return TRUE;
+        }
+        panel->quick_search.far_find = TRUE;
+    }
+
+    for (i = 0; i < len; i++)
+    {
+        if (panel->quick_search.filtering)
+            do_quick_filter (panel, (unsigned char) text[i]);
+        else
+            do_search (panel, (unsigned char) text[i]);
+    }
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 static void
 start_quick_filter (WPanel *panel)
 {
@@ -4030,6 +4207,7 @@ stop_search (WPanel *panel)
 
     panel_quick_filter_restore (panel);
     panel->quick_search.active = FALSE;
+    panel->quick_search.far_find = FALSE;
 
     /* if user overrdied search string, we need to store it
        to the quick_search.prev_buffer */
@@ -5356,6 +5534,15 @@ panel_key (WPanel *panel, int key)
 {
     long command;
 
+    // the rest of the UTF-8 character of a fast find of Far that could not start
+    if (panel->quick_search.far_skip > 0)
+    {
+        panel->quick_search.far_skip--;
+        if (key >= 0x80 && key <= 0xBF)
+            return MSG_HANDLED;
+        panel->quick_search.far_skip = 0;
+    }
+
     if (is_abort_char (key))
     {
         // an Esc with no search going on is the file manager's, when its keymap has Esc
@@ -5365,6 +5552,10 @@ panel_key (WPanel *panel, int key)
         stop_search (panel);
         return MSG_HANDLED;
     }
+
+    // Far mode: Alt with a character is the fast find of Far
+    if (panel_far_fast_find (panel, key))
+        return MSG_HANDLED;
 
     // Far mode: in the quick search, Ctrl-Enter and Ctrl-Shift-Enter go on to the next and to the
     // previous file that matches
@@ -5390,45 +5581,17 @@ panel_key (WPanel *panel, int key)
     command = widget_lookup_key (WIDGET (panel), key);
     if (command != CK_IgnoreKey)
     {
-        if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-            && panel->plugin->handle_key != NULL)
-        {
-            mc_pp_result_t r;
+        const mc_pp_result_t r = panel_plugin_command_key (panel, command, key);
 
-            r = panel->plugin->handle_key (panel->plugin_data, command);
-            if (r == MC_PPR_NOT_SUPPORTED && key != (int) command)
-            {
-                /* Fallback for plugin-local hotkeys that are stored as raw terminal keys
-                   (e.g. KEY_F(13)) rather than command ids (CK_*). */
-                r = panel->plugin->handle_key (panel->plugin_data, key);
-            }
-            if (r == MC_PPR_OK)
-            {
-                if ((command != CK_View && command != CK_ViewRaw) || panel->plugin_reload_wanted)
-                    panel_plugin_reload (panel);
-                panel->plugin_reload_wanted = FALSE;
-                return MSG_HANDLED;
-            }
-            // A cancelled dialog is an answer; a failure of the plugin's own is not.
-            if (r == MC_PPR_SKIPPED)
-                return MSG_HANDLED;
-        }
+        // A cancelled dialog is an answer; a failure of the plugin's own is not.
+        if (r == MC_PPR_OK || r == MC_PPR_SKIPPED)
+            return MSG_HANDLED;
         return panel_execute_cmd (panel, command);
     }
 
     /* Let plugin handle keys not in the panel keymap (e.g. plugin-specific hotkeys). */
-    if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-        && panel->plugin->handle_key != NULL)
-    {
-        mc_pp_result_t r;
-
-        r = panel->plugin->handle_key (panel->plugin_data, key);
-        if (r == MC_PPR_OK)
-        {
-            panel_plugin_reload (panel);
-            return MSG_HANDLED;
-        }
-    }
+    if (panel_plugin_key (panel, key, TRUE) == MC_PPR_OK)
+        return MSG_HANDLED;
 
     if (!command_prompt && ((key >= ' ' && key <= 255) || key == KEY_BACKSPACE))
     {
@@ -5505,19 +5668,8 @@ panel_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         return panel_key (panel, parm);
 
     case MSG_ACTION:
-        if (panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
-            && panel->plugin->handle_key != NULL)
-        {
-            mc_pp_result_t r;
-
-            r = panel->plugin->handle_key (panel->plugin_data, parm);
-            if (r == MC_PPR_OK)
-            {
-                if (parm != CK_View && parm != CK_ViewRaw)
-                    panel_plugin_reload (panel);
-                return MSG_HANDLED;
-            }
-        }
+        if (panel_plugin_key (panel, parm, parm != CK_View && parm != CK_ViewRaw) == MC_PPR_OK)
+            return MSG_HANDLED;
         return panel_execute_cmd (panel, parm);
 
     case MSG_DESTROY:
@@ -6112,6 +6264,19 @@ panel_dir_list_callback (dir_list_cb_state_t state, void *data)
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
+/**
+ * Is the fast find of Far mode running in @panel? Enter then ends it and opens the file found,
+ * whatever the command line holds.
+ */
+
+gboolean
+panel_far_fast_find_running (const WPanel *panel)
+{
+    return panel != NULL && panel->quick_search.active && panel->quick_search.far_find;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 file_entry_t *
 panel_current_entry (const WPanel *panel)
 {
@@ -6183,6 +6348,8 @@ panel_clean_dir (WPanel *panel)
     panel->total = 0;
     panel->quick_search.active = FALSE;
     panel->quick_search.filtering = FALSE;
+    panel->quick_search.far_find = FALSE;
+    panel->quick_search.far_skip = 0;
     if (panel->quick_search.source.list != NULL)
         dir_list_free_list (&panel->quick_search.source);
     panel->is_panelized = FALSE;

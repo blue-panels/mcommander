@@ -68,6 +68,8 @@
 
 /* The most code points of the text of a key event; a longer text is not kept */
 #define TTY_KITTY_TEXT_MAX 512
+/* The most bytes that text takes in the charset of the terminal */
+#define TTY_KITTY_TEXT_BYTES (TTY_KITTY_TEXT_MAX * 6)
 
 /*** enums ***************************************************************************************/
 
@@ -155,6 +157,8 @@ int tty_match_seq_to_keycode (const char *seq, int len);
 gboolean tty_key_event (int key, tty_key_event_t *ev);
 /* The same, for a caller that takes the whole event: the rest of its text is not given as keys */
 gboolean tty_key_event_take (int key, tty_key_event_t *ev);
+/* The text the key of @ev types, in the charset of the terminal; 0 when it types none */
+size_t tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size);
 /* The modifiers held now (TTY_KITTY_MOD_* bits), 0 when the terminal does not report them */
 guint tty_kitty_modifiers (void);
 /* The kitty event in the bytes of a key that learn_key () gave; FALSE when they are none */

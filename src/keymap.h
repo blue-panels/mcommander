@@ -66,7 +66,12 @@ extern const global_keymap_t *mcterm_map;
 
 /* Far mode: panel keys of Far Manager; load the keymap again to see a change */
 extern gboolean keymap_far_mode;
+/* Far mode: Alt with a character is the fast find of Far in the panels */
+extern gboolean keymap_far_fast_find;
 
+gboolean keymap_far_fast_find_key (int key);
+gboolean keymap_far_fast_find_kept (int key);
+gboolean keymap_far_fast_find_takes (int key);
 void keymap_load (gboolean load_from_file);
 void keymap_free (void);
 void keymap_save_old_maps (void);

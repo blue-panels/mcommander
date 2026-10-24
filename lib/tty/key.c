@@ -605,7 +605,7 @@ static int kitty_event_code;
 static guint kitty_flags_wanted = 0;
 static guint kitty_flags_sent = 0;
 /* The rest of the text of the last kitty key, given as single bytes */
-static unsigned char kitty_text[TTY_KITTY_TEXT_MAX * 6];
+static unsigned char kitty_text[TTY_KITTY_TEXT_BYTES];
 static size_t kitty_text_len = 0;
 static size_t kitty_text_pos = 0;
 /* How many more times the last key comes: a Win32 input record with a repeat count */
@@ -2057,32 +2057,29 @@ kitty_text_pending (void)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* The text of a key with no Ctrl, Alt or Super, in the bytes a legacy terminal would send.
-   Returns the first byte and keeps the rest for get_key_code (), or -1 when there is no text. */
+/* @n code points in the charset of the terminal, into @buf of @size bytes. Returns the length, or 0
+   when a code point is a control character or no character at all, or the text does not fit. */
 
-static int
-kitty_text_start (const tty_key_event_t *ev)
+static size_t
+kitty_codepoints_to_bytes (const gunichar *cp, int n, char *buf, size_t size)
 {
     GString *utf8;
     char *bytes;
     gsize len = 0;
     int i;
 
-    if (ev->final != 'u' || ev->text_len == 0
-        || (ev->mods
-            & (KITTY_MOD_ALT | KITTY_MOD_CTRL | KITTY_MOD_SUPER | KITTY_MOD_HYPER | KITTY_MOD_META))
-            != 0)
-        return -1;
+    if (n <= 0)
+        return 0;
 
     utf8 = g_string_sized_new (16);
-    for (i = 0; i < ev->text_len; i++)
+    for (i = 0; i < n; i++)
     {
-        if (ev->text[i] < 0x20 || ev->text[i] == 0x7F || !g_unichar_validate (ev->text[i]))
+        if (cp[i] < 0x20 || cp[i] == 0x7F || !g_unichar_validate (cp[i]))
         {
             g_string_free (utf8, TRUE);
-            return -1;
+            return 0;
         }
-        g_string_append_unichar (utf8, ev->text[i]);
+        g_string_append_unichar (utf8, cp[i]);
     }
 
     if (mc_global.utf8_display)
@@ -2096,14 +2093,37 @@ kitty_text_start (const tty_key_event_t *ev)
         g_string_free (utf8, TRUE);
     }
 
-    if (bytes == NULL || len == 0 || len > sizeof (kitty_text))
+    if (bytes == NULL || len == 0 || len > size)
     {
         g_free (bytes);
-        return -1;
+        return 0;
     }
 
-    memcpy (kitty_text, bytes, len);
+    memcpy (buf, bytes, len);
     g_free (bytes);
+    return len;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The text of a key with no Ctrl, Alt or Super, in the bytes a legacy terminal would send.
+   Returns the first byte and keeps the rest for get_key_code (), or -1 when there is no text. */
+
+static int
+kitty_text_start (const tty_key_event_t *ev)
+{
+    size_t len;
+
+    if (ev->final != 'u' || ev->text_len == 0
+        || (ev->mods
+            & (KITTY_MOD_ALT | KITTY_MOD_CTRL | KITTY_MOD_SUPER | KITTY_MOD_HYPER | KITTY_MOD_META))
+            != 0)
+        return -1;
+
+    len = kitty_codepoints_to_bytes (ev->text, ev->text_len, (char *) kitty_text,
+                                     sizeof (kitty_text));
+    if (len == 0)
+        return -1;
+
     kitty_text_len = len;
     kitty_text_pos = 1;
     return kitty_text[0];
@@ -4051,6 +4071,44 @@ tty_key_event_take (int key, tty_key_event_t *ev)
         return FALSE;
     kitty_text_len = kitty_text_pos = 0;
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * The text that the key of @ev types, in the charset of the terminal, into @buf of @size bytes:
+ * the whole text the terminal sent with it, else the character of the key (its shifted form with
+ * Shift; the capital of a letter when the terminal does not report the alternate keys). The
+ * modifiers do not count, so Alt with a letter gives the letter. Returns the length; 0 for a key
+ * that types nothing (a functional key, a control character) or a text that does not fit: a
+ * buffer of TTY_KITTY_TEXT_BYTES takes any text.
+ */
+
+size_t
+tty_key_event_text (const tty_key_event_t *ev, char *buf, size_t size)
+{
+    gunichar c;
+
+    if (ev->final != 'u' || ev->event == TTY_KITTY_RELEASE)
+        return 0;
+
+    if (ev->text_len > 0)
+        return kitty_codepoints_to_bytes (ev->text, ev->text_len, buf, size);
+
+    c = ev->key;
+    if ((ev->mods & KITTY_MOD_SHIFT) != 0)
+    {
+        if (ev->shifted != 0)
+            c = ev->shifted;
+        else if (g_unichar_islower (c))
+            // without the alternate keys (flag 4) the terminal does not say what Shift types
+            c = g_unichar_toupper (c);
+    }
+
+    // the functional keys of kitty are in the private use area
+    if (c >= 0xE000 && c <= 0xF8FF)
+        return 0;
+
+    return kitty_codepoints_to_bytes (&c, 1, buf, size);
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -472,21 +472,42 @@ sort_cmd (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The caption of the key of @command in @keymap, as keybind_lookup_keymap_shortcut () gives it,
+   but not of an Alt key that the fast find of Far mode takes: that key no longer runs @command */
+
+static const char *
+midnight_lookup_shortcut (const global_keymap_t *keymap, long command)
+{
+    size_t i;
+
+    if (keymap == NULL)
+        return NULL;
+
+    for (i = 0; keymap[i].key != 0; i++)
+        if (keymap[i].command == command && !keymap_far_fast_find_takes ((int) keymap[i].key))
+            return (keymap[i].caption[0] != '\0') ? keymap[i].caption : NULL;
+
+    return NULL;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static char *
 midnight_get_shortcut (long command)
 {
     const char *ext_map;
     const char *shortcut = NULL;
 
-    shortcut = keybind_lookup_keymap_shortcut (filemanager_map, command);
+    shortcut = midnight_lookup_shortcut (filemanager_map, command);
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
-    shortcut = keybind_lookup_keymap_shortcut (panel_map, command);
+    shortcut = midnight_lookup_shortcut (panel_map, command);
     if (shortcut != NULL)
         return g_strdup (shortcut);
 
-    ext_map = keybind_lookup_keymap_shortcut (filemanager_map, CK_ExtendedKeyMap);
+    // the prefix too: Alt-x of Far mode is a key of the fast find
+    ext_map = midnight_lookup_shortcut (filemanager_map, CK_ExtendedKeyMap);
     if (ext_map != NULL)
         shortcut = keybind_lookup_keymap_shortcut (filemanager_x_map, command);
     if (shortcut != NULL)
@@ -1839,6 +1860,24 @@ midnight_cmdline_marks_with (int key)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * Does @key stay the command line's when it has text: a key it marks text with, or an Alt key of
+ * the fast find of Far mode that it answers to (Alt-b, Alt-f, Alt-d, Alt-p and the others), unless
+ * a search runs? On an empty command line those Alt keys are the fast find's, as in Far.
+ */
+
+static gboolean
+midnight_cmdline_keeps (int key)
+{
+    if (midnight_cmdline_marks_with (key))
+        return TRUE;
+
+    return keymap_far_fast_find_takes (key)
+        && !(get_current_type () == view_listing && current_panel->quick_search.active)
+        && widget_lookup_key (WIDGET (cmdline), key) != CK_IgnoreKey;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static cb_ret_t
 midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data)
@@ -1901,9 +1940,10 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
             return mcterm_res;
     }
 
-        // With text on the command line, the keys it marks text with stay its own, not the panel's.
+        // With text on the command line, the keys it marks text with stay its own, not the panel's,
+        // and so do its Alt keys that the fast find of Far mode would take
         if (!w->ext_mode && command_prompt && !is_cmdline_mute ()
-            && !mcterm_overlay_cmdline_is_empty () && midnight_cmdline_marks_with (parm))
+            && !mcterm_overlay_cmdline_is_empty () && midnight_cmdline_keeps (parm))
         {
             cb_ret_t v = mcterm_overlay_cmdline_key (parm);
 
@@ -1921,7 +1961,10 @@ midnight_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *
         if (widget_get_state (WIDGET (the_menubar), WST_FOCUSED))
             return MSG_NOT_HANDLED;
 
-        if (parm == '\n' && !is_cmdline_mute ())
+        // Enter in the fast find of Far mode is the panel's: it opens the file found
+        if (parm == '\n' && !is_cmdline_mute ()
+            && !(get_current_type () == view_listing
+                 && panel_far_fast_find_running (current_panel)))
         {
             if (exec_cmdline_enter () == MSG_HANDLED)
                 return MSG_HANDLED;

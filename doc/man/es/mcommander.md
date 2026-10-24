@@ -482,9 +482,63 @@ los deselecciona. La terminal solo envía estas teclas si informa de las teclas
 con modificadores.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
-: en la búsqueda rápida (Ctrl-s, Alt-s), pasan al archivo siguiente y al
-anterior que coinciden, como en la búsqueda rápida de Far. Alt con un carácter
-conserva las acciones de M-Commander: no inicia una búsqueda.
+: en la búsqueda rápida (Ctrl-s, Alt-s) y en la búsqueda con Alt (más abajo),
+pasan al archivo siguiente y al anterior que coinciden, como en la búsqueda
+rápida de Far.
+
+**Alt con un carácter, Alt-Shift con un carácter**
+: la búsqueda rápida de Far, cuando también está activada la opción
+*Alt-letter fast find*
+del diálogo
+[Configuración](#configuration)
+(**far_fast_find=true**;
+por defecto está desactivada). El panel pasa al primer archivo, a partir del
+que está bajo el cursor, cuyo nombre empieza por lo escrito, sin distinguir
+mayúsculas de minúsculas; \* y ? son comodines, como en la búsqueda rápida.
+Mientras la búsqueda sigue, los caracteres se escriben con Alt o sin él, y un
+carácter con el que no coincide ningún nombre no se acepta. Esc termina la
+búsqueda; cualquier otra tecla la termina y después hace lo suyo, de modo que
+Enter abre el archivo encontrado y el texto de la línea de órdenes se queda
+en ella. Mientras la línea de órdenes tiene texto, sus propias teclas Alt
+(Alt-b y Alt-f, Alt-d y Alt-w, Alt-p, Alt-n y Alt-h) siguen editándola, siempre
+que no haya una búsqueda en marcha; las demás teclas Alt van a la búsqueda. El cirílico y otras letras
+funcionan igual con una configuración regional UTF-8 que con una de 8 bits.
+Un terminal que envía Alt como un Esc delante de la tecla envía Alt con un
+dígito como Esc y el dígito, que en M-Commander es una tecla de función (Esc 1
+es F1): allí los dígitos se escriben sin Alt en la búsqueda ya iniciada.
+Mientras los paneles tienen el foco, estas teclas van a la búsqueda en lugar
+de a sus acciones: Alt-c, Alt-s, Alt-o, Alt-h, Alt-? y las demás teclas Alt con
+un carácter de los paneles, Alt-x, el prefijo de las órdenes extendidas, y las
+teclas Alt de la línea de órdenes cuando está vacía (Alt-p y Alt-n, Alt-h; en
+el modo Far el historial de la línea de órdenes está en Ctrl-E,
+Ctrl-X y Alt-F8). La mayoría de esas acciones están en los menús, que entonces
+no muestran esas teclas, y Alt-F7, Alt-F8, Alt-F11 y Alt-F12 se mantienen.
+Alt-{, Alt-} y Alt-\`, que cambian de pantalla, conservan sus acciones, también
+durante una búsqueda, igual que cualquier tecla de la sección
+**[dialog]**
+del mapa de teclas. Una tecla que el mapa de teclas del usuario asigna a otra
+acción que el mapa sin él conserva esa acción, como una macro en Far, en las
+secciones
+**[filemanager]**,
+**[panel]**
+e
+**[input]**.
+Las teclas se buscan como las busca M-Commander, gana la primera asignación de
+una tecla, y las acciones se comparan sin tener en cuenta las mayúsculas de sus
+nombres, de modo que un mapa del usuario que repite el de M-Commander, como una
+copia suya, no conserva ninguna. Un mapa del paquete elegido con
+**--keymap**,
+**MC_KEYMAP**
+o
+**keymap=**
+desde
+**{{pkgdatadir}}**
+no es el propio del usuario. También conserva su acción una tecla a la que
+responde el complemento de un panel de complemento: el complemento recibe la
+orden que los paneles asignan a la tecla, como sin la opción, o la propia
+tecla. La opción no cambia los mapas de teclas ni el diálogo Key Bindings, y los
+menús vuelven a mostrar las teclas cuando se cambia. Con la opción desactivada, Alt con un carácter conserva las acciones
+de M-Commander y no inicia una búsqueda.
 
 **Ctrl-G, Alt-X g**
 : aplican una orden a los archivos: piden una orden y la ejecutan para cada
@@ -2353,6 +2407,12 @@ opciones configurables de M-Commander se guardan en el archivo
 *Far Manager keys.*
 Si esta opción está activada, los paneles responden a las teclas de Far
 Manager; véase
+[Modo Far](#far-mode). Por defecto, esta opción está desactivada.
+
+*Alt-letter fast find.*
+Si esta opción está activada junto con
+*Far Manager keys*,
+Alt con un carácter inicia en los paneles la búsqueda rápida de Far; véase
 [Modo Far](#far-mode). Por defecto, esta opción está desactivada.
 
 ### Presentación <a id="layout"></a>
