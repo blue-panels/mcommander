@@ -1452,9 +1452,17 @@ keymap_far_fast_find_key (int key)
         || c > 0xFF)
         return FALSE;
 
-    // a key of the keypad has no character in its event, but its key code is the character
-    if (tty_key_event (key, &ev) && tty_key_event_char (&ev) != 0)
-        return far_fast_find_name_char (tty_key_event_char (&ev));
+    if (tty_key_event (key, &ev))
+    {
+        const gunichar ch = tty_key_event_char (&ev);
+
+        if (ch != 0)
+            return far_fast_find_name_char (ch);
+        // an event that types nothing is no key of the search, but for a key of the keypad, which
+        // kitty names in the private use area: its key code is the character
+        if (ev.key < 0xE000 || ev.key > 0xF8FF)
+            return FALSE;
+    }
 
     // a byte of an 8-bit charset or the lead byte of UTF-8 does not say what character it is
     return c >= 0x80 || far_fast_find_name_char ((gunichar) c);
