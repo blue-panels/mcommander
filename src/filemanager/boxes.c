@@ -645,7 +645,6 @@ configure_box (void)
                                     &configure_far_mode_id),
                     QUICK_CHECKBOX (_ ("Alt-letter fast find"), &keymap_far_fast_find,
                                     &configure_far_fast_find_id),
-                    QUICK_SEPARATOR (FALSE),
                 QUICK_STOP_GROUPBOX,
             QUICK_STOP_COLUMNS,
             QUICK_BUTTONS_OK_CANCEL,
