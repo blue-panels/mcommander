@@ -121,6 +121,8 @@ typedef struct global_keymap_ini_t
    the user, which the fast find of Far tells the bindings of the user from */
 #define FAR_FAST_FIND_SECTIONS 3
 static GArray *far_fast_find_base[FAR_FAST_FIND_SECTIONS] = { NULL, NULL, NULL };
+/* Far mode: the Alt keys that keep their actions in the fast find of Far, found once per load */
+static GHashTable *far_fast_find_kept_keys = NULL;
 
 /* midnight */
 static const global_keymap_ini_t default_filemanager_keymap[] = {
@@ -1361,6 +1363,40 @@ far_fast_find_changed (const global_keymap_t *map, const GArray *base, int key)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * Find the keys that keep their actions in the fast find of Far: every key of the dialogs (the
+ * screens are switched with them), and every key that the live keymaps of the file manager, the
+ * panels or the edit lines bind to another action than the keymap without the keymaps of the user
+ * does. The keymap without them is not needed after that.
+ */
+
+static void
+far_fast_find_set_kept (void)
+{
+    const global_keymap_t *const maps[FAR_FAST_FIND_SECTIONS] = { filemanager_map, panel_map,
+                                                                  input_map };
+    size_t i, k;
+
+    if (far_fast_find_kept_keys != NULL)
+        g_hash_table_destroy (far_fast_find_kept_keys);
+    far_fast_find_kept_keys = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+    for (k = 0; dialog_map != NULL && dialog_map[k].key != 0; k++)
+        g_hash_table_add (far_fast_find_kept_keys, GINT_TO_POINTER ((int) dialog_map[k].key));
+
+    for (i = 0; i < FAR_FAST_FIND_SECTIONS; i++)
+        for (k = 0; maps[i] != NULL && maps[i][k].key != 0; k++)
+        {
+            const int key = (int) maps[i][k].key;
+
+            if (far_fast_find_changed (maps[i], far_fast_find_base[i], key))
+                g_hash_table_add (far_fast_find_kept_keys, GINT_TO_POINTER (key));
+        }
+
+    far_fast_find_free_base ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
@@ -1397,27 +1433,15 @@ keymap_far_fast_find_key (int key)
 /* --------------------------------------------------------------------------------------------- */
 /**
  * Does @key, an Alt key of the fast find of Far, keep its action instead of going to the search?
- * Every key of the dialogs does (the screens are switched with them), and every key that the live
- * keymaps of the file manager, the panels or the edit lines bind to another action than the keymap
- * without the keymaps of the user does. The keys are looked up in both as mc looks them up, so a
- * keymap of the user that repeats the global keymap, as a copy of it does, keeps none.
+ * The keys are looked up in both keymaps as mc looks them up, so a keymap of the user that repeats
+ * the global keymap, as a copy of it does, keeps none; see far_fast_find_set_kept ().
  */
 
 gboolean
 keymap_far_fast_find_kept (int key)
 {
-    const global_keymap_t *const maps[FAR_FAST_FIND_SECTIONS] = { filemanager_map, panel_map,
-                                                                  input_map };
-    size_t i;
-
-    if (keybind_lookup_keymap_command (dialog_map, key) != CK_IgnoreKey)
-        return TRUE;
-
-    for (i = 0; i < FAR_FAST_FIND_SECTIONS; i++)
-        if (far_fast_find_changed (maps[i], far_fast_find_base[i], key))
-            return TRUE;
-
-    return FALSE;
+    return far_fast_find_kept_keys != NULL
+        && g_hash_table_contains (far_fast_find_kept_keys, GINT_TO_POINTER (key));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1513,6 +1537,8 @@ keymap_load (gboolean load_from_file)
 #endif
 
 #undef SET_MAP
+
+    far_fast_find_set_kept ();
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1521,6 +1547,11 @@ void
 keymap_free (void)
 {
     far_fast_find_free_base ();
+    if (far_fast_find_kept_keys != NULL)
+    {
+        g_hash_table_destroy (far_fast_find_kept_keys);
+        far_fast_find_kept_keys = NULL;
+    }
 
 #define FREE_KEYMAP(km)                                                                            \
     if (km##_keymap != NULL)                                                                       \
