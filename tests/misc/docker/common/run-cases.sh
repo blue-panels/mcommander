@@ -508,9 +508,9 @@ check ()
     esac
 }
 
-# the charset of the locale, as iconv names it
+# the charset of the locale, as iconv names it, without a modifier (@latin)
 case "$locale" in
-*.*) charset=${locale#*.} ;;
+*.*) charset=${locale#*.}; charset=${charset%%@*} ;;
 *) charset=ASCII ;;
 esac
 
