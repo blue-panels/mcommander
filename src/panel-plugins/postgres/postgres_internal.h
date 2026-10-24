@@ -102,6 +102,15 @@ const mc_panel_column_t *postgres_get_columns (void *plugin_data, size_t *count)
 const char *postgres_get_column_value (void *plugin_data, const char *fname, const char *column_id);
 const char *postgres_get_default_format (void *plugin_data);
 
+/* postgres_console.c */
+
+/* Show the query editor coole, or psql without it, for the connection and the database under
+   the cursor, or the open ones, started the first time; @relation, when not NULL, is the one
+   the editor is told of, else the one under the cursor. */
+mc_pp_result_t postgres_console_open (postgres_data_t *data, const char *relation);
+/* Before the plugin is unloaded: the screens stay, but no longer call back */
+void postgres_console_shutdown (void);
+
 /* postgres_connections.c */
 
 mc_pp_result_t postgres_create_connection (postgres_data_t *data);

@@ -45,6 +45,8 @@
 static void *postgres_open (mc_panel_host_t *host, const char *open_path);
 static void postgres_close (void *plugin_data);
 static mc_pp_result_t postgres_handle_key (void *plugin_data, int key);
+static mc_pp_result_t postgres_enter (void *plugin_data, const char *fname, const struct stat *st);
+static void postgres_shutdown (void);
 static mc_pp_result_t postgres_create_item (void *plugin_data);
 static mc_pp_result_t postgres_delete_items (void *plugin_data, const char **names, int count);
 static mc_pp_result_t postgres_get_local_copy (void *plugin_data, const char *fname,
@@ -72,6 +74,7 @@ static const mc_panel_plugin_t postgres_plugin = {
     .get_items = postgres_get_items,
     .chdir = postgres_chdir,
     .handle_key = postgres_handle_key,
+    .enter = postgres_enter,
     .create_item = postgres_create_item,
     .delete_items = postgres_delete_items,
     .get_local_copy = postgres_get_local_copy,
@@ -82,6 +85,7 @@ static const mc_panel_plugin_t postgres_plugin = {
     .get_default_format = postgres_get_default_format,
     .configure = postgres_configure,
     .get_help_info = postgres_get_help_info,
+    .shutdown = postgres_shutdown,
 
     .default_sort_id = "name",
 };
@@ -128,6 +132,10 @@ postgres_handle_key (void *plugin_data, int key)
 {
     postgres_data_t *data = (postgres_data_t *) plugin_data;
 
+    // Alt-F3 by default
+    if (key == CK_PluginConsole)
+        return postgres_console_open (data, NULL);
+
     if (data->level == POSTGRES_LEVEL_CONNECTIONS)
     {
         if (key == CK_Edit)
@@ -143,10 +151,26 @@ postgres_handle_key (void *plugin_data, int key)
     {
         postgres_message (data->host, FALSE,
                           _ ("The panel only shows the objects of the database: change them with "
-                             "SQL in the query editor."));
+                             "SQL in the query editor (Alt-F3)."));
         return MC_PPR_OK;
     }
     return MC_PPR_NOT_SUPPORTED;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Enter on a relation: the query editor, told of it */
+static mc_pp_result_t
+postgres_enter (void *plugin_data, const char *fname, const struct stat *st)
+{
+    postgres_data_t *data = (postgres_data_t *) plugin_data;
+
+    (void) st;
+
+    if (data->level != POSTGRES_LEVEL_RELATIONS || postgres_find_item (data, fname) == NULL)
+        return MC_PPR_NOT_SUPPORTED;
+    (void) postgres_console_open (data, fname);
+    return MC_PPR_OK;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -254,6 +278,12 @@ postgres_get_help_info (void *plugin_data, const char **filename, const char **n
     if (node != NULL)
         *node = POSTGRES_HELP_NODE;
     return MC_PPR_OK;
+}
+
+static void
+postgres_shutdown (void)
+{
+    postgres_console_shutdown ();
 }
 
 /* --------------------------------------------------------------------------------------------- */

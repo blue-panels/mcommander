@@ -123,6 +123,10 @@
                       is not a dump: the owner, the grants
                       and the policies are left out.
       F5              Copy that SQL to the other panel.
+      Enter           The query editor, told of the relation.
+
+    On every level:
+      Alt-F3          The query editor, see below.
 
     The system schemas, pg_catalog, information_schema and
     pg_toast, are shown with show_system_schemas only; the
@@ -143,4 +147,38 @@
     Below the connections the panel changes nothing: F4, F6,
     F7, F8 say so. The objects are changed with SQL in the
     query editor.
+
+  The query editor
+
+    Alt-F3 runs coole, the editor of queries ("coole -Q"), for
+    the connection and the database under the cursor, or the
+    open ones, in a screen of its own beside the panels; in it
+    Alt-F3 comes back. Enter on a relation does the same. In
+    coole F5 runs the statement under the cursor, and the rows
+    of a relation are read there: the panel has none. The
+    queries of a database are kept in
+    ~/.local/share/coole/queries/postgres/<connection>/<db>.sql.
+
+    Without coole, Alt-F3 runs psql there, connected; with
+    neither it says what to install. One of them runs per
+    connection and database: Alt-F3 again brings back the same
+    one, until it is quit.
+
+    What to connect to goes to it in its environment, the PG*
+    variables of libpq as the connection of the panel has
+    resolved them, whether the server was named by its host, a
+    URL or a service: PGHOST, PGPORT, PGUSER and PGDATABASE,
+    and the others that differ from what libpq would take
+    anyway. A password typed in the session or written in
+    the URL goes as PGPASSWORD, never on a command line; one
+    in ~/.pgpass needs nothing. coole is also told MC_QUERY_KIND=postgres,
+    MC_PG_CONNECTION, MC_PG_SCHEMA and MC_PG_RELATION, where
+    the cursor was, and MC_QUERY_READ_ONLY=1 for a read-only
+    connection; psql gets PGOPTIONS with
+    default_transaction_read_only instead. Read-only guards
+    against a slip, not against the user: the role of the
+    server is the limit.
+
+    Alt-F3 is the command PluginConsole of the [panel] section
+    of the keymap.
 ```
