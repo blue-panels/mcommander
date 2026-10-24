@@ -4125,6 +4125,14 @@ panel_far_fast_find (WPanel *panel, int key)
     if (len == 0)
         return FALSE;
 
+    // an empty directory has nothing to find: the key does what it does without the fast find, and
+    // the rest of the character is not typed
+    if (!panel->quick_search.active && panel->dir.len == 0)
+    {
+        panel->quick_search.far_skip = panel_far_fast_find_rest (key);
+        return FALSE;
+    }
+
     // the lead byte of a UTF-8 character after an Esc is no key of a plugin: a dialog of the
     // plugin would take the rest of the character as typed
     if (!panel->quick_search.active && panel_far_fast_find_rest (key) == 0)
@@ -4155,12 +4163,6 @@ panel_far_fast_find (WPanel *panel, int key)
     if (!panel->quick_search.active)
     {
         start_search (panel);
-        // an empty directory has nothing to find; the rest of the character is not typed either
-        if (!panel->quick_search.active)
-        {
-            panel->quick_search.far_skip = panel_far_fast_find_rest (key);
-            return TRUE;
-        }
         panel->quick_search.far_find = TRUE;
     }
 
