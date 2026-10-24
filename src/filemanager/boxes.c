@@ -697,8 +697,10 @@ configure_box (void)
         g_free (time_out_new);
 
         // The keys of Far mode are part of the keymap: load it again the way the key bindings
-        // dialog does, so that the mode works at once. The fast find takes keys from it too
-        if (keymap_far_mode != far_mode_old || keymap_far_fast_find != far_fast_find_old)
+        // dialog does, so that the mode works at once. The fast find takes keys from it too, in
+        // Far mode only
+        if (keymap_far_mode != far_mode_old
+            || (keymap_far_mode && keymap_far_fast_find != far_fast_find_old))
         {
             keymap_save_old_maps ();
             keymap_free ();
