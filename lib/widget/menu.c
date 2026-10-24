@@ -1032,11 +1032,8 @@ menubar_mouse_callback (Widget *w, mouse_msg_t msg, mouse_event_t *event)
             }
             else if (mouse_on_drop)
             {
-                // drop-down menu: up/down
-                if (msg == MSG_MOUSE_SCROLL_UP)
-                    menubar_up (menubar);
-                else
-                    menubar_down (menubar);
+                // drop-down menu: a page up/down, no wrap
+                menubar_page (menubar, msg == MSG_MOUSE_SCROLL_DOWN);
             }
         }
         break;
