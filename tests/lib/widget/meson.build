@@ -1,4 +1,4 @@
-foreach name : ['buttonbar_modifiers', 'complete_engine', 'filechooser', 'hotkey_equal',
+foreach name : ['buttonbar_modifiers', 'complete_engine', 'filechooser', 'hotkey_equal', 'menu_shortcuts',
                 'group_init_destroy', 'group_set_state', 'hexstrip', 'paste', 'scrollbar',
                 'table_datasource', 'table_quick_search', 'textarea', 'widget_find_by_id',
                 'widget_make_global_local']

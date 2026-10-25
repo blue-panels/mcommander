@@ -419,9 +419,70 @@ Ctrl-gray minus megszünteti a kijelölésüket. A terminál csak akkor küldi e
 a billentyűket, ha jelzi a módosított billentyűket.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
-: a gyorskeresésben (Ctrl-s, Alt-s) a következő, illetve az előző illeszkedő
-fájlra lép, ahogy a Far gyorskeresése. Az Alt egy karakterrel megtartja az
-M-Commander műveleteit: nem indít keresést.
+: a gyorskeresésben (Ctrl-s, Alt-s) és az Alt-os keresésben (lásd lent) a
+következő, illetve az előző illeszkedő fájlra lép, ahogy a Far gyorskeresése.
+
+**Alt egy karakterrel, Alt-Shift egy karakterrel**
+: a Far gyorskeresése, ha a
+[M-Commander konfigurálása](#configuration)
+párbeszédablak
+*Gyorskeresés Alt-tal (Alt-letter fast find)*
+opciója is be van kapcsolva
+(**far_fast_find=true**;
+alapesetben ki van kapcsolva). A panel a kurzor alatti fájltól kezdve az
+első olyan fájlra lép, amelynek a neve a begépelt karakterekkel kezdődik, a
+kis- és nagybetűktől függetlenül; a \* és a ? helyettesítő karakter, ahogy a
+gyorskeresésben. Amíg a keresés tart, a karakterek Alt-tal és anélkül is
+gépelhetők, és az a karakter, amelyre egyetlen név sem illeszkedik, nem kerül
+be. Az Esc befejezi a keresést; minden más billentyű befejezi, majd végrehajtja
+a saját műveletét, így az Enter megnyitja a megtalált fájlt, a parancssor
+szövege pedig
+megmarad. Amíg a parancssorban szöveg van és nem fut keresés, a parancssor
+saját Alt billentyűi (Alt-b és Alt-f, Alt-d és Alt-w, Alt-p, Alt-n és Alt-h)
+továbbra is azt szerkesztik; a többi Alt billentyű a keresésbe kerül. A cirill
+és más betűk UTF-8 és 8 bites locale alatt egyaránt működnek. Az a terminál, amely az Altot a billentyű előtti Esc-ként küldi, az
+Altot egy számjeggyel Esc-ként és számjegyként küldi, ez pedig az
+M-Commanderben funkcióbillentyű (az Esc 1 az F1): ott a számjegyek Alt nélkül
+kerülnek a már futó keresésbe.
+Az Alt csak olyan karaktert vesz át, amellyel egy név kezdődhet: bármely írás
+betűjét vagy számjegyét, a pontot, az aláhúzást vagy a kötőjelet; minden más
+karakterrel, például Alt-\\ vagy Alt-|, az Alt megtartja a saját műveletét.
+Amíg a paneleken van a fókusz, ezek a billentyűk a műveletük helyett a
+keresésbe kerülnek: a panelek Alt-c, Alt-s, Alt-o, Alt-h és többi
+karakteres Alt billentyűje, az Alt-x, a bővített parancsok előtagja, és a
+üres parancssor Alt billentyűi (Alt-p és Alt-n, Alt-h; Far
+módban a parancssor előzményei a Ctrl-E, Ctrl-X és Alt-F8 billentyűkön vannak).
+A műveletek többsége a menükben megvan, amelyek ilyenkor nem mutatják ezeket a
+billentyűket, az Alt-F7, Alt-F8, Alt-F11 és Alt-F12 pedig megmarad. Az Alt-{,
+Alt-} és Alt-\`, amelyek a képernyőket váltják, keresés közben is megtartják a
+műveletüket, ahogy a billentyűkiosztás
+**[dialog]**
+szakaszának bármely billentyűje is. Az a billentyű, amelyet a felhasználó
+kiosztása más műveletre köt, mint a nélküle vett kiosztás, megtartja ezt a
+műveletet, ahogy egy makró a Farban, a
+**[filemanager]**,
+**[panel]**
+és
+**[input]**
+szakaszban. A billentyűket úgy keresi, ahogy az M-Commander: egy billentyű első
+hozzárendelése érvényes, a műveleteket pedig a nevük kis- és nagybetűitől
+függetlenül hasonlítja össze, így a felhasználó olyan kiosztása, amely
+megismétli az M-Commanderét, ahogy egy másolata, egyet sem tart meg. A csomag
+kiosztása, amelyet a
+**{{pkgdatadir}}**
+könyvtárból a
+**--keymap**,
+**MC_KEYMAP**
+vagy
+**keymap=**
+választ ki, nem a felhasználó saját kiosztása. Az a
+billentyű is megtartja a műveletét, amelyre egy bővítménypanel bővítménye
+válaszol: a bővítmény azt a parancsot kapja, amelyet a panelek a billentyűhöz
+kötnek, ahogy az opció nélkül, vagy magát a billentyűt. Az opció nem
+változtatja meg sem a kiosztásokat, sem a Key Bindings párbeszédablakot, a
+menük pedig az átkapcsolásakor újra mutatják a billentyűket. Ha az opció ki van
+kapcsolva, az Alt egy karakterrel megtartja az M-Commander műveleteit, és nem
+indít keresést.
 
 **Ctrl-G, Alt-X g**
 : parancsot alkalmaz a fájlokra: bekér egy parancsot, és lefuttatja minden
@@ -2180,6 +2241,14 @@ az M-Commander opcióinak beállításait az ~/.config/mc6/ini fájlba menti.
 *Far Manager billentyűk.*
 Ha ez az opció engedélyezve van, a panelek a Far Manager billentyűire
 válaszolnak; lásd
+[Far mód](#far-mode).
+Ez az opció alapesetben ki van kapcsolva.
+
+*Gyorskeresés Alt-tal (Alt-letter fast find).*
+Ha ez az opció a
+*Far Manager billentyűk*
+opcióval együtt be van kapcsolva, az Alt egy karakterrel a panelekben
+elindítja a Far gyorskeresését; lásd
 [Far mód](#far-mode).
 Ez az opció alapesetben ki van kapcsolva.
 

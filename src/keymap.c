@@ -36,6 +36,7 @@
 #include "lib/fileloc.h"
 #include "lib/keybind.h"
 #include "lib/mcconfig.h"  // mc_config_t
+#include "lib/tty/key.h"   // tty_key_event()
 #include "lib/util.h"
 #include "lib/widget.h"  // dialog_map, input_map, listbox_map, menu_map, radio_map
 
@@ -49,6 +50,8 @@
 
 /* Far mode: panel keys of Far Manager, see "Far mode" in the manual */
 gboolean keymap_far_mode = FALSE;
+/* Far mode: Alt with a character is the fast find of Far in the panels, see "Far mode" */
+gboolean keymap_far_fast_find = FALSE;
 
 GArray *filemanager_keymap = NULL;
 GArray *filemanager_x_keymap = NULL;
@@ -113,6 +116,13 @@ typedef struct global_keymap_ini_t
 /*** forward declarations (file scope functions) *************************************************/
 
 /*** file scope variables ************************************************************************/
+
+/* Far mode: the keymaps of the file manager, the panels and the edit lines without the keymaps of
+   the user, which the fast find of Far tells the bindings of the user from */
+#define FAR_FAST_FIND_SECTIONS 3
+static GArray *far_fast_find_base[FAR_FAST_FIND_SECTIONS] = { NULL, NULL, NULL };
+/* Far mode: the Alt keys that keep their actions in the fast find of Far, found once per load */
+static GHashTable *far_fast_find_kept_keys = NULL;
 
 /* midnight */
 static const global_keymap_ini_t default_filemanager_keymap[] = {
@@ -1159,6 +1169,121 @@ load_setup_init_config_from_file (mc_config_t **config, const char *fname, gbool
 
 /* --------------------------------------------------------------------------------------------- */
 
+static void
+far_fast_find_free_base (void)
+{
+    size_t i;
+
+    for (i = 0; i < FAR_FAST_FIND_SECTIONS; i++)
+        if (far_fast_find_base[i] != NULL)
+        {
+            g_array_free (far_fast_find_base[i], TRUE);
+            far_fast_find_base[i] = NULL;
+        }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Take the keymap @cfg as the keymap without the keymaps of the user, which the fast find of Far
+ * tells the bindings of the user from: parse its sections of the file manager, the panels and the
+ * edit lines the way the live keymaps are parsed. Nothing is kept unless Far mode and the fast find
+ * are on, so the keymap is not parsed twice for nothing.
+ */
+
+static void
+far_fast_find_set_base (mc_config_t *cfg)
+{
+    static const char *const sections[FAR_FAST_FIND_SECTIONS] = {
+        KEYMAP_SECTION_FILEMANAGER,
+        KEYMAP_SECTION_PANEL,
+        KEYMAP_SECTION_INPUT,
+    };
+    size_t i;
+
+    far_fast_find_free_base ();
+
+    if (!keymap_far_mode || !keymap_far_fast_find)
+        return;
+
+    for (i = 0; i < FAR_FAST_FIND_SECTIONS; i++)
+    {
+        far_fast_find_base[i] = g_array_new (TRUE, FALSE, sizeof (global_keymap_t));
+        load_keymap_from_section (sections[i], far_fast_find_base[i], cfg);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Is @fname a keymap of the package, in the directory of its data? A keymap in the directory of
+ * the configuration is the administrator's, and it is the user's own for the fast find of Far.
+ */
+
+static gboolean
+keymap_file_is_global (const char *fname)
+{
+    gboolean global;
+    char *dir, *d;
+
+    if (mc_global.share_data_dir == NULL || *mc_global.share_data_dir == '\0')
+        return FALSE;
+
+    dir = g_path_get_dirname (fname);
+    canonicalize_pathname (dir);
+    d = g_strdup (mc_global.share_data_dir);
+    canonicalize_pathname (d);
+    global = strcmp (d, dir) == 0;
+    g_free (d);
+    g_free (dir);
+
+    return global;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* Is @fname a keymap of the user's choice, not one of the global keymaps that are always read? */
+
+static gboolean
+keymap_file_is_chosen (const char *fname, const char *share_keymap, const char *sysconfig_keymap)
+{
+    return fname != NULL && strcmp (fname, sysconfig_keymap) != 0
+        && strcmp (fname, share_keymap) != 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The one keymap of the user's choice, by the rules 3) to 6) */
+
+static char *
+load_setup_get_user_keymap_name (const char *share_keymap, const char *sysconfig_keymap)
+{
+    char *fname, *fname2;
+
+    // 3) --keymap=<keymap>
+    fname = load_setup_get_full_config_name (NULL, mc_args__keymap_file);
+    if (keymap_file_is_chosen (fname, share_keymap, sysconfig_keymap))
+        return fname;
+    g_free (fname);
+
+    // 4) getenv("MC_KEYMAP")
+    fname = load_setup_get_full_config_name (NULL, g_getenv ("MC_KEYMAP"));
+    if (keymap_file_is_chosen (fname, share_keymap, sysconfig_keymap))
+        return fname;
+    g_free (fname);
+
+    // 5) main config; [Midnight Commander] -> keymap
+    fname = NULL;
+    fname2 = mc_config_get_string (mc_global.main_config, CONFIG_APP_SECTION, "keymap", NULL);
+    if (fname2 != NULL && *fname2 != '\0')
+        fname = load_setup_get_full_config_name (NULL, fname2);
+    g_free (fname2);
+    if (keymap_file_is_chosen (fname, share_keymap, sysconfig_keymap))
+        return fname;
+    g_free (fname);
+
+    // 6) ${XDG_CONFIG_HOME}/mc/mc.keymap
+    return mc_config_get_full_path (GLOBAL_KEYMAP_FILE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mc_config_t *
 load_setup_get_keymap_profile_config (gboolean load_from_file)
 {
@@ -1167,13 +1292,14 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
      */
     mc_config_t *keymap_config;
     char *share_keymap, *sysconfig_keymap;
-    char *fname, *fname2;
+    char *fname;
 
     // 0) Create default keymap
     keymap_config = create_default_keymap ();
     if (!load_from_file)
     {
         apply_far_mode_keymap (keymap_config);
+        far_fast_find_set_base (keymap_config);
         return keymap_config;
     }
 
@@ -1191,44 +1317,22 @@ load_setup_get_keymap_profile_config (gboolean load_from_file)
     // Far mode goes over the global keymaps, which carry every key of the default keymap
     apply_far_mode_keymap (keymap_config);
 
-    // then load and merge one of user-defined keymap
-
-    // 3) --keymap=<keymap>
-    fname = load_setup_get_full_config_name (NULL, mc_args__keymap_file);
-    if (fname != NULL && strcmp (fname, sysconfig_keymap) != 0 && strcmp (fname, share_keymap) != 0)
+    // then load and merge one of user-defined keymap, 3) to 6). The fast find of Far tells the
+    // bindings of the user from the keymap before it; a keymap of the package that is chosen by
+    // name is not the user's own
+    fname = load_setup_get_user_keymap_name (share_keymap, sysconfig_keymap);
+    if (fname != NULL && keymap_file_is_global (fname))
     {
         load_setup_init_config_from_file (&keymap_config, fname, TRUE);
-        goto done;
+        far_fast_find_set_base (keymap_config);
     }
-    g_free (fname);
-
-    // 4) getenv("MC_KEYMAP")
-    fname = load_setup_get_full_config_name (NULL, g_getenv ("MC_KEYMAP"));
-    if (fname != NULL && strcmp (fname, sysconfig_keymap) != 0 && strcmp (fname, share_keymap) != 0)
+    else
     {
-        load_setup_init_config_from_file (&keymap_config, fname, TRUE);
-        goto done;
+        far_fast_find_set_base (keymap_config);
+        if (fname != NULL)
+            load_setup_init_config_from_file (&keymap_config, fname, TRUE);
     }
 
-    MC_PTR_FREE (fname);
-
-    // 5) main config; [Midnight Commander] -> keymap
-    fname2 = mc_config_get_string (mc_global.main_config, CONFIG_APP_SECTION, "keymap", NULL);
-    if (fname2 != NULL && *fname2 != '\0')
-        fname = load_setup_get_full_config_name (NULL, fname2);
-    g_free (fname2);
-    if (fname != NULL && strcmp (fname, sysconfig_keymap) != 0 && strcmp (fname, share_keymap) != 0)
-    {
-        load_setup_init_config_from_file (&keymap_config, fname, TRUE);
-        goto done;
-    }
-    g_free (fname);
-
-    // 6) ${XDG_CONFIG_HOME}/mc/mc.keymap
-    fname = mc_config_get_full_path (GLOBAL_KEYMAP_FILE);
-    load_setup_init_config_from_file (&keymap_config, fname, TRUE);
-
-done:
     g_free (fname);
     g_free (sysconfig_keymap);
     g_free (share_keymap);
@@ -1237,7 +1341,160 @@ done:
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/**
+ * Does @key do another thing in the live keymap @map than in the keymap @base without the keymaps
+ * of the user? Both are looked up as the keys are, the first binding of a key winning, and the
+ * actions are compared as commands, so the case of their names does not count. A key the user
+ * leaves without an action does not count either.
+ */
+
+static gboolean
+far_fast_find_changed (const global_keymap_t *map, const GArray *base, int key)
+{
+    const long command = keybind_lookup_keymap_command (map, key);
+
+    return command != CK_IgnoreKey
+        && (base == NULL
+            || command
+                != keybind_lookup_keymap_command ((const global_keymap_t *) base->data, key));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Find the keys that keep their actions in the fast find of Far: every key of the dialogs (the
+ * screens are switched with them), and every key that the live keymaps of the file manager, the
+ * panels or the edit lines bind to another action than the keymap without the keymaps of the user
+ * does. The keymap without them is not needed after that.
+ */
+
+static void
+far_fast_find_set_kept (void)
+{
+    const global_keymap_t *const maps[FAR_FAST_FIND_SECTIONS] = { filemanager_map, panel_map,
+                                                                  input_map };
+    size_t i, k;
+
+    if (far_fast_find_kept_keys != NULL)
+    {
+        g_hash_table_destroy (far_fast_find_kept_keys);
+        far_fast_find_kept_keys = NULL;
+    }
+
+    // nothing asks for them without the fast find
+    if (!keymap_far_mode || !keymap_far_fast_find)
+    {
+        far_fast_find_free_base ();
+        return;
+    }
+
+    far_fast_find_kept_keys = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+    for (k = 0; dialog_map != NULL && dialog_map[k].key != 0; k++)
+        g_hash_table_add (far_fast_find_kept_keys, GINT_TO_POINTER ((int) dialog_map[k].key));
+
+    for (i = 0; i < FAR_FAST_FIND_SECTIONS; i++)
+        for (k = 0; maps[i] != NULL && maps[i][k].key != 0; k++)
+        {
+            const int key = (int) maps[i][k].key;
+
+            if (far_fast_find_changed (maps[i], far_fast_find_base[i], key))
+                g_hash_table_add (far_fast_find_kept_keys, GINT_TO_POINTER (key));
+        }
+
+    far_fast_find_free_base ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Can a name begin with @c, as the fast find of Far takes it: a letter or a digit of any script, a
+ * dot, an underscore or a hyphen? Alt with another character keeps its action.
+ */
+
+static gboolean
+far_fast_find_name_char (gunichar c)
+{
+    if (c < 0x80)
+        return g_ascii_isalnum ((char) c) || c == '.' || c == '_' || c == '-';
+
+    return g_unichar_isalnum (c);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * Is @key one of the keys of the fast find of Far: Alt or Alt-Shift with a character a name can
+ * begin with (far_fast_find_name_char ()), as the terminal sends it (a byte of the charset of the
+ * terminal, or the first byte of a UTF-8 one), or a kitty event of Alt with a key mc has no key
+ * code for (a letter of a layout whose key the terminal names without the key of the base layout)?
+ * A kitty event decides by the character it types: the key code is the key of the base layout.
+ */
+
+gboolean
+keymap_far_fast_find_key (int key)
+{
+    const int c = key & ~(KEY_M_ALT | KEY_M_SHIFT);
+    tty_key_event_t ev;
+
+    // the panel takes the text of the event once, when it types into the search
+    if (key == KEY_KITTY_EVENT)
+        return tty_key_event (key, &ev) && ev.final == 'u' && ev.event != TTY_KITTY_RELEASE
+            && (ev.mods & TTY_KITTY_MOD_ALT) != 0
+            && (ev.mods
+                & (TTY_KITTY_MOD_CTRL | TTY_KITTY_MOD_SUPER | TTY_KITTY_MOD_HYPER
+                   | TTY_KITTY_MOD_META))
+            == 0
+            && far_fast_find_name_char (tty_key_event_char (&ev));
+
+    if ((key & KEY_M_ALT) == 0 || (key & (KEY_M_CTRL | KEY_M_SUPER)) != 0 || c <= ' ' || c == 0x7F
+        || c > 0xFF)
+        return FALSE;
+
+    if (tty_key_event (key, &ev))
+    {
+        const gunichar ch = tty_key_event_char (&ev);
+
+        if (ch != 0)
+            return far_fast_find_name_char (ch);
+        // an event that types nothing is no key of the search, but for a key of the keypad, which
+        // kitty names in the private use area: its key code is the character
+        if (ev.key < 0xE000 || ev.key > 0xF8FF)
+            return FALSE;
+    }
+
+    // a byte of an 8-bit charset or the lead byte of UTF-8 does not say what character it is
+    return c >= 0x80 || far_fast_find_name_char ((gunichar) c);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Does @key, an Alt key of the fast find of Far, keep its action instead of going to the search?
+ * The keys are looked up in both keymaps as mc looks them up, so a keymap of the user that repeats
+ * the global keymap, as a copy of it does, keeps none; see far_fast_find_set_kept ().
+ */
+
+gboolean
+keymap_far_fast_find_kept (int key)
+{
+    return far_fast_find_kept_keys != NULL
+        && g_hash_table_contains (far_fast_find_kept_keys, GINT_TO_POINTER (key));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/**
+ * Does the fast find of Far take @key from the panels: Far mode and the fast find are on, @key is
+ * Alt with a character and it does not keep its action?
+ */
+
+gboolean
+keymap_far_fast_find_takes (int key)
+{
+    return keymap_far_mode && keymap_far_fast_find && keymap_far_fast_find_key (key)
+        && !keymap_far_fast_find_kept (key);
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 void
@@ -1318,6 +1575,8 @@ keymap_load (gboolean load_from_file)
 #endif
 
 #undef SET_MAP
+
+    far_fast_find_set_kept ();
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1325,6 +1584,13 @@ keymap_load (gboolean load_from_file)
 void
 keymap_free (void)
 {
+    far_fast_find_free_base ();
+    if (far_fast_find_kept_keys != NULL)
+    {
+        g_hash_table_destroy (far_fast_find_kept_keys);
+        far_fast_find_kept_keys = NULL;
+    }
+
 #define FREE_KEYMAP(km)                                                                            \
     if (km##_keymap != NULL)                                                                       \
         g_array_free (km##_keymap, TRUE);                                                          \
@@ -1467,6 +1733,14 @@ keymap_refresh_widgets (void)
         {
             for (l = g->widgets; l != NULL; l = g_list_next (l))
                 keymap_refresh_widget (WIDGET (l->data));
+        }
+
+        /* the menus show the keys of the new keymaps: Far mode and its fast find change them */
+        {
+            WMenuBar *menubar = menubar_find (dlg);
+
+            if (menubar != NULL)
+                menubar_update_shortcuts (menubar);
         }
     }
 }

@@ -416,9 +416,64 @@ cursor, or unselects them when that file is selected; Ctrl-gray minus unselects
 them. A terminal sends these keys only when it reports modified keys.
 
 **Ctrl-Enter, Ctrl-Shift-Enter**
-: in the quick search (Ctrl-s, Alt-s), go on to the next and to the previous
-file that matches, as in the fast find of Far. Alt with a character keeps the
-actions of M-Commander: it does not start a search.
+: in the quick search (Ctrl-s, Alt-s) and in the fast find below, go on to the
+next and to the previous file that matches, as in the fast find of Far.
+
+**Alt with a character, Alt-Shift with a character**
+: the fast find of Far, when the
+*Alt-letter fast find*
+check box of the
+[Configuration](#configuration)
+dialog is on as well
+(**far_fast_find=true**;
+it is off by default). The panel goes to the first file, from the one under
+the cursor on, whose name begins with what is typed, whatever its case; \* and ?
+are wildcards, as in the quick search. Once the search runs, the characters go
+on with Alt or without it, and a character that no name matches is not taken.
+Esc ends the search; any other key ends it and then does what it does, so Enter
+opens the file that was found; text on the command line stays
+there. While the command line has text, its own Alt keys (Alt-b and Alt-f,
+Alt-d and Alt-w, Alt-p, Alt-n and Alt-h) keep editing it, as long as no search
+runs; the other Alt keys go to the search. Cyrillic and other letters work in a
+UTF-8 locale and in an 8-bit one alike. A terminal that sends Alt as an Esc in
+front of the key sends Alt with a digit as Esc and the digit, which is a
+function key in M-Commander (Esc 1 is F1): there the digits go into the search
+without Alt, once it runs.
+Alt takes only a character a name can begin with: a letter or a digit of any
+script, a dot, an underscore or a hyphen; Alt with any other character, such
+as Alt-\\ or Alt-|, keeps its action.
+While the panels have the focus, these keys go to the search instead of their
+actions: Alt-c, Alt-s, Alt-o, Alt-h and the rest of the Alt keys with a
+character of the panels, Alt-x, the prefix of the extended commands, and the
+Alt keys of the command line when it is empty (Alt-p and Alt-n, Alt-h; in Far
+mode the history of the command line is on Ctrl-E, Ctrl-X and Alt-F8). Most of
+the actions are in the menus, which then do not show these keys, and Alt-F7,
+Alt-F8, Alt-F11 and Alt-F12 stay. Alt-{, Alt-} and Alt-\`, which switch the
+screens, keep their actions, in a search too, and so does any key of the
+**[dialog]**
+section of the keymap. A key that the keymap of the user binds to another
+action than the keymap without it does keeps that action, as a macro does in
+Far, in the
+**[filemanager]**,
+**[panel]**
+and
+**[input]**
+sections. The keys are looked up as M-Commander looks them up, the first
+binding of a key winning, and the actions are compared whatever the case of
+their names, so a keymap of the user that repeats the keymap of M-Commander, as
+a copy of it does, keeps none. A keymap of the package that is chosen with
+**--keymap**,
+**MC_KEYMAP**
+or
+**keymap=**
+from
+**{{pkgdatadir}}**
+is not the user's own. A key that the plugin of a plugin panel answers to also
+keeps its action: the plugin gets the command that the panels bind the key to,
+as without the option, or the key itself. The keymaps themselves and the Key
+Bindings dialog are not changed by the option, and the menus show the keys anew
+when it is switched. With the check box off, Alt with a character keeps the actions
+of M-Commander and does not start a search.
 
 **Ctrl-G, Alt-X g**
 : applies a command to the files: it asks for a command and runs it for every
@@ -2393,6 +2448,12 @@ configurable options of M-Commander are saved in the
 
 *Far Manager keys.*
 If this option is enabled, the panels answer to the keys of Far Manager; see
+[Far mode](#far-mode). This option is disabled by default.
+
+*Alt-letter fast find.*
+If this option is enabled together with
+*Far Manager keys*,
+Alt with a character starts the fast find of Far in the panels; see
 [Far mode](#far-mode). This option is disabled by default.
 
 ### Layout

@@ -42,6 +42,7 @@ leaves nothing in the working tree and reuses its object files between runs.
       panel/                the same for the panel: the quick filter, quick cd
       lua/                  the same for the viewers written in Lua
       sqlite/, arcmc/       the same for the sqlite plugin and arcmc.ini
+      far/                  the same for Far mode: the fast find, in six charsets
     reports/                what a run leaves behind (not in git)
 
 Three axes, chosen independently: the **environment** (which image mc is
@@ -219,6 +220,27 @@ archives by extension, so an archive without one is left alone everywhere, and
 plain text called `.tar.gz` gets an error from the operation that was asked to
 open it.
 
+### far
+
+| directory   | what it is for                                                  |
+|-------------|------------------------------------------------------------------|
+| `01-ascii`  | the fast find of Far: Alt and Alt-Shift with a letter, the case of a name, a letter that matches nothing, letters without Alt once it runs, Enter and Esc, an Alt key that had an action, text on the command line |
+| `02-utf8`   | Alt with Cyrillic letters, as the Esc and the bytes of UTF-8     |
+| `03-koi8r`  | the same names in KOI8-R, run under `-l ru_RU.KOI8-R`            |
+| `04-cp866`  | the same names in CP866, run under `-l ru_RU.CP866`              |
+| `05-plugin` | a plugin panel that turns the key down: the Git panel, its coole hotkey on Alt-q and no coole, so the key goes on to the fast find |
+| `06-cp1251` | the same names in CP1251, run under `-l ru_RU.CP1251`; the small ya is the byte 0xFF there |
+| `07-iso88595` | the same names in ISO-8859-5, run under `-l ru_RU.ISO-8859-5` |
+| `08-koi8u`  | the same names in KOI8-U, run under `-l ru_RU.KOI8-U`            |
+
+`cases/far/config/ini` turns Far mode and its fast find on. A name in KOI8-R
+is only found by the bytes a KOI8-R terminal sends, so each of the Cyrillic
+directories has a `charset` file, and a run takes the one of its locale:
+`test -c far` the UTF-8 one, `test -c far -l ru_RU.KOI8-R` and the other
+locales of the table the 8-bit ones. Any case directory may carry such a file. The
+`alt <text>` step sends each character as such a terminal does: an Esc and the
+bytes of the character in the charset of the locale.
+
 ## Pressing the keys
 
     sandbox.sh debian-12 test                          # archives, local panel
@@ -237,7 +259,8 @@ expectation, reason, and optionally the transports it is for. The keys go
 comma separated, in order: `Enter`, `F3`, `F5`, `C-o`, `..` (up one level),
 `on <name>` (the cursor goes there), `cd <path>` (the Quick cd box),
 `type <text>`, `key <name>` for anything tmux can send (`F4`, `M-S`, `C-M-l`,
-`C-Insert`, `Escape`), `paste <text>` for a paste from the terminal (`\n` in
+`C-Insert`, `Escape`), `alt <text>` for each character of the text with Alt,
+in the charset of the locale, `paste <text>` for a paste from the terminal (`\n` in
 it is a line break; tmux sends it as a bracketed paste when mc asked for one),
 and `width <n>` for a narrower terminal. The
 expectations: `archive panel`, `listing`, `error dialog`, `nothing, no error`,

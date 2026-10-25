@@ -12,8 +12,12 @@
 # is Enter, F3, F5, F6, F8, C-o, ".." (up one level), "on <name>" (the cursor goes
 # there), "cd <path>" (through the Quick cd box), "type <text>",
 # "key <name>" for anything tmux can send (F4, M-S, C-M-l, Escape, C-F1),
+# "alt <text>" for each character of the text with Alt, as a terminal sends it
+# in the charset of the locale (Esc, then the bytes of the character),
 # "paste <text>" for a paste from the terminal (\n in it is a line break), or
 # "width <n>" to make the terminal that many columns wide.
+# A case directory with a file "charset" in it runs only in a locale of that
+# charset: its names are written in it.
 # Rows whose keys or expectation this script does not know are reported as
 # skipped; a row with transports named runs only over those.
 #
@@ -504,12 +508,37 @@ check ()
     esac
 }
 
+# the charset of the locale, as iconv names it, without a modifier (@latin)
+case "$locale" in
+*.*) charset=${locale#*.}; charset=${charset%%@*} ;;
+*) charset=ASCII ;;
+esac
+
+# the same name in one spelling, so that UTF-8, utf-8 and utf8 are one charset
+charset_key ()
+{
+    printf '%s' "$1" | tr 'a-z' 'A-Z' | tr -d '_-'
+}
+
+# Alt with each character of $1, as a terminal that sends Alt as Esc does: the
+# bytes of the character in the charset of the locale come after the Esc.  tmux
+# would send its own UTF-8 for a key it is given, so the bytes go as they are.
+alt_keys ()
+{
+    printf '%s' "$1" | LC_ALL=C.UTF-8 grep -o . | while IFS= read -r ch; do
+        hex=$(printf '%s' "$ch" | iconv -f UTF-8 -t "$charset" | od -An -tx1)
+        # shellcheck disable=SC2086
+        $T send-keys -t mc -H 1b $hex
+        nap 0.2
+    done
+}
+
 # can every step of $1 be pressed?
 steps_known ()
 {
     printf '%s\n' "$1" | tr ',' '\n' | while read -r step; do
         case "$step" in
-        Enter | F3 | F5 | F6 | F8 | C-o | .. | "on "* | "cd "* | "type "* | "key "* | "paste "* | "width "*) ;;
+        Enter | F3 | F5 | F6 | F8 | C-o | .. | "on "* | "cd "* | "type "* | "key "* | "alt "* | "paste "* | "width "*) ;;
         *) exit 1 ;;
         esac
     done
@@ -558,6 +587,9 @@ press ()
         # anything tmux has a name for: F4, M-S, C-M-l, Escape, C-F1
         "key "*)
             $T send-keys -t mc "${step#key }"
+            ;;
+        "alt "*)
+            alt_keys "${step#alt }"
             ;;
         # tmux sends it in ESC[200~ ... ESC[201~ when mc asked for bracketed paste;
         # the dot keeps the line breaks at the end from $(...)
@@ -686,6 +718,15 @@ for where in $(echo "$transports" | tr ',' ' '); do
         refresh_fixtures "$where"
         tsv=/work/local/$subject/$d/cases.tsv
         [ -f "$tsv" ] || { echo "  $d: no cases.tsv"; continue; }
+        # a directory whose names are in one charset says so in a file
+        # "charset": a locale of another charset could not type them
+        if [ -f "/work/local/$subject/$d/charset" ]; then
+            dir_charset=$(cat "/work/local/$subject/$d/charset")
+            if [ "$(charset_key "$dir_charset")" != "$(charset_key "$charset")" ]; then
+                echo "  $d: for $dir_charset, not run in $locale"
+                continue
+            fi
+        fi
 
         tail -n +2 "$tsv" | while IFS="$(printf '\t')" read -r file key expect why only shells; do
             [ -n "$file" ] || continue

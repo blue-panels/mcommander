@@ -55,6 +55,8 @@ WMenuBar *menubar_new (GList *menu);
 void menubar_set_menu (WMenuBar *menubar, GList *menu);
 void menubar_add_menu (WMenuBar *menubar, menu_t *menu);
 void menubar_arrange (WMenuBar *menubar);
+/* Take the shortcuts of the entries from the keymap again */
+void menubar_update_shortcuts (WMenuBar *menubar);
 
 WMenuBar *menubar_find (const WDialog *h);
 

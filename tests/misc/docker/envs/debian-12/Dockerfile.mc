@@ -11,13 +11,17 @@ RUN apt-get update \
         zsh dash mksh tcsh busybox fish \
         libarchive-tools procps unzip zip tmux \
         valgrind \
-        liblua5.4-dev chafa sqlite3 \
+        liblua5.4-dev chafa sqlite3 git \
         locales \
     && sed -i 's/^# *\(en_US.UTF-8\|ru_RU.UTF-8\|ru_RU.KOI8-R\)/\1/' /etc/locale.gen \
     && locale-gen \
     # CP866 is not in the list locale-gen walks; it is what mc draws with
     # when the terminal speaks the DOS codepage
     && localedef -f IBM866 -i ru_RU ru_RU.CP866 \
+    # the other 8-bit Russian charsets, for the fast find of Far
+    && localedef -f CP1251 -i ru_RU ru_RU.CP1251 \
+    && localedef -f ISO-8859-5 -i ru_RU ru_RU.ISO-8859-5 \
+    && localedef -f KOI8-U -i ru_RU ru_RU.KOI8-U \
     && rm -rf /var/lib/apt/lists/*
 
 # without a UTF-8 locale mc draws question marks instead of anything non-ASCII;

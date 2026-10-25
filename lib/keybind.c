@@ -564,12 +564,22 @@ keybind_lookup_action_flags (long action)
 const char *
 keybind_lookup_keymap_shortcut (const global_keymap_t *keymap, long action)
 {
+    return keybind_lookup_keymap_shortcut_if (keymap, action, NULL);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/* The same, for the keys that @key_ok takes only; NULL @key_ok takes every key */
+
+const char *
+keybind_lookup_keymap_shortcut_if (const global_keymap_t *keymap, long action,
+                                   gboolean (*key_ok) (long key))
+{
     if (keymap != NULL)
     {
         size_t i;
 
         for (i = 0; keymap[i].key != 0; i++)
-            if (keymap[i].command == action)
+            if (keymap[i].command == action && (key_ok == NULL || key_ok (keymap[i].key)))
                 return (keymap[i].caption[0] != '\0') ? keymap[i].caption : NULL;
     }
     return NULL;

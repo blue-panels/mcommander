@@ -427,6 +427,92 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+static gboolean
+seq_event (const char *seq, tty_key_event_t *ev)
+{
+    return tty_kitty_seq_event (seq, (int) strlen (seq), ev);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_event_text)
+{
+    tty_key_event_t ev;
+    char text[16];
+
+    /* the whole text of the event: a letter with a combining mark is three bytes of UTF-8 */
+    ck_assert (seq_event (ESC_STR "[97;3;97:776u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 3);
+    ck_assert (memcmp (text, "a\xCC\x88", 3) == 0);
+
+    /* a text that does not fit is not cut */
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, 2), 0);
+
+    /* the first character of the text, not the key of the base layout: Alt with the key of ';'
+       in a Russian layout types a letter */
+    ck_assert (seq_event (ESC_STR "[1078::59;3;1078u", &ev));
+    ck_assert_uint_eq (tty_key_event_char (&ev), 0x436);
+
+    /* Alt with a Cyrillic letter and no key of the base layout: the letter of the key */
+    ck_assert (seq_event (ESC_STR "[1092;3u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 2);
+    ck_assert (memcmp (text, "\xD1\x84", 2) == 0);
+
+    /* with Shift, the shifted key */
+    ck_assert (seq_event (ESC_STR "[97:65;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
+    ck_assert_int_eq (text[0], 'A');
+
+    /* with Shift and no alternate keys reported, the capital of the letter */
+    ck_assert (seq_event (ESC_STR "[97;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
+    ck_assert_int_eq (text[0], 'A');
+    ck_assert (seq_event (ESC_STR "[1092;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 2);
+    ck_assert (memcmp (text, "\xD0\xA4", 2) == 0);
+    /* a key that is not a letter types what the layout says, which the terminal does not tell */
+    ck_assert (seq_event (ESC_STR "[49;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+    /* it does with the alternate keys */
+    ck_assert (seq_event (ESC_STR "[49:33;4u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 1);
+    ck_assert_int_eq (text[0], '!');
+
+    /* a functional key types nothing: the plus of the keypad, Enter, a release */
+    ck_assert (seq_event (ESC_STR "[57413;3u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+    ck_assert_uint_eq (tty_key_event_char (&ev), 0);
+    ck_assert (seq_event (ESC_STR "[13;3u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+    ck_assert (seq_event (ESC_STR "[97;3:3u", &ev));
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 0);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_kitty_event_long_text)
+{
+    tty_key_event_t ev;
+    char text[TTY_KITTY_TEXT_BYTES];
+    GString *seq;
+    int i;
+
+    /* a text longer than any small buffer comes whole, not as the letter of the key */
+    seq = g_string_new (ESC_STR "[97;3;98");
+    for (i = 1; i < 65; i++)
+        g_string_append (seq, ":98");
+    g_string_append_c (seq, 'u');
+    ck_assert (seq_event (seq->str, &ev));
+    g_string_free (seq, TRUE);
+    ck_assert_uint_eq (tty_key_event_text (&ev, text, sizeof (text)), 65);
+    for (i = 0; i < 65; i++)
+        ck_assert_int_eq (text[i], 'b');
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_kitty_flags_base)
 {
     keybar_modifiers = FALSE;
@@ -942,6 +1028,8 @@ main (void)
     tcase_add_test (tc_core, test_kitty_release_wanted);
     tcase_add_test (tc_core, test_kitty_release_dropped_before_key);
     tcase_add_test (tc_core, test_kitty_text_bytes);
+    tcase_add_test (tc_core, test_kitty_event_text);
+    tcase_add_test (tc_core, test_kitty_event_long_text);
     tcase_add_test (tc_core, test_kitty_flags_base);
     tcase_add_test (tc_core, test_kitty_held_modifiers);
     tcase_add_test (tc_core, test_getch_skips_modifiers);

@@ -153,6 +153,9 @@ typedef struct
     {
         gboolean active;
         gboolean filtering;
+        gboolean far_find;    // the fast find of Far mode started the search: Enter is the panel's
+        gboolean far_nocase;  // the fast find of Far typed into the search: the case does not count
+        int far_skip;         // bytes of UTF-8 still to come after a fast find that did not start
         GString *buffer;
         GString *prev_buffer;
         char ch[MB_LEN_MAX];  // Buffer for multi-byte character
@@ -206,6 +209,7 @@ void do_file_mark (WPanel *panel, int idx, int val);
 const GString *panel_find_marked_file (const WPanel *panel, int *current_file);
 const GString *panel_get_marked_file (const WPanel *panel, int *current_file);
 
+gboolean panel_far_fast_find_running (void);
 gboolean panel_do_cd (WPanel *panel, const vfs_path_t *new_dir_vpath, enum cd_enum cd_type);
 gboolean panel_do_cd_int (WPanel *panel, const vfs_path_t *new_dir_vpath, enum cd_enum cd_type);
 MC_MOCKABLE gboolean panel_cd (WPanel *panel, const vfs_path_t *new_dir_vpath,
