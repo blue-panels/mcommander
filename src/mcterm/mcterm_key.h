@@ -29,6 +29,10 @@ size_t mcterm_encode_kitty_event (const tty_key_event_t *ev, guint flags, unsign
 /* A character key by the kitty protocol, 0 when the flags leave it plain text */
 size_t mcterm_encode_kitty_codepoint (gunichar cp, int mods, guint flags, unsigned char *buf,
                                       size_t bufsz);
+/* The key as a far2l terminal reports it: a press and a release, APC f2l<base64> BEL each, of the
+   virtual key, character and Windows control key state. 0 when the key has no such form (a byte of
+   a character out of ASCII, a key of no virtual key), and the caller sends it as xterm would. */
+size_t mcterm_encode_key_far2l (int key, unsigned char *buf, size_t bufsz);
 
 /*** inline functions ****************************************************************************/
 

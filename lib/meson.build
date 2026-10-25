@@ -57,6 +57,7 @@ libmc_sources = files(
 
   'tty/color-internal.c',
   'tty/color.c',
+  'tty/far2l.c',
   'tty/key.c',
   'tty/keyxdef.c',
   'tty/mouse.c',

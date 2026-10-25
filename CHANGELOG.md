@@ -44,6 +44,17 @@ The releases of this fork, newest first.
 - The commit list of the git panel starts with diff: every file the branch
   changes from its base, with Shift-F3 for the diff of the whole branch. Quick
   view shows the description of a commit, as F3 does.
+- The far2l terminal extensions: in far2l's terminal and f4's every key comes
+  with its virtual key, character and modifiers (Ctrl-Enter, Shift-Tab and
+  the like are told apart), the mouse and files dropped on the window reach
+  the panels, and with no clipboard_store or clipboard_paste command the
+  clipboard of the terminal is used; the terminal asks its user first, and
+  M-Commander keeps a passcode of its own for it. Help, About tells the
+  keyboard input in use. A program in the built-in terminal gets the
+  extensions too, in any terminal: its keys the far2l way, M-Commander's
+  clipboard after a question to the user and only right after Ctrl-V or
+  Shift-Insert, and the drops of a far2l terminal outside. MC_FAR2L=0 turns
+  them off.
 
 ## 6.1.0 - 2026-09-26
 

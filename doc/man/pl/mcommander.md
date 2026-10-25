@@ -413,8 +413,9 @@ zaznaczonego pliku albo dla pliku pod kursorem, jeśli nic nie jest
 zaznaczone. W poleceniu %f (albo %p) to nazwa pliku, %n nazwa bez
 rozszerzenia, a %x rozszerzenie, wszystkie ujęte w cudzysłów dla powłoki;
 pozostałe makra menu użytkownika działają tak samo jak tam. Ctrl-G działa
-tylko w terminalu, który wysyła klawisze przez kitty keyboard protocol albo
-tryb Win32 input (kitty, WezTerm, foot, Windows Terminal): w innych to klawisz
+tylko w terminalu, który wysyła klawisze przez kitty keyboard protocol, tryb
+Win32 input albo rozszerzenia far2l (kitty, WezTerm, foot, Windows Terminal,
+far2l): w innych to klawisz
 przerwania terminala i nigdy nie dociera do M-Commandera. Alt-X g działa w
 każdym terminalu.
 
@@ -3772,6 +3773,13 @@ jest wysyłany w UTF-8, a tekst dłuższy niż 75000 bajtów nie jest wysyłany.
 Otrzymuje go tylko terminal podobny do xterm, nie konsola Linuksa. Domyślnie
 "false".
 
+W terminalu z rozszerzeniami terminala far2l (far2l, f4), gdy ani
+*clipboard_store*,
+ani
+*clipboard_paste*
+nie są ustawione, kopia trafia do schowka terminala, a wklejanie z niego czyta.
+Terminal raz pyta swojego użytkownika, czy M-Commander może używać schowka.
+
 *autodetect_codeset*
 : Ta opcja pozwala użyć polecenia 'enca' do samodzielnego rozpoznania strony
 kodowej plików tekstowych we wbudowanym podglądzie i edytorze. Listę
@@ -3860,6 +3868,20 @@ każde wyjście w terminalu, także plik wypisany przez
 **cat**,
 mogłoby zmienić schowek.
 
+Program w terminalu, który zna rozszerzenia terminala far2l (far2l, f4, sam
+M-Commander), dostaje klawisze tak, jak zgłaszają je te rozszerzenia, i może
+używać schowka M-Commandera, w jakimkolwiek terminalu działa M-Commander. Gdy
+program pierwszy raz prosi o schowek, M-Commander pyta, czy może: "Block", "Own
+clipboard", "Allow" albo "Allow always", zapamiętywane w
+~/.local/share/mc6/far2l-clients. Schowek może zostać odczytany tylko przez
+kilka sekund po naciśnięciu
+**Ctrl-V**
+albo
+**Shift-Insert**
+w terminalu; w innej chwili program nic nie dostaje, więc nie odczyta schowka za
+plecami użytkownika, jak program może to zrobić zapytaniem OSC 52. Plik
+upuszczony na okno terminala far2l nad terminalem też trafia do programu.
+
 # Baza danych terminali (Terminal databases) <a id="terminal-databases"></a>
 
 M-Commander pozwala ci na naprawienie bazy danych terminali bez
@@ -3937,6 +3959,10 @@ wczytywany i nic, co go potrzebuje, nie jest dostępne.
 **MC_SIXEL**
 : Wartość 0 oznacza, że terminal nie ma grafiki sixel, wartość 1 - że ma. Bez
 tej zmiennej pytany jest sam terminal.
+
+**MC_FAR2L**
+: Wartość 0 sprawia, że terminal nie jest pytany o rozszerzenia terminala far2l,
+a programy w terminalu wbudowanym ich nie dostają.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Jak długo czekać na resztę sekwencji sterującej, w mikrosekundach.
