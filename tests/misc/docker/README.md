@@ -42,7 +42,7 @@ leaves nothing in the working tree and reuses its object files between runs.
       panel/                the same for the panel: the quick filter, quick cd
       lua/                  the same for the viewers written in Lua
       sqlite/, arcmc/       the same for the sqlite plugin and arcmc.ini
-      far/                  the same for Far mode: the fast find, in three charsets
+      far/                  the same for Far mode: the fast find, in six charsets
     reports/                what a run leaves behind (not in git)
 
 Three axes, chosen independently: the **environment** (which image mc is
@@ -229,12 +229,15 @@ open it.
 | `03-koi8r`  | the same names in KOI8-R, run under `-l ru_RU.KOI8-R`            |
 | `04-cp866`  | the same names in CP866, run under `-l ru_RU.CP866`              |
 | `05-plugin` | a plugin panel that turns the key down: the Git panel, its coole hotkey on Alt-q and no coole, so the key goes on to the fast find |
+| `06-cp1251` | the same names in CP1251, run under `-l ru_RU.CP1251`; the small ya is the byte 0xFF there |
+| `07-iso88595` | the same names in ISO-8859-5, run under `-l ru_RU.ISO-8859-5` |
+| `08-koi8u`  | the same names in KOI8-U, run under `-l ru_RU.KOI8-U`            |
 
 `cases/far/config/ini` turns Far mode and its fast find on. A name in KOI8-R
 is only found by the bytes a KOI8-R terminal sends, so each of the Cyrillic
 directories has a `charset` file, and a run takes the one of its locale:
-`test -c far` the UTF-8 one, `test -c far -l ru_RU.KOI8-R` and `-l
-ru_RU.CP866` the 8-bit ones. Any case directory may carry such a file. The
+`test -c far` the UTF-8 one, `test -c far -l ru_RU.KOI8-R` and the other
+locales of the table the 8-bit ones. Any case directory may carry such a file. The
 `alt <text>` step sends each character as such a terminal does: an Esc and the
 bytes of the character in the charset of the locale.
 

@@ -5,8 +5,8 @@
 # with a character starts the quick search and types the character into it.
 # Each case ends the quick search the run started with (Esc), types with Alt,
 # and opens the file the cursor found in the viewer (F3), whose text says which
-# file it is.  The names in Cyrillic are written in UTF-8, KOI8-R and CP866,
-# a directory each, and a run in a locale (-l) takes the directory of its
+# file it is.  The names in Cyrillic are written in UTF-8 and in the 8-bit
+# Russian charsets, a directory each, and a run in a locale (-l) takes the directory of its
 # charset: that is the charset the terminal sends the keys in.
 set -e
 
@@ -49,6 +49,8 @@ cyrillic ()
     printf 'this is alfa\n'    > "$1/$(printf 'альфа.txt' | iconv -f UTF-8 -t "$2")"
     printf 'this is beta\n'    > "$1/$(printf 'бета.txt' | iconv -f UTF-8 -t "$2")"
     printf 'this is borscht\n' > "$1/$(printf 'Борщ.txt' | iconv -f UTF-8 -t "$2")"
+    printf 'this is yolka\n'   > "$1/$(printf 'ёлка.txt' | iconv -f UTF-8 -t "$2")"
+    printf 'this is apple\n'   > "$1/$(printf 'яблоко.txt' | iconv -f UTF-8 -t "$2")"
 
     cat > "$1/cases.tsv" <<CASES
 file	key	expect	why	transports
@@ -56,12 +58,19 @@ cases.tsv	key Escape,alt аль,F3	text: this is alfa	Alt with Cyrillic letters 
 cases.tsv	key Escape,alt бе,F3	text: this is beta	the second letter picks between two names	local
 cases.tsv	key Escape,alt бо,F3	text: this is borscht	the case of a Cyrillic name does not count	local
 cases.tsv	key Escape,alt альz,F3	text: this is alfa	a letter that matches nothing is not taken	local
+cases.tsv	key Escape,alt ёл,F3	text: this is yolka	the letter yo, which lies apart from the rest of the alphabet	local
+cases.tsv	key Escape,alt ЁЛ,F3	text: this is yolka	Alt-Shift with yo: the capital finds the small one	local
+cases.tsv	key Escape,alt яб,F3	text: this is apple	the letter ya, the last byte of CP1251	local
+cases.tsv	key Escape,alt ЯБ,F3	text: this is apple	the capital of ya finds the small one	local
 CASES
 }
 
 cyrillic 02-utf8 UTF-8
 cyrillic 03-koi8r KOI8-R
 cyrillic 04-cp866 CP866
+cyrillic 06-cp1251 CP1251
+cyrillic 07-iso88595 ISO-8859-5
+cyrillic 08-koi8u KOI8-U
 
 # A plugin panel that turns a key down: the Git panel runs coole on its hotkey,
 # Alt-q here (config/panels.git.ini), and with no coole in the image it says so
