@@ -243,6 +243,9 @@ library is missing.
 -Dpanel_plugin_sqlite
      SQLite database browser.  Requires sqlite3 >= 3.26.
 
+-Dpanel_plugin_postgres
+     PostgreSQL.  Requires libpq >= 10.
+
 The options of configure and their meson names:
 - - - - - - - - - - - - - - - - - - - - - - - -
 

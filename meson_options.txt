@@ -57,6 +57,8 @@ option('panel_plugin_mongo', type: 'feature', value: 'auto',
        description: 'The MongoDB panel plugin (needs the MongoDB C driver)')
 option('panel_plugin_sqlite', type: 'feature', value: 'auto',
        description: 'The SQLite database browser panel plugin (needs sqlite3 >= 3.26)')
+option('panel_plugin_postgres', type: 'feature', value: 'auto',
+       description: 'The PostgreSQL panel plugin (needs libpq >= 10)')
 
 option('panel_plugins_dir', type: 'string', value: '',
        description: 'Directory of the panel plugins [LIBDIR/mcommander/panel-plugins]')

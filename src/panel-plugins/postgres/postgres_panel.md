@@ -1,0 +1,196 @@
+# PostgreSQL Plugin <!-- help:notitle -->
+
+```
+  PostgreSQL Panel Plugin
+
+  The PostgreSQL plugin shows the servers of PostgreSQL as
+  panel contents: connection -> database -> schema ->
+  relation. It reads the catalog of PostgreSQL 10 and newer;
+  an older server is refused when it is connected to.
+
+  Opening the plugin
+
+    Alt-F1 / Alt-F2 -> PostgreSQL
+                    The list of connections of
+                    ~/.config/mc6/postgres.ini.
+
+  Configuration: ~/.config/mc6/postgres.ini
+
+    [General]
+      default_connection   the connection the cursor starts
+                           on when the plugin opens
+      connect_timeout      seconds to wait for a server
+                           (default 10, 0: no limit)
+      statement_timeout    seconds a query of the panel may
+                           take (default 30, 0: no limit)
+      preview_rows         the rows F3 shows below the SQL
+                           of a table or a view (default
+                           100, 0: none)
+      show_system_schemas  true also lists pg_catalog,
+                           information_schema and pg_toast
+      coole                the query editor; empty: found
+                           in PATH
+      psql                 psql, run without coole; empty:
+                           found in PATH
+
+    The [General] options are edited from the Manage Plugins
+    dialog (Options menu): select the PostgreSQL row and press
+    Enter or F4.
+
+    [Connection.<name>]
+      connect_by          host, url or service: what names
+                          the server
+      host, port          host name, address or directory of
+                          sockets, and port (connect_by=host)
+      url                 postgresql://user@host:port/db?...
+                          (connect_by=url)
+      service             a service of pg_service.conf
+                          (connect_by=service)
+      database            the database; with
+                          show_all_databases, the one the
+                          list of databases is read from;
+                          empty: what libpq takes, the
+                          name of the user
+      show_all_databases  false: the panel has only the
+                          database
+      user, sslmode       the user, the SSL mode of libpq
+      save_password       true: a password typed for the
+                          connection goes to ~/.pgpass once
+                          it has connected
+      description         a note
+      read_only           true: the query editor opens
+                          read-only transactions
+
+    A field not given is left to libpq: the service file and
+    the PG* variables of the environment, as psql does.
+
+    No password is kept in postgres.ini. libpq reads it from
+    ~/.pgpass (or $PGPASSFILE) or from the service file. When
+    the server asks for one there is none of, the plugin asks
+    for it and keeps it for the session; with save_password it
+    is written to ~/.pgpass, for the host, the port and the
+    user, any database, at mode 0600.
+
+  The dialog of a connection
+
+    Connect by chooses Host, URL or Service; the fields the
+    choice does not use are disabled. With Host the URL is the
+    one the fields make, read-only; going from URL back to
+    Host fills the fields from the URL. Test connection
+    connects with what is in the fields and tells the version
+    of the server, or the error of libpq; it asks for a
+    password the server wants and the fields have not got, and
+    leaves it in the Password field. Ctrl-G gives up the wait
+    for a server.
+
+  Hierarchy and keys
+
+    On the list of connections:
+      F7, Shift-F4    A new connection: the name and the keys
+                      above, written as a [Connection.<name>]
+                      section (the file is created at mode
+                      0600).
+      F4              Edit the connection under the cursor.
+                      Renaming rewrites its section.
+      F8              Delete the marked connections, or the
+                      one under the cursor, from postgres.ini.
+      Enter           Connect, list the databases.
+
+    On the list of databases:
+      Enter           Open the database: its schemas.
+      ..              Close the connection, back to the list
+                      of connections.
+
+    On the list of schemas:
+      Enter           The relations of the schema.
+
+    On the list of relations:
+      Type            table, partitioned, view, matview,
+                      foreign or sequence.
+      Rows~           The estimate of the statistics of the
+                      server (reltuples), not a count: empty
+                      before the first ANALYZE.
+      Size            pg_total_relation_size, with the
+                      indexes and TOAST.
+      F3              The SQL of the relation, rebuilt from
+                      the catalog: CREATE TABLE with its
+                      columns, defaults, identity and
+                      generated columns, collations and
+                      constraints, PARTITION BY and the
+                      partitions, the indexes, the triggers,
+                      the comments; CREATE VIEW or
+                      MATERIALIZED VIEW from pg_get_viewdef;
+                      CREATE FOREIGN TABLE with its server
+                      and options; CREATE SEQUENCE. Every
+                      name is qualified with its schema. It
+                      is not a dump: the owner, the grants
+                      and the policies are left out. Below
+                      it, the first preview_rows rows of a
+                      table or a view, as psql shows them.
+      F5              Copy that SQL to the other panel.
+      Enter           The query editor, told of the relation.
+
+    On every level:
+      Alt-F3          The query editor, see below.
+
+    The system schemas, pg_catalog, information_schema and
+    pg_toast, are shown with show_system_schemas only; the
+    temporary schemas of the sessions never. A partition is
+    not in the list: its rows are those of its parent, whose
+    Rows~ and Size sum the partitions under it.
+
+    The list has the databases the user may connect to,
+    without the templates, with their size and owner.
+    Without "Show all databases" it has the database of the
+    connection only.
+    The connection of the panel is read-only and bounded by
+    statement_timeout; Ctrl-G cancels a query of the panel. A
+    server that does not answer the cancel within 5 seconds
+    has the connection closed. A connection found lost is
+    opened again once.
+
+    Below the connections the panel changes nothing: F4, F6,
+    F7, F8 say so. The objects are changed with SQL in the
+    query editor.
+
+  The query editor
+
+    Alt-F3 runs coole, the editor of queries ("coole -Q"), for
+    the connection and the database under the cursor, or the
+    open ones, in a screen of its own beside the panels; in it
+    Alt-F3 comes back. Enter on a relation does the same and
+    tells coole of the relation: coole runs SELECT * on it
+    with LIMIT 100, and puts that query in the file of
+    queries when the file is empty. In coole F5 runs the
+    statement under the cursor. The panel has no level of
+    rows: F3 shows the first ones only. The queries of a
+    database are kept in
+    ~/.local/share/coole/queries/postgres/<connection>/<db>.sql.
+
+    Without coole, Alt-F3 runs psql there, connected; with
+    neither it says what to install. One of them runs per
+    connection and database: Alt-F3 again brings back the same
+    one, until it is quit. coole learns of a relation when it
+    starts only: Enter on another relation of the same
+    connection and database brings back the coole that runs,
+    with what it had. Quit it (F10) to start it for the new
+    one.
+
+    What to connect to goes to it in its environment, the PG*
+    variables of libpq as the connection of the panel has
+    resolved them, whether the server was named by its host, a
+    URL or a service: PGHOST, PGPORT, PGUSER and PGDATABASE,
+    and the others that differ from what libpq would take
+    anyway. A password typed in the session or written in
+    the URL goes as PGPASSWORD, never on a command line; one
+    in ~/.pgpass needs nothing. coole is also told MC_QUERY_KIND=postgres,
+    MC_PG_CONNECTION, MC_PG_SCHEMA and MC_PG_RELATION, where
+    the cursor was, and MC_QUERY_READ_ONLY=1 for a read-only
+    connection; psql gets PGOPTIONS with
+    default_transaction_read_only instead. Read-only guards
+    against a slip, not against the user: the role of the
+    server is the limit.
+
+    Alt-F3 is the command PluginConsole of the [panel] section
+    of the keymap.
+```

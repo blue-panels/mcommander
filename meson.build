@@ -371,6 +371,7 @@ if not get_option('panel_plugin_mongo').disabled()
 endif
 
 sqlite3 = dependency('sqlite3', version: '>= 3.26', required: get_option('panel_plugin_sqlite'))
+libpq = dependency('libpq', version: '>= 10', required: get_option('panel_plugin_postgres'))
 
 # the external tools some Lua viewers run
 chafa = find_program('chafa', required: false)

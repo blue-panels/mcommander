@@ -705,6 +705,15 @@ panel_plugin_activate_finish (WPanel *panel, const mc_panel_plugin_t *plugin, mc
     panel_plugin_get_items (panel);
 
     panel_re_sort (panel);
+
+    // where the plugin wants the cursor on its first list, as after a change of level
+    if (plugin->get_focus_name != NULL)
+    {
+        const char *focus = plugin->get_focus_name (new_data);
+
+        if (focus != NULL && *focus != '\0')
+            panel_set_current_by_name (panel, focus);
+    }
     panel->dirty = TRUE;
 
     if (add_history && panel->plugin->proto != NULL && panel->plugin->get_title != NULL)
