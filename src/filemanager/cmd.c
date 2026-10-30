@@ -4,19 +4,22 @@
 
    Copyright (C) 1994-2025
    Free Software Foundation, Inc.
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
 
    Written by:
    Andrew Borodin <aborodin@vmail.ru>, 2013-2022
    Ilia Maslakov <il.smind@gmail.com>, 2009-2011, 2013, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -311,8 +314,10 @@ fallback:
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* When no rule handles the entry, the copy taken to tell its type goes to @copy_out, for the
+   viewer to show instead of asking the plugin for the entry a second time */
 static gboolean
-panel_magic_view_plugin_file (WPanel *panel, const file_entry_t *fe, WView *target)
+panel_magic_view_plugin_file (WPanel *panel, const file_entry_t *fe, WView *target, char **copy_out)
 {
     panel_magic_source_data_t source_data = {
         .panel = panel,
@@ -373,6 +378,11 @@ panel_magic_view_plugin_file (WPanel *panel, const file_entry_t *fe, WView *targ
         handled = TRUE;
     }
 
+    if (!handled && copy_out != NULL)
+    {
+        *copy_out = type_copy;
+        type_copy = NULL;
+    }
     if (type_copy != NULL)
     {
         unlink (type_copy);
@@ -382,6 +392,11 @@ panel_magic_view_plugin_file (WPanel *panel, const file_entry_t *fe, WView *targ
     return handled;
 
 fallback:
+    if (copy_out != NULL)
+    {
+        *copy_out = type_copy;
+        type_copy = NULL;
+    }
     if (type_copy != NULL)
     {
         unlink (type_copy);
@@ -389,6 +404,19 @@ fallback:
     }
     mc_magic_action_clear (&action);
     return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A copy of a plugin entry nobody took: removed */
+static void
+drop_magic_copy (char **copy)
+{
+    if (*copy != NULL)
+    {
+        unlink (*copy);
+        g_clear_pointer (copy, g_free);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -400,6 +428,7 @@ static void
 do_view_cmd (WPanel *panel, gboolean plain_view)
 {
     const file_entry_t *fe;
+    char *magic_copy = NULL;  // the entry of a plugin, fetched to tell its type
 
     fe = panel_current_entry (panel);
     if (fe == NULL)
@@ -413,7 +442,7 @@ do_view_cmd (WPanel *panel, gboolean plain_view)
         gboolean handled;
 
         if (panel->is_plugin_panel)
-            handled = panel_magic_view_plugin_file (panel, fe, NULL);
+            handled = panel_magic_view_plugin_file (panel, fe, NULL, &magic_copy);
         else
         {
             vfs_path_t *full_name_vpath =
@@ -438,6 +467,7 @@ do_view_cmd (WPanel *panel, gboolean plain_view)
         r = panel->plugin->view (panel->plugin_data, fe->fname->str, &fe->st, plain_view);
         if (r == MC_PPR_OK || r == MC_PPR_FAILED)
         {
+            drop_magic_copy (&magic_copy);
             repaint_screen ();
             return;
         }
@@ -477,9 +507,15 @@ do_view_cmd (WPanel *panel, gboolean plain_view)
 
         {
             char *local_path = NULL;
-            mc_pp_result_t r;
+            mc_pp_result_t r = MC_PPR_OK;
 
-            r = panel->plugin->get_local_copy (panel->plugin_data, fe->fname->str, &local_path);
+            if (magic_copy != NULL)
+            {
+                local_path = magic_copy;
+                magic_copy = NULL;
+            }
+            else
+                r = panel->plugin->get_local_copy (panel->plugin_data, fe->fname->str, &local_path);
             if (r != MC_PPR_OK || local_path == NULL)
             {
                 message (D_ERROR, MSG_ERROR, _ ("Cannot get local copy of %s"), fe->fname->str);
@@ -506,6 +542,7 @@ do_view_cmd (WPanel *panel, gboolean plain_view)
         vfs_path_free (filename_vpath, TRUE);
     }
 
+    drop_magic_copy (&magic_copy);
     repaint_screen ();
 }
 
@@ -515,6 +552,7 @@ void
 mcview_load_panel_current (struct WView *view, WPanel *panel)
 {
     const file_entry_t *fe;
+    char *magic_copy = NULL;  // the entry of a plugin, fetched to tell its type
 
     mcview_remove_tmp_preview ((WView *) view);
 
@@ -530,7 +568,7 @@ mcview_load_panel_current (struct WView *view, WPanel *panel)
         gboolean handled;
 
         if (panel->is_plugin_panel)
-            handled = panel_magic_view_plugin_file (panel, fe, (WView *) view);
+            handled = panel_magic_view_plugin_file (panel, fe, (WView *) view, &magic_copy);
         else
         {
             vfs_path_t *full_name_vpath =
@@ -565,16 +603,25 @@ mcview_load_panel_current (struct WView *view, WPanel *panel)
         if (r == MC_PPR_NOT_SUPPORTED && !S_ISDIR (fe->st.st_mode)
             && panel->plugin->get_local_copy != NULL)
         {
-            gboolean prev_quiet;
-
             if (local_path != NULL)
                 unlink (local_path);
             g_free (local_path);
             local_path = NULL;
 
-            prev_quiet = panel_plugin_set_quiet_messages (TRUE);
-            r = panel->plugin->get_local_copy (panel->plugin_data, fe->fname->str, &local_path);
-            panel_plugin_set_quiet_messages (prev_quiet);
+            if (magic_copy != NULL)
+            {
+                local_path = magic_copy;
+                magic_copy = NULL;
+                r = MC_PPR_OK;
+            }
+            else
+            {
+                gboolean prev_quiet;
+
+                prev_quiet = panel_plugin_set_quiet_messages (TRUE);
+                r = panel->plugin->get_local_copy (panel->plugin_data, fe->fname->str, &local_path);
+                panel_plugin_set_quiet_messages (prev_quiet);
+            }
         }
 
         if (r == MC_PPR_OK && local_path != NULL)
@@ -593,9 +640,11 @@ mcview_load_panel_current (struct WView *view, WPanel *panel)
                 unlink (local_path);
         }
         g_free (local_path);
+        drop_magic_copy (&magic_copy);
         return;
     }
 
+    drop_magic_copy (&magic_copy);
     mcview_load ((WView *) view, NULL, fe->fname->str, 0, 0, 0);
 }
 
