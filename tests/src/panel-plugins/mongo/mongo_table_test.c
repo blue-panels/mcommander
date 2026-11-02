@@ -58,9 +58,9 @@ doc_free (gpointer p)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The documents of @json, one per line, rendered */
+/* The documents of @json, one per line, rendered @screen_width wide (0: no limit) */
 static char *
-render (const char *const *json)
+render_width (const char *const *json, int screen_width)
 {
     GPtrArray *docs = g_ptr_array_new_with_free_func (doc_free);
     char *out;
@@ -72,9 +72,17 @@ render (const char *const *json)
         ck_assert_ptr_nonnull (doc);
         g_ptr_array_add (docs, doc);
     }
-    out = mongo_table_render (docs);
+    out = mongo_table_render (docs, NULL, screen_width);
     g_ptr_array_free (docs, TRUE);
     return out;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static char *
+render (const char *const *json)
+{
+    return render_width (json, 0);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -192,16 +200,47 @@ END_TEST
 START_TEST (test_table_wide_cell_cut)
 {
     const char *json[] = {
-        "{\"s\": \"0123456789012345678901234567890123456789ABCDEF\"}",
+        "{\"n\": 1, \"s\": \"0123456789012345678901234567890123456789ABCDEF\"}",
         NULL,
     };
-    char *out = render (json);
-    char **lines = g_strsplit (out, "\n", -1);
+    char *out = render_width (json, 0);
+    char **lines;
 
-    // a column is at most 40 wide, plus a space on each side
-    ck_assert_int_eq (strlen (lines[2]), 42);
+    // no screen to fit: the value is written whole
+    ck_assert_ptr_nonnull (strstr (out, " 0123456789012345678901234567890123456789ABCDEF \n"));
+    g_free (out);
+
+    // 30 columns: " n " and "|" leave the value 24, its start and "~"
+    out = render_width (json, 30);
+    lines = g_strsplit (out, "\n", -1);
+    mctest_assert_str_eq (lines[2], " 1 | 01234567890123456789012~ ");
     g_strfreev (lines);
     g_free (out);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_table_caption)
+{
+    const char *json[] = {
+        "{\"a\": 1}",
+        NULL,
+    };
+    GPtrArray *docs = g_ptr_array_new_with_free_func (doc_free);
+    char *out;
+
+    g_ptr_array_add (docs, bson_new_from_json ((const uint8_t *) json[0], -1, NULL));
+    out = mongo_table_render (docs, "db.coll, 000.001 .. 000.712", 0);
+    mctest_assert_str_eq (out,
+                          "-- db.coll, 000.001 .. 000.712\n"
+                          "\n"
+                          " a \n"
+                          "---\n"
+                          " 1 \n"
+                          "(1 row)\n");
+    g_free (out);
+    g_ptr_array_free (docs, TRUE);
 }
 END_TEST
 
@@ -234,6 +273,7 @@ main (void)
     tcase_add_test (tc_core, test_table_date_before_1970);
     tcase_add_test (tc_core, test_table_key_on_one_line);
     tcase_add_test (tc_core, test_table_wide_cell_cut);
+    tcase_add_test (tc_core, test_table_caption);
     tcase_add_test (tc_core, test_table_empty);
 
     return mctest_run_all (tc_core);
