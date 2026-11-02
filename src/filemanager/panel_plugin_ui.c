@@ -44,6 +44,7 @@
 #include "lib/panel-plugin.h"
 
 #include "src/execute.h"
+#include "src/selcodepage.h"  // SELECT_CHARSET_NO_TRANSLATE
 #ifdef USE_DIFF_VIEW
 #include "src/diffviewer/ydiff.h"
 #endif
@@ -645,6 +646,7 @@ panel_plugin_suspend_current (WPanel *panel)
     source->base_list_format = panel->plugin_base_list_format;
     source->sort_info = panel->sort_info;
     source->sort_field = panel->sort_field;
+    source->plugin_codepage = panel->plugin_codepage;
 
     panel->plugin = NULL;
     panel->plugin_data = NULL;
@@ -681,6 +683,8 @@ panel_plugin_activate_finish (WPanel *panel, const mc_panel_plugin_t *plugin, mc
     panel->is_plugin_panel = TRUE;
     panel->is_panelized = TRUE;
     panel->plugin_base_list_format = panel->list_format;
+    // the names of a new plugin are its own, whatever another one was read in
+    panel->plugin_codepage = SELECT_CHARSET_NO_TRANSLATE;
 
     panel_clean_dir (panel);
     /* panel_clean_dir() resets these flags. */
@@ -1258,6 +1262,7 @@ panel_plugin_restore_stream_source (WPanel *panel)
     panel->plugin_base_list_format = source.base_list_format;
     panel->sort_info = source.sort_info;
     panel->sort_field = source.sort_field;
+    panel->plugin_codepage = source.plugin_codepage;
     panel->is_plugin_panel = TRUE;
     panel->is_panelized = TRUE;
 
@@ -1512,6 +1517,8 @@ panel_plugin_open_file_list_one (WPanel *panel, const mc_panel_plugin_t *plugin,
     panel->is_plugin_panel = TRUE;
     panel->is_panelized = TRUE;
     panel->plugin_base_list_format = panel->list_format;
+    // the names of a new plugin are its own, whatever another one was read in
+    panel->plugin_codepage = SELECT_CHARSET_NO_TRANSLATE;
 
     panel_clean_dir (panel);
     panel->is_panelized = TRUE;

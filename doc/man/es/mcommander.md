@@ -760,6 +760,8 @@ para el directorio superior.  Para cancelar las conversiones en cualquier
 directorio seleccionar
 *«Sin traducción»*
 en el diálogo de selección de código.
+En el panel de un complemento los nombres vienen del complemento, y la
+elección solo los recodifica en pantalla: el panel se queda donde está.
 
 **Alt-g, Alt-r, Alt-j**
 : usadas para seleccionar el archivo superior en un panel, el archivo central y el inferior del

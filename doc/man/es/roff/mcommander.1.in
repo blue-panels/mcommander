@@ -874,6 +874,8 @@ para el directorio superior.  Para cancelar las conversiones en cualquier
 directorio seleccionar
 \fI«Sin traducción»\fP
 en el diálogo de selección de código.
+En el panel de un complemento los nombres vienen del complemento, y la
+elección solo los recodifica en pantalla: el panel se queda donde está.
 
 .TP
 \fBAlt\-g, Alt\-r, Alt\-j\fP

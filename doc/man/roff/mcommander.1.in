@@ -781,6 +781,8 @@ Shift\-End are the command line's and do not tag files.
 to change charset of panel you may use Alt\-e (M\-e).
 Recoding is made from selected codepage into system codepage. To
 cancel the recoding, select "No translation" in the dialog of encodings.
+On a plugin panel the names come from the plugin, and the choice only recodes
+them on the screen: the panel stays where it is.
 
 .TP
 \fBAlt\-g, Alt\-r, Alt\-j\fP
