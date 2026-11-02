@@ -2401,6 +2401,12 @@ edit_update_screen (WEdit *e)
         edit_render_keypress (e);
     }
 
+    /* The text is not drawn whole while input waits: it is drawn when the dialog is idle again.
+       What came may be no key that draws anything (an answer of the terminal at the start), and
+       without that the text would wait for a key. */
+    if (e->force != 0)
+        widget_idle (WIDGET (WIDGET (e)->owner), TRUE);
+
     widget_draw (WIDGET (buttonbar_find (DIALOG (WIDGET (e)->owner))));
 }
 
