@@ -28,27 +28,15 @@
 #include <bson/bson.h>
 
 #include "lib/global.h"
-#include "lib/strutil.h"  // str_fit_to_term
+#include "lib/text_table.h"
 
 #include "mongo_render.h"
 
 /*** file scope macros ***************************************************************************/
 
-/* the widest a column is written, in columns of the terminal */
-#define TABLE_CELL_WIDTH 40
-
-/* a cell is written up to about this many bytes, the terminal shows TABLE_CELL_WIDTH anyway */
-#define TABLE_TEXT_MAX 256
-
-/*** file scope type declarations ****************************************************************/
-
-typedef struct
-{
-    char *name;
-    char *title;       // the name on one line
-    gboolean numeric;  // every value of the column is a number
-    int width;
-} table_column_t;
+/* a cell is made up to about this many bytes: more than the table writes, so that its "~" shows
+   where the text was cut, and a value of megabytes is not copied */
+#define CELL_TEXT_MAX 512
 
 /*** file scope functions ************************************************************************/
 
@@ -61,41 +49,27 @@ is_numeric_type (bson_type_t t)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The control characters of @text are spaces */
-static char *
-one_line (char *text)
-{
-    for (char *p = text; *p != '\0'; p++)
-        if ((unsigned char) *p < ' ' || *p == '\177')
-            *p = ' ';
-    return text;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/* @len bytes of UTF-8 @text, cut with "..." where the cell reaches TABLE_TEXT_MAX */
+/* @len bytes of UTF-8 @text, as many as the cell has room for up to CELL_TEXT_MAX */
 static void
 append_text (GString *out, const char *text, gsize len)
 {
-    gsize room = out->len < TABLE_TEXT_MAX ? TABLE_TEXT_MAX - out->len : 0;
+    gsize room = out->len < CELL_TEXT_MAX ? CELL_TEXT_MAX - out->len : 0;
 
-    if (len <= room)
+    if (len > room)
     {
-        g_string_append_len (out, text, (gssize) len);
-        return;
+        len = room;
+        // not in the middle of a character, which is 4 bytes at most
+        for (int i = 0; i < 3 && len > 0 && ((unsigned char) text[len] & 0xC0) == 0x80; i++)
+            len--;
     }
-    // not in the middle of a character
-    while (room > 0 && ((unsigned char) text[room] & 0xC0) == 0x80)
-        room--;
-    g_string_append_len (out, text, (gssize) room);
-    g_string_append (out, "...");
+    g_string_append_len (out, text, (gssize) len);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
 static void append_value (GString *out, const bson_value_t *v, gboolean nested);
 
-/* {a: 1, b: "x"} or [1, "x"], cut with "..." past TABLE_TEXT_MAX */
+/* {a: 1, b: "x"} or [1, "x"], up to about CELL_TEXT_MAX */
 static void
 append_nested (GString *out, const bson_value_t *v)
 {
@@ -109,11 +83,8 @@ append_nested (GString *out, const bson_value_t *v)
         && bson_iter_init (&it, &sub))
         while (bson_iter_next (&it))
         {
-            if (out->len >= TABLE_TEXT_MAX)
-            {
-                g_string_append (out, ", ...");
+            if (out->len >= CELL_TEXT_MAX)
                 break;
-            }
             if (!first)
                 g_string_append (out, ", ");
             first = FALSE;
@@ -187,36 +158,14 @@ append_value (GString *out, const bson_value_t *v, gboolean nested)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* A value on one line */
+/* A value as the text of a cell */
 static char *
 cell_text (const bson_value_t *v)
 {
     GString *out = g_string_new (NULL);
 
     append_value (out, v, FALSE);
-    return one_line (g_string_free (out, FALSE));
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static void
-append_cell (GString *out, const char *text, int width, gboolean right)
-{
-    g_string_append_c (out, ' ');
-    g_string_append (out, str_fit_to_term (text, width, right ? J_RIGHT_FIT : J_LEFT_FIT));
-    g_string_append_c (out, ' ');
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-static void
-column_free (gpointer p)
-{
-    table_column_t *c = (table_column_t *) p;
-
-    g_free (c->name);
-    g_free (c->title);
-    g_free (c);
+    return g_string_free (out, FALSE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -224,110 +173,57 @@ column_free (gpointer p)
 /* --------------------------------------------------------------------------------------------- */
 
 char *
-mongo_table_render (const GPtrArray *docs)
+mongo_table_render (const GPtrArray *docs, const char *caption, int screen_width)
 {
-    GPtrArray *columns;
+    mc_text_table_t *table;
     GHashTable *index;  // name of a field -> 1 + its column
-    char ***cells;
-    GString *out;
-    guint ncols;
+    GArray *set_in;     // per column: 1 + the row its cell was set in
+    char *out;
 
-    columns = g_ptr_array_new_with_free_func (column_free);
-    index = g_hash_table_new (g_str_hash, g_str_equal);
+    table = mc_text_table_new ();
+    index = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    set_in = g_array_new (FALSE, TRUE, sizeof (guint));
 
-    // the columns: the fields of the first level, in the order they are first met
     for (guint r = 0; r < docs->len; r++)
     {
         bson_iter_t it;
 
+        mc_text_table_add_row (table);
         if (!bson_iter_init (&it, (const bson_t *) g_ptr_array_index (docs, r)))
             continue;
         while (bson_iter_next (&it))
         {
             const char *key = bson_iter_key (&it);
             gpointer pos = g_hash_table_lookup (index, key);
-            table_column_t *c;
+            int col;
+            char *text;
 
+            // the columns: the fields of the first level, in the order they are first met
             if (pos == NULL)
             {
-                c = g_new0 (table_column_t, 1);
-                c->name = g_strdup (key);
-                c->title = one_line (g_strdup (key));
-                c->numeric = TRUE;
-                c->width = MIN (str_term_width1 (c->title), TABLE_CELL_WIDTH);
-                g_ptr_array_add (columns, c);
-                g_hash_table_insert (index, c->name, GUINT_TO_POINTER (columns->len));
+                col = mc_text_table_add_column (table, key);
+                g_hash_table_insert (index, g_strdup (key), GINT_TO_POINTER (col + 1));
+                g_array_set_size (set_in, (guint) col + 1);
             }
             else
-                c = (table_column_t *) g_ptr_array_index (columns, GPOINTER_TO_UINT (pos) - 1);
-            if (!is_numeric_type (bson_iter_type (&it)))
-                c->numeric = FALSE;
-        }
-    }
-    ncols = columns->len;
-
-    cells = g_new0 (char **, docs->len);
-    for (guint r = 0; r < docs->len; r++)
-    {
-        bson_iter_t it;
-
-        cells[r] = g_new0 (char *, ncols + 1);
-        if (!bson_iter_init (&it, (const bson_t *) g_ptr_array_index (docs, r)))
-            continue;
-        while (bson_iter_next (&it))
-        {
-            gpointer pos = g_hash_table_lookup (index, bson_iter_key (&it));
-            guint col = GPOINTER_TO_UINT (pos) - 1;
-            table_column_t *c = (table_column_t *) g_ptr_array_index (columns, col);
+                col = GPOINTER_TO_INT (pos) - 1;
 
             // a key met twice in a document keeps its first value
-            if (cells[r][col] != NULL)
+            if (g_array_index (set_in, guint, col) == r + 1)
                 continue;
-            cells[r][col] = cell_text (bson_iter_value (&it));
-            c->width = MAX (c->width, MIN (str_term_width1 (cells[r][col]), TABLE_CELL_WIDTH));
+            g_array_index (set_in, guint, col) = r + 1;
+
+            text = cell_text (bson_iter_value (&it));
+            mc_text_table_set_cell (table, col, text, -1, is_numeric_type (bson_iter_type (&it)));
+            g_free (text);
         }
     }
 
-    out = g_string_new (NULL);
-    for (guint col = 0; col < ncols; col++)
-    {
-        const table_column_t *c = (const table_column_t *) g_ptr_array_index (columns, col);
-
-        if (col > 0)
-            g_string_append_c (out, '|');
-        append_cell (out, c->title, c->width, FALSE);
-    }
-    g_string_append_c (out, '\n');
-    for (guint col = 0; col < ncols; col++)
-    {
-        const table_column_t *c = (const table_column_t *) g_ptr_array_index (columns, col);
-
-        if (col > 0)
-            g_string_append_c (out, '+');
-        for (int i = 0; i < c->width + 2; i++)
-            g_string_append_c (out, '-');
-    }
-    g_string_append_c (out, '\n');
-    for (guint r = 0; r < docs->len; r++)
-    {
-        for (guint col = 0; col < ncols; col++)
-        {
-            const table_column_t *c = (const table_column_t *) g_ptr_array_index (columns, col);
-
-            if (col > 0)
-                g_string_append_c (out, '|');
-            append_cell (out, cells[r][col] != NULL ? cells[r][col] : "", c->width, c->numeric);
-            g_free (cells[r][col]);
-        }
-        g_string_append_c (out, '\n');
-        g_free (cells[r]);
-    }
-    g_string_append_printf (out, "(%u %s)\n", docs->len, docs->len == 1 ? "row" : "rows");
-
-    g_free (cells);
+    out = mc_text_table_render (table, caption, screen_width);
+    g_array_free (set_in, TRUE);
     g_hash_table_destroy (index);
-    g_ptr_array_free (columns, TRUE);
-    return g_string_free (out, FALSE);
+    mc_text_table_free (table);
+    return out;
 }
 
 /* --------------------------------------------------------------------------------------------- */

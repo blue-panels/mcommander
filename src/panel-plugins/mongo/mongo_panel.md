@@ -71,9 +71,11 @@
       Enter           List documents (first page).
       F3, Shift-F3    The first documents as a table of text,
                       as psql prints it: a row for a document,
-                      a column for a field of the first level,
-                      at most 40 wide. As many documents as a
-                      flat list holds (2 * bucket_leaf_size).
+                      a column for a field of the first level.
+                      The table is as wide as the screen: the
+                      widest columns give way, and a value cut
+                      at the end shows "~". As many documents
+                      as a flat list holds (2 * bucket_leaf_size).
 
     On the bucket list:
       Enter           Go into the bucket.

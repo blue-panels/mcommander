@@ -34,9 +34,9 @@ char *mongo_render_truncate_base64 (const char *json, gsize keep);
    g_free); NULL only when @json is NULL. */
 char *mongo_render_pretty_json (const char *json, int indent);
 
-/* mongo_table.c: @docs (bson_t *) as a table of text as psql prints it, a row for a document,
-   a column for a field of the first level in the order the fields are first met. Caller
-   g_free. */
-char *mongo_table_render (const GPtrArray *docs);
+/* mongo_table.c: @docs (bson_t *) as a table of text (lib/text_table.h) below @caption: a row
+   for a document, a column for a field of the first level in the order the fields are first met,
+   as wide as @screen_width (0: no limit). Caller g_free. */
+char *mongo_table_render (const GPtrArray *docs, const char *caption, int screen_width);
 
 #endif

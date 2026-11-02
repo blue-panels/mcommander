@@ -31,6 +31,7 @@
 #include <bson/bson.h>
 
 #include "lib/global.h"
+#include "lib/tty/tty.h"       // COLS
 #include "lib/vfs/vfs.h"       // vfs_path_from_str
 #include "lib/panel-plugin.h"  // mc_pp_result_t, mc_pp_rename_with_ext
 
@@ -177,7 +178,7 @@ mongo_view_table (mongo_data_t *data, const char *fname)
     gboolean truncated;
     char *err = NULL;
     char *table;
-    GString *text;
+    GString *caption;
     char *tmp_path = NULL;
 
     if (data->client == NULL || data->db_name == NULL || strcmp (fname, "..") == 0)
@@ -227,25 +228,23 @@ mongo_view_table (mongo_data_t *data, const char *fname)
     if (truncated)
         g_ptr_array_set_size (docs, (guint) limit);
 
-    text = g_string_new (NULL);
-    g_string_append_printf (text, "-- %s.%s", data->db_name, coll_name);
+    caption = g_string_new (NULL);
+    g_string_append_printf (caption, "%s.%s", data->db_name, coll_name);
     if (label != NULL)
-        g_string_append_printf (text, ", %s", label);
+        g_string_append_printf (caption, ", %s", label);
     if (truncated)
-        g_string_append_printf (text, ": the first %" G_GINT64_FORMAT " documents", limit);
-    g_string_append (text, "\n\n");
-    table = mongo_table_render (docs);
-    g_string_append (text, table);
-    g_free (table);
+        g_string_append_printf (caption, ": the first %" G_GINT64_FORMAT " documents", limit);
+    table = mongo_table_render (docs, caption->str, COLS);
+    g_string_free (caption, TRUE);
     g_ptr_array_free (docs, TRUE);
 
-    if (!mc_pp_write_temp_file ("mc-mongo-XXXXXX", text->str, (gssize) text->len, &tmp_path))
+    if (!mc_pp_write_temp_file ("mc-mongo-XXXXXX", table, -1, &tmp_path))
     {
-        g_string_free (text, TRUE);
+        g_free (table);
         mongo_show_message (data->host, TRUE, _ ("Failed to write temp file."));
         return MC_PPR_FAILED;
     }
-    g_string_free (text, TRUE);
+    g_free (table);
 
     mongo_view_temp (tmp_path);
     return MC_PPR_OK;
