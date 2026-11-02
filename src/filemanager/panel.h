@@ -84,6 +84,7 @@ typedef struct
     list_format_t base_list_format;
     dir_sort_options_t sort_info;
     const panel_field_t *sort_field;
+    int plugin_codepage;
 } panel_plugin_suspended_t;
 
 typedef struct
@@ -112,6 +113,9 @@ typedef struct
     GSList *stream_sources;                      // suspended sources, innermost first
 
     int codepage;  // Panel codepage
+    /* The codepage the names of a plugin panel are in, chosen with Alt-E; they are recoded only
+       to be drawn, the plugin gets its own bytes back */
+    int plugin_codepage;
 
     dir_list dir;          // Directory contents
     struct stat dir_stat;  // Stat of current dir: used by execute ()

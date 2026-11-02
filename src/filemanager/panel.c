@@ -282,6 +282,8 @@ static int state_mark = 0;
 static guint panel_selection_rebuild_depth = 0;
 
 static GString *string_file_name_buffer;
+/* names of a plugin panel to the codeset of the terminal, while format_file() draws one */
+static GIConv string_file_name_conv = INVALID_CONV;
 
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
@@ -564,9 +566,59 @@ string_file_name (const file_entry_t *fe, int len)
 {
     (void) len;
 
-    mc_g_string_copy (string_file_name_buffer, fe->fname);
+    if (string_file_name_conv != INVALID_CONV)
+    {
+        g_string_truncate (string_file_name_buffer, 0);
+        str_convert (string_file_name_conv, fe->fname->str, string_file_name_buffer);
+    }
+    else
+        mc_g_string_copy (string_file_name_buffer, fe->fname);
 
     return string_file_name_buffer->str;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The converter from the codepage chosen for the names of a plugin panel, INVALID_CONV when
+   there is none; made again only when the codepage changes */
+static GIConv
+plugin_names_conv (const WPanel *panel)
+{
+    static int conv_codepage = SELECT_CHARSET_NO_TRANSLATE;
+    static GIConv conv = INVALID_CONV;
+
+    if (!panel->is_plugin_panel || panel->plugin_codepage < 0)
+        return INVALID_CONV;
+
+    if (panel->plugin_codepage != conv_codepage)
+    {
+        str_close_conv (conv);
+        conv = str_crt_conv_from (get_codepage_id (panel->plugin_codepage));
+        conv_codepage = conv != INVALID_CONV ? panel->plugin_codepage : SELECT_CHARSET_NO_TRANSLATE;
+    }
+    return conv;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The name of @fe as the panel draws it: on a plugin panel with a codepage chosen by Alt-e, the
+   bytes of the plugin recoded, otherwise the name itself. The quick search, the quick filter and
+   marking by a pattern go by it; what goes back to the plugin stays fe->fname. The result lives
+   until the next call. */
+static const GString *
+panel_shown_name (const WPanel *panel, const file_entry_t *fe)
+{
+    static GString *shown = NULL;
+    GIConv conv = plugin_names_conv (panel);
+
+    if (conv == INVALID_CONV)
+        return fe->fname;
+
+    if (shown == NULL)
+        shown = g_string_sized_new (MC_MAXFILENAMELEN);
+    g_string_truncate (shown, 0);
+    str_convert (conv, fe->fname->str, shown);
+    return shown;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -985,6 +1037,7 @@ format_file (WPanel *panel, int file_index, int width, file_attr_t attr, gboolea
     }
 
     home = isstatus ? panel->status_format : panel->format;
+    string_file_name_conv = plugin_names_conv (panel);
 
     for (format = home; format != NULL && length != width; format = g_slist_next (format))
     {
@@ -1000,7 +1053,19 @@ format_file (WPanel *panel, int file_index, int width, file_attr_t attr, gboolea
             if (fe != NULL)
             {
                 if (fi->is_plugin_column)
+                {
                     txt = panel_plugin_get_column_value (panel, fe, fi->id);
+                    if (txt != NULL && string_file_name_conv != INVALID_CONV)
+                    {
+                        static GString *recoded = NULL;
+
+                        if (recoded == NULL)
+                            recoded = g_string_new (NULL);
+                        g_string_truncate (recoded, 0);
+                        str_convert (string_file_name_conv, txt, recoded);
+                        txt = recoded->str;
+                    }
+                }
                 else
                     txt = fi->string_fn (fe, fi->field_len);
             }
@@ -1090,6 +1155,7 @@ format_file (WPanel *panel, int file_index, int width, file_attr_t attr, gboolea
         tty_draw_hline (y, x, ' ', width - length);
     }
 
+    string_file_name_conv = INVALID_CONV;
     return res;
 }
 
@@ -2696,7 +2762,7 @@ panel_select_ext_cmd (WPanel *panel, gboolean toggle)
 
     do_select = toggle && fe->f.marked == 0;
 
-    cur_file_ext = str_regex_escape (extension (fe->fname->str));
+    cur_file_ext = str_regex_escape (extension (panel_shown_name (panel, fe)->str));
     if (cur_file_ext[0] != '\0')
         reg_exp = g_strconcat ("^.*\\.", cur_file_ext, "$", (char *) NULL);
     else
@@ -2717,8 +2783,12 @@ panel_select_ext_cmd (WPanel *panel, gboolean toggle)
         if (DIR_IS_DOTDOT (fe->fname->str) || S_ISDIR (fe->st.st_mode))
             continue;
 
-        if (!mc_search_run (search, fe->fname->str, 0, fe->fname->len, NULL))
-            continue;
+        {
+            const GString *name = panel_shown_name (panel, fe);
+
+            if (!mc_search_run (search, name->str, 0, name->len, NULL))
+                continue;
+        }
 
         do_file_mark (panel, i, do_select ? 1 : 0);
     }
@@ -3473,8 +3543,9 @@ panel_select_unselect_files (WPanel *panel, const char *title, const char *histo
         if (S_ISDIR (panel->dir.list[i].st.st_mode) && files_only)
             continue;
 
-        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
-                           NULL))
+        const GString *name = panel_shown_name (panel, &panel->dir.list[i]);
+
+        if (mc_search_run (search, name->str, 0, name->len, NULL))
             do_file_mark (panel, i, do_select ? 1 : 0);
     }
 
@@ -3620,8 +3691,9 @@ do_search (WPanel *panel, int c_code)
                 break;
             wrapped = TRUE;
         }
-        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
-                           NULL))
+        const GString *name = panel_shown_name (panel, &panel->dir.list[i]);
+
+        if (mc_search_run (search, name->str, 0, name->len, NULL))
         {
             curr = i;
             is_found = TRUE;
@@ -3667,10 +3739,14 @@ panel_quick_filter_set_current_by_name (WPanel *panel, const char *name)
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
-panel_quick_filter_matches (mc_search_t *search, const file_entry_t *fe)
+panel_quick_filter_matches (const WPanel *panel, mc_search_t *search, const file_entry_t *fe)
 {
-    return !DIR_IS_DOTDOT (fe->fname->str)
-        && mc_search_run (search, fe->fname->str, 0, fe->fname->len, NULL);
+    const GString *name;
+
+    if (DIR_IS_DOTDOT (fe->fname->str))
+        return FALSE;
+    name = panel_shown_name (panel, fe);
+    return mc_search_run (search, name->str, 0, name->len, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3822,7 +3898,7 @@ panel_quick_filter_apply (WPanel *panel)
     {
         const file_entry_t *fe = &source->list[i];
         gboolean is_current = current_name != NULL && strcmp (fe->fname->str, current_name) == 0;
-        gboolean is_match = panel_quick_filter_matches (search, fe);
+        gboolean is_match = panel_quick_filter_matches (panel, search, fe);
 
         if (is_current)
         {
@@ -3978,9 +4054,9 @@ search_previous (WPanel *panel)
     for (n = 1; n < panel->dir.len; n++)
     {
         int i = (panel->current - n + panel->dir.len) % panel->dir.len;
+        const GString *name = panel_shown_name (panel, &panel->dir.list[i]);
 
-        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
-                           NULL))
+        if (mc_search_run (search, name->str, 0, name->len, NULL))
         {
             unselect_item (panel);
             panel->current = i;
@@ -6462,6 +6538,7 @@ panel_sized_empty_new (const char *panel_name, const WRect *r)
         panel->user_status_format[i] = g_strdup (DEFAULT_USER_FORMAT);
 
     panel->codepage = SELECT_CHARSET_NO_TRANSLATE;
+    panel->plugin_codepage = SELECT_CHARSET_NO_TRANSLATE;
 
     panel->frame_size = frame_half;
 
@@ -6953,6 +7030,20 @@ panel_change_encoding (WPanel *panel)
 {
     const char *encoding = NULL;
     char *errmsg;
+
+    if (panel->is_plugin_panel)
+    {
+        /* The names come from the plugin, not from a directory the VFS reads: no "#enc:" in the
+           path, which would leave the plugin for the directory on the disk */
+        const int r = select_charset (-1, -1, panel->plugin_codepage);
+
+        if (r != SELECT_CHARSET_CANCEL)
+        {
+            panel->plugin_codepage = r;
+            panel->dirty = TRUE;
+        }
+        return;
+    }
 
     const int r = select_charset (-1, -1, panel->codepage);
 
