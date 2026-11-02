@@ -26,24 +26,63 @@
 #include <sqlite3.h>
 
 #include "lib/panel-plugin.h"
+#include "lib/strutil.h"
+#include "lib/tty/tty.h"  // COLS
+#include "lib/vfs/vfs.h"
+#include "src/vfs/local/local.c"
 #include "src/filemanager/dir.h"
 #include "src/panel-plugins/sqlite/sqlite_json.h"
 #include "src/viewer/mcviewer.h"
 
 const mc_panel_plugin_t *mc_panel_plugin_register (void);
 
+/* What the last F3 showed */
+static char *viewed = NULL;
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The plugin's F3 handler calls the real viewer in MC.  These model tests do
-   not open a terminal UI, so they provide that one boundary as a no-op. */
+   not open a terminal UI, so they provide that one boundary: it keeps the
+   file the plugin gave it. */
 gboolean
 mcview_viewer (const char *command, const vfs_path_t *file_vpath, int start_line,
                off_t search_start, off_t search_end)
 {
     (void) command;
-    (void) file_vpath;
     (void) start_line;
     (void) search_start;
     (void) search_end;
+
+    g_free (viewed);
+    viewed = NULL;
+    if (!g_file_get_contents (vfs_path_as_str (file_vpath), &viewed, NULL, NULL))
+        viewed = NULL;
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+setup (void)
+{
+    str_init_strings ("UTF-8");
+    // the width F3 fits a table of rows into
+    COLS = 80;
+    // the viewer of F3 is given a vfs path
+    vfs_init ();
+    vfs_init_localfs ();
+    vfs_setup_work_dir ();
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+teardown (void)
+{
+    g_free (viewed);
+    viewed = NULL;
+    vfs_shut ();
+    str_uninit_strings ();
 }
 
 static void
@@ -465,6 +504,232 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_view_table_as_text)
+{
+    const mc_panel_plugin_t *plugin;
+    void *data;
+    char *db_path;
+
+    db_path = sqlite_test_create_database ();
+    plugin = mc_panel_plugin_register ();
+    data = plugin->open (NULL, db_path);
+    mctest_assert_not_null (data);
+
+    ck_assert_int_eq (plugin->view (data, "contacts", NULL, FALSE), MC_PPR_OK);
+    mctest_assert_str_eq (viewed,
+                          "-- contacts\n"
+                          "\n"
+                          " id | name  | photo      | content                       | email \n"
+                          "----+-------+------------+-------------------------------+-------\n"
+                          "  1 | Ada   | <blob 2 B> | {\"IndexText\":{\"LineStart\":0}} |       \n"
+                          "  2 | Grace |            | plain text                    |       \n"
+                          "(2 rows)\n");
+
+    // Shift-F3 shows the same, there is no raw form of a table
+    g_free (viewed);
+    viewed = NULL;
+    ck_assert_int_eq (plugin->view (data, "contacts", NULL, TRUE), MC_PPR_OK);
+    ck_assert_ptr_nonnull (strstr (viewed, "(2 rows)"));
+
+    // a name that is no table is not ours to show
+    ck_assert_int_eq (plugin->view (data, "missing", NULL, FALSE), MC_PPR_NOT_SUPPORTED);
+
+    plugin->close (data);
+    unlink (db_path);
+    g_free (db_path);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_view_table_fits_the_screen)
+{
+    const mc_panel_plugin_t *plugin;
+    sqlite3 *db = NULL;
+    void *data;
+    char *db_path;
+    char **lines;
+
+    db_path = sqlite_test_create_rowid_database ();
+    ck_assert_int_eq (sqlite3_open (db_path, &db), SQLITE_OK);
+    ck_assert_int_eq (sqlite3_exec (db,
+                                    "CREATE TABLE notes (id INTEGER PRIMARY KEY, body TEXT);"
+                                    "INSERT INTO notes (body) VALUES "
+                                    "('0123456789abcdefghijklmnopqrstuvwxyz0123456789');"
+                                    "INSERT INTO notes (body) VALUES (printf('%.300c', 'x'));",
+                                    NULL, NULL, NULL),
+                      SQLITE_OK);
+    {
+        // 300 bytes of 0x80 as a text: no UTF-8 at all
+        GString *sql = g_string_new ("INSERT INTO notes (body) VALUES (CAST (X'");
+
+        for (int i = 0; i < 300; i++)
+            g_string_append (sql, "80");
+        g_string_append (sql, "' AS TEXT));");
+        ck_assert_int_eq (sqlite3_exec (db, sql->str, NULL, NULL, NULL), SQLITE_OK);
+        g_string_free (sql, TRUE);
+    }
+    sqlite3_close (db);
+
+    plugin = mc_panel_plugin_register ();
+    data = plugin->open (NULL, db_path);
+    mctest_assert_not_null (data);
+
+    // on a wide screen the long value is cut at 256 bytes only
+    COLS = 300;
+    ck_assert_int_eq (plugin->view (data, "notes", NULL, FALSE), MC_PPR_OK);
+    ck_assert_ptr_nonnull (strstr (viewed, " 0123456789abcdefghijklmnopqrstuvwxyz0123456789 "));
+    lines = g_strsplit (viewed, "\n", -1);
+    // "-- notes", "", head, rule, row 1, row 2: "  2 | " + 256 x + "~ "
+    ck_assert_int_eq (strlen (lines[5]), 6 + 256 + 2);
+    ck_assert_ptr_nonnull (strstr (lines[5], "xx~ "));
+    g_strfreev (lines);
+
+    // a long text of bytes that are no UTF-8 is not lost to the cut at 256 bytes
+    ck_assert_ptr_nonnull (strstr (viewed, "  3 | \xef\xbf\xbd\xef\xbf\xbd"));
+
+    // on a narrow one the widest column gives way, from the end of its values
+    COLS = 30;
+    ck_assert_int_eq (plugin->view (data, "notes", NULL, FALSE), MC_PPR_OK);
+    lines = g_strsplit (viewed, "\n", -1);
+    ck_assert_int_eq (strlen (lines[2]), 30);
+    mctest_assert_str_eq (lines[4], "  1 | 0123456789abcdefghijkl~ ");
+    ck_assert_int_eq (strlen (lines[5]), 30);
+    g_strfreev (lines);
+
+    plugin->close (data);
+    unlink (db_path);
+    g_free (db_path);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_view_long_column_names_fit)
+{
+    const mc_panel_plugin_t *plugin;
+    sqlite3 *db = NULL;
+    void *data;
+    char *db_path;
+    char **lines;
+
+    db_path = sqlite_test_create_rowid_database ();
+    ck_assert_int_eq (sqlite3_open (db_path, &db), SQLITE_OK);
+    ck_assert_int_eq (sqlite3_exec (db,
+                                    "CREATE VIEW named AS SELECT value AS a_rather_long_name_one, "
+                                    "value AS a_rather_long_name_two FROM entries;",
+                                    NULL, NULL, NULL),
+                      SQLITE_OK);
+    sqlite3_close (db);
+
+    plugin = mc_panel_plugin_register ();
+    data = plugin->open (NULL, db_path);
+    mctest_assert_not_null (data);
+
+    // the names give way too, the table fits
+    COLS = 30;
+    ck_assert_int_eq (plugin->view (data, "named", NULL, FALSE), MC_PPR_OK);
+    lines = g_strsplit (viewed, "\n", -1);
+    mctest_assert_str_eq (lines[2], " a_rather_lo~ | a_rather_lon~ ");
+    g_strfreev (lines);
+
+    plugin->close (data);
+    unlink (db_path);
+    g_free (db_path);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_view_rows_by_page)
+{
+    const mc_panel_plugin_t *plugin;
+    void *data;
+    char *db_path;
+
+    db_path = sqlite_test_create_rowid_database ();
+    plugin = mc_panel_plugin_register ();
+    data = plugin->open (NULL, db_path);
+    mctest_assert_not_null (data);
+
+    // the table: its first page, in rowid order
+    ck_assert_int_eq (plugin->view (data, "entries", NULL, FALSE), MC_PPR_OK);
+    ck_assert_ptr_nonnull (strstr (viewed, "-- entries: the first 200 rows\n"));
+    ck_assert_ptr_nonnull (strstr (viewed, " row-001 \n"));
+    ck_assert_ptr_nonnull (strstr (viewed, " row-200 \n"));
+    mctest_assert_null (strstr (viewed, "row-201"));
+    ck_assert_ptr_nonnull (strstr (viewed, "(200 rows)\n"));
+
+    ck_assert_int_eq (plugin->chdir (data, "entries"), MC_PPR_OK);
+    ck_assert_int_eq (plugin->view (data, "rows-000000000201-000000000400", NULL, FALSE),
+                      MC_PPR_OK);
+    ck_assert_ptr_nonnull (strstr (viewed, "-- entries, rows 201-400\n"));
+    ck_assert_ptr_nonnull (strstr (viewed, " row-201 \n"));
+    ck_assert_ptr_nonnull (strstr (viewed, " row-400 \n"));
+    mctest_assert_null (strstr (viewed, "row-200 "));
+    mctest_assert_null (strstr (viewed, "row-401"));
+
+    ck_assert_int_eq (plugin->view (data, "rows-000000000401-000000000401", NULL, FALSE),
+                      MC_PPR_OK);
+    ck_assert_ptr_nonnull (strstr (viewed, "-- entries, rows 401-401\n"));
+    ck_assert_ptr_nonnull (strstr (viewed, " row-401 \n(1 row)\n"));
+
+    // schema.sql is a file, F3 on it is the usual one
+    ck_assert_int_eq (plugin->view (data, "schema.sql", NULL, FALSE), MC_PPR_NOT_SUPPORTED);
+
+    plugin->close (data);
+    unlink (db_path);
+    g_free (db_path);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_view_page_of_a_view)
+{
+    const mc_panel_plugin_t *plugin;
+    sqlite3 *db = NULL;
+    void *data;
+    char *db_path;
+
+    db_path = sqlite_test_create_rowid_database ();
+    ck_assert_int_eq (sqlite3_open (db_path, &db), SQLITE_OK);
+    ck_assert_int_eq (sqlite3_exec (db,
+                                    "CREATE VIEW late AS SELECT value, rowid AS n FROM entries "
+                                    "WHERE rowid > 395;",
+                                    NULL, NULL, NULL),
+                      SQLITE_OK);
+    sqlite3_close (db);
+
+    plugin = mc_panel_plugin_register ();
+    data = plugin->open (NULL, db_path);
+    mctest_assert_not_null (data);
+
+    // a view has no rowid: its rows are sorted by every column
+    ck_assert_int_eq (plugin->chdir (data, "late"), MC_PPR_OK);
+    ck_assert_int_eq (plugin->view (data, "rows-000000000001-000000000006", NULL, FALSE),
+                      MC_PPR_OK);
+    mctest_assert_str_eq (viewed,
+                          "-- late, rows 1-6\n"
+                          "\n"
+                          " value   | n   \n"
+                          "---------+-----\n"
+                          " row-396 | 396 \n"
+                          " row-397 | 397 \n"
+                          " row-398 | 398 \n"
+                          " row-399 | 399 \n"
+                          " row-400 | 400 \n"
+                          " row-401 | 401 \n"
+                          "(6 rows)\n");
+
+    plugin->close (data);
+    unlink (db_path);
+    g_free (db_path);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_reload_sees_external_changes)
 {
     const mc_panel_plugin_t *plugin;
@@ -746,10 +1011,16 @@ main (void)
     TCase *tc_core;
 
     tc_core = tcase_create ("Core");
+    tcase_add_checked_fixture (tc_core, setup, teardown);
     tcase_add_test (tc_core, test_browse_database_and_view_row);
     tcase_add_test (tc_core, test_rowid_page_mapping);
     tcase_add_test (tc_core, test_location_with_colon_in_database_path);
     tcase_add_test (tc_core, test_fallback_order_for_view_and_without_rowid_table);
+    tcase_add_test (tc_core, test_view_table_as_text);
+    tcase_add_test (tc_core, test_view_table_fits_the_screen);
+    tcase_add_test (tc_core, test_view_long_column_names_fit);
+    tcase_add_test (tc_core, test_view_rows_by_page);
+    tcase_add_test (tc_core, test_view_page_of_a_view);
     tcase_add_test (tc_core, test_reload_sees_external_changes);
     tcase_add_test (tc_core, test_pretty_embedded_json);
     tcase_add_test (tc_core, test_non_database_is_declined);

@@ -2,6 +2,7 @@ sqlite_plugin_dir = panel_plugins_dir / 'sqlite'
 shared_module('mc-panel-sqlite',
   'sqlite.c',
   'sqlite_json.c',
+  'sqlite_table.c',
   c_args: '-DMC_PLUGIN_DIR="@0@"'.format(sqlite_plugin_dir),
   name_prefix: '',
   name_suffix: 'so',

@@ -43,6 +43,7 @@
 #include "src/viewer/mcviewer.h"
 
 #include "sqlite_json.h"
+#include "sqlite_table.h"
 
 /*** file scope macro definitions ****************************************************************/
 
@@ -1474,7 +1475,7 @@ sqlite_append_column_value (GString *out, sqlite3_stmt *stmt, int column, gboole
 /* --------------------------------------------------------------------------------------------- */
 
 static char *
-sqlite_fallback_order_by (sqlite_data_t *data)
+sqlite_fallback_order_by (sqlite_data_t *data, const char *object)
 {
     sqlite3_stmt *stmt = NULL;
     GString *order;
@@ -1484,7 +1485,7 @@ sqlite_fallback_order_by (sqlite_data_t *data)
     int rc;
     int i;
 
-    quoted = sqlite_quote_identifier (data->object_name);
+    quoted = sqlite_quote_identifier (object);
     sql = g_strdup_printf ("SELECT * FROM %s LIMIT 0", quoted);
     g_free (quoted);
     rc = sqlite3_prepare_v2 (data->db, sql, -1, &stmt, NULL);
@@ -1563,7 +1564,7 @@ sqlite_load_current_page_rows (sqlite_data_t *data, gboolean unfold_json_text)
     char *sql;
     int rc;
 
-    order_by = sqlite_fallback_order_by (data);
+    order_by = sqlite_fallback_order_by (data, data->object_name);
     if (order_by == NULL)
         return FALSE;
 
@@ -1779,6 +1780,91 @@ sqlite_get_local_copy (void *plugin_data, const char *fname, char **local_path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The rows of the table or view @name from the row @first, a page of them at most, as a table
+   of text; on the list of objects (@page FALSE) the first page */
+static char *
+sqlite_render_rows_table (sqlite_data_t *data, const char *name, gint64 first, gboolean page)
+{
+    const char *rowid_name;
+    sqlite3_stmt *stmt = NULL;
+    mc_text_table_t *table;
+    GString *caption;
+    char *content;
+    char *quoted;
+    char *sql;
+    gboolean more;
+    int rc;
+
+    rowid_name = page ? data->rowid_name : sqlite_object_rowid_name (data, name);
+    quoted = sqlite_quote_identifier (name);
+    if (rowid_name != NULL)
+    {
+        // the pages of a rowid table are ranges of rowids, see sqlite_load_rowid_pages
+        if (first > 1)
+            sql = g_strdup_printf ("SELECT * FROM %s WHERE %s >= ?2 ORDER BY %s LIMIT ?1", quoted,
+                                   rowid_name, rowid_name);
+        else
+            sql = g_strdup_printf ("SELECT * FROM %s ORDER BY %s LIMIT ?1", quoted, rowid_name);
+    }
+    else if (!page)
+        // the first rows as they come: sorting a large view by every column only to show them
+        // would read all of it
+        sql = g_strdup_printf ("SELECT * FROM %s LIMIT ?1 OFFSET ?2", quoted);
+    else
+    {
+        char *order_by = sqlite_fallback_order_by (data, name);
+
+        sql = order_by == NULL
+            ? NULL
+            : g_strdup_printf ("SELECT * FROM %s ORDER BY %s LIMIT ?1 OFFSET ?2", quoted, order_by);
+        g_free (order_by);
+    }
+    g_free (quoted);
+    if (sql == NULL)
+        return NULL;
+
+    rc = sqlite3_prepare_v2 (data->db, sql, -1, &stmt, NULL);
+    g_free (sql);
+    if (rc != SQLITE_OK)
+        return NULL;
+
+    // one more than a page, to know there are more
+    sqlite3_bind_int (stmt, 1, SQLITE_ROW_PAGE_SIZE + 1);
+    if (rowid_name == NULL)
+        sqlite3_bind_int64 (stmt, 2, first - 1);
+    else if (first > 1)
+    {
+        guint page_index = (guint) ((first - 1) / SQLITE_ROW_PAGE_SIZE);
+
+        if (data->rowid_page_starts == NULL || page_index >= data->rowid_page_starts->len)
+        {
+            sqlite3_finalize (stmt);
+            return NULL;
+        }
+        sqlite3_bind_int64 (stmt, 2, g_array_index (data->rowid_page_starts, gint64, page_index));
+    }
+
+    sqlite_begin_interruptible (data);
+    table = sqlite_table_read (stmt, SQLITE_ROW_PAGE_SIZE, &more);
+    sqlite_end_interruptible (data);
+    sqlite3_finalize (stmt);
+    if (table == NULL)
+        return NULL;
+
+    caption = g_string_new (name);
+    if (page)
+        g_string_append_printf (caption, ", rows %" G_GINT64_FORMAT "-%" G_GINT64_FORMAT, first,
+                                MIN (first + SQLITE_ROW_PAGE_SIZE - 1, data->row_count));
+    else if (more)
+        g_string_append_printf (caption, ": the first %d rows", SQLITE_ROW_PAGE_SIZE);
+    content = mc_text_table_render (table, caption->str, COLS);
+    g_string_free (caption, TRUE);
+    mc_text_table_free (table);
+    return content;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mc_pp_result_t
 sqlite_view (void *plugin_data, const char *fname, const struct stat *st, gboolean plain_view)
 {
@@ -1786,22 +1872,46 @@ sqlite_view (void *plugin_data, const char *fname, const struct stat *st, gboole
     char *content;
     char *local_path = NULL;
     gint64 row_number;
+    gint64 first;
+    gboolean table = FALSE;
     mc_pp_result_t result;
 
     (void) st;
 
-    /* Shift-F3 is deliberately left to the standard path: it requests the
-       original stored text rather than expanding JSON embedded in a column. */
-    if (plain_view || data == NULL || fname == NULL || data->level != SQLITE_LEVEL_ROWS
-        || !sqlite_parse_row_name (fname, &row_number) || row_number < data->page_first
-        || row_number >= data->page_first + SQLITE_ROW_PAGE_SIZE || row_number > data->row_count)
+    if (data == NULL || fname == NULL)
         return MC_PPR_NOT_SUPPORTED;
 
-    content = sqlite_render_row (data, row_number, TRUE);
-    if (content == NULL)
-        return MC_PPR_FAILED;
+    // F3 and Shift-F3 on a table or a view, or on a page of its rows: the rows as a table
+    if (data->level == SQLITE_LEVEL_OBJECTS && sqlite_object_exists (data, fname))
+    {
+        content = sqlite_render_rows_table (data, fname, 1, FALSE);
+        table = TRUE;
+    }
+    else if (data->level == SQLITE_LEVEL_OBJECT && sqlite_parse_page_name (fname, &first)
+             && first <= data->row_count)
+    {
+        content = sqlite_render_rows_table (data, data->object_name, first, TRUE);
+        table = TRUE;
+    }
+    /* Shift-F3 on a row is deliberately left to the standard path: it requests the
+       original stored text rather than expanding JSON embedded in a column. */
+    else if (plain_view || data->level != SQLITE_LEVEL_ROWS
+             || !sqlite_parse_row_name (fname, &row_number) || row_number < data->page_first
+             || row_number >= data->page_first + SQLITE_ROW_PAGE_SIZE
+             || row_number > data->row_count)
+        return MC_PPR_NOT_SUPPORTED;
+    else
+        content = sqlite_render_row (data, row_number, TRUE);
 
-    result = sqlite_content_to_local_copy (content, fname, &local_path);
+    if (content == NULL)
+    {
+        // the rows of a table could not be read: busy, cancelled with Ctrl-C...
+        if (table)
+            sqlite_show_error (data->host, sqlite3_errmsg (data->db));
+        return MC_PPR_FAILED;
+    }
+
+    result = sqlite_content_to_local_copy (content, table ? "rows.txt" : fname, &local_path);
     g_free (content);
     if (result != MC_PPR_OK)
         return result;
