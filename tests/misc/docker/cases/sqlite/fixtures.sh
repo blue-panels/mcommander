@@ -37,4 +37,22 @@ library.sqlite	Enter,on books,Enter,on rows,Enter,on row-000000000001,F3	text: p
 nameless.dat	Enter	text: authors	the name says nothing, so libmagic is what names it	local
 EOF
 
+# A table named in CP1251, while mc runs in UTF-8: the bytes of the name are no
+# UTF-8, and Alt-e on the panel says what they are.  SQLite keeps a name as the
+# bytes it was given.
+mkdir -p 02-names
+printf 'CREATE TABLE "люди" (name TEXT);\nINSERT INTO "люди" VALUES (1);\n' \
+    | iconv -f UTF-8 -t CP1251 | sqlite3 02-names/people.sqlite
+
+# Windows 1251 is entry 5 of the codepage list, "No translation" is "-"
+cat > 02-names/cases.tsv <<'EOF2'
+file	key	expect	why	transports
+people.sqlite	Enter	no text: люди	the name is drawn as the bytes it is, not in the codeset of the terminal	local
+people.sqlite	Enter,key M-e,type 5	text: люди	Alt-e with Windows 1251 recodes the names of the plugin	local
+people.sqlite	Enter,key M-e,type 5	text: schema.sql	and the panel stays in the plugin, where Alt-e used to leave for the directory on the disk	local
+people.sqlite	Enter,key M-e,type 5,key Down,Enter	text: rows-000000000001	the plugin gets the bytes of the name back and opens the table	local
+people.sqlite	Enter,key M-e,type 5,key Down,Enter	text: people.sqlite / люди	the title of the panel is recoded too	local
+people.sqlite	Enter,key M-e,type 5,key M-e,type -	no text: люди	"No translation" draws the bytes again	local
+EOF2
+
 echo "sqlite cases in $dir"
