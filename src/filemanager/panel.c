@@ -601,6 +601,28 @@ plugin_names_conv (const WPanel *panel)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The name of @fe as the panel draws it: on a plugin panel with a codepage chosen by Alt-e, the
+   bytes of the plugin recoded, otherwise the name itself. The quick search, the quick filter and
+   marking by a pattern go by it; what goes back to the plugin stays fe->fname. The result lives
+   until the next call. */
+static const GString *
+panel_shown_name (const WPanel *panel, const file_entry_t *fe)
+{
+    static GString *shown = NULL;
+    GIConv conv = plugin_names_conv (panel);
+
+    if (conv == INVALID_CONV)
+        return fe->fname;
+
+    if (shown == NULL)
+        shown = g_string_sized_new (MC_MAXFILENAMELEN);
+    g_string_truncate (shown, 0);
+    str_convert (conv, fe->fname->str, shown);
+    return shown;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static unsigned int
 ilog10 (dev_t n)
 {
@@ -1710,18 +1732,6 @@ show_dir (const WPanel *panel)
                 full_title = g_strdup (title);
             }
 
-            {
-                GIConv conv = plugin_names_conv (panel);
-
-                if (conv != INVALID_CONV)
-                {
-                    GString *recoded = g_string_new (NULL);
-
-                    str_convert (conv, full_title, recoded);
-                    g_free (full_title);
-                    full_title = g_string_free (recoded, FALSE);
-                }
-            }
             tty_printf (" %s ",
                         str_term_trim (full_title, MIN (MAX (w->rect.cols - 12, 0), w->rect.cols)));
             g_free (full_title);
@@ -2752,7 +2762,7 @@ panel_select_ext_cmd (WPanel *panel, gboolean toggle)
 
     do_select = toggle && fe->f.marked == 0;
 
-    cur_file_ext = str_regex_escape (extension (fe->fname->str));
+    cur_file_ext = str_regex_escape (extension (panel_shown_name (panel, fe)->str));
     if (cur_file_ext[0] != '\0')
         reg_exp = g_strconcat ("^.*\\.", cur_file_ext, "$", (char *) NULL);
     else
@@ -2773,8 +2783,12 @@ panel_select_ext_cmd (WPanel *panel, gboolean toggle)
         if (DIR_IS_DOTDOT (fe->fname->str) || S_ISDIR (fe->st.st_mode))
             continue;
 
-        if (!mc_search_run (search, fe->fname->str, 0, fe->fname->len, NULL))
-            continue;
+        {
+            const GString *name = panel_shown_name (panel, fe);
+
+            if (!mc_search_run (search, name->str, 0, name->len, NULL))
+                continue;
+        }
 
         do_file_mark (panel, i, do_select ? 1 : 0);
     }
@@ -3529,8 +3543,9 @@ panel_select_unselect_files (WPanel *panel, const char *title, const char *histo
         if (S_ISDIR (panel->dir.list[i].st.st_mode) && files_only)
             continue;
 
-        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
-                           NULL))
+        const GString *name = panel_shown_name (panel, &panel->dir.list[i]);
+
+        if (mc_search_run (search, name->str, 0, name->len, NULL))
             do_file_mark (panel, i, do_select ? 1 : 0);
     }
 
@@ -3676,8 +3691,9 @@ do_search (WPanel *panel, int c_code)
                 break;
             wrapped = TRUE;
         }
-        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
-                           NULL))
+        const GString *name = panel_shown_name (panel, &panel->dir.list[i]);
+
+        if (mc_search_run (search, name->str, 0, name->len, NULL))
         {
             curr = i;
             is_found = TRUE;
@@ -3723,10 +3739,14 @@ panel_quick_filter_set_current_by_name (WPanel *panel, const char *name)
 /* --------------------------------------------------------------------------------------------- */
 
 static gboolean
-panel_quick_filter_matches (mc_search_t *search, const file_entry_t *fe)
+panel_quick_filter_matches (const WPanel *panel, mc_search_t *search, const file_entry_t *fe)
 {
-    return !DIR_IS_DOTDOT (fe->fname->str)
-        && mc_search_run (search, fe->fname->str, 0, fe->fname->len, NULL);
+    const GString *name;
+
+    if (DIR_IS_DOTDOT (fe->fname->str))
+        return FALSE;
+    name = panel_shown_name (panel, fe);
+    return mc_search_run (search, name->str, 0, name->len, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -3878,7 +3898,7 @@ panel_quick_filter_apply (WPanel *panel)
     {
         const file_entry_t *fe = &source->list[i];
         gboolean is_current = current_name != NULL && strcmp (fe->fname->str, current_name) == 0;
-        gboolean is_match = panel_quick_filter_matches (search, fe);
+        gboolean is_match = panel_quick_filter_matches (panel, search, fe);
 
         if (is_current)
         {
@@ -4034,9 +4054,9 @@ search_previous (WPanel *panel)
     for (n = 1; n < panel->dir.len; n++)
     {
         int i = (panel->current - n + panel->dir.len) % panel->dir.len;
+        const GString *name = panel_shown_name (panel, &panel->dir.list[i]);
 
-        if (mc_search_run (search, panel->dir.list[i].fname->str, 0, panel->dir.list[i].fname->len,
-                           NULL))
+        if (mc_search_run (search, name->str, 0, name->len, NULL))
         {
             unselect_item (panel);
             panel->current = i;
