@@ -51,6 +51,11 @@ GArray *mongo_conn_list_documents (mongoc_client_t *client, const char *db_name,
                                    const bson_t *sort_override, gint64 skip, gint64 limit,
                                    gboolean *has_more, char **err_out);
 
+/* Whole documents within [@lo, @hi), sorted by _id, at most @limit. Caller g_ptr_array_free. */
+GPtrArray *mongo_conn_find_documents (mongoc_client_t *client, const char *db_name,
+                                      const char *coll_name, const bson_value_t *lo,
+                                      const bson_value_t *hi, gint64 limit, char **err_out);
+
 /* findOne({_id: @id_value}) with optional projection; caller bson_destroy. */
 bson_t *mongo_conn_get_document (mongoc_client_t *client, const char *db_name,
                                  const char *coll_name, const bson_value_t *id_value,

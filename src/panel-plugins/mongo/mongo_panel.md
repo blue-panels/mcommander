@@ -69,6 +69,16 @@
 
     On the collection list:
       Enter           List documents (first page).
+      F3, Shift-F3    The first documents as a table of text,
+                      as psql prints it: a row for a document,
+                      a column for a field of the first level,
+                      at most 40 wide. As many documents as a
+                      flat list holds (2 * bucket_leaf_size).
+
+    On the bucket list:
+      Enter           Go into the bucket.
+      F3, Shift-F3    The documents of the bucket as a table,
+                      as on the collection list.
 
     On the document list:
       Enter           Pagination only -- on "*page:prev" or
@@ -77,6 +87,8 @@
                       pretty-printed. Long base64 payloads are
                       truncated to ~24 chars so binary blobs do not
                       flood the viewer.
+      Shift-F3        The whole document, as F4 opens it: no
+                      base64 cut, no projection of the filter.
       F4              Edit document: opens the editor on the JSON
                       copy. On save, the plugin parses the JSON,
                       verifies _id is unchanged, and runs

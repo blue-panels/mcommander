@@ -10,3 +10,10 @@ test('mongo_scram_test',
     c_args: test_c_args, dependencies: [test_lib_deps, mongoc]),
   workdir: meson.current_build_dir(),
   suite: 'src/panel-plugins/mongo')
+
+test('mongo_table_test',
+  executable('mongo_table_test', 'mongo_table_test.c', pp_src / 'mongo' / 'mongo_table.c',
+    pp_src / 'mongo' / 'mongo_render.c',
+    c_args: test_c_args, dependencies: [test_lib_deps, mongoc]),
+  workdir: meson.current_build_dir(),
+  suite: 'src/panel-plugins/mongo')
