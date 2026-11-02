@@ -196,7 +196,7 @@ shells it wants to answer for; debian-12 carries all of them.
 | directory     | what it is for                                              |
 |---------------|--------------------------------------------------------------|
 | `01-tables`   | a database of two tables and a view: the tree down to one row as JSON, the schema at every level, and the same bytes under a name the rule does not know |
-| `02-names`    | a table named in CP1251 while mc runs in UTF-8: Alt-e on the plugin panel recodes the names and the title, the panel stays in the plugin, Enter still opens the table |
+| `02-names`    | a table named in CP1251 while mc runs in UTF-8: Alt-e on the plugin panel recodes the names but not the title, the panel stays in the plugin, Enter, quick search and the quick filter go by the name as drawn |
 
 ### arcmc
 
