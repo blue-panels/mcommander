@@ -126,7 +126,10 @@
                       is not a dump: the owner, the grants
                       and the policies are left out. Below
                       it, the first preview_rows rows of a
-                      table or a view, as psql shows them.
+                      table or a view, as psql shows them,
+                      as wide as the screen: the widest
+                      columns give way, and a value cut at
+                      the end shows "~".
       F5              Copy that SQL to the other panel.
       Enter           The query editor, told of the relation.
 

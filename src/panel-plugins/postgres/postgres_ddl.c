@@ -38,7 +38,9 @@
 #include <string.h>
 
 #include "lib/global.h"
-#include "lib/strutil.h"  // str_fit_to_term
+#include "lib/strutil.h"     // str_get_codeset
+#include "lib/text_table.h"  // mc_text_table_t
+#include "lib/tty/tty.h"     // COLS
 
 #include "postgres_internal.h"
 
@@ -94,9 +96,6 @@
 #define SQL_SEQUENCE                                                                               \
     "SELECT pg_catalog.format_type (seqtypid, NULL), seqincrement, seqmin, seqmax, seqstart, "     \
     "seqcache, seqcycle FROM pg_catalog.pg_sequence WHERE seqrelid = $1"
-
-/* the widest a column of the rows is written, in columns of the terminal */
-#define ROWS_CELL_WIDTH 40
 
 /*** file scope type declarations ****************************************************************/
 
@@ -334,20 +333,6 @@ ddl_sequence (ddl_t *d)
     return TRUE;
 }
 
-/* A value of a row on one line: the control characters are spaces */
-static char *
-cell_text (const PGresult *res, int row, int col)
-{
-    char *text = g_strdup (PQgetvalue (res, row, col));
-
-    for (char *p = text; *p != '\0'; p++)
-        if ((unsigned char) *p < ' ' || *p == '\177')
-            *p = ' ';
-    return text;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 static gboolean
 is_numeric_type (Oid type)
 {
@@ -358,29 +343,21 @@ is_numeric_type (Oid type)
 
 /* --------------------------------------------------------------------------------------------- */
 
-static void
-rows_cell (GString *out, const char *text, int width, gboolean right)
-{
-    g_string_append_c (out, ' ');
-    g_string_append (out, str_fit_to_term (text, width, right ? J_RIGHT_FIT : J_LEFT_FIT));
-    g_string_append_c (out, ' ');
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-/* The first rows of a table or a view, a table of text with a column for a column */
-static void
+/* The first rows of a table or a view, a table of text with a column for a column, in the codeset
+   of the terminal; NULL when there are none to show. Why the rows could not be read is written in
+   the file, below the SQL. */
+static char *
 ddl_rows (ddl_t *d)
 {
     int limit = d->data->cfg->preview_rows;
     char *sql, *err = NULL;
     PGresult *res;
     int nrows, ncols;
-    char ***cells;
-    int *widths;
+    mc_text_table_t *table;
+    char *caption, *text;
 
     if (limit <= 0)
-        return;
+        return NULL;
 
     sql = g_strdup_printf ("SELECT * FROM %s LIMIT %d", d->qname, limit);
     res = postgres_query_err (d->data, sql, 0, NULL, &err);
@@ -400,58 +377,50 @@ ddl_rows (ddl_t *d)
         }
         g_string_append_c (d->out, '\n');
         g_free (err);
-        return;
+        return NULL;
     }
 
     nrows = PQntuples (res);
     ncols = PQnfields (res);
-    cells = g_new0 (char **, nrows);
-    widths = g_new0 (int, ncols);
-
+    table = mc_text_table_new ();
     for (int c = 0; c < ncols; c++)
-        widths[c] = MIN (str_term_width1 (PQfname (res, c)), ROWS_CELL_WIDTH);
+        (void) mc_text_table_add_column (table, PQfname (res, c));
     for (int r = 0; r < nrows; r++)
     {
-        cells[r] = g_new0 (char *, ncols + 1);
+        mc_text_table_add_row (table);
         for (int c = 0; c < ncols; c++)
-        {
-            cells[r][c] = cell_text (res, r, c);
-            widths[c] = MAX (widths[c], MIN (str_term_width1 (cells[r][c]), ROWS_CELL_WIDTH));
-        }
+            if (!PQgetisnull (res, r, c))
+                mc_text_table_set_cell (table, c, PQgetvalue (res, r, c), PQgetlength (res, r, c),
+                                        is_numeric_type (PQftype (res, c)));
     }
 
-    g_string_append_printf (d->out, "\n-- the first %d rows of %s\n\n", limit, d->qname);
-    for (int c = 0; c < ncols; c++)
-    {
-        if (c > 0)
-            g_string_append_c (d->out, '|');
-        rows_cell (d->out, PQfname (res, c), widths[c], FALSE);
-    }
-    g_string_append_c (d->out, '\n');
-    for (int c = 0; c < ncols; c++)
-    {
-        if (c > 0)
-            g_string_append_c (d->out, '+');
-        for (int i = 0; i < widths[c] + 2; i++)
-            g_string_append_c (d->out, '-');
-    }
-    g_string_append_c (d->out, '\n');
-    for (int r = 0; r < nrows; r++)
-    {
-        for (int c = 0; c < ncols; c++)
-        {
-            if (c > 0)
-                g_string_append_c (d->out, '|');
-            rows_cell (d->out, cells[r][c], widths[c], is_numeric_type (PQftype (res, c)));
-        }
-        g_string_append_c (d->out, '\n');
-        g_strfreev (cells[r]);
-    }
-    g_string_append_printf (d->out, "(%d %s)\n", nrows, nrows == 1 ? "row" : "rows");
-
-    g_free (cells);
-    g_free (widths);
+    caption = g_strdup_printf ("the first %d rows of %s", limit, d->qname);
+    text = mc_text_table_render (table, caption, COLS);
+    g_free (caption);
+    mc_text_table_free (table);
     PQclear (res);
+    return text;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* @text of the server, in UTF-8, in the codeset of the terminal the table of rows is written in,
+   so that the file is in one codeset; a character the terminal has not becomes "?" */
+static char *
+to_terminal_codeset (GString *text)
+{
+    const char *codeset = str_get_codeset ();
+    char *converted;
+
+    if (codeset == NULL || str_isutf8 (codeset))
+        return g_string_free (text, FALSE);
+
+    converted = g_convert_with_fallback (text->str, (gssize) text->len, codeset, "UTF-8", "?", NULL,
+                                         NULL, NULL);
+    if (converted == NULL)
+        return g_string_free (text, FALSE);
+    g_string_free (text, TRUE);
+    return converted;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -466,6 +435,8 @@ postgres_ddl (postgres_data_t *data, const char *name)
     const char *comment;
     char kind;
     gboolean ok;
+    char *rows = NULL;
+    char *sql_text, *text;
 
     rel = postgres_query (data, SQL_RELATION, 2, params);
     if (rel == NULL)
@@ -510,7 +481,7 @@ postgres_ddl (postgres_data_t *data, const char *name)
         g_string_append (d.out, ";\n");
     }
     if (ok && kind != 'S')
-        ddl_rows (&d);
+        rows = ddl_rows (&d);
     PQclear (rel);
 
     if (!ok)
@@ -518,7 +489,14 @@ postgres_ddl (postgres_data_t *data, const char *name)
         g_string_free (d.out, TRUE);
         return NULL;
     }
-    return g_string_free (d.out, FALSE);
+
+    sql_text = to_terminal_codeset (d.out);
+    if (rows == NULL)
+        return sql_text;
+    text = g_strconcat (sql_text, "\n", rows, (char *) NULL);
+    g_free (sql_text);
+    g_free (rows);
+    return text;
 }
 
 /* --------------------------------------------------------------------------------------------- */
