@@ -698,6 +698,69 @@ mongo_conn_list_documents (mongoc_client_t *client, const char *db_name, const c
 
 /* --------------------------------------------------------------------------------------------- */
 
+static void
+bson_destroy_notify (gpointer p)
+{
+    bson_destroy ((bson_t *) p);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+GPtrArray *
+mongo_conn_find_documents (mongoc_client_t *client, const char *db_name, const char *coll_name,
+                           const bson_value_t *lo, const bson_value_t *hi, gint64 limit,
+                           char **err_out)
+{
+    bson_t filter = BSON_INITIALIZER;
+    bson_t opts = BSON_INITIALIZER;
+    bson_t sort;
+    mongoc_collection_t *coll;
+    mongoc_cursor_t *cursor;
+    const bson_t *doc;
+    GPtrArray *out;
+    bson_error_t err;
+
+    if (err_out != NULL)
+        *err_out = NULL;
+    if (client == NULL || db_name == NULL || coll_name == NULL)
+    {
+        if (err_out != NULL)
+            *err_out = g_strdup ("Internal: bad arguments to find_documents.");
+        return NULL;
+    }
+
+    build_id_range_filter (&filter, lo, hi, NULL);
+
+    BSON_APPEND_INT64 (&opts, "limit", limit);
+    bson_init (&sort);
+    BSON_APPEND_INT32 (&sort, "_id", 1);
+    BSON_APPEND_DOCUMENT (&opts, "sort", &sort);
+    bson_destroy (&sort);
+
+    coll = mongoc_client_get_collection (client, db_name, coll_name);
+    cursor = mongoc_collection_find_with_opts (coll, &filter, &opts, NULL);
+
+    out = g_ptr_array_new_with_free_func (bson_destroy_notify);
+    while (mongoc_cursor_next (cursor, &doc))
+        g_ptr_array_add (out, bson_copy (doc));
+
+    if (mongoc_cursor_error (cursor, &err))
+    {
+        if (err_out != NULL)
+            *err_out = g_strdup (err.message);
+        g_ptr_array_free (out, TRUE);
+        out = NULL;
+    }
+
+    mongoc_cursor_destroy (cursor);
+    mongoc_collection_destroy (coll);
+    bson_destroy (&opts);
+    bson_destroy (&filter);
+    return out;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Scalar BSON equality; unsupported types return FALSE. */
 static gboolean
 bson_value_equal_scalar (const bson_value_t *a, const bson_value_t *b)

@@ -148,6 +148,110 @@ mongo_json_to_temp (mongo_data_t *data, const char *json)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* Open @tmp_path in the internal viewer, then remove it and free @tmp_path */
+static void
+mongo_view_temp (char *tmp_path)
+{
+    vfs_path_t *tmp_vpath = vfs_path_from_str (tmp_path);
+
+    (void) mcview_viewer (NULL, tmp_vpath, 0, 0, 0);
+    vfs_path_free (tmp_vpath, TRUE);
+    unlink (tmp_path);
+    g_free (tmp_path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* F3 on the collection or the bucket @fname: its first documents, as many as a flat list
+   of the panel holds, as a table of text */
+static mc_pp_result_t
+mongo_view_table (mongo_data_t *data, const char *fname)
+{
+    const char *coll_name;
+    const char *label = NULL;
+    const bson_value_t *lo = NULL;
+    const bson_value_t *hi = NULL;
+    gint64 limit = mongo_flat_cap (data);
+    GPtrArray *docs;
+    gboolean truncated;
+    char *err = NULL;
+    char *table;
+    GString *text;
+    char *tmp_path = NULL;
+
+    if (data->client == NULL || data->db_name == NULL || strcmp (fname, "..") == 0)
+        return MC_PPR_NOT_SUPPORTED;
+
+    if (data->level == MONGO_LEVEL_COLLS)
+        coll_name = fname;
+    else
+    {
+        const mongo_bucket_t *b;
+
+        if (strncmp (fname, "#bucket:", 8) != 0 || data->coll_name == NULL)
+            return MC_PPR_NOT_SUPPORTED;
+        b = mongo_bucket_view_find (data, fname + 8);
+        if (b == NULL)
+            return MC_PPR_NOT_SUPPORTED;
+        coll_name = data->coll_name;
+        label = b->label;
+        lo = b->has_lo ? &b->lo : NULL;
+        hi = b->has_hi ? &b->hi : NULL;
+    }
+
+    {
+        mongo_status_t st;
+        char *stage_msg;
+
+        mongo_status_open (&st, _ ("MongoDB"));
+        stage_msg = g_strdup_printf (_ ("Loading %s..."), coll_name);
+        mongo_status_set (&st, stage_msg);
+        g_free (stage_msg);
+        // one more than shown, to know there are more
+        docs = mongo_conn_find_documents (data->client, data->db_name, coll_name, lo, hi, limit + 1,
+                                          &err);
+        mongo_status_close (&st);
+    }
+    if (docs == NULL)
+    {
+        char *msg = g_strdup_printf (_ ("Cannot list documents in '%s': %s"), coll_name,
+                                     err != NULL ? err : "unknown");
+        mongo_show_message (data->host, TRUE, msg);
+        g_free (msg);
+        g_free (err);
+        return MC_PPR_FAILED;
+    }
+
+    truncated = docs->len > (guint) limit;
+    if (truncated)
+        g_ptr_array_set_size (docs, (guint) limit);
+
+    text = g_string_new (NULL);
+    g_string_append_printf (text, "-- %s.%s", data->db_name, coll_name);
+    if (label != NULL)
+        g_string_append_printf (text, ", %s", label);
+    if (truncated)
+        g_string_append_printf (text, ": the first %" G_GINT64_FORMAT " documents", limit);
+    g_string_append (text, "\n\n");
+    table = mongo_table_render (docs);
+    g_string_append (text, table);
+    g_free (table);
+    g_ptr_array_free (docs, TRUE);
+
+    if (!mc_pp_write_temp_file ("mc-mongo-XXXXXX", text->str, (gssize) text->len, &tmp_path))
+    {
+        g_string_free (text, TRUE);
+        mongo_show_message (data->host, TRUE, _ ("Failed to write temp file."));
+        return MC_PPR_FAILED;
+    }
+    g_string_free (text, TRUE);
+
+    mongo_view_temp (tmp_path);
+    return MC_PPR_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -192,7 +296,8 @@ mongo_get_local_copy (void *plugin_data, const char *fname, char **local_path)
 /* --------------------------------------------------------------------------------------------- */
 
 /* F3 view: render the document with base64 values trimmed (display only) and
-   open it in the internal viewer. */
+   open it in the internal viewer; Shift-F3 shows the whole document. On a
+   collection or a bucket both show its first documents as a table. */
 mc_pp_result_t
 mongo_view (void *plugin_data, const char *fname, const struct stat *st, gboolean plain_view)
 {
@@ -202,7 +307,10 @@ mongo_view (void *plugin_data, const char *fname, const struct stat *st, gboolea
     char *tmp_path;
 
     (void) st;
-    (void) plain_view;
+
+    if (data != NULL && fname != NULL
+        && (data->level == MONGO_LEVEL_COLLS || data->level == MONGO_LEVEL_BUCKETS))
+        return mongo_view_table (data, fname);
 
     if (data == NULL || fname == NULL || data->level != MONGO_LEVEL_DOCS || data->doc_ids == NULL
         || data->coll_name == NULL || mongo_is_virtual_fname (fname))
@@ -212,7 +320,7 @@ mongo_view (void *plugin_data, const char *fname, const struct stat *st, gboolea
     if (slot < 0 || (guint) slot >= data->doc_ids->len)
         return MC_PPR_NOT_SUPPORTED;
 
-    json = mongo_doc_json (data, slot, TRUE, TRUE);
+    json = mongo_doc_json (data, slot, !plain_view, !plain_view);
     if (json == NULL)
         return MC_PPR_FAILED;
 
@@ -221,13 +329,7 @@ mongo_view (void *plugin_data, const char *fname, const struct stat *st, gboolea
     if (tmp_path == NULL)
         return MC_PPR_FAILED;
 
-    {
-        vfs_path_t *tmp_vpath = vfs_path_from_str (tmp_path);
-        (void) mcview_viewer (NULL, tmp_vpath, 0, 0, 0);
-        vfs_path_free (tmp_vpath, TRUE);
-    }
-    unlink (tmp_path);
-    g_free (tmp_path);
+    mongo_view_temp (tmp_path);
     return MC_PPR_OK;
 }
 
