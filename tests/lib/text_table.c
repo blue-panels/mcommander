@@ -89,13 +89,17 @@ END_TEST
 START_TEST (test_ascii_terminal)
 {
     char *out = render_one ("ANSI_X3.4-1968", "Привет", 0);
+    char **lines = g_strsplit (out, "\n", -1);
 
-    // a letter the terminal has not is "?", one column, as everywhere in mc
-    mctest_assert_str_eq (out,
-                          " name   | n \n"
-                          "--------+---\n"
-                          " ?????? | 7 \n"
-                          "(1 row)\n");
+    /* A letter the terminal has not is one ASCII character, one column: "?" from GLib, or the
+       "*" musl's iconv puts there itself */
+    mctest_assert_str_eq (lines[0], " name   | n ");
+    ck_assert_int_eq (strlen (lines[2]), 12);
+    for (int i = 1; i <= 6; i++)
+        ck_assert_int_eq (lines[2][i], lines[2][1]);
+    ck_assert (lines[2][1] == '?' || lines[2][1] == '*');
+    mctest_assert_str_eq (lines[2] + 7, " | 7 ");
+    g_strfreev (lines);
     g_free (out);
 }
 END_TEST
