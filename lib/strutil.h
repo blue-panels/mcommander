@@ -531,6 +531,9 @@ gboolean str_isutf8 (const char *codeset_name);
 
 const char *str_detect_termencoding (void);
 
+/* the codeset of the terminal the strings are written in, as str_init_strings() set it */
+const char *str_get_codeset (void);
+
 int str_verscmp (const char *s1, const char *s2);
 
 /* Like filevercmp, except compare the byte arrays a (of length alen) and b (of length blen)

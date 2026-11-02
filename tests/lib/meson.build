@@ -7,6 +7,7 @@ lib_tests = {
   'serialize': 'serialize.c',
   'runtime_events': 'runtime_events.c',
   'terminal': 'terminal.c',
+  'text_table': 'text_table.c',
   'tty': 'tty.c',
   'tty_color': 'tty_color.c',
   'utilunix__mc_pread_signal': 'utilunix__mc_pread_signal.c',

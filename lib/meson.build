@@ -13,6 +13,7 @@ libmc_sources = files(
   'serialize.c',
   'shell.c',
   'terminal.c',
+  'text_table.c',
   'timefmt.c',
   'util.c',
   'utilunix.c',
