@@ -1964,11 +1964,6 @@ edit_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *data
     case MSG_PASTE:
         edit_paste_text (e, (const GString *) data);
         edit_update_screen (e);
-        /* with input still there the text is not drawn yet, as after a key: the dialog draws it
-           when the input ends. The Windows console sends the repeats of a held Shift after a
-           paste, which are no keys and draw nothing. */
-        if (!is_idle ())
-            widget_idle (WIDGET (w->owner), TRUE);
         return MSG_HANDLED;
 
     case MSG_ACTION:
@@ -2401,10 +2396,8 @@ edit_update_screen (WEdit *e)
         edit_render_keypress (e);
     }
 
-    /* The text is not drawn whole while input waits: it is drawn when the dialog is idle again.
-       What came may be no key that draws anything (an answer of the terminal at the start), and
-       without that the text would wait for a key. */
-    if (e->force != 0)
+    // drawn when the input ends, which may be no key (an answer of the terminal)
+    if (e->force != 0 && !is_idle () && widget_get_state (WIDGET (e), WST_FOCUSED))
         widget_idle (WIDGET (WIDGET (e)->owner), TRUE);
 
     widget_draw (WIDGET (buttonbar_find (DIALOG (WIDGET (e)->owner))));
