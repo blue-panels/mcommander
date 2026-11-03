@@ -31,6 +31,70 @@ function M.new_document()
     return { refs = {}, notes = {}, note_defs = {}, note_order = {}, note_number = {} }
 end
 
+-- The elements of html a markdown text is written with.  A tag of one of
+-- them is dropped and what it holds is shown; anything else between angle
+-- brackets is text, the way a placeholder such as <year> or <name of author>
+-- is meant to be read.
+local html_tags = {}
+for name in ([[
+a abbr address article aside audio b bdi bdo big blockquote body br button
+caption center cite code col colgroup dd del details dfn div dl dt em embed
+figcaption figure font footer form h1 h2 h3 h4 h5 h6 head header hr html i
+iframe img input ins kbd label li link main mark meta nav noscript object ol
+p param picture pre q rp rt ruby s samp script section select small source
+span strike strong style sub summary sup svg table tbody td template textarea
+tfoot th thead title tr tt u ul var video wbr
+]]):gmatch("%S+") do
+    html_tags[name] = true
+end
+
+-- Where a tag of html that starts at i ends, or nil when there is none there.
+local function html_tag_end(s, i)
+    local comment = s:match("^<!%-%-.-%-%->()", i) or s:match("^<!%a[^<>]*>()", i)
+
+    if comment ~= nil then
+        return comment
+    end
+
+    local name, e = s:match("^</?(%a[%w]*)[^<>]*>()", i)
+
+    if name ~= nil and html_tags[name:lower()] then
+        local rest = s:sub(i, e - 1):match("^</?%a[%w]*(.-)/?>$")
+
+        -- what follows the name is attributes, not words
+        if rest == "" or rest:match("^%s+[%a_:][%w_:.-]*%s*=") or rest:match("^%s+[%a_:][%w_:.-]*%s*$") then
+            return e
+        end
+    end
+    return nil
+end
+
+-- The text without the tags of html in it.
+local function strip_tags(s)
+    local out = {}
+    local i = 1
+
+    while i <= #s do
+        local lt = s:find("<", i, true)
+
+        if lt == nil then
+            out[#out + 1] = s:sub(i)
+            break
+        end
+        out[#out + 1] = s:sub(i, lt - 1)
+
+        local e = html_tag_end(s, lt)
+
+        if e ~= nil then
+            i = e
+        else
+            out[#out + 1] = "<"
+            i = lt + 1
+        end
+    end
+    return table.concat(out)
+end
+
 local entities = {
     amp = "&", lt = "<", gt = ">", quot = "\"", apos = "'", nbsp = " ",
     copy = "\u{00A9}", reg = "\u{00AE}", trade = "\u{2122}", hellip = "\u{2026}",
@@ -178,8 +242,7 @@ tokenize = function(s, doc)
             if url == nil then
                 url, e = s:match("^<([%w.+-]+@[%w.-]+)>()", i)
             end
-            local tag_end = url == nil and (s:match("^<!%-%-.-%-%->()", i) or s:match("^<[!/]?%a[^<>]*>()", i))
-                or nil
+            local tag_end = url == nil and html_tag_end(s, i) or nil
             if url ~= nil then
                 flush()
                 local target = url:find(":", 1, true) and url or "mailto:" .. url
@@ -395,5 +458,6 @@ end
 M.normalize_label = normalize_label
 M.footnote_number = footnote_number
 M.render = inline
+M.strip_tags = strip_tags
 
 return M

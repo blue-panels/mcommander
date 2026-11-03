@@ -1,0 +1,26 @@
+  [48;5;233m                      GNU GENERAL PUBLIC LICENSE           [49m
+  [48;5;233m                        Version 3, 29 June 2007            [49m
+
+Everyone is permitted to copy and distribute verbatim copies of this license document, but
+changing it is not allowed.
+
+  [48;5;233m                              Preamble         [49m
+
+The GNU General Public License is a free, copyleft license for software and other kinds of
+works.
+
+  [48;5;233m  d) Convey the object code by offering access from a designated  place  (gratis         [49m
+  [48;5;233m     or for a charge), and offer equivalent access to the Corresponding  Source          [49m
+  [48;5;233m     in the same way through the same place at no further charge.                        [49m
+  [48;5;233m  e) Convey the object code using peer-to-peer transmission, provided you inform other   [49m
+  [48;5;233m     peers where the object code and Corresponding Source of the work are being          [49m
+  [48;5;233m     offered to the general public at no charge under subsection 6d.                     [49m
+
+<one line to give the program's name and a brief idea of what it does.> Copyright (C)
+<year> <name of author>
+
+  [48;5;233m  struct entry { const char *id;          /* "stage", "diff", "fav_add" - a stable       [49m
+  [48;5;233m  symbol */                                                                              [49m
+  [48;5;233m                 const char *label; };    /* shown in the menu */                        [49m
+
+bold and K keep their text.

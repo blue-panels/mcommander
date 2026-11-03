@@ -107,7 +107,7 @@ M.TAB_WIDTH = 8
 
 -- a code block is indented this far, and the frame and the background keep
 -- a margin between their edge and the code
-M.CODE_INDENT = "    "
+M.CODE_INDENT = "  "
 M.CODE_MARGIN = 2
 
 -- the corners of a code block, each with the stub of an edge
