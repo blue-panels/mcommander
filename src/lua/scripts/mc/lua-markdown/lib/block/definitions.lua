@@ -10,6 +10,7 @@ local scanner = require("block.scanner")
 local trim = txt.trim
 
 local normalize_label = inl.normalize_label
+local strip_tags = inl.strip_tags
 
 local is_blank = scanner.is_blank
 local fence_of = scanner.fence_of
@@ -52,7 +53,7 @@ local function html_line(line)
         end
     end
     -- a line of tags alone says nothing
-    if body ~= "" and body:gsub("<[^<>]*>", ""):match("^%s*$") then
+    if body ~= "" and strip_tags(body):match("^%s*$") then
         return nil
     end
     return line

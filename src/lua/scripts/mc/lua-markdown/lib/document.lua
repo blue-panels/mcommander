@@ -126,13 +126,45 @@ local function render_document(text, opts, emit)
             end
             i = i + 1
         elseif blank then
-            out[#out + 1] = ""
+            -- blank lines in a row part blocks no wider than one does
+            if out[#out] ~= "" then
+                out[#out + 1] = ""
+            end
             i = i + 1
         elseif prev_blank and not was_list and (line:match("^    ") or line:match("^\t")) then
-            local block
+            local block, after = read_indented(lines, i)
+            local start = #block + 1
 
-            block, i = read_indented(lines, i)
-            emit_code(block, out, width_limit, nil, screen)
+            -- an indented line the text goes on from without a blank line is
+            -- the first line of a paragraph, not code: plain text indents
+            -- the first line of a paragraph that way.  What comes before it
+            -- in the block, past a blank line, is still a block.
+            if lines[after] ~= nil and not is_blank(lines[after])
+                and not starts_block(lines[after], lines[after + 1]) then
+                start = 1
+                for k = #block, 1, -1 do
+                    if is_blank(block[k]) then
+                        start = k + 1
+                        break
+                    end
+                end
+            end
+            if start > #block then
+                emit_code(block, out, width_limit, nil, screen)
+                i = after
+            else
+                local head = {}
+
+                for k = 1, start - 2 do
+                    head[k] = block[k]
+                end
+                if #head > 0 then
+                    emit_code(head, out, width_limit, nil, screen)
+                    out[#out + 1] = ""
+                end
+                -- the paragraph is read from its first line on
+                i = after - (#block - start + 1)
+            end
         elseif math_block_of(line, width_limit) ~= nil then
             for _, l in ipairs(math_block_of(line, width_limit)) do
                 out[#out + 1] = l

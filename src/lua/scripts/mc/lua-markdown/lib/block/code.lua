@@ -53,7 +53,7 @@ local function mermaid_lines(code, language, out, width_limit)
         return false
     end
     for _, line in ipairs(drawn) do
-        out[#out + 1] = line == "" and "" or ("    " .. line)
+        out[#out + 1] = line == "" and "" or (CODE_INDENT .. line)
     end
     return true
 end
@@ -91,9 +91,10 @@ end
 -- The pieces of a line too wide for the block, each at most w columns: cut
 -- after the last space that fits, or where the line runs out of room when
 -- there is none in the second half.  A piece after the first is indented as
--- far as the line is, and a color open at a cut is closed before it and
--- opened again after it, because the viewer may start reading at any line.
-local function wrap_code(line, w)
+-- far as the line is, or by hang when it is given, and a color open at a cut
+-- is closed before it and opened again after it, because the viewer may
+-- start reading at any line.
+local function wrap_code(line, w, hang)
     if code_width(line) <= w then
         return { line }
     end
@@ -106,6 +107,9 @@ local function wrap_code(line, w)
     local indent = 0
     while units[indent + 1] ~= nil and is_space(units[indent + 1]) do
         indent = indent + 1
+    end
+    if hang ~= nil then
+        indent = hang
     end
     if indent > w // 2 then
         indent = 0
@@ -170,6 +174,96 @@ local function code_edge(left, right, label, box)
     return left .. text .. (" "):rep(fill) .. right
 end
 
+-- The columns of spaces a line starts with, past the colors in it.
+local function lead_of(line)
+    return #line:gsub("\27%[[%d;]*m", ""):match("^ *")
+end
+
+local function is_empty(line)
+    return not line:gsub("\27%[[%d;]*m", ""):find("%S")
+end
+
+-- A line without the spaces it starts with and without the ones a justified
+-- text is padded with; the colors among the spaces it starts with are kept.
+local function words_of(line)
+    local seqs, pos = {}, 1
+
+    while true do
+        local seq = line:match("^\27%[[%d;]*m", pos)
+
+        if seq ~= nil then
+            seqs[#seqs + 1] = seq
+            pos = pos + #seq
+        elseif line:sub(pos, pos) == " " then
+            pos = pos + 1
+        else
+            break
+        end
+    end
+    return (table.concat(seqs) .. line:sub(pos)):gsub("(%S)  +", "%1 "):gsub(" +$", "")
+end
+
+-- Whether the lines read as prose: next to no character of them is one code
+-- is written with and words are not, past the colors in them.
+local function is_prose(lines)
+    local letters, signs = 0, 0
+
+    for _, line in ipairs(lines) do
+        local plain = line:gsub("\27%[[%d;]*m", "")
+
+        letters = letters + select(2, plain:gsub("%a", ""))
+        signs = signs + select(2, plain:gsub("[{}%[%]<>=;\\|$~_*/#`]", ""))
+    end
+    return letters > 0 and signs * 100 <= letters
+end
+
+-- A block written with four columns of indent and too wide for the screen
+-- is often prose kept as it was typed: a line that has to be cut takes the
+-- lines that go on with it, so that what is cut off runs on into them
+-- instead of being left alone on a line of its own.  A line goes on with the
+-- one before it when that one is filled nearly to the widest line of the
+-- block, and it is indented as far as the line it goes on from or further,
+-- the same as the lines that went on before it; that indent is the one the
+-- pieces after the first take.  A line that fits is kept as it was typed, so
+-- a drawing or a table in plain text is not touched.
+local function join_prose(lines, w)
+    local joined = {}
+    local k = 1
+    local widest = 0
+
+    for _, line in ipairs(lines) do
+        widest = math.max(widest, code_width(line))
+    end
+
+    while k <= #lines do
+        local line = lines[k]
+        local j = k + 1
+
+        if code_width(line) > w then
+            local lead = lead_of(line)
+            local parts = { (" "):rep(lead) .. words_of(line) }
+            local hang
+
+            while lines[j] ~= nil and not is_empty(lines[j]) do
+                local more = lead_of(lines[j])
+
+                if code_width(lines[j - 1]) * 4 < widest * 3
+                    or more < lead or more > w // 2 or (hang ~= nil and more ~= hang) then
+                    break
+                end
+                hang = more
+                parts[#parts + 1] = words_of(lines[j])
+                j = j + 1
+            end
+            joined[#joined + 1] = { text = table.concat(parts, " "), hang = hang }
+        else
+            joined[#joined + 1] = { text = line }
+        end
+        k = j
+    end
+    return joined
+end
+
 -- The lines of a code block, padded to the widest one so that the background
 -- covers a rectangle.  Each line opens the background and closes it at its
 -- end, because the viewer may start reading at any line.
@@ -178,28 +272,35 @@ end
 -- than the screen is wrapped, with a mark in the margin where it goes on.
 local function emit_code(lines, out, width_limit, language, screen)
     local plain = is_plain(language)
-
-    if language == nil or language == "" then
-        language = cfg.CODE_PLAIN
-    end
-
     local box = code_box(lines, plain and width_limit or math.max(screen or 0, width_limit or 0))
     local color = code_bg()
     local bg = color ~= nil and ("\27[" .. color .. "m") or ""
     local off = bg ~= "" and SGR_BG_OFF or ""
+    -- a block without a language is set apart by its background alone; the
+    -- frame is drawn for it only when there is no background to do it
+    local framed = cfg.CODE_FRAME and (bg == "" or (language ~= nil and language ~= ""))
+    local rows = language == nil and is_prose(lines) and join_prose(lines, box) or nil
 
-    if cfg.CODE_FRAME and language ~= nil and language ~= "" then
+    if language == nil or language == "" then
+        language = cfg.CODE_PLAIN
+    end
+    if rows == nil then
+        rows = {}
+        for k, line in ipairs(lines) do
+            rows[k] = { text = line }
+        end
+    end
+
+    if framed then
         -- a language longer than the code widens the block, so that both
         -- edges and the lines between them keep the same width
         local edge = width(FRAME_TL) + width(" " .. language) + CODE_MARGIN + width(FRAME_TR)
 
         box = math.max(box, edge - 2 * CODE_MARGIN)
-    end
-    if cfg.CODE_FRAME then
         out[#out + 1] = CODE_INDENT .. bg .. code_edge(FRAME_TL, FRAME_TR, language, box) .. off
     end
-    for _, whole in ipairs(lines) do
-        local pieces = wrap_code(whole, box)
+    for _, row in ipairs(rows) do
+        local pieces = wrap_code(row.text, box, row.hang)
 
         for k, line in ipairs(pieces) do
             local fill = math.max(box - code_width(line), 0) + CODE_MARGIN
@@ -211,7 +312,7 @@ local function emit_code(lines, out, width_limit, language, screen)
             out[#out + 1] = CODE_INDENT .. bg .. (" "):rep(CODE_MARGIN) .. line .. tail .. off
         end
     end
-    if cfg.CODE_FRAME then
+    if framed then
         out[#out + 1] = CODE_INDENT .. bg .. code_edge(FRAME_BL, FRAME_BR, nil, box) .. off
     end
 end
