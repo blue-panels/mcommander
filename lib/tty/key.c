@@ -929,6 +929,11 @@ getch_with_delay (void)
         if (c != -1)
             break;
 
+        /* What came was no key, an answer of the terminal for one, and nothing is left: back to
+           the caller, so that the dialog is idle and draws what waited for the input to end. */
+        if (is_idle ())
+            break;
+
         // Failed -> wait 0.1 secs and try again
         try_channels (TRUE);
     }
@@ -3127,6 +3132,13 @@ pend_send:
                     if (csi && ch >= 0x40 && ch <= 0x7e)
                         break;
             }
+
+            /* The sequence is no key, an answer of the terminal for one: the next key is read
+               only if it has come, else the caller hears of no key and the dialog gets idle. */
+            this = NULL;
+            if (tty_lowlevel_input_pending ())
+                goto nodelay_try_again;
+            return -1;
         }
         else
             goto done;
