@@ -164,7 +164,9 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
     char *err = NULL;
     gint64 scope_count;
     gint64 fanout;
-    const bson_value_t *scope_hi;
+    const bson_value_t *cur_hi;
+    bson_value_t scope_hi_v;
+    const bson_value_t *scope_hi = NULL;
     GArray *new_view;
     gint64 cumulative_pos;
     int label_width;
@@ -176,7 +178,13 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
     scope_count = mongo_scope_count (data);
     fanout = mongo_pick_fanout (data, scope_count);
 
-    scope_hi = mongo_current_hi (data);
+    // a copy: the stack it comes from may change while the server is asked
+    cur_hi = mongo_current_hi (data);
+    if (cur_hi != NULL)
+    {
+        bson_value_copy (cur_hi, &scope_hi_v);
+        scope_hi = &scope_hi_v;
+    }
     raw = mongo_conn_bucket_auto (data->client, data->db_name, data->coll_name,
                                   mongo_current_lo (data), scope_hi, NULL, fanout, &err);
     if (raw == NULL)
@@ -186,6 +194,8 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
         mongo_show_message (data->host, TRUE, text);
         g_free (text);
         g_free (err);
+        if (scope_hi != NULL)
+            bson_value_destroy (&scope_hi_v);
         return FALSE;
     }
 
@@ -213,8 +223,7 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
         const mongo_bucket_info_t *src = &g_array_index (raw, mongo_bucket_info_t, i);
         mongo_bucket_t b = { 0 };
         gint64 cnt = src->count > 0 ? src->count : 0;
-        // the max of the last bucket is inclusive: it ends where the scope ends
-        const bson_value_t *hi = i + 1 < raw->len ? (src->has_hi ? &src->hi : NULL) : scope_hi;
+        const bson_value_t *hi = mongo_conn_bucket_hi (raw, i, scope_hi);
 
         bson_value_copy (&src->lo, &b.lo);
         b.has_lo = TRUE;
@@ -238,6 +247,8 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
         g_array_append_val (new_view, b);
     }
     g_array_free (raw, TRUE);
+    if (scope_hi != NULL)
+        bson_value_destroy (&scope_hi_v);
 
     mongo_bucket_view_free (data);
     data->bucket_view = new_view;
