@@ -90,6 +90,11 @@ typedef struct
     gint64 count;
 } mongo_bucket_info_t;
 
+/* The exclusive upper bound of bucket @i of @buckets: the last one ends at @scope_hi, because
+   $bucketAuto gives it an inclusive max. */
+const bson_value_t *mongo_conn_bucket_hi (const GArray *buckets, guint i,
+                                          const bson_value_t *scope_hi);
+
 /* $bucketAuto over [@lo, @hi) AND @filter_extra; sorted ascending by lo. */
 GArray *mongo_conn_bucket_auto (mongoc_client_t *client, const char *db_name, const char *coll_name,
                                 const bson_value_t *lo, const bson_value_t *hi,

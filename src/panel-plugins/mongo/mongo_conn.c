@@ -1036,6 +1036,23 @@ bucket_info_clear (gpointer p)
 
 /* --------------------------------------------------------------------------------------------- */
 
+const bson_value_t *
+mongo_conn_bucket_hi (const GArray *buckets, guint i, const bson_value_t *scope_hi)
+{
+    const mongo_bucket_info_t *b = &g_array_index (buckets, mongo_bucket_info_t, i);
+    const mongo_bucket_info_t *next;
+
+    if (i + 1 >= buckets->len)
+        return scope_hi;
+    if (b->has_hi)
+        return &b->hi;
+    // no max: the bucket ends where the next one starts
+    next = &g_array_index (buckets, mongo_bucket_info_t, i + 1);
+    return next->lo.value_type != BSON_TYPE_EOD ? &next->lo : scope_hi;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 GArray *
 mongo_conn_bucket_auto (mongoc_client_t *client, const char *db_name, const char *coll_name,
                         const bson_value_t *lo, const bson_value_t *hi, const bson_t *filter_extra,
