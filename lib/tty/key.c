@@ -909,6 +909,13 @@ init_key_x11 (void)
 #endif
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* set while getch_with_delay() reads: get_key_code() returns -1 after an unknown sequence with
+   nothing after it, and says so in dropped_seq */
+static gboolean dropped_seq_returns = FALSE;
+static gboolean dropped_seq = FALSE;
+
+/* --------------------------------------------------------------------------------------------- */
 /* Workaround for System V Curses vt100 bug */
 
 static int
@@ -925,13 +932,15 @@ getch_with_delay (void)
             try_channels (FALSE);
 
         // Try to get a character
+        dropped_seq_returns = TRUE;
+        dropped_seq = FALSE;
         c = get_key_code (0);
+        dropped_seq_returns = FALSE;
         if (c != -1)
             break;
 
-        /* What came was no key, an answer of the terminal for one, and nothing is left: back to
-           the caller, so that the dialog is idle and draws what waited for the input to end. */
-        if (is_idle ())
+        // an unknown sequence and nothing after it: the dialog may draw what waited for input
+        if (dropped_seq)
             break;
 
         // Failed -> wait 0.1 secs and try again
@@ -3133,12 +3142,15 @@ pend_send:
                         break;
             }
 
-            /* The sequence is no key, an answer of the terminal for one: the next key is read
-               only if it has come, else the caller hears of no key and the dialog gets idle. */
-            this = NULL;
-            if (tty_lowlevel_input_pending ())
-                goto nodelay_try_again;
-            return -1;
+            // getch_with_delay() hears of it instead of waiting here for the next key
+            if (dropped_seq_returns && !tty_lowlevel_input_pending ())
+            {
+                this = NULL;
+                kitty_event_valid = FALSE;
+                kitty_event_code = -1;
+                dropped_seq = TRUE;
+                return -1;
+            }
         }
         else
             goto done;

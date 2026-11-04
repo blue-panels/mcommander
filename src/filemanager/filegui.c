@@ -811,7 +811,12 @@ get_event:
     event.x = -1;  // Don't show the GPM cursor
     c = tty_get_event (&event, FALSE, ctx->suspended);
     if (c == EV_NONE)
+    {
+        // no key: a suspended operation stays suspended
+        if (ctx->suspended)
+            goto get_event;
         return FILE_CONT;
+    }
 
     // Reinitialize to avoid old values after events other than selecting a button
     ui->op_dlg->ret_value = FILE_CONT;
