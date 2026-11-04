@@ -164,6 +164,7 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
     char *err = NULL;
     gint64 scope_count;
     gint64 fanout;
+    const bson_value_t *scope_hi;
     GArray *new_view;
     gint64 cumulative_pos;
     int label_width;
@@ -175,9 +176,9 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
     scope_count = mongo_scope_count (data);
     fanout = mongo_pick_fanout (data, scope_count);
 
+    scope_hi = mongo_current_hi (data);
     raw = mongo_conn_bucket_auto (data->client, data->db_name, data->coll_name,
-                                  mongo_current_lo (data), mongo_current_hi (data), NULL, fanout,
-                                  &err);
+                                  mongo_current_lo (data), scope_hi, NULL, fanout, &err);
     if (raw == NULL)
     {
         char *text =
@@ -212,12 +213,14 @@ mongo_build_positional_bucket_view (mongo_data_t *data)
         const mongo_bucket_info_t *src = &g_array_index (raw, mongo_bucket_info_t, i);
         mongo_bucket_t b = { 0 };
         gint64 cnt = src->count > 0 ? src->count : 0;
+        // the max of the last bucket is inclusive: it ends where the scope ends
+        const bson_value_t *hi = i + 1 < raw->len ? (src->has_hi ? &src->hi : NULL) : scope_hi;
 
         bson_value_copy (&src->lo, &b.lo);
         b.has_lo = TRUE;
-        if (src->has_hi)
+        if (hi != NULL)
         {
-            bson_value_copy (&src->hi, &b.hi);
+            bson_value_copy (hi, &b.hi);
             b.has_hi = TRUE;
         }
         b.count = src->count;
