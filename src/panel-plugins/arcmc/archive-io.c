@@ -60,10 +60,11 @@
 /* Outcome of reading the table of contents with libarchive. */
 typedef enum
 {
-    ARCMC_READ_OK = 0,      /* contents read */
-    ARCMC_READ_FAILED,      /* unreadable: not an archive, unknown format, I/O error */
-    ARCMC_READ_ENCRYPTED,   /* encrypted: a password is needed */
-    ARCMC_READ_ENCRYPTED_7Z /* encrypted 7z: only the external 7z program can read it */
+    ARCMC_READ_OK = 0,       /* contents read */
+    ARCMC_READ_FAILED,       /* unreadable: not an archive, unknown format, I/O error */
+    ARCMC_READ_ENCRYPTED,    /* encrypted: a password is needed */
+    ARCMC_READ_ENCRYPTED_7Z, /* encrypted 7z: only the external 7z program can read it */
+    ARCMC_READ_ABORTED       /* the user stopped the reading */
 } arcmc_read_result_t;
 
 /* 7z binaries that understand the -p switch, in order of preference.
@@ -166,6 +167,136 @@ strip_trailing_slashes (char *path)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* The size of the file the archive is read from, or 0 if it is not a local file. */
+static off_t
+source_size (const arcmc_data_t *data)
+{
+    const char *local;
+    struct stat st;
+
+    local = data->input_stream == NULL ? data->archive_path
+                                       : mc_pp_input_stream_local_path (data->input_stream, NULL);
+    if (local != NULL && stat (local, &st) == 0 && S_ISREG (st.st_mode))
+        return st.st_size;
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The progress of reading the table of contents, shown when it takes longer than 4 seconds.
+   With @measured, the share of the archive read is counted from the size of its file. */
+static arcmc_progress_t *
+read_progress_new (const arcmc_data_t *data, gboolean measured)
+{
+    arcmc_progress_t *p;
+
+    p = arcmc_progress_create (_ ("Reading archive"),
+                               data->display_path != NULL ? data->display_path : data->archive_path,
+                               measured ? source_size (data) : 0);
+    arcmc_progress_set_delay (p, 4 * G_USEC_PER_SEC);
+    return p;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* What the dialog of a pass counts */
+typedef enum
+{
+    PASS_TOC,  /* the table of contents is read: the bytes of the archive read */
+    PASS_SEEK, /* entries are looked for: the position in the archive file */
+    PASS_COPY  /* entries are copied out: the bytes copied, told by the copy itself */
+} pass_mode_t;
+
+/* A pass over the archive that tells a progress dialog how far it has got. */
+typedef struct
+{
+    struct archive *a;
+    arcmc_progress_t *p;
+    off_t size; /* bytes of the archive file, 0 if it is not a local file */
+    pass_mode_t mode;
+    gint64 next; /* when the dialog is told again */
+} pass_t;
+
+static void
+pass_init (pass_t *pass, const arcmc_data_t *data, struct archive *a, arcmc_progress_t *p,
+           pass_mode_t mode)
+{
+    pass->a = a;
+    pass->p = p;
+    pass->size = p != NULL ? source_size (data) : 0;
+    pass->mode = mode;
+    pass->next = 0;
+}
+
+/* Tell the dialog of the pass a few times a second, whatever the size of the entries.
+   FALSE if the user stopped the pass. */
+static gboolean
+pass_report (pass_t *pass, const char *pathname)
+{
+    gint64 now;
+    off_t pos;
+
+    if (pass->p == NULL)
+        return TRUE;
+
+    now = g_get_monotonic_time ();
+    if (now < pass->next)
+        return TRUE;
+    pass->next = now + G_USEC_PER_SEC / 20;
+
+    pos = archive_filter_bytes (pass->a, -1);
+    switch (pass->mode)
+    {
+    case PASS_TOC:
+        return arcmc_progress_update (pass->p, pathname, 0, 0, pos, 0);
+    case PASS_SEEK:
+        return arcmc_progress_seek (pass->p, pathname, pos, pass->size);
+    default:
+        // the numbers stay those of the last copy, only the buttons are looked at
+        return arcmc_progress_update (pass->p, NULL, pass->p->file_bytes, pass->p->file_done,
+                                      pass->p->done_bytes, pass->p->written_bytes);
+    }
+}
+
+/* TRUE if reading the data of the entry costs no more than skipping it: the plain data of
+   a tar or a cpio inside a compressed stream or a stream that cannot be seeked. A zip,
+   a 7z or a rar skips the packed data of an entry without unpacking it. */
+static gboolean
+pass_reads_anyway (const pass_t *pass)
+{
+    int format = archive_format (pass->a) & ARCHIVE_FORMAT_BASE_MASK;
+
+    if (format != ARCHIVE_FORMAT_TAR && format != ARCHIVE_FORMAT_CPIO)
+        return FALSE;
+    return pass->size == 0 || archive_filter_code (pass->a, 0) != ARCHIVE_FILTER_NONE;
+}
+
+/* Pass over the data of the entry the reader stands on. When it is read anyway, it is read
+   block by block, and the dialog is told between the blocks. FALSE if the user stopped
+   the pass. */
+static gboolean
+pass_skip (pass_t *pass, const char *pathname)
+{
+    if (pass->p == NULL || !pass_reads_anyway (pass))
+    {
+        archive_read_data_skip (pass->a);
+        return TRUE;
+    }
+
+    for (;;)
+    {
+        const void *buf;
+        size_t len;
+        la_int64_t offset;
+
+        // the end of the data, or an error the next header meets again
+        if (archive_read_data_block (pass->a, &buf, &len, &offset) != ARCHIVE_OK)
+            return TRUE;
+        if (!pass_report (pass, pathname))
+            return FALSE;
+    }
+}
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -913,9 +1044,9 @@ arcmc_extfs_env (const char *password, const char *archive_path)
 /* --------------------------------------------------------------------------------------------- */
 
 /* Read archive contents using an extfs helper's "list" command.
-   Returns TRUE on success, FALSE on error. */
-gboolean
-arcmc_read_archive_extfs (arcmc_data_t *data)
+   Returns TRUE on success, FALSE on error; `*stopped` tells that the user stopped it. */
+static gboolean
+read_archive_extfs (arcmc_data_t *data, gboolean *stopped)
 {
     char *quoted_archive;
     char *env;
@@ -924,7 +1055,12 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
     GError *error = NULL;
     GString *remain_line = NULL;
     GHashTable *by_path;
+    arcmc_progress_t *progress;
+    GPtrArray *entries;
+    guint lines = 0;
+    gboolean aborted = FALSE;
 
+    *stopped = FALSE;
     quoted_archive = name_quote (data->archive_path, FALSE);
     env = arcmc_extfs_env (data->password, data->archive_path);
     cmd = g_strconcat (env, data->extfs_helper, " list ", quoted_archive, (char *) NULL);
@@ -941,12 +1077,13 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
         return FALSE;
     }
 
-    arcmc_data_free_entries (data);
-
-    data->all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    // the old list stays until the new one is read in full
+    entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
     by_path = g_hash_table_new (g_str_hash, g_str_equal);
+    // the helper says nothing of how far it is
+    progress = read_progress_new (data, FALSE);
 
-    for (;;)
+    while (!aborted)
     {
         GString *buffer;
 
@@ -1018,7 +1155,7 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
 
                     if (clean[0] != '\0' && !g_hash_table_contains (by_path, clean))
                     {
-                        ensure_parent_dirs (data->all_entries, by_path, clean);
+                        ensure_parent_dirs (entries, by_path, clean);
 
                         e = g_new0 (arcmc_entry_t, 1);
                         e->full_path = clean;
@@ -1036,7 +1173,11 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
                         e->mtime = st.st_mtime;
                         e->is_virtual_dir = FALSE;
 
-                        add_entry (data->all_entries, by_path, e);
+                        add_entry (entries, by_path, e);
+
+                        if (++lines % 64 == 0
+                            && !arcmc_progress_update (progress, e->full_path, 0, 0, 0, 0))
+                            aborted = TRUE;
                     }
                     else
                         g_free (clean);
@@ -1047,18 +1188,45 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
             }
 
             g_string_free (buffer, TRUE);
+            if (aborted)
+                break;
         }
     }
+
+    arcmc_progress_destroy (progress);
 
     if (remain_line != NULL)
         g_string_free (remain_line, TRUE);
 
+    // a helper that still writes ends on the closed pipe, one that does not on the signal
+    if (aborted)
+        kill (pip->child_pid, SIGTERM);
     mc_pclose (pip, NULL);
     g_hash_table_destroy (by_path);
 
-    arcmc_resolve_links (data->all_entries);
+    // an archive with nothing left in it is a full list too, only not a success to open
+    if (!aborted)
+    {
+        arcmc_resolve_links (entries);
+        arcmc_data_free_entries (data);
+        data->all_entries = entries;
+    }
+    else
+        g_ptr_array_free (entries, TRUE);
 
-    return (data->all_entries->len > 0);
+    *stopped = aborted;
+    return !aborted && data->all_entries->len > 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Read archive contents using an extfs helper, TRUE on success. */
+gboolean
+arcmc_read_archive_extfs (arcmc_data_t *data)
+{
+    gboolean stopped;
+
+    return read_archive_extfs (data, &stopped);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1251,16 +1419,20 @@ arcmc_read_archive_res (arcmc_data_t *data)
     arcmc_read_result_t res = ARCMC_READ_OK;
     arcmc_archive_reader_ctx_t *reader_ctx;
     GHashTable *by_path;
+    GPtrArray *entries;
+    arcmc_progress_t *progress;
+    pass_t pass;
     int r;
 
     a = arcmc_archive_reader_open (data, &reader_ctx);
     if (a == NULL)
         return ARCMC_READ_FAILED;
 
-    arcmc_data_free_entries (data);
-
-    data->all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    // the old list stays until the new one is read in full
+    entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
     by_path = g_hash_table_new (g_str_hash, g_str_equal);
+    progress = read_progress_new (data, TRUE);
+    pass_init (&pass, data, a, progress, PASS_TOC);
 
     while ((r = archive_read_next_header (a, &entry)) == ARCHIVE_OK)
     {
@@ -1271,6 +1443,13 @@ arcmc_read_archive_res (arcmc_data_t *data)
         mode_t entry_mode;
 
         pathname = archive_entry_pathname (entry);
+
+        if (!pass_report (&pass, pathname))
+        {
+            res = ARCMC_READ_ABORTED;
+            break;
+        }
+
         if (pathname == NULL || pathname[0] == '\0')
             continue;
 
@@ -1298,7 +1477,7 @@ arcmc_read_archive_res (arcmc_data_t *data)
         }
 
         /* ensure parent directories exist */
-        ensure_parent_dirs (data->all_entries, by_path, clean_path);
+        ensure_parent_dirs (entries, by_path, clean_path);
 
         e = g_new0 (arcmc_entry_t, 1);
         e->full_path = clean_path;
@@ -1321,13 +1500,19 @@ arcmc_read_archive_res (arcmc_data_t *data)
         e->mtime = archive_entry_mtime (entry);
         e->is_virtual_dir = FALSE;
 
-        add_entry (data->all_entries, by_path, e);
+        add_entry (entries, by_path, e);
 
-        archive_read_data_skip (a);
+        if (!pass_skip (&pass, pathname))
+        {
+            res = ARCMC_READ_ABORTED;
+            break;
+        }
     }
 
+    arcmc_progress_destroy (progress);
+
     /* Check if we failed due to encryption */
-    if (r != ARCHIVE_EOF)
+    if (res == ARCMC_READ_OK && r != ARCHIVE_EOF)
     {
         const char *err_str;
 
@@ -1350,7 +1535,15 @@ arcmc_read_archive_res (arcmc_data_t *data)
 
     arcmc_archive_reader_close (a, reader_ctx);
     g_hash_table_destroy (by_path);
-    arcmc_resolve_links (data->all_entries);
+
+    if (res == ARCMC_READ_OK)
+    {
+        arcmc_resolve_links (entries);
+        arcmc_data_free_entries (data);
+        data->all_entries = entries;
+    }
+    else
+        g_ptr_array_free (entries, TRUE);
     return res;
 }
 
@@ -1381,6 +1574,8 @@ arcmc_try_open (arcmc_data_t *data)
 
     if (res == ARCMC_READ_OK)
         return TRUE;
+    if (res == ARCMC_READ_ABORTED)
+        return FALSE;
 
     /* An external helper needs a filename. A file-backed stream has one; an
        arbitrary stream does not. */
@@ -1441,11 +1636,21 @@ arcmc_try_open (arcmc_data_t *data)
         g_free (data->password);
         data->password = pw;
 
-        if (arcmc_read_archive (data))
+        res = arcmc_read_archive_res (data);
+        if (res == ARCMC_READ_OK)
             return TRUE;
+        if (res == ARCMC_READ_ABORTED)
+            break;
 
-        if (data->extfs_helper != NULL && arcmc_read_archive_extfs (data))
-            return TRUE;
+        if (data->extfs_helper != NULL)
+        {
+            gboolean stopped = FALSE;
+
+            if (read_archive_extfs (data, &stopped))
+                return TRUE;
+            if (stopped)
+                break;
+        }
 
         message (D_ERROR, MSG_ERROR, "%s", _ ("Wrong password"));
     }
@@ -2049,11 +2254,14 @@ arcmc_extract_entry (arcmc_data_t *data, const char *target_path, char **local_p
     struct archive *a;
     struct archive_entry *entry;
     arcmc_archive_reader_ctx_t *reader_ctx;
+    pass_t pass;
     int r;
 
     a = arcmc_archive_reader_open (data, &reader_ctx);
     if (a == NULL)
         return MC_PPR_FAILED;
+
+    pass_init (&pass, data, a, p, PASS_SEEK);
 
     while (archive_read_next_header (a, &entry) == ARCHIVE_OK)
     {
@@ -2061,6 +2269,13 @@ arcmc_extract_entry (arcmc_data_t *data, const char *target_path, char **local_p
         char *clean;
 
         pathname = archive_entry_pathname (entry);
+
+        if (!pass_report (&pass, pathname))
+        {
+            arcmc_archive_reader_close (a, reader_ctx);
+            return MC_PPR_FAILED;
+        }
+
         if (pathname == NULL)
             continue;
 
@@ -2070,7 +2285,11 @@ arcmc_extract_entry (arcmc_data_t *data, const char *target_path, char **local_p
         if (strcmp (clean, target_path) != 0)
         {
             g_free (clean);
-            archive_read_data_skip (a);
+            if (!pass_skip (&pass, pathname))
+            {
+                arcmc_archive_reader_close (a, reader_ctx);
+                return MC_PPR_FAILED;
+            }
             continue;
         }
 
@@ -2288,12 +2507,14 @@ arcmc_extract_subtree (arcmc_data_t *data, const char *src_dir, const char *dest
     size_t dir_len;
     char *last_dir = NULL;
     mc_pp_result_t result = MC_PPR_OK;
+    pass_t pass;
 
     a = arcmc_archive_reader_open (data, &reader_ctx);
     if (a == NULL)
         return MC_PPR_FAILED;
 
     dir_len = strlen (src_dir);
+    pass_init (&pass, data, a, p, PASS_COPY);
 
     while (result == MC_PPR_OK && archive_read_next_header (a, &entry) == ARCHIVE_OK)
     {
@@ -2311,7 +2532,8 @@ arcmc_extract_subtree (arcmc_data_t *data, const char *src_dir, const char *dest
         if (!is_under_dir (clean, src_dir))
         {
             g_free (clean);
-            archive_read_data_skip (a);
+            if (!pass_report (&pass, pathname) || !pass_skip (&pass, pathname))
+                result = MC_PPR_FAILED;
             continue;
         }
 

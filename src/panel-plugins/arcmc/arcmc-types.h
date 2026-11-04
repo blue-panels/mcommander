@@ -116,6 +116,8 @@ typedef struct
     off_t file_bytes;    /* current file total size */
     off_t file_done;     /* current file bytes done */
     gint64 start_time;   /* g_get_monotonic_time() at start */
+    gint64 delay;        /* the dialog is shown this long after start, in microseconds */
+    gint64 last_draw;    /* when the dialog was drawn last, without a total to measure by */
     int gauge_cols;      /* visual bar length in characters */
     int last_total_col;  /* last drawn column of total gauge */
     int last_file_col;   /* last drawn column of file gauge */

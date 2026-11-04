@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "lib/global.h"
+#include "lib/strutil.h"
 #include "lib/tty/key.h"
 #include "lib/widget.h"
 
@@ -48,6 +49,15 @@ arcmc_format_size (off_t bytes, char *buf, size_t buflen)
         g_snprintf (buf, buflen, "%.2f MB", (double) bytes / (1024.0 * 1024.0));
     else
         g_snprintf (buf, buflen, "%.2f GB", (double) bytes / (1024.0 * 1024.0 * 1024.0));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Name the current file on one line of the dialog, cut in the middle when it is too long. */
+static void
+progress_set_file (arcmc_progress_t *p, const char *filename)
+{
+    label_set_text (p->lbl_file, str_trunc (filename, WIDGET (p->dlg)->rect.cols - 6));
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -130,6 +140,7 @@ arcmc_progress_create (const char *title, const char *archive_path, off_t total_
     p->op_title = g_strdup (title);
     p->total_bytes = total_bytes;
     p->start_time = g_get_monotonic_time ();
+    p->delay = G_USEC_PER_SEC;
     p->aborted = FALSE;
     p->visible = FALSE;
     p->last_total_col = -1;
@@ -143,7 +154,7 @@ arcmc_progress_create (const char *title, const char *archive_path, off_t total_
     g = GROUP (p->dlg);
 
     /* archive path */
-    p->lbl_archive = label_new (y++, x, archive_path);
+    p->lbl_archive = label_new (y++, x, str_trunc (archive_path, dlg_width - 6));
     group_add_widget (g, p->lbl_archive);
 
     /* separator with percentage text */
@@ -193,6 +204,16 @@ arcmc_progress_create (const char *title, const char *archive_path, off_t total_
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Show the dialog only when the operation takes longer than @usec. */
+void
+arcmc_progress_set_delay (arcmc_progress_t *p, gint64 usec)
+{
+    if (p != NULL)
+        p->delay = usec;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 void
 arcmc_progress_destroy (arcmc_progress_t *p)
 {
@@ -236,10 +257,9 @@ arcmc_progress_update (arcmc_progress_t *p, const char *filename, off_t file_siz
 
     now = g_get_monotonic_time ();
 
-    /* defer display for 1 second */
     if (!p->visible)
     {
-        if (now - p->start_time < G_USEC_PER_SEC)
+        if (now - p->start_time < p->delay)
             return TRUE;
 
         dlg_init (p->dlg);
@@ -249,6 +269,30 @@ arcmc_progress_update (arcmc_progress_t *p, const char *filename, off_t file_siz
     /* always check for abort (Esc / button) */
     if (!arcmc_progress_check_buttons (p))
         return FALSE;
+
+    // nothing to count a share of: show what is being done, a few times a second
+    if (p->total_bytes <= 0)
+    {
+        if (now - p->last_draw < G_USEC_PER_SEC / 5)
+            return TRUE;
+        p->last_draw = now;
+        hline_set_textv (p->hline_top, " %s ", p->op_title);
+        if (filename != NULL)
+            progress_set_file (p, filename);
+        if (file_size > 0)
+        {
+            arcmc_format_size (file_done, buf_fdone, sizeof (buf_fdone));
+            arcmc_format_size (file_size, buf_ftotal, sizeof (buf_ftotal));
+            g_snprintf (line, sizeof (line), " %s / %s", buf_fdone, buf_ftotal);
+            label_set_text (p->lbl_file_size, line);
+            gauge_set_value (p->gauge_file, p->gauge_cols,
+                             (int) ((gint64) p->gauge_cols * file_done / file_size));
+        }
+        gauge_show (p->gauge_file, file_size > 0);
+        gauge_show (p->gauge_total, FALSE);
+        widget_update_cursor (WIDGET (p->dlg));
+        return TRUE;
+    }
 
     /* compute current column positions */
     total_col =
@@ -267,7 +311,7 @@ arcmc_progress_update (arcmc_progress_t *p, const char *filename, off_t file_siz
         p->last_file_col = file_col;
 
         if (filename != NULL)
-            label_set_text (p->lbl_file, filename);
+            progress_set_file (p, filename);
 
         if (file_size > 0)
         {
@@ -287,6 +331,10 @@ arcmc_progress_update (arcmc_progress_t *p, const char *filename, off_t file_siz
     if (total_changed)
     {
         p->last_total_col = total_col;
+
+        // without a size of its own the file is only named
+        if (file_size <= 0 && filename != NULL)
+            progress_set_file (p, filename);
 
         /* percent on the top hline -lightweight, no frame repaint */
         {
@@ -339,6 +387,73 @@ arcmc_progress_update (arcmc_progress_t *p, const char *filename, off_t file_siz
         gauge_show (p->gauge_total, TRUE);
     }
 
+    // the labels leave the cursor where they end, give it back to the button
+    widget_update_cursor (WIDGET (p->dlg));
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Show how far the search for the entries to extract has got: @pos of the @size bytes of the
+   archive file are read, @filename is the entry passed. Returns TRUE to continue, FALSE if
+   aborted. */
+gboolean
+arcmc_progress_seek (arcmc_progress_t *p, const char *filename, off_t pos, off_t size)
+{
+    gint64 now;
+    char buf_pos[64], buf_size[64], line[160];
+
+    if (p == NULL)
+        return TRUE;
+    if (p->aborted)
+        return FALSE;
+
+    now = g_get_monotonic_time ();
+
+    if (!p->visible)
+    {
+        if (now - p->start_time < p->delay)
+            return TRUE;
+
+        dlg_init (p->dlg);
+        p->visible = TRUE;
+    }
+
+    if (!arcmc_progress_check_buttons (p))
+        return FALSE;
+
+    if (now - p->last_draw < G_USEC_PER_SEC / 5)
+        return TRUE;
+    p->last_draw = now;
+
+    // the next update draws all of its own lines again
+    p->last_file_col = -1;
+    p->last_total_col = -1;
+
+    if (filename != NULL)
+        progress_set_file (p, filename);
+    label_set_text (p->lbl_file_size, "");
+    label_set_text (p->lbl_ratio, "");
+    gauge_show (p->gauge_file, FALSE);
+
+    if (size <= 0)
+    {
+        hline_set_textv (p->hline_top, " %s ", p->op_title);
+        label_set_text (p->lbl_total_size, "");
+        gauge_show (p->gauge_total, FALSE);
+        widget_update_cursor (WIDGET (p->dlg));
+        return TRUE;
+    }
+
+    pos = MIN (pos, size);
+    hline_set_textv (p->hline_top, " {%d%%} %s ", (int) (100 * pos / size), p->op_title);
+    arcmc_format_size (pos, buf_pos, sizeof (buf_pos));
+    arcmc_format_size (size, buf_size, sizeof (buf_size));
+    g_snprintf (line, sizeof (line), " %s / %s", buf_pos, buf_size);
+    label_set_text (p->lbl_total_size, line);
+    gauge_set_value (p->gauge_total, p->gauge_cols, (int) ((gint64) p->gauge_cols * pos / size));
+    gauge_show (p->gauge_total, TRUE);
+    widget_update_cursor (WIDGET (p->dlg));
     return TRUE;
 }
 
