@@ -531,8 +531,7 @@ arcmc_open (mc_panel_host_t *host, const char *open_path)
 
     if (!arcmc_try_open (data))
     {
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
         g_free (data->archive_path);
         g_free (data->display_path);
         g_free (data->current_dir);
@@ -571,8 +570,7 @@ arcmc_open_input_stream (mc_panel_host_t *host, const char *display_name,
     /* The format comes from the content: the name a stream arrives with lies. */
     if (!arcmc_try_open (data))
     {
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
         g_free (data->archive_path);
         g_free (data->display_path);
         g_free (data->current_dir);
@@ -697,8 +695,7 @@ arcmc_action_browse (mc_panel_host_t *host, const char *open_path)
 
     if (!arcmc_try_open (data))
     {
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
         g_free (data->archive_path);
         g_free (data->display_path);
         g_free (data->current_dir);
@@ -919,8 +916,7 @@ arcmc_action_extract (mc_panel_host_t *host, const char *open_path)
                 }
             }
 
-            if (tmp_data.all_entries != NULL)
-                g_ptr_array_free (tmp_data.all_entries, TRUE);
+            arcmc_data_free_entries (&tmp_data);
             g_free (tmp_data.current_dir);
             g_free (tmp_data.extfs_helper);
         }
@@ -1008,8 +1004,7 @@ arcmc_action_test (mc_panel_host_t *host, const char *open_path)
             }
             g_free (msg);
 
-            if (tmp_data.all_entries != NULL)
-                g_ptr_array_free (tmp_data.all_entries, TRUE);
+            arcmc_data_free_entries (&tmp_data);
             g_free (tmp_data.current_dir);
         }
 
@@ -1073,8 +1068,7 @@ arcmc_close (void *plugin_data)
 
     arcmc_bulk_cache_cleanup (data);
 
-    if (data->all_entries != NULL)
-        g_ptr_array_free (data->all_entries, TRUE);
+    arcmc_data_free_entries (data);
     g_free (data->archive_path);
     g_free (data->display_path);
     g_free (data->current_dir);
@@ -1158,8 +1152,7 @@ arcmc_chdir (void *plugin_data, const char *path)
                 arcmc_nest_frame_t *f = data->nest_stack;
 
                 /* clean up current (nested) state */
-                if (data->all_entries != NULL)
-                    g_ptr_array_free (data->all_entries, TRUE);
+                arcmc_data_free_entries (data);
                 g_free (data->archive_path);
                 g_free (data->display_path);
                 g_free (data->current_dir);
@@ -1220,7 +1213,7 @@ arcmc_chdir (void *plugin_data, const char *path)
         char *new_dir;
 
         new_dir = build_child_path (data->current_dir, path);
-        e = arcmc_find_entry (data->all_entries, new_dir);
+        e = arcmc_data_find_entry (data, new_dir);
 
         if (e == NULL || (!S_ISDIR (e->mode) && !e->link_to_dir))
         {
@@ -1425,7 +1418,7 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
 
     /* find file size for progress */
     {
-        const arcmc_entry_t *e = arcmc_find_entry (data->all_entries, target_path);
+        const arcmc_entry_t *e = arcmc_data_find_entry (data, target_path);
 
         if (e != NULL)
             file_size = e->size;
@@ -1612,7 +1605,7 @@ arcmc_copy_to_local (void *plugin_data, const char *fname, const char *dest_path
     mc_pp_result_t result;
 
     src = arcmc_target_path (data, fname);
-    e = arcmc_find_entry (data->all_entries, src);
+    e = arcmc_data_find_entry (data, src);
 
     if (e != NULL && S_ISDIR (e->mode))
     {
@@ -1816,19 +1809,18 @@ arcmc_dir_size (arcmc_data_t *data)
 
     if (data->host->get_marked_count (data->host) != 0)
     {
+        GHashTable *names;
         const GString *name;
         int idx = 0;
 
+        names = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
         while ((name = data->host->get_next_marked (data->host, &idx)) != NULL)
         {
-            char *path;
-
-            path = build_child_path (data->current_dir, name->str);
-            if (arcmc_compute_dir_size (data->all_entries, path))
-                done = TRUE;
-            g_free (path);
+            g_hash_table_add (names, g_strdup (name->str));
             idx++;
         }
+        done = arcmc_compute_named_dir_sizes (data->all_entries, data->current_dir, names) != 0;
+        g_hash_table_destroy (names);
     }
 
     if (done)

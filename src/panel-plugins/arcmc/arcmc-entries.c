@@ -68,6 +68,59 @@ arcmc_find_entry (GPtrArray *entries, const char *full_path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The entry of @data at @full_path, looked up in an index of all_entries made at the first
+   call after the list changed. The first entry of a path wins, as in arcmc_find_entry(). */
+const arcmc_entry_t *
+arcmc_data_find_entry (arcmc_data_t *data, const char *full_path)
+{
+    if (data->all_entries == NULL)
+        return NULL;
+
+    if (data->entry_index == NULL)
+    {
+        guint i;
+
+        data->entry_index = g_hash_table_new (g_str_hash, g_str_equal);
+        for (i = data->all_entries->len; i > 0; i--)
+        {
+            arcmc_entry_t *e = (arcmc_entry_t *) g_ptr_array_index (data->all_entries, i - 1);
+
+            g_hash_table_insert (data->entry_index, e->full_path, e);
+        }
+    }
+
+    return (const arcmc_entry_t *) g_hash_table_lookup (data->entry_index, full_path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Drop the index of @data: all_entries is another list now. */
+void
+arcmc_data_entries_changed (arcmc_data_t *data)
+{
+    if (data->entry_index != NULL)
+    {
+        g_hash_table_destroy (data->entry_index);
+        data->entry_index = NULL;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Free all_entries of @data and its index. */
+void
+arcmc_data_free_entries (arcmc_data_t *data)
+{
+    arcmc_data_entries_changed (data);
+    if (data->all_entries != NULL)
+    {
+        g_ptr_array_free (data->all_entries, TRUE);
+        data->all_entries = NULL;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* The total size of the files below @full_path, at any depth, kept on the
    directory entry itself. FALSE when @full_path is not a directory here. */
 gboolean
@@ -173,16 +226,18 @@ arcmc_level_name (const char *path, const char *dir)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The sizes of every directory of @dir at once: one pass over the entries, so
-   that a whole panel level costs what a single directory costs. */
-void
-arcmc_compute_level_dir_sizes (GPtrArray *entries, const char *dir)
+/* The sizes of the directories of @dir named in @names, or of all of them when @names is NULL,
+   at once: one pass over the entries, so that a whole panel level costs what a single directory
+   costs. Returns how many directories were counted. */
+guint
+arcmc_compute_named_dir_sizes (GPtrArray *entries, const char *dir, GHashTable *names)
 {
     GHashTable *dirs;
+    guint found;
     guint i;
 
     if (entries == NULL)
-        return;
+        return 0;
 
     /* the name of each directory of this level, and the entry to count into */
     dirs = g_hash_table_new (g_str_hash, g_str_equal);
@@ -196,7 +251,7 @@ arcmc_compute_level_dir_sizes (GPtrArray *entries, const char *dir)
             continue;
 
         name = is_direct_child (e->full_path, dir);
-        if (name == NULL)
+        if (name == NULL || (names != NULL && !g_hash_table_contains (names, name)))
             continue;
 
         e->dir_size = 0;
@@ -204,7 +259,8 @@ arcmc_compute_level_dir_sizes (GPtrArray *entries, const char *dir)
         g_hash_table_insert (dirs, (gpointer) name, e);
     }
 
-    if (g_hash_table_size (dirs) != 0)
+    found = g_hash_table_size (dirs);
+    if (found != 0)
         for (i = 0; i < entries->len; i++)
         {
             const arcmc_entry_t *e = (const arcmc_entry_t *) g_ptr_array_index (entries, i);
@@ -226,6 +282,15 @@ arcmc_compute_level_dir_sizes (GPtrArray *entries, const char *dir)
         }
 
     g_hash_table_destroy (dirs);
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+arcmc_compute_level_dir_sizes (GPtrArray *entries, const char *dir)
+{
+    (void) arcmc_compute_named_dir_sizes (entries, dir, NULL);
 }
 
 /* --------------------------------------------------------------------------------------------- */

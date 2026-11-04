@@ -26,8 +26,12 @@ char *build_child_path (const char *current_dir, const char *name);
 const char *is_direct_child (const char *entry_path, const char *dir);
 gboolean is_under_dir (const char *entry_path, const char *dir);
 const arcmc_entry_t *arcmc_find_entry (GPtrArray *entries, const char *full_path);
+const arcmc_entry_t *arcmc_data_find_entry (arcmc_data_t *data, const char *full_path);
+void arcmc_data_entries_changed (arcmc_data_t *data);
+void arcmc_data_free_entries (arcmc_data_t *data);
 gboolean arcmc_compute_dir_size (GPtrArray *entries, const char *full_path);
 void arcmc_compute_level_dir_sizes (GPtrArray *entries, const char *dir);
+guint arcmc_compute_named_dir_sizes (GPtrArray *entries, const char *dir, GHashTable *names);
 void arcmc_resolve_links (GPtrArray *entries);
 char *arcmc_target_path (arcmc_data_t *data, const char *name);
 

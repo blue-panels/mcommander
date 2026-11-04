@@ -169,9 +169,19 @@ strip_trailing_slashes (char *path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Add @e to @entries and to @by_path, the entries by their path while the archive is read. */
+static void
+add_entry (GPtrArray *entries, GHashTable *by_path, arcmc_entry_t *e)
+{
+    g_ptr_array_add (entries, e);
+    g_hash_table_insert (by_path, e->full_path, e);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Ensure all parent directories of `full_path` exist as virtual dir entries. */
 static void
-ensure_parent_dirs (GPtrArray *entries, const char *full_path)
+ensure_parent_dirs (GPtrArray *entries, GHashTable *by_path, const char *full_path)
 {
     char *tmp;
     char *slash;
@@ -187,7 +197,7 @@ ensure_parent_dirs (GPtrArray *entries, const char *full_path)
         saved = *slash;
         *slash = '\0';
 
-        if (tmp[0] == '\0' || arcmc_find_entry (entries, tmp) != NULL)
+        if (tmp[0] == '\0' || g_hash_table_contains (by_path, tmp))
         {
             *slash = saved;
             continue;
@@ -204,7 +214,7 @@ ensure_parent_dirs (GPtrArray *entries, const char *full_path)
         dir_entry->mtime = time (NULL);
         dir_entry->is_virtual_dir = TRUE;
 
-        g_ptr_array_add (entries, dir_entry);
+        add_entry (entries, by_path, dir_entry);
 
         *slash = saved;
     }
@@ -514,7 +524,7 @@ arcmc_target_path (arcmc_data_t *data, const char *name)
     const arcmc_entry_t *e;
 
     path = build_child_path (data->current_dir, name);
-    e = arcmc_find_entry (data->all_entries, path);
+    e = arcmc_data_find_entry (data, path);
 
     if (e != NULL && S_ISLNK (e->mode) && e->link_path != NULL && !e->link_to_dir)
     {
@@ -913,6 +923,7 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
     mc_pipe_t *pip;
     GError *error = NULL;
     GString *remain_line = NULL;
+    GHashTable *by_path;
 
     quoted_archive = name_quote (data->archive_path, FALSE);
     env = arcmc_extfs_env (data->password, data->archive_path);
@@ -930,10 +941,10 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
         return FALSE;
     }
 
-    if (data->all_entries != NULL)
-        g_ptr_array_free (data->all_entries, TRUE);
+    arcmc_data_free_entries (data);
 
     data->all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    by_path = g_hash_table_new (g_str_hash, g_str_equal);
 
     for (;;)
     {
@@ -1005,9 +1016,9 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
                     clean = g_strdup (clean);
                     strip_trailing_slashes (clean);
 
-                    if (clean[0] != '\0' && arcmc_find_entry (data->all_entries, clean) == NULL)
+                    if (clean[0] != '\0' && !g_hash_table_contains (by_path, clean))
                     {
-                        ensure_parent_dirs (data->all_entries, clean);
+                        ensure_parent_dirs (data->all_entries, by_path, clean);
 
                         e = g_new0 (arcmc_entry_t, 1);
                         e->full_path = clean;
@@ -1025,7 +1036,7 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
                         e->mtime = st.st_mtime;
                         e->is_virtual_dir = FALSE;
 
-                        g_ptr_array_add (data->all_entries, e);
+                        add_entry (data->all_entries, by_path, e);
                     }
                     else
                         g_free (clean);
@@ -1043,6 +1054,7 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
         g_string_free (remain_line, TRUE);
 
     mc_pclose (pip, NULL);
+    g_hash_table_destroy (by_path);
 
     arcmc_resolve_links (data->all_entries);
 
@@ -1149,7 +1161,7 @@ arcmc_extract_entry_extfs (arcmc_data_t *data, const char *target_path, char **l
         const arcmc_entry_t *e;
         struct stat st;
 
-        e = arcmc_find_entry (data->all_entries, target_path);
+        e = arcmc_data_find_entry (data, target_path);
         failed = stat (*local_path, &st) != 0 || (e != NULL && e->size > 0 && st.st_size == 0);
     }
 
@@ -1238,16 +1250,17 @@ arcmc_read_archive_res (arcmc_data_t *data)
     struct archive_entry *entry;
     arcmc_read_result_t res = ARCMC_READ_OK;
     arcmc_archive_reader_ctx_t *reader_ctx;
+    GHashTable *by_path;
     int r;
 
     a = arcmc_archive_reader_open (data, &reader_ctx);
     if (a == NULL)
         return ARCMC_READ_FAILED;
 
-    if (data->all_entries != NULL)
-        g_ptr_array_free (data->all_entries, TRUE);
+    arcmc_data_free_entries (data);
 
     data->all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    by_path = g_hash_table_new (g_str_hash, g_str_equal);
 
     while ((r = archive_read_next_header (a, &entry)) == ARCHIVE_OK)
     {
@@ -1278,14 +1291,14 @@ arcmc_read_archive_res (arcmc_data_t *data)
         }
 
         /* skip if duplicate */
-        if (arcmc_find_entry (data->all_entries, clean_path) != NULL)
+        if (g_hash_table_contains (by_path, clean_path))
         {
             g_free (clean_path);
             continue;
         }
 
         /* ensure parent directories exist */
-        ensure_parent_dirs (data->all_entries, clean_path);
+        ensure_parent_dirs (data->all_entries, by_path, clean_path);
 
         e = g_new0 (arcmc_entry_t, 1);
         e->full_path = clean_path;
@@ -1308,7 +1321,7 @@ arcmc_read_archive_res (arcmc_data_t *data)
         e->mtime = archive_entry_mtime (entry);
         e->is_virtual_dir = FALSE;
 
-        g_ptr_array_add (data->all_entries, e);
+        add_entry (data->all_entries, by_path, e);
 
         archive_read_data_skip (a);
     }
@@ -1336,6 +1349,7 @@ arcmc_read_archive_res (arcmc_data_t *data)
         res = ARCMC_READ_ENCRYPTED_7Z;
 
     arcmc_archive_reader_close (a, reader_ctx);
+    g_hash_table_destroy (by_path);
     arcmc_resolve_links (data->all_entries);
     return res;
 }
@@ -2174,22 +2188,10 @@ arcmc_extract_to_temp (arcmc_data_t *data, const char *name, char **local_path)
     {
         arcmc_progress_t *progress;
         off_t file_size = 0;
-        guint i;
+        const arcmc_entry_t *e = arcmc_data_find_entry (data, target_path);
 
-        if (data->all_entries != NULL)
-        {
-            for (i = 0; i < data->all_entries->len; i++)
-            {
-                const arcmc_entry_t *e =
-                    (const arcmc_entry_t *) g_ptr_array_index (data->all_entries, i);
-
-                if (strcmp (e->full_path, target_path) == 0)
-                {
-                    file_size = e->size;
-                    break;
-                }
-            }
-        }
+        if (e != NULL)
+            file_size = e->size;
 
         progress = arcmc_progress_create (_ ("Extracting..."), data->archive_path, file_size);
         r = arcmc_extract_entry (data, target_path, local_path, progress);
@@ -2376,6 +2378,7 @@ arcmc_push_nested (arcmc_data_t *data, char *local_path, const char *display_nam
     frame->password = data->password;
     frame->extfs_helper = data->extfs_helper;
     frame->all_entries = data->all_entries;
+    arcmc_data_entries_changed (data);
     frame->input_stream = data->input_stream;
     frame->temp_file = local_path;
     data->nest_stack = frame;
@@ -2399,8 +2402,7 @@ arcmc_push_nested (arcmc_data_t *data, char *local_path, const char *display_nam
         g_free (data->current_dir);
         g_free (data->password);
         g_free (data->extfs_helper);
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
 
         data->archive_path = f->archive_path;
         data->display_path = f->display_path;

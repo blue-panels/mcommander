@@ -85,6 +85,7 @@ typedef struct
     char *current_dir;                  /* current directory inside the archive ("" = root) */
     char *password;                     /* password (if encrypted), NULL otherwise */
     GPtrArray *all_entries;             /* flat list of all entries from the archive */
+    GHashTable *entry_index;            /* all_entries by full_path, built on demand, or NULL */
     char *title_buf;                    /* buffer for get_title */
     char *extfs_helper;                 /* full path to extfs helper, or NULL for libarchive mode */
     mc_pp_input_stream_t *input_stream; /* owned non-local archive source, or NULL */
