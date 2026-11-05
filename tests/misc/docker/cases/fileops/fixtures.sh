@@ -98,11 +98,11 @@ printf 'two levels down\n' > 05-upload/source/tree/deep/deeper.txt
 
 cat > 05-upload/cases.tsv <<'EOF'
 file	key	expect	why	transports
-source	key Tab,cd /work/local/fileops/05-upload/source,on plain.txt,F5,Enter,key Tab,on plain.txt,F3	text: a file of its own	a file goes into the plugin panel	ftp,sh
-source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F5,Enter,key Tab,on tree,Enter	text: inner.txt	a directory goes in with what is in it	ftp
-source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F5,Enter,key Tab,on tree,Enter,on deep,Enter	text: deeper.txt	and with the directories below it	ftp
-source	key Tab,cd /work/local/fileops/05-upload/source,on empty,F5,Enter,key Tab,on empty,Enter	text: 05-upload/empty	an empty directory is made, not skipped	ftp
-source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F6,Enter,key Tab,on tree,Enter,on deep,Enter	text: deeper.txt	F6 takes the whole directory over as well	ftp
+source	key Tab,cd /work/local/fileops/05-upload/source,on plain.txt,F5,Enter,key Tab,on plain.txt,F3	text: a file of its own	a file goes into the plugin panel	ftp,sftp,sh
+source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F5,Enter,key Tab,on tree,Enter	text: inner.txt	a directory goes in with what is in it	ftp,sftp
+source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F5,Enter,key Tab,on tree,Enter,on deep,Enter	text: deeper.txt	and with the directories below it	ftp,sftp
+source	key Tab,cd /work/local/fileops/05-upload/source,on empty,F5,Enter,key Tab,on empty,Enter	text: 05-upload/empty	an empty directory is made, not skipped	ftp,sftp
+source	key Tab,cd /work/local/fileops/05-upload/source,on tree,F6,Enter,key Tab,on tree,Enter,on deep,Enter	text: deeper.txt	F6 takes the whole directory over as well	ftp,sftp
 EOF
 
 # --------------------------------------------------------- plugin delete ---
@@ -143,5 +143,20 @@ EOF
 # the server refuses to remove what is in these, and to write into them; the
 # locked one is listed first, so that what comes after the refusal is tried too
 chmod 555 06-plugin-delete/stuck/a-locked 06-plugin-delete/jammed/a-locked 06-plugin-delete/readonly
+
+# ---------------------------------------------------------- plugin mkdir ---
+#
+# F7 inside a connection of a plugin panel makes a directory on the server.
+
+mkdir -p 07-plugin-mkdir
+printf 'only here for the cursor\n' > 07-plugin-mkdir/here.txt
+
+cat > 07-plugin-mkdir/cases.tsv <<'EOF'
+file	key	expect	why	transports
+here.txt	key F7,type made-by-f7,Enter	text: made-by-f7	F7 makes a directory in a plugin panel	ftp,sftp,sh
+here.txt	key F7,type made-by-f7,Enter	no text: Cannot create	and says nothing went wrong	ftp,sftp,sh
+here.txt	key F7,type made-by-f7,Enter,Enter	text: 07-plugin-mkdir/made-by-f7	the cursor is on it and it can be entered	ftp,sftp,sh
+here.txt	key F7,type one/two,Enter,on one,Enter	text: two	a path makes the directories above it too	ftp,sftp
+EOF
 
 echo "fileops cases in $dir"
