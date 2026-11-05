@@ -57,6 +57,7 @@
 #include "lib/vfs/utilvfs.h"
 #include "lib/widget.h"
 
+#include "src/history.h"  // MC_HISTORY_FM_MKDIR
 #include "src/viewer/mcviewer.h"
 
 /*** file scope type declarations ****************************************************************/
@@ -151,6 +152,7 @@ static mc_pp_result_t sftp_enter (void *plugin_data, const char *name, const str
 static mc_pp_result_t sftp_get_local_copy (void *plugin_data, const char *fname, char **local_path);
 static mc_pp_result_t sftp_copy_to_local (void *plugin_data, const char *fname,
                                           const char *local_path);
+static mc_pp_result_t sftp_mkdir (void *plugin_data, const char *path);
 static mc_pp_result_t sftp_put_file (void *plugin_data, const char *local_path,
                                      const char *dest_name);
 static mc_pp_result_t sftp_delete_items (void *plugin_data, const char **names, int count);
@@ -215,6 +217,7 @@ static const mc_panel_plugin_t sftp_plugin = {
     .view = sftp_view_item,
     .handle_key = sftp_handle_key,
     .create_item = sftp_create_item,
+    .mkdir = sftp_mkdir,
     .get_quick_view = sftp_get_quick_view,
     .get_help_info = sftp_get_help_info,
 };
@@ -2488,6 +2491,53 @@ upload_done:
 /* --------------------------------------------------------------------------------------------- */
 
 static mc_pp_result_t
+sftp_mkdir (void *plugin_data, const char *path)
+{
+    sftp_data_t *data = (sftp_data_t *) plugin_data;
+    char **parts;
+    char *remote_path;
+    mc_pp_result_t result = MC_PPR_OK;
+    int i;
+
+    if (data->at_root || data->sftp_session == NULL || data->current_path == NULL)
+        return MC_PPR_FAILED;
+
+    parts = g_strsplit (path, "/", -1);
+    remote_path = g_strdup (data->current_path);
+
+    for (i = 0; parts[i] != NULL && result == MC_PPR_OK; i++)
+    {
+        char *next;
+
+        if (parts[i][0] == '\0')
+            continue;
+
+        next = mc_pp_join_path (remote_path, parts[i]);
+        g_free (remote_path);
+        remote_path = next;
+
+        if (libssh2_sftp_mkdir (data->sftp_session, remote_path, 0755) != 0)
+        {
+            LIBSSH2_SFTP_ATTRIBUTES attrs;
+
+            if (libssh2_sftp_stat (data->sftp_session, remote_path, &attrs) != 0
+                || (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) == 0
+                || !LIBSSH2_SFTP_S_ISDIR (attrs.permissions))
+                result = MC_PPR_FAILED;
+        }
+    }
+
+    g_strfreev (parts);
+    g_free (remote_path);
+
+    sftp_reload_entries (data);
+
+    return result;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static mc_pp_result_t
 sftp_delete_items (void *plugin_data, const char **names, int count)
 {
     sftp_data_t *data = (sftp_data_t *) plugin_data;
@@ -2580,7 +2630,29 @@ sftp_create_item (void *plugin_data)
     sftp_connection_t *conn;
 
     if (!data->at_root)
-        return MC_PPR_NOT_SUPPORTED;
+    {
+        char *name;
+
+        name = input_dialog (_ ("Create a directory"), _ ("Enter directory name:"),
+                             MC_HISTORY_FM_MKDIR, "", INPUT_COMPLETE_NONE);
+        if (name == NULL || name[0] == '\0')
+        {
+            g_free (name);
+            return MC_PPR_SKIPPED;
+        }
+
+        if (sftp_mkdir (data, name) != MC_PPR_OK)
+        {
+            message (D_ERROR, MSG_ERROR, _ ("Cannot create directory\n%s"), name);
+            g_free (name);
+            return MC_PPR_FAILED;
+        }
+
+        g_free (data->host->focus_after);
+        data->host->focus_after = name;
+
+        return MC_PPR_OK;
+    }
 
     conn = g_new0 (sftp_connection_t, 1);
     conn->port = SFTP_DEFAULT_PORT;

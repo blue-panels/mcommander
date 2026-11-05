@@ -51,6 +51,7 @@
 #include "lib/vfs/utilvfs.h"
 #include "lib/widget.h"
 
+#include "src/history.h"  // MC_HISTORY_FM_MKDIR
 #include "src/viewer/mcviewer.h"
 
 /*** file scope type declarations ****************************************************************/
@@ -3140,7 +3141,29 @@ ftp_create_item (void *plugin_data)
     ftp_connection_t *conn;
 
     if (!data->at_root)
-        return MC_PPR_NOT_SUPPORTED;
+    {
+        char *name;
+
+        name = input_dialog (_ ("Create a directory"), _ ("Enter directory name:"),
+                             MC_HISTORY_FM_MKDIR, "", INPUT_COMPLETE_NONE);
+        if (name == NULL || name[0] == '\0')
+        {
+            g_free (name);
+            return MC_PPR_SKIPPED;
+        }
+
+        if (ftp_mkdir (data, name) != MC_PPR_OK)
+        {
+            message (D_ERROR, MSG_ERROR, _ ("Cannot create directory\n%s"), name);
+            g_free (name);
+            return MC_PPR_FAILED;
+        }
+
+        g_free (data->host->focus_after);
+        data->host->focus_after = name;
+
+        return MC_PPR_OK;
+    }
 
     conn = g_new0 (ftp_connection_t, 1);
     conn->port = FTP_DEFAULT_PORT;
