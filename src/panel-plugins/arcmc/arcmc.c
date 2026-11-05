@@ -139,48 +139,6 @@ move_file_cross_fs (const char *src, const char *dst)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Remove a directory tree recursively. */
-static void
-rm_rf (const char *path)
-{
-    GDir *dir;
-    const char *entry;
-
-    dir = g_dir_open (path, 0, NULL);
-    if (dir != NULL)
-    {
-        while ((entry = g_dir_read_name (dir)) != NULL)
-        {
-            char *child = g_build_filename (path, entry, NULL);
-
-            if (g_file_test (child, G_FILE_TEST_IS_DIR))
-                rm_rf (child);
-            else
-                unlink (child);
-            g_free (child);
-        }
-        g_dir_close (dir);
-    }
-    rmdir (path);
-}
-
-/* Free bulk extract cache and remove temp directory. */
-static void
-arcmc_bulk_cache_cleanup (arcmc_data_t *data)
-{
-    if (data->bulk_cache != NULL)
-    {
-        g_hash_table_destroy (data->bulk_cache);
-        data->bulk_cache = NULL;
-    }
-    if (data->bulk_temp_dir != NULL)
-    {
-        rm_rf (data->bulk_temp_dir);
-        g_free (data->bulk_temp_dir);
-        data->bulk_temp_dir = NULL;
-    }
-}
-
 /*** file scope variables ************************************************************************/
 
 static mc_pp_result_t
@@ -1066,7 +1024,7 @@ arcmc_close (void *plugin_data)
         g_free (f);
     }
 
-    arcmc_bulk_cache_cleanup (data);
+    arcmc_data_drop_cache (data);
 
     arcmc_data_free_entries (data);
     g_free (data->archive_path);
@@ -1140,7 +1098,7 @@ arcmc_chdir (void *plugin_data, const char *path)
 {
     arcmc_data_t *data = (arcmc_data_t *) plugin_data;
 
-    arcmc_bulk_cache_cleanup (data);
+    arcmc_data_drop_cache (data);
 
     if (strcmp (path, "..") == 0)
     {
@@ -1325,17 +1283,11 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
 
     target_path = arcmc_target_path (data, fname);
 
-    /* check bulk cache first (populated by a previous bulk extract) */
-    if (data->bulk_cache != NULL)
+    // a copy of what was unpacked before; the caller removes it, the cache keeps its own
+    if (arcmc_cache_hand_out (data, target_path, local_path))
     {
-        const char *cached = (const char *) g_hash_table_lookup (data->bulk_cache, target_path);
-
-        if (cached != NULL && g_file_test (cached, G_FILE_TEST_EXISTS))
-        {
-            *local_path = g_strdup (cached);
-            g_free (target_path);
-            return MC_PPR_OK;
-        }
+        g_free (target_path);
+        return MC_PPR_OK;
     }
 
     /* extfs mode - if ext archiver has unpack_bin and multiple marked files, bulk extract */
@@ -1385,23 +1337,16 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
                             g_hash_table_insert (data->bulk_cache, g_strdup (mp), lp);
                         }
 
-                        /* lookup the requested file in cache */
+                        if (arcmc_cache_hand_out (data, target_path, local_path))
                         {
-                            const char *cached =
-                                (const char *) g_hash_table_lookup (data->bulk_cache, target_path);
-
-                            if (cached != NULL && g_file_test (cached, G_FILE_TEST_EXISTS))
-                            {
-                                *local_path = g_strdup (cached);
-                                g_ptr_array_free (marked_files, TRUE);
-                                g_free (target_path);
-                                return MC_PPR_OK;
-                            }
+                            g_ptr_array_free (marked_files, TRUE);
+                            g_free (target_path);
+                            return MC_PPR_OK;
                         }
                     }
                     else
                     {
-                        rm_rf (temp_dir);
+                        arcmc_rm_rf (temp_dir);
                         g_free (temp_dir);
                     }
                 }
@@ -1425,13 +1370,13 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
     }
 
     progress = arcmc_progress_create (_ ("Extracting..."), data->archive_path, file_size);
-    result = arcmc_extract_entry (data, target_path, local_path, progress);
+    result = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
 
     if (result != MC_PPR_OK && !progress->aborted && arcmc_ask_password (data))
     {
         progress->done_bytes = 0;
         progress->written_bytes = 0;
-        result = arcmc_extract_entry (data, target_path, local_path, progress);
+        result = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
     }
 
     arcmc_progress_destroy (progress);
@@ -1648,6 +1593,9 @@ arcmc_put_file (void *plugin_data, const char *local_path, const char *dest_name
     if (data->input_stream != NULL)
         return MC_PPR_NOT_SUPPORTED;
 
+    // the cache holds files of the archive as it was, whatever the reread gives
+    arcmc_data_drop_cache (data);
+
     if (data->current_dir[0] != '\0')
         archive_name = g_strconcat (data->current_dir, "/", dest_name, NULL);
     else
@@ -1710,6 +1658,8 @@ arcmc_delete_items (void *plugin_data, const char **names, int count)
 
     if (data->input_stream != NULL)
         return MC_PPR_NOT_SUPPORTED;
+
+    arcmc_data_drop_cache (data);
 
     full_paths = g_new (char *, count);
 

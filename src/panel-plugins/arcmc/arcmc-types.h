@@ -92,6 +92,8 @@ typedef struct
     arcmc_nest_frame_t *nest_stack;     /* stack of outer archives for nested browsing */
     GHashTable *bulk_cache;             /* bulk extract cache: filename -> local_path */
     char *bulk_temp_dir;                /* temp directory for bulk-extracted files */
+    off_t bulk_cache_size;              /* bytes of the files in bulk_cache */
+    guint bulk_cache_seq;               /* number of the next file in bulk_temp_dir */
     gboolean history_enabled;           /* FALSE for non-reconstructable input streams */
 } arcmc_data_t;
 

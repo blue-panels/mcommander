@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "lib/global.h"
 
@@ -94,7 +95,55 @@ arcmc_data_find_entry (arcmc_data_t *data, const char *full_path)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Drop the index of @data: all_entries is another list now. */
+/* Remove a directory tree recursively. */
+void
+arcmc_rm_rf (const char *path)
+{
+    GDir *dir;
+    const char *entry;
+
+    dir = g_dir_open (path, 0, NULL);
+    if (dir != NULL)
+    {
+        while ((entry = g_dir_read_name (dir)) != NULL)
+        {
+            char *child = g_build_filename (path, entry, NULL);
+
+            if (g_file_test (child, G_FILE_TEST_IS_DIR))
+                arcmc_rm_rf (child);
+            else
+                unlink (child);
+            g_free (child);
+        }
+        g_dir_close (dir);
+    }
+    rmdir (path);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Drop the files unpacked before and kept in the cache of @data. */
+void
+arcmc_data_drop_cache (arcmc_data_t *data)
+{
+    if (data->bulk_cache != NULL)
+    {
+        g_hash_table_destroy (data->bulk_cache);
+        data->bulk_cache = NULL;
+    }
+    if (data->bulk_temp_dir != NULL)
+    {
+        arcmc_rm_rf (data->bulk_temp_dir);
+        g_free (data->bulk_temp_dir);
+        data->bulk_temp_dir = NULL;
+    }
+    data->bulk_cache_size = 0;
+    data->bulk_cache_seq = 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Drop the index and the cache of @data: all_entries is another list now. */
 void
 arcmc_data_entries_changed (arcmc_data_t *data)
 {
@@ -103,6 +152,7 @@ arcmc_data_entries_changed (arcmc_data_t *data)
         g_hash_table_destroy (data->entry_index);
         data->entry_index = NULL;
     }
+    arcmc_data_drop_cache (data);
 }
 
 /* --------------------------------------------------------------------------------------------- */
