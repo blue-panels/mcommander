@@ -2845,6 +2845,38 @@ shell_get_title (void *plugin_data)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Like mc's own F7: the directories above @rpath are made too, and only the last
+   one must not be there already. */
+static gboolean
+shell_mkdir_parents (shfs_conn_t *conn, const char *rpath, GError **error)
+{
+    const char *p;
+
+    for (p = strchr (rpath + 1, PATH_SEP); p != NULL; p = strchr (p + 1, PATH_SEP))
+    {
+        char *parent;
+        gboolean ok;
+
+        if (p[1] == '\0' || p[-1] == PATH_SEP)
+            continue;
+
+        parent = g_strndup (rpath, (gsize) (p - rpath));
+        ok = shfs_mkdir_path (conn, parent, 0755, error);
+        g_free (parent);
+
+        if (!ok)
+        {
+            if (!g_error_matches (*error, SHFS_ERROR, SHFS_ERR_EXISTS))
+                return FALSE;
+            g_clear_error (error);
+        }
+    }
+
+    return shfs_mkdir_path (conn, rpath, 0755, error);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static mc_pp_result_t
 shell_create_item (void *plugin_data)
 {
@@ -2869,7 +2901,7 @@ shell_create_item (void *plugin_data)
         }
 
         rpath = shell_remote_path (data, name);
-        ok = shfs_mkdir_path (data->conn, rpath, 0755, &error);
+        ok = shell_mkdir_parents (data->conn, rpath, &error);
         g_free (rpath);
 
         if (!ok)

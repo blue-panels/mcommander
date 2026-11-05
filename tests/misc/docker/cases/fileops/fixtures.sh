@@ -156,7 +156,8 @@ file	key	expect	why	transports
 here.txt	key F7,type made-by-f7,Enter	text: made-by-f7	F7 makes a directory in a plugin panel	ftp,sftp,sh
 here.txt	key F7,type made-by-f7,Enter	no text: Cannot create	and says nothing went wrong	ftp,sftp,sh
 here.txt	key F7,type made-by-f7,Enter,Enter	text: 07-plugin-mkdir/made-by-f7	the cursor is on it and it can be entered	ftp,sftp,sh
-here.txt	key F7,type one/two,Enter,on one,Enter	text: two	a path makes the directories above it too	ftp,sftp
+here.txt	key F7,type one/two,Enter,on one,Enter	text: two	a path makes the directories above it too	ftp,sftp,sh
+here.txt	key F7,type here.txt,Enter	text: already exists	a name that is taken is still an error	sh
 EOF
 
 echo "fileops cases in $dir"
