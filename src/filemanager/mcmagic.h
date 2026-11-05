@@ -13,7 +13,8 @@ typedef enum
 {
     MC_MAGIC_ACTION_NONE,
     MC_MAGIC_ACTION_FOUND,
-    MC_MAGIC_ACTION_ERROR
+    MC_MAGIC_ACTION_ERROR,
+    MC_MAGIC_ACTION_SKIPPED /* the user stopped the fetch of the file: nothing more to do */
 } mc_magic_action_state_t;
 
 typedef struct

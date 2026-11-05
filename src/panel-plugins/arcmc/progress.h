@@ -33,8 +33,10 @@
 
 arcmc_progress_t *arcmc_progress_create (const char *title, const char *archive_path,
                                          off_t total_bytes);
+void arcmc_progress_set_delay (arcmc_progress_t *p, gint64 usec);
 void arcmc_progress_destroy (arcmc_progress_t *p);
 gboolean arcmc_progress_update (arcmc_progress_t *p, const char *filename, off_t file_size,
                                 off_t file_done, off_t total_done, off_t written);
+gboolean arcmc_progress_seek (arcmc_progress_t *p, const char *filename, off_t pos, off_t size);
 
 #endif /* ARCMC_PROGRESS_H */

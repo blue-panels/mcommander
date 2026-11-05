@@ -377,6 +377,8 @@ panel_magic_view_plugin_file (WPanel *panel, const file_entry_t *fe, WView *targ
         panel_magic_view_error (target, fe->fname->str, NULL);
         handled = TRUE;
     }
+    else if (state == MC_MAGIC_ACTION_SKIPPED)
+        handled = TRUE;
 
     if (!handled && copy_out != NULL)
     {
@@ -518,7 +520,9 @@ do_view_cmd (WPanel *panel, gboolean plain_view)
                 r = panel->plugin->get_local_copy (panel->plugin_data, fe->fname->str, &local_path);
             if (r != MC_PPR_OK || local_path == NULL)
             {
-                message (D_ERROR, MSG_ERROR, _ ("Cannot get local copy of %s"), fe->fname->str);
+                if (r != MC_PPR_SKIPPED)
+                    message (D_ERROR, MSG_ERROR, _ ("Cannot get local copy of %s"), fe->fname->str);
+                g_free (local_path);
                 return;
             }
 
@@ -1263,6 +1267,7 @@ edit_plugin_panel_file (const WPanel *panel, const file_entry_t *fe, gboolean fo
 {
     char *plugin_fname;
     char *local_path = NULL;
+    mc_pp_result_t r;
     vfs_path_t *local_vpath;
     char *before_contents = NULL;
     gsize before_len = 0;
@@ -1283,10 +1288,12 @@ edit_plugin_panel_file (const WPanel *panel, const file_entry_t *fe, gboolean fo
     }
 
     plugin_fname = g_strdup (fe->fname->str);
-    if (panel->plugin->get_local_copy (panel->plugin_data, plugin_fname, &local_path) != MC_PPR_OK
-        || local_path == NULL)
+    r = panel->plugin->get_local_copy (panel->plugin_data, plugin_fname, &local_path);
+    if (r != MC_PPR_OK || local_path == NULL)
     {
-        message (D_ERROR, MSG_ERROR, _ ("Cannot get local copy of %s"), plugin_fname);
+        if (r != MC_PPR_SKIPPED)
+            message (D_ERROR, MSG_ERROR, _ ("Cannot get local copy of %s"), plugin_fname);
+        g_free (local_path);
         g_free (plugin_fname);
         return;
     }

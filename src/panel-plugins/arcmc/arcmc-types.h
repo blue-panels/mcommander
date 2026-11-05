@@ -85,12 +85,15 @@ typedef struct
     char *current_dir;                  /* current directory inside the archive ("" = root) */
     char *password;                     /* password (if encrypted), NULL otherwise */
     GPtrArray *all_entries;             /* flat list of all entries from the archive */
+    GHashTable *entry_index;            /* all_entries by full_path, built on demand, or NULL */
     char *title_buf;                    /* buffer for get_title */
     char *extfs_helper;                 /* full path to extfs helper, or NULL for libarchive mode */
     mc_pp_input_stream_t *input_stream; /* owned non-local archive source, or NULL */
     arcmc_nest_frame_t *nest_stack;     /* stack of outer archives for nested browsing */
     GHashTable *bulk_cache;             /* bulk extract cache: filename -> local_path */
     char *bulk_temp_dir;                /* temp directory for bulk-extracted files */
+    off_t bulk_cache_size;              /* bytes of the files in bulk_cache */
+    guint bulk_cache_seq;               /* number of the next file in bulk_temp_dir */
     gboolean history_enabled;           /* FALSE for non-reconstructable input streams */
 } arcmc_data_t;
 
@@ -115,6 +118,8 @@ typedef struct
     off_t file_bytes;    /* current file total size */
     off_t file_done;     /* current file bytes done */
     gint64 start_time;   /* g_get_monotonic_time() at start */
+    gint64 delay;        /* the dialog is shown this long after start, in microseconds */
+    gint64 last_draw;    /* when the dialog was drawn last, without a total to measure by */
     int gauge_cols;      /* visual bar length in characters */
     int last_total_col;  /* last drawn column of total gauge */
     int last_file_col;   /* last drawn column of file gauge */

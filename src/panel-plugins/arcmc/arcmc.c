@@ -139,48 +139,6 @@ move_file_cross_fs (const char *src, const char *dst)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Remove a directory tree recursively. */
-static void
-rm_rf (const char *path)
-{
-    GDir *dir;
-    const char *entry;
-
-    dir = g_dir_open (path, 0, NULL);
-    if (dir != NULL)
-    {
-        while ((entry = g_dir_read_name (dir)) != NULL)
-        {
-            char *child = g_build_filename (path, entry, NULL);
-
-            if (g_file_test (child, G_FILE_TEST_IS_DIR))
-                rm_rf (child);
-            else
-                unlink (child);
-            g_free (child);
-        }
-        g_dir_close (dir);
-    }
-    rmdir (path);
-}
-
-/* Free bulk extract cache and remove temp directory. */
-static void
-arcmc_bulk_cache_cleanup (arcmc_data_t *data)
-{
-    if (data->bulk_cache != NULL)
-    {
-        g_hash_table_destroy (data->bulk_cache);
-        data->bulk_cache = NULL;
-    }
-    if (data->bulk_temp_dir != NULL)
-    {
-        rm_rf (data->bulk_temp_dir);
-        g_free (data->bulk_temp_dir);
-        data->bulk_temp_dir = NULL;
-    }
-}
-
 /*** file scope variables ************************************************************************/
 
 static mc_pp_result_t
@@ -531,8 +489,7 @@ arcmc_open (mc_panel_host_t *host, const char *open_path)
 
     if (!arcmc_try_open (data))
     {
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
         g_free (data->archive_path);
         g_free (data->display_path);
         g_free (data->current_dir);
@@ -571,8 +528,7 @@ arcmc_open_input_stream (mc_panel_host_t *host, const char *display_name,
     /* The format comes from the content: the name a stream arrives with lies. */
     if (!arcmc_try_open (data))
     {
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
         g_free (data->archive_path);
         g_free (data->display_path);
         g_free (data->current_dir);
@@ -697,8 +653,7 @@ arcmc_action_browse (mc_panel_host_t *host, const char *open_path)
 
     if (!arcmc_try_open (data))
     {
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
         g_free (data->archive_path);
         g_free (data->display_path);
         g_free (data->current_dir);
@@ -919,8 +874,7 @@ arcmc_action_extract (mc_panel_host_t *host, const char *open_path)
                 }
             }
 
-            if (tmp_data.all_entries != NULL)
-                g_ptr_array_free (tmp_data.all_entries, TRUE);
+            arcmc_data_free_entries (&tmp_data);
             g_free (tmp_data.current_dir);
             g_free (tmp_data.extfs_helper);
         }
@@ -1008,8 +962,7 @@ arcmc_action_test (mc_panel_host_t *host, const char *open_path)
             }
             g_free (msg);
 
-            if (tmp_data.all_entries != NULL)
-                g_ptr_array_free (tmp_data.all_entries, TRUE);
+            arcmc_data_free_entries (&tmp_data);
             g_free (tmp_data.current_dir);
         }
 
@@ -1071,10 +1024,9 @@ arcmc_close (void *plugin_data)
         g_free (f);
     }
 
-    arcmc_bulk_cache_cleanup (data);
+    arcmc_data_drop_cache (data);
 
-    if (data->all_entries != NULL)
-        g_ptr_array_free (data->all_entries, TRUE);
+    arcmc_data_free_entries (data);
     g_free (data->archive_path);
     g_free (data->display_path);
     g_free (data->current_dir);
@@ -1146,7 +1098,7 @@ arcmc_chdir (void *plugin_data, const char *path)
 {
     arcmc_data_t *data = (arcmc_data_t *) plugin_data;
 
-    arcmc_bulk_cache_cleanup (data);
+    arcmc_data_drop_cache (data);
 
     if (strcmp (path, "..") == 0)
     {
@@ -1158,8 +1110,7 @@ arcmc_chdir (void *plugin_data, const char *path)
                 arcmc_nest_frame_t *f = data->nest_stack;
 
                 /* clean up current (nested) state */
-                if (data->all_entries != NULL)
-                    g_ptr_array_free (data->all_entries, TRUE);
+                arcmc_data_free_entries (data);
                 g_free (data->archive_path);
                 g_free (data->display_path);
                 g_free (data->current_dir);
@@ -1220,7 +1171,7 @@ arcmc_chdir (void *plugin_data, const char *path)
         char *new_dir;
 
         new_dir = build_child_path (data->current_dir, path);
-        e = arcmc_find_entry (data->all_entries, new_dir);
+        e = arcmc_data_find_entry (data, new_dir);
 
         if (e == NULL || (!S_ISDIR (e->mode) && !e->link_to_dir))
         {
@@ -1266,7 +1217,7 @@ arcmc_enter (void *plugin_data, const char *name, const struct stat *st)
         if (r != MC_PPR_OK || local_path == NULL)
         {
             g_free (local_path);
-            return MC_PPR_FAILED;
+            return r == MC_PPR_SKIPPED ? r : MC_PPR_FAILED;
         }
 
 #ifdef HAVE_LIBMAGIC
@@ -1296,7 +1247,7 @@ arcmc_enter (void *plugin_data, const char *name, const struct stat *st)
         if (r != MC_PPR_OK || local_path == NULL)
         {
             g_free (local_path);
-            return MC_PPR_NOT_SUPPORTED;
+            return r == MC_PPR_SKIPPED ? r : MC_PPR_NOT_SUPPORTED;
         }
 
         if (arcmc_is_archive_by_content (local_path))
@@ -1332,17 +1283,11 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
 
     target_path = arcmc_target_path (data, fname);
 
-    /* check bulk cache first (populated by a previous bulk extract) */
-    if (data->bulk_cache != NULL)
+    // a copy of what was unpacked before; the caller removes it, the cache keeps its own
+    if (arcmc_cache_hand_out (data, target_path, local_path))
     {
-        const char *cached = (const char *) g_hash_table_lookup (data->bulk_cache, target_path);
-
-        if (cached != NULL && g_file_test (cached, G_FILE_TEST_EXISTS))
-        {
-            *local_path = g_strdup (cached);
-            g_free (target_path);
-            return MC_PPR_OK;
-        }
+        g_free (target_path);
+        return MC_PPR_OK;
     }
 
     /* extfs mode - if ext archiver has unpack_bin and multiple marked files, bulk extract */
@@ -1392,23 +1337,16 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
                             g_hash_table_insert (data->bulk_cache, g_strdup (mp), lp);
                         }
 
-                        /* lookup the requested file in cache */
+                        if (arcmc_cache_hand_out (data, target_path, local_path))
                         {
-                            const char *cached =
-                                (const char *) g_hash_table_lookup (data->bulk_cache, target_path);
-
-                            if (cached != NULL && g_file_test (cached, G_FILE_TEST_EXISTS))
-                            {
-                                *local_path = g_strdup (cached);
-                                g_ptr_array_free (marked_files, TRUE);
-                                g_free (target_path);
-                                return MC_PPR_OK;
-                            }
+                            g_ptr_array_free (marked_files, TRUE);
+                            g_free (target_path);
+                            return MC_PPR_OK;
                         }
                     }
                     else
                     {
-                        rm_rf (temp_dir);
+                        arcmc_rm_rf (temp_dir);
                         g_free (temp_dir);
                     }
                 }
@@ -1425,22 +1363,24 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
 
     /* find file size for progress */
     {
-        const arcmc_entry_t *e = arcmc_find_entry (data->all_entries, target_path);
+        const arcmc_entry_t *e = arcmc_data_find_entry (data, target_path);
 
         if (e != NULL)
             file_size = e->size;
     }
 
     progress = arcmc_progress_create (_ ("Extracting..."), data->archive_path, file_size);
-    result = arcmc_extract_entry (data, target_path, local_path, progress);
+    result = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
 
     if (result != MC_PPR_OK && !progress->aborted && arcmc_ask_password (data))
     {
         progress->done_bytes = 0;
         progress->written_bytes = 0;
-        result = arcmc_extract_entry (data, target_path, local_path, progress);
+        result = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
     }
 
+    if (result != MC_PPR_OK && progress->aborted)
+        result = MC_PPR_SKIPPED;
     arcmc_progress_destroy (progress);
     g_free (target_path);
     return result;
@@ -1612,7 +1552,7 @@ arcmc_copy_to_local (void *plugin_data, const char *fname, const char *dest_path
     mc_pp_result_t result;
 
     src = arcmc_target_path (data, fname);
-    e = arcmc_find_entry (data->all_entries, src);
+    e = arcmc_data_find_entry (data, src);
 
     if (e != NULL && S_ISDIR (e->mode))
     {
@@ -1654,6 +1594,9 @@ arcmc_put_file (void *plugin_data, const char *local_path, const char *dest_name
 
     if (data->input_stream != NULL)
         return MC_PPR_NOT_SUPPORTED;
+
+    // the cache holds files of the archive as it was, whatever the reread gives
+    arcmc_data_drop_cache (data);
 
     if (data->current_dir[0] != '\0')
         archive_name = g_strconcat (data->current_dir, "/", dest_name, NULL);
@@ -1717,6 +1660,8 @@ arcmc_delete_items (void *plugin_data, const char **names, int count)
 
     if (data->input_stream != NULL)
         return MC_PPR_NOT_SUPPORTED;
+
+    arcmc_data_drop_cache (data);
 
     full_paths = g_new (char *, count);
 
@@ -1816,19 +1761,18 @@ arcmc_dir_size (arcmc_data_t *data)
 
     if (data->host->get_marked_count (data->host) != 0)
     {
+        GHashTable *names;
         const GString *name;
         int idx = 0;
 
+        names = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
         while ((name = data->host->get_next_marked (data->host, &idx)) != NULL)
         {
-            char *path;
-
-            path = build_child_path (data->current_dir, name->str);
-            if (arcmc_compute_dir_size (data->all_entries, path))
-                done = TRUE;
-            g_free (path);
+            g_hash_table_add (names, g_strdup (name->str));
             idx++;
         }
+        done = arcmc_compute_named_dir_sizes (data->all_entries, data->current_dir, names) != 0;
+        g_hash_table_destroy (names);
     }
 
     if (done)

@@ -60,10 +60,11 @@
 /* Outcome of reading the table of contents with libarchive. */
 typedef enum
 {
-    ARCMC_READ_OK = 0,      /* contents read */
-    ARCMC_READ_FAILED,      /* unreadable: not an archive, unknown format, I/O error */
-    ARCMC_READ_ENCRYPTED,   /* encrypted: a password is needed */
-    ARCMC_READ_ENCRYPTED_7Z /* encrypted 7z: only the external 7z program can read it */
+    ARCMC_READ_OK = 0,       /* contents read */
+    ARCMC_READ_FAILED,       /* unreadable: not an archive, unknown format, I/O error */
+    ARCMC_READ_ENCRYPTED,    /* encrypted: a password is needed */
+    ARCMC_READ_ENCRYPTED_7Z, /* encrypted 7z: only the external 7z program can read it */
+    ARCMC_READ_ABORTED       /* the user stopped the reading */
 } arcmc_read_result_t;
 
 /* 7z binaries that understand the -p switch, in order of preference.
@@ -167,11 +168,151 @@ strip_trailing_slashes (char *path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The size of the file the archive is read from, or 0 if it is not a local file. */
+static off_t
+source_size (const arcmc_data_t *data)
+{
+    const char *local;
+    struct stat st;
+
+    local = data->input_stream == NULL ? data->archive_path
+                                       : mc_pp_input_stream_local_path (data->input_stream, NULL);
+    if (local != NULL && stat (local, &st) == 0 && S_ISREG (st.st_mode))
+        return st.st_size;
+    return 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The progress of reading the table of contents, shown when it takes longer than 4 seconds.
+   With @measured, the share of the archive read is counted from the size of its file. */
+static arcmc_progress_t *
+read_progress_new (const arcmc_data_t *data, gboolean measured)
+{
+    arcmc_progress_t *p;
+
+    p = arcmc_progress_create (_ ("Reading archive"),
+                               data->display_path != NULL ? data->display_path : data->archive_path,
+                               measured ? source_size (data) : 0);
+    arcmc_progress_set_delay (p, 4 * G_USEC_PER_SEC);
+    return p;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* What the dialog of a pass counts */
+typedef enum
+{
+    PASS_TOC,  /* the table of contents is read: the bytes of the archive read */
+    PASS_SEEK, /* entries are looked for: the position in the archive file */
+    PASS_COPY  /* entries are copied out: the bytes copied, told by the copy itself */
+} pass_mode_t;
+
+/* A pass over the archive that tells a progress dialog how far it has got. */
+typedef struct
+{
+    struct archive *a;
+    arcmc_progress_t *p;
+    off_t size; /* bytes of the archive file, 0 if it is not a local file */
+    pass_mode_t mode;
+    gint64 next; /* when the dialog is told again */
+} pass_t;
+
+static void
+pass_init (pass_t *pass, const arcmc_data_t *data, struct archive *a, arcmc_progress_t *p,
+           pass_mode_t mode)
+{
+    pass->a = a;
+    pass->p = p;
+    pass->size = p != NULL ? source_size (data) : 0;
+    pass->mode = mode;
+    pass->next = 0;
+}
+
+/* Tell the dialog of the pass a few times a second, whatever the size of the entries.
+   FALSE if the user stopped the pass. */
+static gboolean
+pass_report (pass_t *pass, const char *pathname)
+{
+    gint64 now;
+    off_t pos;
+
+    if (pass->p == NULL)
+        return TRUE;
+
+    now = g_get_monotonic_time ();
+    if (now < pass->next)
+        return TRUE;
+    pass->next = now + G_USEC_PER_SEC / 20;
+
+    pos = archive_filter_bytes (pass->a, -1);
+    switch (pass->mode)
+    {
+    case PASS_TOC:
+        return arcmc_progress_update (pass->p, pathname, 0, 0, pos, 0);
+    case PASS_SEEK:
+        return arcmc_progress_seek (pass->p, pathname, pos, pass->size);
+    default:
+        // the numbers stay those of the last copy, only the buttons are looked at
+        return arcmc_progress_update (pass->p, NULL, pass->p->file_bytes, pass->p->file_done,
+                                      pass->p->done_bytes, pass->p->written_bytes);
+    }
+}
+
+/* TRUE if reading the data of the entry costs no more than skipping it: the plain data of
+   a tar or a cpio inside a compressed stream or a stream that cannot be seeked. A zip,
+   a 7z or a rar skips the packed data of an entry without unpacking it. */
+static gboolean
+pass_reads_anyway (const pass_t *pass)
+{
+    int format = archive_format (pass->a) & ARCHIVE_FORMAT_BASE_MASK;
+
+    if (format != ARCHIVE_FORMAT_TAR && format != ARCHIVE_FORMAT_CPIO)
+        return FALSE;
+    return pass->size == 0 || archive_filter_code (pass->a, 0) != ARCHIVE_FILTER_NONE;
+}
+
+/* Pass over the data of the entry the reader stands on. When it is read anyway, it is read
+   block by block, and the dialog is told between the blocks. FALSE if the user stopped
+   the pass. */
+static gboolean
+pass_skip (pass_t *pass, const char *pathname)
+{
+    if (pass->p == NULL || !pass_reads_anyway (pass))
+    {
+        archive_read_data_skip (pass->a);
+        return TRUE;
+    }
+
+    for (;;)
+    {
+        const void *buf;
+        size_t len;
+        la_int64_t offset;
+
+        // the end of the data, or an error the next header meets again
+        if (archive_read_data_block (pass->a, &buf, &len, &offset) != ARCHIVE_OK)
+            return TRUE;
+        if (!pass_report (pass, pathname))
+            return FALSE;
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Add @e to @entries and to @by_path, the entries by their path while the archive is read. */
+static void
+add_entry (GPtrArray *entries, GHashTable *by_path, arcmc_entry_t *e)
+{
+    g_ptr_array_add (entries, e);
+    g_hash_table_insert (by_path, e->full_path, e);
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 /* Ensure all parent directories of `full_path` exist as virtual dir entries. */
 static void
-ensure_parent_dirs (GPtrArray *entries, const char *full_path)
+ensure_parent_dirs (GPtrArray *entries, GHashTable *by_path, const char *full_path)
 {
     char *tmp;
     char *slash;
@@ -187,7 +328,7 @@ ensure_parent_dirs (GPtrArray *entries, const char *full_path)
         saved = *slash;
         *slash = '\0';
 
-        if (tmp[0] == '\0' || arcmc_find_entry (entries, tmp) != NULL)
+        if (tmp[0] == '\0' || g_hash_table_contains (by_path, tmp))
         {
             *slash = saved;
             continue;
@@ -204,7 +345,7 @@ ensure_parent_dirs (GPtrArray *entries, const char *full_path)
         dir_entry->mtime = time (NULL);
         dir_entry->is_virtual_dir = TRUE;
 
-        g_ptr_array_add (entries, dir_entry);
+        add_entry (entries, by_path, dir_entry);
 
         *slash = saved;
     }
@@ -514,7 +655,7 @@ arcmc_target_path (arcmc_data_t *data, const char *name)
     const arcmc_entry_t *e;
 
     path = build_child_path (data->current_dir, name);
-    e = arcmc_find_entry (data->all_entries, path);
+    e = arcmc_data_find_entry (data, path);
 
     if (e != NULL && S_ISLNK (e->mode) && e->link_path != NULL && !e->link_to_dir)
     {
@@ -903,9 +1044,9 @@ arcmc_extfs_env (const char *password, const char *archive_path)
 /* --------------------------------------------------------------------------------------------- */
 
 /* Read archive contents using an extfs helper's "list" command.
-   Returns TRUE on success, FALSE on error. */
-gboolean
-arcmc_read_archive_extfs (arcmc_data_t *data)
+   Returns TRUE on success, FALSE on error; `*stopped` tells that the user stopped it. */
+static gboolean
+read_archive_extfs (arcmc_data_t *data, gboolean *stopped)
 {
     char *quoted_archive;
     char *env;
@@ -913,7 +1054,13 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
     mc_pipe_t *pip;
     GError *error = NULL;
     GString *remain_line = NULL;
+    GHashTable *by_path;
+    arcmc_progress_t *progress;
+    GPtrArray *entries;
+    guint lines = 0;
+    gboolean aborted = FALSE;
 
+    *stopped = FALSE;
     quoted_archive = name_quote (data->archive_path, FALSE);
     env = arcmc_extfs_env (data->password, data->archive_path);
     cmd = g_strconcat (env, data->extfs_helper, " list ", quoted_archive, (char *) NULL);
@@ -930,12 +1077,13 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
         return FALSE;
     }
 
-    if (data->all_entries != NULL)
-        g_ptr_array_free (data->all_entries, TRUE);
+    // the old list stays until the new one is read in full
+    entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    by_path = g_hash_table_new (g_str_hash, g_str_equal);
+    // the helper says nothing of how far it is
+    progress = read_progress_new (data, FALSE);
 
-    data->all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
-
-    for (;;)
+    while (!aborted)
     {
         GString *buffer;
 
@@ -1005,9 +1153,9 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
                     clean = g_strdup (clean);
                     strip_trailing_slashes (clean);
 
-                    if (clean[0] != '\0' && arcmc_find_entry (data->all_entries, clean) == NULL)
+                    if (clean[0] != '\0' && !g_hash_table_contains (by_path, clean))
                     {
-                        ensure_parent_dirs (data->all_entries, clean);
+                        ensure_parent_dirs (entries, by_path, clean);
 
                         e = g_new0 (arcmc_entry_t, 1);
                         e->full_path = clean;
@@ -1025,7 +1173,11 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
                         e->mtime = st.st_mtime;
                         e->is_virtual_dir = FALSE;
 
-                        g_ptr_array_add (data->all_entries, e);
+                        add_entry (entries, by_path, e);
+
+                        if (++lines % 64 == 0
+                            && !arcmc_progress_update (progress, e->full_path, 0, 0, 0, 0))
+                            aborted = TRUE;
                     }
                     else
                         g_free (clean);
@@ -1036,17 +1188,45 @@ arcmc_read_archive_extfs (arcmc_data_t *data)
             }
 
             g_string_free (buffer, TRUE);
+            if (aborted)
+                break;
         }
     }
+
+    arcmc_progress_destroy (progress);
 
     if (remain_line != NULL)
         g_string_free (remain_line, TRUE);
 
+    // a helper that still writes ends on the closed pipe, one that does not on the signal
+    if (aborted)
+        kill (pip->child_pid, SIGTERM);
     mc_pclose (pip, NULL);
+    g_hash_table_destroy (by_path);
 
-    arcmc_resolve_links (data->all_entries);
+    // an archive with nothing left in it is a full list too, only not a success to open
+    if (!aborted)
+    {
+        arcmc_resolve_links (entries);
+        arcmc_data_free_entries (data);
+        data->all_entries = entries;
+    }
+    else
+        g_ptr_array_free (entries, TRUE);
 
-    return (data->all_entries->len > 0);
+    *stopped = aborted;
+    return !aborted && data->all_entries->len > 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Read archive contents using an extfs helper, TRUE on success. */
+gboolean
+arcmc_read_archive_extfs (arcmc_data_t *data)
+{
+    gboolean stopped;
+
+    return read_archive_extfs (data, &stopped);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -1149,7 +1329,7 @@ arcmc_extract_entry_extfs (arcmc_data_t *data, const char *target_path, char **l
         const arcmc_entry_t *e;
         struct stat st;
 
-        e = arcmc_find_entry (data->all_entries, target_path);
+        e = arcmc_data_find_entry (data, target_path);
         failed = stat (*local_path, &st) != 0 || (e != NULL && e->size > 0 && st.st_size == 0);
     }
 
@@ -1238,16 +1418,21 @@ arcmc_read_archive_res (arcmc_data_t *data)
     struct archive_entry *entry;
     arcmc_read_result_t res = ARCMC_READ_OK;
     arcmc_archive_reader_ctx_t *reader_ctx;
+    GHashTable *by_path;
+    GPtrArray *entries;
+    arcmc_progress_t *progress;
+    pass_t pass;
     int r;
 
     a = arcmc_archive_reader_open (data, &reader_ctx);
     if (a == NULL)
         return ARCMC_READ_FAILED;
 
-    if (data->all_entries != NULL)
-        g_ptr_array_free (data->all_entries, TRUE);
-
-    data->all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    // the old list stays until the new one is read in full
+    entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    by_path = g_hash_table_new (g_str_hash, g_str_equal);
+    progress = read_progress_new (data, TRUE);
+    pass_init (&pass, data, a, progress, PASS_TOC);
 
     while ((r = archive_read_next_header (a, &entry)) == ARCHIVE_OK)
     {
@@ -1258,6 +1443,13 @@ arcmc_read_archive_res (arcmc_data_t *data)
         mode_t entry_mode;
 
         pathname = archive_entry_pathname (entry);
+
+        if (!pass_report (&pass, pathname))
+        {
+            res = ARCMC_READ_ABORTED;
+            break;
+        }
+
         if (pathname == NULL || pathname[0] == '\0')
             continue;
 
@@ -1278,14 +1470,14 @@ arcmc_read_archive_res (arcmc_data_t *data)
         }
 
         /* skip if duplicate */
-        if (arcmc_find_entry (data->all_entries, clean_path) != NULL)
+        if (g_hash_table_contains (by_path, clean_path))
         {
             g_free (clean_path);
             continue;
         }
 
         /* ensure parent directories exist */
-        ensure_parent_dirs (data->all_entries, clean_path);
+        ensure_parent_dirs (entries, by_path, clean_path);
 
         e = g_new0 (arcmc_entry_t, 1);
         e->full_path = clean_path;
@@ -1308,13 +1500,19 @@ arcmc_read_archive_res (arcmc_data_t *data)
         e->mtime = archive_entry_mtime (entry);
         e->is_virtual_dir = FALSE;
 
-        g_ptr_array_add (data->all_entries, e);
+        add_entry (entries, by_path, e);
 
-        archive_read_data_skip (a);
+        if (!pass_skip (&pass, pathname))
+        {
+            res = ARCMC_READ_ABORTED;
+            break;
+        }
     }
 
+    arcmc_progress_destroy (progress);
+
     /* Check if we failed due to encryption */
-    if (r != ARCHIVE_EOF)
+    if (res == ARCMC_READ_OK && r != ARCHIVE_EOF)
     {
         const char *err_str;
 
@@ -1336,7 +1534,16 @@ arcmc_read_archive_res (arcmc_data_t *data)
         res = ARCMC_READ_ENCRYPTED_7Z;
 
     arcmc_archive_reader_close (a, reader_ctx);
-    arcmc_resolve_links (data->all_entries);
+    g_hash_table_destroy (by_path);
+
+    if (res == ARCMC_READ_OK)
+    {
+        arcmc_resolve_links (entries);
+        arcmc_data_free_entries (data);
+        data->all_entries = entries;
+    }
+    else
+        g_ptr_array_free (entries, TRUE);
     return res;
 }
 
@@ -1367,6 +1574,8 @@ arcmc_try_open (arcmc_data_t *data)
 
     if (res == ARCMC_READ_OK)
         return TRUE;
+    if (res == ARCMC_READ_ABORTED)
+        return FALSE;
 
     /* An external helper needs a filename. A file-backed stream has one; an
        arbitrary stream does not. */
@@ -1427,11 +1636,21 @@ arcmc_try_open (arcmc_data_t *data)
         g_free (data->password);
         data->password = pw;
 
-        if (arcmc_read_archive (data))
+        res = arcmc_read_archive_res (data);
+        if (res == ARCMC_READ_OK)
             return TRUE;
+        if (res == ARCMC_READ_ABORTED)
+            break;
 
-        if (data->extfs_helper != NULL && arcmc_read_archive_extfs (data))
-            return TRUE;
+        if (data->extfs_helper != NULL)
+        {
+            gboolean stopped = FALSE;
+
+            if (read_archive_extfs (data, &stopped))
+                return TRUE;
+            if (stopped)
+                break;
+        }
 
         message (D_ERROR, MSG_ERROR, "%s", _ ("Wrong password"));
     }
@@ -2026,138 +2245,6 @@ arcmc_do_pack (const arcmc_pack_opts_t *opts, const char *cwd, GPtrArray *files,
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Extract the entry `target_path` from the current archive to a temp file.
-   `p` is an optional progress context (may be NULL). */
-mc_pp_result_t
-arcmc_extract_entry (arcmc_data_t *data, const char *target_path, char **local_path,
-                     arcmc_progress_t *p)
-{
-    struct archive *a;
-    struct archive_entry *entry;
-    arcmc_archive_reader_ctx_t *reader_ctx;
-    int r;
-
-    a = arcmc_archive_reader_open (data, &reader_ctx);
-    if (a == NULL)
-        return MC_PPR_FAILED;
-
-    while (archive_read_next_header (a, &entry) == ARCHIVE_OK)
-    {
-        const char *pathname;
-        char *clean;
-
-        pathname = archive_entry_pathname (entry);
-        if (pathname == NULL)
-            continue;
-
-        clean = g_strdup (pathname);
-        strip_trailing_slashes (clean);
-
-        if (strcmp (clean, target_path) != 0)
-        {
-            g_free (clean);
-            archive_read_data_skip (a);
-            continue;
-        }
-
-        g_free (clean);
-
-        /* found the entry - extract it to a temp file */
-        {
-            GError *error = NULL;
-            int fd;
-            off_t file_size, file_done = 0;
-            char *tmp_path = NULL;
-
-            file_size = archive_entry_size (entry);
-
-            fd = g_file_open_tmp ("mc-arcmc-XXXXXX", &tmp_path, &error);
-            if (fd == -1)
-            {
-                if (error != NULL)
-                    g_error_free (error);
-                arcmc_archive_reader_close (a, reader_ctx);
-                return MC_PPR_FAILED;
-            }
-
-            *local_path = tmp_path;
-            mc_pp_rename_with_ext (local_path, target_path);
-
-            for (;;)
-            {
-                const void *buff;
-                size_t len;
-                la_int64_t offset;
-
-                r = archive_read_data_block (a, &buff, &len, &offset);
-                if (r == ARCHIVE_EOF)
-                    break;
-                if (r != ARCHIVE_OK)
-                {
-                    close (fd);
-                    unlink (*local_path);
-                    g_free (*local_path);
-                    *local_path = NULL;
-                    arcmc_archive_reader_close (a, reader_ctx);
-                    return MC_PPR_FAILED;
-                }
-
-                {
-                    const char *wbuf = (const char *) buff;
-                    size_t remaining = len;
-
-                    while (remaining > 0)
-                    {
-                        ssize_t nw = write (fd, wbuf, remaining);
-
-                        if (nw <= 0)
-                        {
-                            close (fd);
-                            unlink (*local_path);
-                            g_free (*local_path);
-                            *local_path = NULL;
-                            arcmc_archive_reader_close (a, reader_ctx);
-                            return MC_PPR_FAILED;
-                        }
-                        wbuf += nw;
-                        remaining -= (size_t) nw;
-                    }
-                }
-
-                file_done += (off_t) len;
-
-                if (p != NULL)
-                {
-                    p->done_bytes += (off_t) len;
-                    p->written_bytes += (off_t) len;
-
-                    if (!arcmc_progress_update (p, target_path, file_size, file_done, p->done_bytes,
-                                                p->written_bytes))
-                    {
-                        close (fd);
-                        unlink (*local_path);
-                        g_free (*local_path);
-                        *local_path = NULL;
-                        arcmc_archive_reader_close (a, reader_ctx);
-                        return MC_PPR_FAILED;
-                    }
-                }
-            }
-
-            close (fd);
-        }
-
-        arcmc_archive_reader_close (a, reader_ctx);
-        return MC_PPR_OK;
-    }
-
-    /* entry not found */
-    arcmc_archive_reader_close (a, reader_ctx);
-    return MC_PPR_FAILED;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 /* Extract the entry `name` from the current archive to a temp file.
    Returns MC_PPR_OK on success with `local_path` set. */
 mc_pp_result_t
@@ -2174,25 +2261,15 @@ arcmc_extract_to_temp (arcmc_data_t *data, const char *name, char **local_path)
     {
         arcmc_progress_t *progress;
         off_t file_size = 0;
-        guint i;
+        const arcmc_entry_t *e = arcmc_data_find_entry (data, target_path);
 
-        if (data->all_entries != NULL)
-        {
-            for (i = 0; i < data->all_entries->len; i++)
-            {
-                const arcmc_entry_t *e =
-                    (const arcmc_entry_t *) g_ptr_array_index (data->all_entries, i);
-
-                if (strcmp (e->full_path, target_path) == 0)
-                {
-                    file_size = e->size;
-                    break;
-                }
-            }
-        }
+        if (e != NULL)
+            file_size = e->size;
 
         progress = arcmc_progress_create (_ ("Extracting..."), data->archive_path, file_size);
-        r = arcmc_extract_entry (data, target_path, local_path, progress);
+        r = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
+        if (r != MC_PPR_OK && progress->aborted)
+            r = MC_PPR_SKIPPED;
         arcmc_progress_destroy (progress);
     }
 
@@ -2203,10 +2280,11 @@ arcmc_extract_to_temp (arcmc_data_t *data, const char *name, char **local_path)
 /* --------------------------------------------------------------------------------------------- */
 
 /* Write the entry the reader stands on into `out_path`.
-   `p` is an optional progress context (may be NULL). */
+   `p` is an optional progress context (may be NULL).  With `limit` >= 0 an entry longer
+   than that fails and `*written` gets more than `limit`; on success it gets the length. */
 static gboolean
 extract_current_to (struct archive *a, struct archive_entry *entry, const char *out_path,
-                    arcmc_progress_t *p)
+                    arcmc_progress_t *p, off_t limit, off_t *written)
 {
     off_t entry_size, done = 0;
     int fd;
@@ -2235,6 +2313,14 @@ extract_current_to (struct archive *a, struct archive_entry *entry, const char *
         }
 
         block_len = len;
+
+        if (limit >= 0 && (off_t) len > limit - done)
+        {
+            close (fd);
+            if (written != NULL)
+                *written = done + (off_t) len;
+            return FALSE;
+        }
 
         for (wbuf = (const char *) buff; len > 0;)
         {
@@ -2266,7 +2352,376 @@ extract_current_to (struct archive *a, struct archive_entry *entry, const char *
 
     close (fd);
 
+    if (written != NULL)
+        *written = done;
     return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* At most this much of the directory of an extracted entry is kept unpacked beside it. */
+#define DIR_CACHE_MAX ((off_t) 64 * 1024 * 1024)
+
+/* Past the entry asked for, the pass goes on only for the files of its directory that lie
+   within this much unpacked data of it. */
+#define DIR_FOLLOW_MAX ((off_t) 64 * 1024 * 1024)
+
+/* Write the entry the reader stands on into a new temp file named like `target_path`. */
+static gboolean
+entry_to_temp (struct archive *a, struct archive_entry *entry, const char *target_path,
+               char **local_path, arcmc_progress_t *p)
+{
+    char *tmp_path = NULL;
+    int fd;
+
+    fd = g_file_open_tmp ("mc-arcmc-XXXXXX", &tmp_path, NULL);
+    if (fd == -1)
+        return FALSE;
+    close (fd);
+
+    if (!extract_current_to (a, entry, tmp_path, p, -1, NULL))
+    {
+        unlink (tmp_path);
+        g_free (tmp_path);
+        return FALSE;
+    }
+
+    *local_path = tmp_path;
+    mc_pp_rename_with_ext (local_path, target_path);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Copy the file `src` into the open file `out`. */
+static gboolean
+copy_to_fd (const char *src, int out)
+{
+    char buf[64 * 1024];
+    ssize_t n;
+    int in;
+    gboolean ok = TRUE;
+
+    in = open (src, O_RDONLY);
+    if (in == -1)
+        return FALSE;
+
+    while (ok && (n = read (in, buf, sizeof (buf))) != 0)
+    {
+        ssize_t done = 0;
+
+        if (n < 0)
+        {
+            ok = (errno == EINTR);
+            continue;
+        }
+
+        while (ok && done < n)
+        {
+            ssize_t w = write (out, buf + done, (size_t) (n - done));
+
+            if (w > 0)
+                done += w;
+            else
+                ok = (w < 0 && errno == EINTR);
+        }
+    }
+
+    close (in);
+    return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* A new name in the cache directory, which is made on first use, or NULL. */
+static char *
+dir_cache_new_name (arcmc_data_t *data)
+{
+    if (data->bulk_temp_dir == NULL)
+        data->bulk_temp_dir = g_dir_make_tmp ("mc-arcmc-XXXXXX", NULL);
+    if (data->bulk_temp_dir == NULL)
+        return NULL;
+    if (data->bulk_cache == NULL)
+        data->bulk_cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+    return g_strdup_printf ("%s/%u", data->bulk_temp_dir, data->bulk_cache_seq++);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Keep a copy of `local_path`, the file `full_path` just extracted, in the cache. */
+static void
+dir_cache_keep_copy (arcmc_data_t *data, const char *full_path, const char *local_path)
+{
+    char *cached;
+    struct stat st;
+    off_t size;
+    int fd;
+    gboolean ok;
+
+    if (stat (local_path, &st) != 0)
+        return;
+    size = st.st_size;
+    if (size > DIR_CACHE_MAX - data->bulk_cache_size
+        || (cached = dir_cache_new_name (data)) == NULL)
+        return;
+
+    fd = open (cached, O_WRONLY | O_CREAT | O_EXCL, 0600);
+    ok = fd != -1 && copy_to_fd (local_path, fd);
+    if (fd != -1)
+        ok = close (fd) == 0 && ok;
+
+    if (!ok)
+    {
+        unlink (cached);
+        g_free (cached);
+        return;
+    }
+
+    g_hash_table_insert (data->bulk_cache, g_strdup (full_path), cached);
+    data->bulk_cache_size += size;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Unpack the entry the reader stands on into the cache. */
+static gboolean
+dir_cache_add (arcmc_data_t *data, struct archive *a, struct archive_entry *entry,
+               const char *full_path)
+{
+    char *cached;
+    off_t limit, written = 0;
+
+    cached = dir_cache_new_name (data);
+    if (cached == NULL)
+        return FALSE;
+
+    // the header may tell no size, so the budget is checked by what is written
+    limit = DIR_CACHE_MAX - data->bulk_cache_size;
+    if (!extract_current_to (a, entry, cached, NULL, limit, &written))
+    {
+        // more files of unknown size would only be unpacked to be thrown away
+        if (written > limit)
+            data->bulk_cache_size = DIR_CACHE_MAX;
+        unlink (cached);
+        g_free (cached);
+        return FALSE;
+    }
+
+    g_hash_table_insert (data->bulk_cache, g_strdup (full_path), cached);
+    data->bulk_cache_size += written;
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Whether the entry the reader stands on, `full_path`, is a file of `dir` not in the cache. */
+static gboolean
+dir_cache_lacks (const arcmc_data_t *data, struct archive_entry *entry, const char *full_path,
+                 const char *dir)
+{
+    return archive_entry_filetype (entry) == AE_IFREG && is_direct_child (full_path, dir) != NULL
+        && (data->bulk_cache == NULL || !g_hash_table_contains (data->bulk_cache, full_path));
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* How many files of `dir` not in the cache yet follow `target_path` in the archive within
+   DIR_FOLLOW_MAX of unpacked data. all_entries is in the order of the archive. */
+static guint
+dir_cache_followers (const arcmc_data_t *data, const char *dir, const char *target_path)
+{
+    guint i, n = 0;
+    off_t passed = 0;
+    gboolean after = FALSE;
+
+    for (i = 0; data->all_entries != NULL && i < data->all_entries->len; i++)
+    {
+        const arcmc_entry_t *e = g_ptr_array_index (data->all_entries, i);
+
+        if (!after)
+        {
+            after = strcmp (e->full_path, target_path) == 0;
+            continue;
+        }
+        if (e->is_virtual_dir)
+            continue;
+        if (S_ISREG (e->mode) && is_direct_child (e->full_path, dir) != NULL
+            && (data->bulk_cache == NULL
+                || !g_hash_table_contains (data->bulk_cache, e->full_path)))
+        {
+            if (passed > DIR_FOLLOW_MAX)
+                break;
+            n++;
+        }
+        passed += e->size;
+    }
+    return n;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Extract `target_path` to a temp file. With `keep_dir`, the other files of its directory
+   that are passed on the way are unpacked into the cache, and the pass goes on for the
+   files that follow it closely, so that the next file of the directory is at hand without
+   a new pass. */
+static mc_pp_result_t
+extract_entry (arcmc_data_t *data, const char *target_path, char **local_path, arcmc_progress_t *p,
+               gboolean keep_dir)
+{
+    struct archive *a;
+    struct archive_entry *entry;
+    arcmc_archive_reader_ctx_t *reader_ctx;
+    mc_pp_result_t result = MC_PPR_FAILED;
+    pass_t pass;
+    const char *slash;
+    char *dir = NULL;
+    guint left = 0;
+    gboolean found = FALSE, stopped = FALSE;
+
+    if (keep_dir && arcmc_cache_hand_out (data, target_path, local_path))
+        return MC_PPR_OK;
+
+    a = arcmc_archive_reader_open (data, &reader_ctx);
+    if (a == NULL)
+        return MC_PPR_FAILED;
+
+    pass_init (&pass, data, a, p, PASS_SEEK);
+
+    if (keep_dir && data->bulk_cache_size < DIR_CACHE_MAX)
+    {
+        slash = strrchr (target_path, '/');
+        dir =
+            slash != NULL ? g_strndup (target_path, (gsize) (slash - target_path)) : g_strdup ("");
+        left = dir_cache_followers (data, dir, target_path);
+    }
+
+    while (archive_read_next_header (a, &entry) == ARCHIVE_OK)
+    {
+        const char *pathname;
+        char *clean;
+
+        pathname = archive_entry_pathname (entry);
+
+        if (!pass_report (&pass, pathname))
+        {
+            stopped = TRUE;
+            break;
+        }
+
+        if (pathname == NULL)
+            continue;
+
+        clean = g_strdup (pathname);
+        strip_trailing_slashes (clean);
+
+        // the entries of a directory follow each other
+        if (found && !is_under_dir (clean, dir))
+        {
+            g_free (clean);
+            break;
+        }
+
+        if (!found && strcmp (clean, target_path) == 0)
+        {
+            found = TRUE;
+            if (!entry_to_temp (a, entry, target_path, local_path, p))
+            {
+                g_free (clean);
+                break;
+            }
+            result = MC_PPR_OK;
+            if (dir != NULL)
+                dir_cache_keep_copy (data, target_path, *local_path);
+        }
+        else if (dir != NULL && (!found || left > 0) && dir_cache_lacks (data, entry, clean, dir))
+        {
+            if (found)
+                left--;
+            // the cache is full: what is left of the directory is not worth the pass
+            if (archive_entry_size (entry) > DIR_CACHE_MAX - data->bulk_cache_size)
+            {
+                stopped = !pass_skip (&pass, pathname);
+                if (found)
+                    left = 0;
+            }
+            else if (!dir_cache_add (data, a, entry, clean) && found)
+                left = 0;
+        }
+        else
+            stopped = !pass_skip (&pass, pathname);
+
+        g_free (clean);
+
+        if (stopped || (found && left == 0))
+            break;
+    }
+
+    // stopped on the way to the files that follow: nothing is given out
+    if (stopped && found && result == MC_PPR_OK)
+    {
+        unlink (*local_path);
+        g_clear_pointer (local_path, g_free);
+        result = MC_PPR_FAILED;
+    }
+
+    g_free (dir);
+    arcmc_archive_reader_close (a, reader_ctx);
+    return result;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Give out a copy of the cached `target_path` as a new file of its own, which the caller may
+   change or remove. */
+gboolean
+arcmc_cache_hand_out (const arcmc_data_t *data, const char *target_path, char **local_path)
+{
+    const char *cached;
+    char *tmp_path = NULL;
+    int fd;
+    gboolean ok;
+
+    if (data->bulk_cache == NULL
+        || (cached = g_hash_table_lookup (data->bulk_cache, target_path)) == NULL)
+        return FALSE;
+
+    fd = g_file_open_tmp ("mc-arcmc-XXXXXX", &tmp_path, NULL);
+    if (fd == -1)
+        return FALSE;
+    ok = copy_to_fd (cached, fd);
+    ok = close (fd) == 0 && ok;
+
+    if (!ok)
+    {
+        unlink (tmp_path);
+        g_free (tmp_path);
+        return FALSE;
+    }
+
+    *local_path = tmp_path;
+    mc_pp_rename_with_ext (local_path, target_path);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Extract the entry `target_path` from the current archive to a temp file.
+   `p` is an optional progress context (may be NULL). */
+mc_pp_result_t
+arcmc_extract_entry (arcmc_data_t *data, const char *target_path, char **local_path,
+                     arcmc_progress_t *p)
+{
+    return extract_entry (data, target_path, local_path, p, FALSE);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* As arcmc_extract_entry(), and the files of the same directory are kept at hand. */
+mc_pp_result_t
+arcmc_extract_entry_keep_dir (arcmc_data_t *data, const char *target_path, char **local_path,
+                              arcmc_progress_t *p)
+{
+    return extract_entry (data, target_path, local_path, p, TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2286,12 +2741,14 @@ arcmc_extract_subtree (arcmc_data_t *data, const char *src_dir, const char *dest
     size_t dir_len;
     char *last_dir = NULL;
     mc_pp_result_t result = MC_PPR_OK;
+    pass_t pass;
 
     a = arcmc_archive_reader_open (data, &reader_ctx);
     if (a == NULL)
         return MC_PPR_FAILED;
 
     dir_len = strlen (src_dir);
+    pass_init (&pass, data, a, p, PASS_COPY);
 
     while (result == MC_PPR_OK && archive_read_next_header (a, &entry) == ARCHIVE_OK)
     {
@@ -2309,7 +2766,8 @@ arcmc_extract_subtree (arcmc_data_t *data, const char *src_dir, const char *dest
         if (!is_under_dir (clean, src_dir))
         {
             g_free (clean);
-            archive_read_data_skip (a);
+            if (!pass_report (&pass, pathname) || !pass_skip (&pass, pathname))
+                result = MC_PPR_FAILED;
             continue;
         }
 
@@ -2340,7 +2798,7 @@ arcmc_extract_subtree (arcmc_data_t *data, const char *src_dir, const char *dest
 
             if (result == MC_PPR_OK)
             {
-                if (!extract_current_to (a, entry, out_path, p))
+                if (!extract_current_to (a, entry, out_path, p, -1, NULL))
                     result = MC_PPR_FAILED;
                 else if ((mode & 0777) != 0)
                     chmod (out_path, mode & 0777);
@@ -2376,6 +2834,7 @@ arcmc_push_nested (arcmc_data_t *data, char *local_path, const char *display_nam
     frame->password = data->password;
     frame->extfs_helper = data->extfs_helper;
     frame->all_entries = data->all_entries;
+    arcmc_data_entries_changed (data);
     frame->input_stream = data->input_stream;
     frame->temp_file = local_path;
     data->nest_stack = frame;
@@ -2399,8 +2858,7 @@ arcmc_push_nested (arcmc_data_t *data, char *local_path, const char *display_nam
         g_free (data->current_dir);
         g_free (data->password);
         g_free (data->extfs_helper);
-        if (data->all_entries != NULL)
-            g_ptr_array_free (data->all_entries, TRUE);
+        arcmc_data_free_entries (data);
 
         data->archive_path = f->archive_path;
         data->display_path = f->display_path;

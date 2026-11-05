@@ -513,6 +513,30 @@ magic_find_in_config (magic_config_t *config, const mc_magic_source_t *source, c
 }
 
 /* --------------------------------------------------------------------------------------------- */
+
+/* The file is fetched at most once in a lookup: a fetch that failed or that the user stopped
+   is not started again by the next rule that wants the contents. */
+typedef struct
+{
+    const mc_magic_source_t *source;
+    gboolean tried;
+    mc_pp_result_t result;
+} magic_fetch_once_t;
+
+static mc_pp_result_t
+magic_fetch_once (void *data, char **local_copy)
+{
+    magic_fetch_once_t *once = (magic_fetch_once_t *) data;
+
+    if (!once->tried)
+    {
+        once->tried = TRUE;
+        once->result = once->source->get_local_copy (once->source->data, local_copy);
+    }
+    return once->result;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
@@ -523,6 +547,8 @@ mc_magic_find_action (const mc_magic_source_t *source, const char *action, char 
     mc_magic_action_state_t state;
     magic_type_info_t type = { FALSE, { '\0' } };
     magic_mime_info_t mime = { FALSE, NULL };
+    magic_fetch_once_t once = { source, FALSE, MC_PPR_OK };
+    mc_magic_source_t fetched;
     gboolean matched;
 
     if (source == NULL || source->display_name == NULL || action == NULL || local_copy == NULL
@@ -532,18 +558,26 @@ mc_magic_find_action (const mc_magic_source_t *source, const char *action, char 
     mc_magic_action_clear (result);
     magic_configs_load ();
 
-    /* file(1) runs at most once for the file, however many rules ask. */
-    state = magic_find_in_config (&magic_user_config, source, action, local_copy, result, &matched,
-                                  &type, &mime);
-    if (matched)
+    fetched = *source;
+    if (source->get_local_copy != NULL && *local_copy == NULL)
     {
-        g_free (mime.text);
-        return state;
+        fetched.get_local_copy = magic_fetch_once;
+        fetched.data = &once;
     }
 
-    state = magic_find_in_config (&magic_system_config, source, action, local_copy, result,
+    /* file(1) runs at most once for the file, however many rules ask. */
+    state = magic_find_in_config (&magic_user_config, &fetched, action, local_copy, result,
                                   &matched, &type, &mime);
+    if (!matched && once.result != MC_PPR_SKIPPED)
+        state = magic_find_in_config (&magic_system_config, &fetched, action, local_copy, result,
+                                      &matched, &type, &mime);
     g_free (mime.text);
+
+    if (once.result == MC_PPR_SKIPPED)
+    {
+        mc_magic_action_clear (result);
+        state = MC_MAGIC_ACTION_SKIPPED;
+    }
     return state;
 }
 

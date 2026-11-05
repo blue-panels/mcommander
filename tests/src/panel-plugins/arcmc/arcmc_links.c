@@ -178,6 +178,64 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Only the named directories of the level, in a single pass. */
+START_TEST (test_compute_named_dir_sizes)
+{
+    GHashTable *names;
+
+    add ("etc", S_IFDIR | 0755, NULL);
+    add ("etc/config", S_IFREG | 0644, NULL)->size = 12;
+    add ("var", S_IFDIR | 0755, NULL);
+    add ("var/log", S_IFREG | 0644, NULL)->size = 7;
+    add ("loose", S_IFREG | 0644, NULL)->size = 99;
+
+    names = g_hash_table_new (g_str_hash, g_str_equal);
+    g_hash_table_add (names, (gpointer) "etc");
+    g_hash_table_add (names, (gpointer) "loose");
+
+    // a file among the names is not counted
+    ck_assert_uint_eq (arcmc_compute_named_dir_sizes (entries, "", names), 1);
+    ck_assert_int_eq (get ("etc")->dir_size, 12);
+    ck_assert (!get ("var")->dir_size_computed);
+    ck_assert (!get ("loose")->dir_size_computed);
+
+    g_hash_table_remove_all (names);
+    g_hash_table_add (names, (gpointer) "loose");
+    ck_assert_uint_eq (arcmc_compute_named_dir_sizes (entries, "", names), 0);
+    g_hash_table_destroy (names);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The index finds what the list holds, the first entry of a path wins, and a new list is
+   indexed again. */
+START_TEST (test_data_find_entry)
+{
+    arcmc_data_t data = { 0 };
+    const arcmc_entry_t *first;
+
+    first = add ("a", S_IFDIR | 0755, NULL);
+    add ("a/f", S_IFREG | 0644, NULL);
+    add ("a", S_IFREG | 0644, NULL);
+
+    data.all_entries = entries;
+    ck_assert_ptr_eq (arcmc_data_find_entry (&data, "a"), first);
+    ck_assert_ptr_nonnull (arcmc_data_find_entry (&data, "a/f"));
+    ck_assert_ptr_null (arcmc_data_find_entry (&data, "b"));
+
+    // the list is the fixture's: give it back before it is freed
+    data.all_entries = g_ptr_array_new_with_free_func (arcmc_entry_free);
+    arcmc_data_entries_changed (&data);
+    ck_assert_ptr_null (arcmc_data_find_entry (&data, "a"));
+    arcmc_data_free_entries (&data);
+    ck_assert_ptr_null (data.all_entries);
+    ck_assert_ptr_null (data.entry_index);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* A second pass starts over, as after a reload. */
 START_TEST (test_resolve_twice)
 {
@@ -205,6 +263,8 @@ main (void)
     tcase_add_test (tc_core, test_links_are_resolved);
     tcase_add_test (tc_core, test_compute_dir_size);
     tcase_add_test (tc_core, test_compute_level_dir_sizes);
+    tcase_add_test (tc_core, test_compute_named_dir_sizes);
+    tcase_add_test (tc_core, test_data_find_entry);
     tcase_add_test (tc_core, test_resolve_twice);
 
     return mctest_run_all (tc_core);
