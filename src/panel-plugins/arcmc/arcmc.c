@@ -1217,7 +1217,7 @@ arcmc_enter (void *plugin_data, const char *name, const struct stat *st)
         if (r != MC_PPR_OK || local_path == NULL)
         {
             g_free (local_path);
-            return MC_PPR_FAILED;
+            return r == MC_PPR_SKIPPED ? r : MC_PPR_FAILED;
         }
 
 #ifdef HAVE_LIBMAGIC
@@ -1247,7 +1247,7 @@ arcmc_enter (void *plugin_data, const char *name, const struct stat *st)
         if (r != MC_PPR_OK || local_path == NULL)
         {
             g_free (local_path);
-            return MC_PPR_NOT_SUPPORTED;
+            return r == MC_PPR_SKIPPED ? r : MC_PPR_NOT_SUPPORTED;
         }
 
         if (arcmc_is_archive_by_content (local_path))
@@ -1379,6 +1379,8 @@ arcmc_get_local_copy (void *plugin_data, const char *fname, char **local_path)
         result = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
     }
 
+    if (result != MC_PPR_OK && progress->aborted)
+        result = MC_PPR_SKIPPED;
     arcmc_progress_destroy (progress);
     g_free (target_path);
     return result;

@@ -2268,6 +2268,8 @@ arcmc_extract_to_temp (arcmc_data_t *data, const char *name, char **local_path)
 
         progress = arcmc_progress_create (_ ("Extracting..."), data->archive_path, file_size);
         r = arcmc_extract_entry_keep_dir (data, target_path, local_path, progress);
+        if (r != MC_PPR_OK && progress->aborted)
+            r = MC_PPR_SKIPPED;
         arcmc_progress_destroy (progress);
     }
 

@@ -4468,6 +4468,8 @@ panel_magic_open_plugin_file (WPanel *panel, const file_entry_t *fe, const char 
         if (report_error)
             panel_magic_error (fe->fname->str, NULL);
     }
+    else if (state == MC_MAGIC_ACTION_SKIPPED)
+        handled = TRUE;
     mc_magic_action_clear (&action);
     if (state == MC_MAGIC_ACTION_NONE)
         return PANEL_MAGIC_OPEN_NONE;
@@ -4635,7 +4637,8 @@ do_enter (WPanel *panel)
         if (panel->plugin->enter != NULL)
         {
             enter_result = panel->plugin->enter (panel->plugin_data, fe->fname->str, &fe->st);
-            if (!panel->is_plugin_panel || panel->plugin == NULL || panel->plugin_data == NULL)
+            if (!panel->is_plugin_panel || panel->plugin == NULL || panel->plugin_data == NULL
+                || enter_result == MC_PPR_SKIPPED)
             {
                 g_free (focus_name);
                 return TRUE;
