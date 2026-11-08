@@ -22,10 +22,14 @@
 
 #define TEST_SUITE_NAME "/src/viewer/fast_search"
 
+#include <config.h>
+
+#include <ctype.h>
+#include <locale.h>  // before lib/global.h: it can pull in libintl.h, which global.h stubs out
+
 #include "tests/mctest.h"
 
 #include <fcntl.h>
-#include <locale.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -49,16 +53,6 @@ message (int flags, const char *title, const char *text, ...)
     (void) flags;
     (void) title;
     (void) text;
-}
-
-int
-query_dialog (const char *header, const char *text, int flags, int count, ...)
-{
-    (void) header;
-    (void) text;
-    (void) flags;
-    (void) count;
-    return 1;
 }
 
 void
@@ -457,8 +451,10 @@ START_TEST (test_locale_case_rules)
     char *matches;
 
     old_locale = g_strdup (setlocale (LC_CTYPE, NULL));
-    if (setlocale (LC_CTYPE, "tr_TR.ISO-8859-9") == NULL)
+    // musl takes any name, so look at what the locale does
+    if (setlocale (LC_CTYPE, "tr_TR.ISO-8859-9") == NULL || toupper ('i') == 'I')
     {
+        setlocale (LC_CTYPE, old_locale);
         g_free (old_locale);
         return;  // the locale is not there on this machine
     }
@@ -493,7 +489,7 @@ END_TEST
 START_TEST (test_repeated_needle_in_repeated_data)
 {
     const gsize size = 512 * 1024;
-    const gsize needle_len = 10000;
+    const gsize needle_len = 1000;  // the regex of a longer caseless one is too large for old PCRE
     char *buf = g_malloc (size);
     char *pattern = g_malloc (needle_len + 1);
     gsize len = 0;
