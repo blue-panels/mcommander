@@ -41,6 +41,12 @@ START_TEST (test_marks_are_read)
     ck_assert (mcterm_osc133_parse ("133;B;mc=" TOKEN, TOKEN, &m));
     ck_assert_int_eq (m.mark, MCTERM_MARK_PROMPT_END);
 
+    ck_assert (mcterm_osc133_parse ("133;R;mc=" TOKEN, TOKEN, &m));
+    ck_assert_int_eq (m.mark, MCTERM_MARK_RPROMPT_START);
+
+    ck_assert (mcterm_osc133_parse ("133;S;mc=" TOKEN, TOKEN, &m));
+    ck_assert_int_eq (m.mark, MCTERM_MARK_RPROMPT_END);
+
     ck_assert (mcterm_osc133_parse ("133;C;mc=" TOKEN, TOKEN, &m));
     ck_assert_int_eq (m.mark, MCTERM_MARK_COMMAND_START);
 }

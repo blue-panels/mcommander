@@ -133,6 +133,13 @@ struct WMcTerm
     gint64 input_start_row;
     int input_start_col;
     gboolean input_start_valid;
+    /* The right prompt shares a row with the typed line. The shell wipes it when the line grows
+       up to it, and the cells are forgotten at the first output that changes them: text typed
+       over the same place can look the same. NULL when no right prompt is drawn. */
+    gint64 rprompt_row;
+    int rprompt_col;
+    int rprompt_len;
+    gunichar *rprompt_cells;
     /* Keys sent to the line are not on the screen until the shell echoes them: the line was
        told to go, or was typed on, and the screen has yet to say so. */
     gboolean line_cleared;
@@ -232,6 +239,7 @@ static gboolean mcterm_handle_osc7_generation (WMcTerm *t);
 static int mcterm_pty_ready_cb (int fd, void *info);
 static gboolean mcterm_osc7_is_ours (const WMcTerm *t, const char *raw);
 static gboolean mcterm_handle_osc133_generation (WMcTerm *t);
+static gboolean mcterm_rprompt_is_drawn (const WMcTerm *t);
 static void mcterm_handle_osc52_generation (WMcTerm *t);
 static gboolean mcterm_write_all (int master, const unsigned char *data, size_t len);
 static void mcterm_busy_tick (WMcTerm *t);
@@ -439,6 +447,8 @@ mcterm_pty_ready_cb (int fd, void *info)
             mcterm_handle_osc7_generation (t);
             mcterm_handle_osc133_generation (t);
             mcterm_handle_osc52_generation (t);
+            if (t->rprompt_cells != NULL && !mcterm_rprompt_is_drawn (t))
+                g_clear_pointer (&t->rprompt_cells, g_free);
         }
 
         mcterm_want_host_keys (t);
@@ -725,6 +735,45 @@ mcterm_handle_osc52_generation (WMcTerm *t)
  * @return TRUE when the shell has just come back to its prompt.
  */
 
+static gunichar
+mcterm_cell_char (const mcview_terminal_buffer_t *buf, int row, int col)
+{
+    const mcview_vterm_cell_t *cell = mcview_terminal_buffer_get (buf, row, col);
+
+    return (cell != NULL && cell->ch != 0) ? cell->ch : ' ';
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* After a change of width the right prompt can run over two rows. */
+static gboolean
+mcterm_rprompt_is_drawn (const WMcTerm *t)
+{
+    const mcview_terminal_buffer_t *buf = mcview_vterm_buf (t->vterm);
+    const int cols = WIDGET (t)->rect.cols;
+    gint64 row = t->rprompt_row - mcview_vterm_scrolled_rows (t->vterm);
+    int col = t->rprompt_col;
+    int i;
+
+    if (row < 0)
+        return FALSE;
+
+    for (i = 0; i < t->rprompt_len; i++, col++)
+    {
+        if (col >= cols)
+        {
+            row++;
+            col = 0;
+        }
+        if (mcterm_cell_char (buf, (int) row, col) != t->rprompt_cells[i])
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static gboolean
 mcterm_handle_osc133_generation (WMcTerm *t)
 {
@@ -745,6 +794,33 @@ mcterm_handle_osc133_generation (WMcTerm *t)
 
     switch (mark.mark)
     {
+    case MCTERM_MARK_RPROMPT_START:
+        t->rprompt_row = mcview_vterm_scrolled_rows (t->vterm) + mcview_vterm_cursor_row (t->vterm);
+        t->rprompt_col = mcview_vterm_cursor_col (t->vterm);
+        g_clear_pointer (&t->rprompt_cells, g_free);
+        return FALSE;
+
+    case MCTERM_MARK_RPROMPT_END:
+    {
+        const int cursor_row = mcview_vterm_cursor_row (t->vterm);
+        const int end_col =
+            mcview_vterm_cursor_col (t->vterm) + (mcview_vterm_pending_wrap (t->vterm) ? 1 : 0);
+
+        g_clear_pointer (&t->rprompt_cells, g_free);
+        if (mcview_vterm_scrolled_rows (t->vterm) + cursor_row == t->rprompt_row
+            && end_col > t->rprompt_col)
+        {
+            int col;
+
+            t->rprompt_len = end_col - t->rprompt_col;
+            t->rprompt_cells = g_new (gunichar, t->rprompt_len);
+            for (col = t->rprompt_col; col < end_col; col++)
+                t->rprompt_cells[col - t->rprompt_col] =
+                    mcterm_cell_char (mcview_vterm_buf (t->vterm), cursor_row, col);
+        }
+        return FALSE;
+    }
+
     case MCTERM_MARK_PROMPT_END:
         /* A prompt is printed again whenever the line editor redraws it - among other times,
            right after we hand it a command. Until the shell reports that command done, a
@@ -767,6 +843,7 @@ mcterm_handle_osc133_generation (WMcTerm *t)
         return TRUE;
 
     case MCTERM_MARK_COMMAND_START:
+        g_clear_pointer (&t->rprompt_cells, g_free);
         t->shell_at_prompt = FALSE;
         t->input_start_valid = FALSE;
         t->line_entered = FALSE;
@@ -1567,6 +1644,19 @@ mcterm_after_reflow (WMcTerm *t)
         else
             t->input_start_valid = FALSE;
     }
+    if (t->rprompt_cells != NULL)
+    {
+        gint64 row;
+        int col;
+
+        if (mcview_vterm_reflow_map (t->vterm, t->rprompt_row, t->rprompt_col, &row, &col))
+        {
+            t->rprompt_row = row;
+            t->rprompt_col = col;
+        }
+        else
+            g_clear_pointer (&t->rprompt_cells, g_free);
+    }
     mcterm_sel_clear (&t->sel);
     mcterm_filter_clear (&t->filter);
     t->cursor_valid = FALSE;
@@ -1750,6 +1840,7 @@ mcterm_clear_screen (WMcTerm *t, gboolean whole_buffer)
     const gint64 first_row = (t->shell_at_prompt && t->input_start_valid)
         ? MAX (t->input_start_row - scrolled, 0)
         : cursor_row;
+    gint64 moved;
 
     mcterm_follow_end (t);
     if (t->sel.anchored)
@@ -1759,9 +1850,11 @@ mcterm_clear_screen (WMcTerm *t, gboolean whole_buffer)
     if (whole_buffer)
         mcview_vterm_clear_history (t->vterm);
 
-    // The line moved down with its rows.
-    t->input_start_row += mcview_vterm_scrolled_rows (t->vterm) - scrolled
+    // The line moved down with its rows, the right prompt with it.
+    moved = mcview_vterm_scrolled_rows (t->vterm) - scrolled
         + (mcview_vterm_cursor_row (t->vterm) - cursor_row);
+    t->input_start_row += moved;
+    t->rprompt_row += moved;
     t->cursor_valid = FALSE;
     widget_draw (WIDGET (t));
     send_message (WIDGET (t), NULL, MSG_CURSOR, 0, NULL);
@@ -2960,6 +3053,7 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         t->last_osc7_gen = 0;
         g_free (t->osc7_token);
         t->osc7_token = NULL;
+        g_clear_pointer (&t->rprompt_cells, g_free);
         g_clear_pointer (&t->command_hint, g_free);
         mcview_terminal_buffer_free (t->sync_snapshot_buf);
         t->sync_snapshot_buf = NULL;
@@ -3952,6 +4046,31 @@ mcterm_settle_line (WMcTerm *t)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The column the typed line stops at on @row: the right prompt, while it is there. A shell
+   keeps its cursor to the left of the right prompt. */
+static int
+mcterm_line_limit (const WMcTerm *t, int row, int cols)
+{
+    const gint64 scrolled = mcview_vterm_scrolled_rows (t->vterm);
+    const gint64 abs_row = scrolled + row;
+    const gint64 cursor_abs = scrolled + mcview_vterm_cursor_row (t->vterm);
+
+    if (t->rprompt_cells == NULL || abs_row < t->rprompt_row
+        || abs_row > t->rprompt_row + (t->rprompt_col + t->rprompt_len - 1) / cols)
+        return cols;
+
+    if (cursor_abs > t->rprompt_row
+        || (cursor_abs == t->rprompt_row && mcview_vterm_cursor_col (t->vterm) >= t->rprompt_col))
+        return cols;
+
+    if (!mcterm_rprompt_is_drawn (t))
+        return cols;
+
+    return abs_row == t->rprompt_row ? t->rprompt_col : 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 char *
 mcterm_shell_line_text (WMcTerm *t)
 {
@@ -3991,11 +4110,14 @@ mcterm_shell_line_text (WMcTerm *t)
     {
         gsize row_start = text->len;
         gboolean blank = TRUE;
+        int limit;
 
         if (row > cursor_row && !mcview_terminal_buffer_is_wrapped (buf, (int) row - 1))
             break;
 
-        for (; col < cols; col++)
+        limit = mcterm_line_limit (t, (int) row, cols);
+
+        for (; col < limit; col++)
         {
             const mcview_vterm_cell_t *cell = mcview_terminal_buffer_get (buf, (int) row, col);
             gunichar ch = (cell != NULL && cell->ch != 0) ? cell->ch : ' ';
