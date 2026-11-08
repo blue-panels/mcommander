@@ -52,6 +52,10 @@ osc133_mark_of (char letter)
         return MCTERM_MARK_COMMAND_START;
     case 'D':
         return MCTERM_MARK_COMMAND_DONE;
+    case 'R':
+        return MCTERM_MARK_RPROMPT_START;
+    case 'S':
+        return MCTERM_MARK_RPROMPT_END;
     default:
         return MCTERM_MARK_NONE;
     }

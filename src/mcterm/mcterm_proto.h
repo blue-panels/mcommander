@@ -22,6 +22,8 @@ typedef enum
     MCTERM_MARK_PROMPT_END,     // 133;B - the prompt ends, what follows is typed by the user
     MCTERM_MARK_COMMAND_START,  // 133;C - the command is under way
     MCTERM_MARK_COMMAND_DONE,   // 133;D - it finished, with an exit code
+    MCTERM_MARK_RPROMPT_START,  // 133;R - ours: the right prompt begins here
+    MCTERM_MARK_RPROMPT_END,    // 133;S - ours: the right prompt ends here
 } mcterm_mark_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
