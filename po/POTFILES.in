@@ -86,6 +86,7 @@ src/keybind_dialog.c
 src/main.c
 src/manage_plugins.c
 src/mcterm/mcterm.c
+src/mcterm/mcterm_screen.c
 src/mctree/mctree-json-provider.c
 src/mctree/mctree-resolver.c
 src/mctree/mctree-xml-provider.c
@@ -107,9 +108,6 @@ src/panel-plugins/ftp/ftp.c
 src/panel-plugins/gh/files.c
 src/panel-plugins/gh/gh-cmd.c
 src/panel-plugins/gh/gh.c
-src/panel-plugins/gh/issues.c
-src/panel-plugins/gh/pulls.c
-src/panel-plugins/gh/repos.c
 src/panel-plugins/git/git.c
 src/panel-plugins/k8s/k8s-cmd.c
 src/panel-plugins/k8s/k8s-logs.c
@@ -126,6 +124,7 @@ src/panel-plugins/mcstruct/mcstruct_ui.c
 src/panel-plugins/mongo/mongo.c
 src/panel-plugins/mongo/mongo_bucket.c
 src/panel-plugins/mongo/mongo_connections.c
+src/panel-plugins/mongo/mongo_console.c
 src/panel-plugins/mongo/mongo_docops.c
 src/panel-plugins/mongo/mongo_filter.c
 src/panel-plugins/mongo/mongo_nav.c
