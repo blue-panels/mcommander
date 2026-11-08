@@ -2450,6 +2450,14 @@ mcview_vterm_cursor_col (const mcview_vterm_t *vt)
 /* --------------------------------------------------------------------------------------------- */
 
 gboolean
+mcview_vterm_pending_wrap (const mcview_vterm_t *vt)
+{
+    return vt->pending_wrap;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
 mcview_vterm_in_alt_screen (const mcview_vterm_t *vt)
 {
     return vt->in_alt_screen;

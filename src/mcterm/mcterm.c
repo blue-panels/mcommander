@@ -777,17 +777,21 @@ mcterm_handle_osc133_generation (WMcTerm *t)
         return FALSE;
 
     case MCTERM_MARK_RPROMPT_END:
+    {
+        const int cursor_row = mcview_vterm_cursor_row (t->vterm);
+        const int end_col =
+            mcview_vterm_cursor_col (t->vterm) + (mcview_vterm_pending_wrap (t->vterm) ? 1 : 0);
+
         g_clear_pointer (&t->rprompt_text, g_free);
-        if (mcview_vterm_scrolled_rows (t->vterm) + mcview_vterm_cursor_row (t->vterm)
-                == t->rprompt_row
-            && mcview_vterm_cursor_col (t->vterm) > t->rprompt_col)
+        if (mcview_vterm_scrolled_rows (t->vterm) + cursor_row == t->rprompt_row
+            && end_col > t->rprompt_col)
         {
-            t->rprompt_end_col = mcview_vterm_cursor_col (t->vterm);
-            t->rprompt_text =
-                mcterm_cells_text (mcview_vterm_buf (t->vterm), mcview_vterm_cursor_row (t->vterm),
-                                   t->rprompt_col, t->rprompt_end_col);
+            t->rprompt_end_col = end_col;
+            t->rprompt_text = mcterm_cells_text (mcview_vterm_buf (t->vterm), cursor_row,
+                                                 t->rprompt_col, end_col);
         }
         return FALSE;
+    }
 
     case MCTERM_MARK_PROMPT_END:
         /* A prompt is printed again whenever the line editor redraws it - among other times,

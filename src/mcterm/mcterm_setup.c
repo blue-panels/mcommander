@@ -183,12 +183,11 @@ mcterm_fish_integration (void)
         "function fish_prompt; printf "
         "'\\033]133;A;" MC_MARK_TOK "\\a'; __mc_orig_prompt; "
         "printf '\\033]133;B;" MC_MARK_TOK "\\a'; end; "
-        // the marks must not take $status away from a right prompt that shows it
+        // called first: any command before it would take $status and $pipestatus away
         "if functions -q fish_right_prompt; "
         "functions -q __mc_orig_rprompt; or functions -c fish_right_prompt __mc_orig_rprompt; "
-        "function __mc_status; return $argv[1]; end; "
-        "function fish_right_prompt; set -l s $status; "
-        "printf '\\033]133;R;" MC_MARK_TOK "\\a'; __mc_status $s; __mc_orig_rprompt; "
+        "function fish_right_prompt; set -l out (__mc_orig_rprompt); "
+        "printf '\\033]133;R;" MC_MARK_TOK "\\a'; printf '%s' $out; "
         "printf '\\033]133;S;" MC_MARK_TOK "\\a'; end; end; "
         "function __mc_preexec --on-event fish_preexec; "
         "printf '\\033]133;C;" MC_MARK_TOK "\\a'; end; "

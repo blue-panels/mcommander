@@ -87,6 +87,8 @@ void mcview_vterm_apply_event (mcview_vterm_t *vt, const vterm_event_t *ev);
 
 int mcview_vterm_cursor_row (const mcview_vterm_t *vt);
 int mcview_vterm_cursor_col (const mcview_vterm_t *vt);
+// The last column is taken and the cursor still stands in it: the next character wraps.
+gboolean mcview_vterm_pending_wrap (const mcview_vterm_t *vt);
 gboolean mcview_vterm_in_alt_screen (const mcview_vterm_t *vt);
 gboolean mcview_vterm_app_cursor_keys (const mcview_vterm_t *vt);
 /* Whether the program asked for bracketed paste (ESC[?2004h) and did not turn it off. */
