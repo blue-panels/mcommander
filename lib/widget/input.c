@@ -1227,10 +1227,14 @@ input_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *dat
         return MSG_HANDLED;
 
     case MSG_DESTROY:
-        // unsubscribe from "history_load" event
-        mc_event_del (h->event_group, MCEVENT_HISTORY_LOAD, input_load_history, w);
-        // unsubscribe from "history_save" event
-        mc_event_del (h->event_group, MCEVENT_HISTORY_SAVE, input_save_history, w);
+        // an input that has never been in a dialog has not subscribed to its events
+        if (h != NULL)
+        {
+            // unsubscribe from "history_load" event
+            mc_event_del (h->event_group, MCEVENT_HISTORY_LOAD, input_load_history, w);
+            // unsubscribe from "history_save" event
+            mc_event_del (h->event_group, MCEVENT_HISTORY_SAVE, input_save_history, w);
+        }
         input_destroy (in);
         return MSG_HANDLED;
 

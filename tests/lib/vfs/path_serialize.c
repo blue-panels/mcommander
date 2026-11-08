@@ -121,6 +121,7 @@ START_TEST (test_path_serialize)
     // then
     mctest_assert_ptr_ne (serialized_vpath, NULL);
     mctest_assert_str_eq (serialized_vpath, ETALON_SERIALIZED_PATH);
+    g_free (serialized_vpath);
 }
 END_TEST
 

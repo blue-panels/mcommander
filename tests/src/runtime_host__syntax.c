@@ -55,6 +55,7 @@ setup (void)
     char *lang;
     char *local;
     char *top;
+    char *top_file;
 
     tmpdir = g_dir_make_tmp ("mc-runtime-syntax-XXXXXX", NULL);
     ck_assert_ptr_nonnull (tmpdir);
@@ -82,9 +83,10 @@ setup (void)
     top = g_strconcat ("file ..\\*\\\\.c$ Tested\\sProgram\ninclude ", lang, "\n",
                        "file ..\\*\\\\.sh$ Shell\\sscript ^#!.\\*/bin/sh\ninclude ", local, "\n",
                        (char *) NULL);
-    syntax_dir = g_build_filename (share_dir, EDIT_SYNTAX_FILE, (char *) NULL);
-    write_file (syntax_dir, top);
+    top_file = g_build_filename (share_dir, EDIT_SYNTAX_FILE, (char *) NULL);
+    write_file (top_file, top);
 
+    g_free (top_file);
     g_free (top);
     g_free (local);
     g_free (lang);

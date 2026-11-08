@@ -67,6 +67,8 @@ START_TEST (test_file_history_write_entry)
     ck_assert_str_eq (s->str, "ba\\nz 1;0;5");
 
     g_string_free (s, TRUE);
+    g_free (fhd.file_name);
+    g_free (fhd.file_pos);
 }
 END_TEST
 /* --------------------------------------------------------------------------------------------- */
