@@ -552,6 +552,8 @@ gboolean mcview_search_init (WView *view);
 void mcview_search_deinit (WView *view);
 mc_search_cbret_t mcview_search_cmd_callback (const void *user_data, off_t char_offset,
                                               int *current_char);
+ssize_t mcview_search_block_cmd_callback (const void *user_data, off_t offset, char *buffer,
+                                          size_t size);
 mc_search_cbret_t mcview_search_update_cmd_callback (const void *user_data, off_t char_offset);
 void mcview_search (WView *view, gboolean start_search);
 

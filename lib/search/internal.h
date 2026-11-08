@@ -3,6 +3,10 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
+/* The plain search reads this much at a time and looks at Esc in between: not more, on a slow VFS
+   the wait for one chunk is the wait for Esc. */
+#define MC_SEARCH__PLAIN_CHUNK (128 * 1024)
+
 /*** enums ***************************************************************************************/
 
 typedef enum
@@ -70,6 +74,16 @@ void mc_search__cond_struct_new_init_hex (const char *charset, mc_search_t *lc_m
 gboolean mc_search__run_hex (mc_search_t *lc_mc_search, const void *user_data, off_t start_search,
                              off_t end_search, gsize *found_len);
 GString *mc_search_hex_prepare_replace_str (mc_search_t *lc_mc_search, GString *replace_str);
+
+GString *mc_search__hex_numbers_to_bytes (const GString *astr);
+
+/* search/plain.c : */
+
+GString *mc_search__plain_needle (const mc_search_t *lc_mc_search, gboolean *caseless);
+void mc_search__plain_free (struct mc_search_plain *plain);
+gboolean mc_search__run_plain (mc_search_t *lc_mc_search, const void *user_data,
+                               off_t *start_search, off_t end_search, gsize *found_len,
+                               gboolean *finished);
 
 /*** inline functions ****************************************************************************/
 

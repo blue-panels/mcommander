@@ -39,14 +39,9 @@
 
 #include <config.h>
 
-#include <errno.h>
-#include <stdio.h>   // sscanf()
-#include <string.h>  // memchr(), memcmp()
-
 #include "lib/global.h"
 #include "lib/strutil.h"
 #include "lib/charsets.h"  // cp_source
-#include "lib/util.h"      // unix_error_string()
 #include "lib/widget.h"
 
 #include "src/setup.h"
@@ -64,10 +59,6 @@ mcview_search_options_t mcview_search_options = {
 };
 
 /*** file scope macro definitions ****************************************************************/
-
-/* The fast search reads this much at a time and looks at Esc in between: not more, on a slow VFS
-   the wait for one chunk is the wait for Esc. */
-#define MCVIEW_FAST_SEARCH_CHUNK (128 * 1024)
 
 /*** file scope type declarations ****************************************************************/
 
@@ -163,274 +154,6 @@ mcview_search_update_steps (WView *view)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/**
- * The bytes of a hex search made of numbers only, NULL for anything else: a quoted string goes to
- * the generic search, and so does an error, to be reported there.
- * The syntax is the one of mc_search__hex_translate_to_regex().
- */
-
-static GString *
-mcview_fast_search_hex_needle (const GString *str)
-{
-    GString *needle;
-    gsize i = 0;
-
-    needle = g_string_sized_new (str->len / 2);
-
-    while (i < str->len)
-    {
-        unsigned int val;
-        int n;
-
-        if (g_ascii_isspace (str->str[i]))
-            i++;
-        else if (sscanf (str->str + i, "%x%n", &val, &n) == 1 && val <= 255)
-        {
-            g_string_append_c (needle, (char) val);
-            i += (gsize) n;
-        }
-        else
-        {
-            g_string_free (needle, TRUE);
-            return NULL;
-        }
-    }
-
-    if (needle->len == 0)
-    {
-        g_string_free (needle, TRUE);
-        return NULL;
-    }
-
-    return needle;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-/**
- * The bytes the fast path looks for, NULL when this search is not a matter of plain bytes.
- *
- * The search string is already in the charset of the file, so a case sensitive string is a byte
- * match. A case insensitive one is a byte match for ASCII letters only: others need Unicode case
- * folding. A string with a newline stays with the generic search, which works on lines.
- * Hex numbers are always matched exactly.
- *
- * @param search   the search
- * @param caseless set to TRUE if ASCII letters must be matched case insensitively
- */
-
-static GString *
-mcview_fast_search_needle (const mc_search_t *search, gboolean *caseless)
-{
-    const GString *str = search->original.str;
-    GString *needle;
-    gsize i;
-
-    *caseless = FALSE;
-
-    if (str == NULL || str->len == 0)
-        return NULL;
-
-    if (search->search_type == MC_SEARCH_T_HEX)
-        return mcview_fast_search_hex_needle (str);
-
-    if (search->search_type != MC_SEARCH_T_NORMAL)
-        return NULL;
-
-    for (i = 0; i < str->len; i++)
-    {
-        if (str->str[i] == '\n')
-            return NULL;
-        if ((unsigned char) str->str[i] >= 0x80 && !search->is_case_sensitive)
-            return NULL;
-    }
-
-    *caseless = !search->is_case_sensitive;
-    needle = mc_g_string_dup (str);
-    if (*caseless)
-        g_string_ascii_down (needle);
-
-    return needle;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-/** The first @c in [@p, @end), or @end if there is none. */
-
-static inline const char *
-mcview_fast_search_next (const char *p, const char *end, char c)
-{
-    const char *q;
-
-    q = memchr (p, c, (size_t) (end - p));
-    return q != NULL ? q : end;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-/** Whether the bytes at @p after the first one, already matched, are those of @needle. */
-
-static gboolean
-mcview_fast_search_rest_matches (const char *p, const char *needle, gsize needle_len,
-                                 gboolean caseless)
-{
-    gsize i;
-
-    if (!caseless)
-        return memcmp (p + 1, needle + 1, needle_len - 1) == 0;
-
-    for (i = 1; i < needle_len; i++)
-        if (g_ascii_tolower (p[i]) != needle[i])
-            return FALSE;
-
-    return TRUE;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-/**
- * Find @needle in @hay, like memmem() (which isn't available everywhere). If @caseless, @needle
- * must be in lower case: both cases of its first byte are looked for with memchr(), which is much
- * faster than folding the whole @hay.
- */
-
-static const char *
-mcview_fast_search_find (const char *hay, gsize hay_len, const char *needle, gsize needle_len,
-                         gboolean caseless)
-{
-    const char *end, *lower, *upper;
-    const char c_lower = needle[0];
-    const char c_upper = caseless ? g_ascii_toupper (c_lower) : c_lower;
-
-    if (hay_len < needle_len)
-        return NULL;
-
-    end = hay + hay_len - needle_len + 1;  // the last possible start of a match + 1
-    lower = mcview_fast_search_next (hay, end, c_lower);
-    upper = c_upper != c_lower ? mcview_fast_search_next (hay, end, c_upper) : end;
-
-    while (TRUE)
-    {
-        const char *p = MIN (lower, upper);
-
-        if (p == end)
-            return NULL;
-
-        if (mcview_fast_search_rest_matches (p, needle, needle_len, caseless))
-            return p;
-
-        if (p == lower)
-            lower = mcview_fast_search_next (p + 1, end, c_lower);
-        else
-            upper = mcview_fast_search_next (p + 1, end, c_upper);
-    }
-}
-
-/* --------------------------------------------------------------------------------------------- */
-/** Read up to @want bytes, as many as there are. -1 on an error, with errno set. */
-
-static ssize_t
-mcview_fast_search_read (int fd, char *buf, size_t want)
-{
-    size_t got = 0;
-
-    while (got < want)
-    {
-        const ssize_t n = mc_read (fd, buf + got, want - got);
-
-        if (n == -1 && errno == EINTR)
-            continue;
-        if (n == -1)
-            return -1;
-        if (n == 0)
-            break;
-        got += (size_t) n;
-    }
-
-    return (ssize_t) got;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-/**
- * Fast path of mcview_find(): read the file in chunks and search the bytes directly. Only a match
- * that lies wholly in [@search_start, @search_end) is found. Sets the same result fields
- * (normal_offset, error) as mc_search_run().
- *
- * The descriptor is left at an arbitrary place: mcview_file_load_data() seeks before every read.
- */
-
-static gboolean
-mcview_fast_search (mcview_search_status_msg_t *ssm, off_t search_start, off_t search_end,
-                    gsize *len, const GString *needle_str, gboolean caseless)
-{
-    WView *view = ssm->view;
-    mc_search_t *search = view->search;
-    const char *const needle = needle_str->str;
-    const gsize needle_len = needle_str->len;
-    char *buf;
-    gsize keep = 0;  // bytes kept from the previous chunk for matches across chunks
-    off_t pos = search_start;
-    gboolean found = FALSE;
-    mc_search_error_t error = MC_SEARCH_E_NOTFOUND;
-    int read_errno = 0;
-
-    if (mc_lseek (view->ds_file_fd, pos, SEEK_SET) != pos)
-    {
-        mc_search_set_error (search, MC_SEARCH_E_INPUT, "%s", unix_error_string (errno));
-        return FALSE;
-    }
-
-    buf = g_malloc (MCVIEW_FAST_SEARCH_CHUNK + needle_len);
-
-    while (pos < search_end)
-    {
-        const size_t want = (size_t) MIN ((off_t) MCVIEW_FAST_SEARCH_CHUNK, search_end - pos);
-        const ssize_t got = mcview_fast_search_read (view->ds_file_fd, buf + keep, want);
-        const char *hit;
-        gsize total;
-
-        if (got == -1)
-        {
-            read_errno = errno;
-            error = MC_SEARCH_E_INPUT;
-            break;
-        }
-        if (got == 0)
-            break;
-
-        total = keep + (gsize) got;
-        hit = mcview_fast_search_find (buf, total, needle, needle_len, caseless);
-        if (hit != NULL)
-        {
-            search->normal_offset = pos - (off_t) keep + (hit - buf);
-            search->start_buffer = search->normal_offset;
-            *len = needle_len;
-            found = TRUE;
-            break;
-        }
-
-        pos += got;
-        keep = MIN (total, needle_len - 1);
-        memmove (buf, buf + total - keep, keep);
-
-        if (search->update_fn != NULL && search->update_fn (ssm, pos) == MC_SEARCH_CB_ABORT)
-        {
-            error = MC_SEARCH_E_ABORT;
-            break;
-        }
-    }
-
-    g_free (buf);
-
-    if (found)
-        mc_search_set_error (search, MC_SEARCH_E_OK, NULL);
-    else if (error == MC_SEARCH_E_NOTFOUND)
-        mc_search_set_error (search, MC_SEARCH_E_NOTFOUND, "%s", _ (STR_E_NOTFOUND));
-    else if (error == MC_SEARCH_E_ABORT)
-        mc_search_set_error (search, MC_SEARCH_E_ABORT, NULL);
-    else
-        mc_search_set_error (search, error, "%s", unix_error_string (read_errno));
-
-    return found;
-}
-
-/* --------------------------------------------------------------------------------------------- */
 
 static gboolean
 mcview_find (mcview_search_status_msg_t *ssm, off_t search_start, off_t search_end, gsize *len)
@@ -483,23 +206,6 @@ mcview_find (mcview_search_status_msg_t *ssm, off_t search_start, off_t search_e
 
     if ((view->search_line_type & MC_SEARCH_LINE_BEGIN) != 0 && search_start != 0)
         search_start = mcview_eol (view, search_start);
-
-    if (view->datasource == DS_FILE && !view->mode_flags.nroff && view->search_line_type == 0
-        && !view->search->is_all_charsets && !view->search->whole_words)
-    {
-        gboolean caseless;
-        GString *needle;
-
-        needle = mcview_fast_search_needle (view->search, &caseless);
-        if (needle != NULL)
-        {
-            gboolean found;
-
-            found = mcview_fast_search (ssm, search_start, search_end, len, needle, caseless);
-            g_string_free (needle, TRUE);
-            return found;
-        }
-    }
 
     view->search_nroff_seq->index = search_start;
     mcview_nroff_seq_info (view->search_nroff_seq);
@@ -587,7 +293,7 @@ mcview_do_search_in_filter (WView *view, off_t want_search_start)
             view->search_nroff_seq->index = from;
             mcview_nroff_seq_info (view->search_nroff_seq);
 
-            if (mc_search_run (view->search, (void *) &vsm, from, eol, &match_len))
+            if (mc_search_run (view->search, (void *) &vsm, from, eol - 1, &match_len))
             {
                 mcview_search_show_result (view, match_len);
                 found = TRUE;
@@ -620,7 +326,7 @@ mcview_do_search_in_filter (WView *view, off_t want_search_start)
                     view->search_nroff_seq->index = bol;
                     mcview_nroff_seq_info (view->search_nroff_seq);
 
-                    if (mc_search_run (view->search, (void *) &vsm, bol, eol, &match_len))
+                    if (mc_search_run (view->search, (void *) &vsm, bol, eol - 1, &match_len))
                     {
                         mcview_search_show_result (view, match_len);
                         found = TRUE;
@@ -654,7 +360,7 @@ mcview_do_search_in_filter (WView *view, off_t want_search_start)
                 view->search_nroff_seq->index = try_start;
                 mcview_nroff_seq_info (view->search_nroff_seq);
 
-                if (mc_search_run (view->search, (void *) &vsm, try_start, eol, &match_len)
+                if (mc_search_run (view->search, (void *) &vsm, try_start, eol - 1, &match_len)
                     && view->search->normal_offset == try_start)
                 {
                     mcview_search_show_result (view, match_len);
@@ -701,6 +407,10 @@ mcview_do_search (WView *view, off_t want_search_start)
     gboolean incomplete = FALSE;
 
     size_t match_len;
+
+    view->search->block_fn = (view->datasource == DS_FILE && !view->mode_flags.nroff)
+        ? mcview_search_block_cmd_callback
+        : NULL;
 
     /* In filter mode text search is restricted to the indexed filtered lines. */
     if (view->filter_active && !view->mode_flags.hex)
@@ -947,6 +657,51 @@ mcview_search_cmd_callback (const void *user_data, off_t char_offset, int *curre
     search_cb_char_curr_index++;
 
     return (*current_char != -1) ? MC_SEARCH_CB_OK : MC_SEARCH_CB_INVALID;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+ssize_t
+mcview_search_block_cmd_callback (const void *user_data, off_t offset, char *buffer, size_t size)
+{
+    WView *view = ((const mcview_search_status_msg_t *) user_data)->view;
+    const off_t filesize = mcview_get_filesize (view);
+    size_t got = 0;
+
+    if (offset >= filesize)
+        return 0;
+
+    size = (size_t) MIN ((off_t) size, filesize - offset);
+
+    // a short range, such as a line of a filter: the block the viewer keeps is enough
+    if (size <= view->ds_file_datasize)
+    {
+        int c;
+
+        while (got < size && mcview_get_byte (view, offset + (off_t) got, &c))
+            buffer[got++] = (char) c;
+
+        if (got == size)
+            return (ssize_t) got;
+        // the reason is not known here: the read below tells an error from the end of the file
+    }
+
+    // the descriptor can be left anywhere: mcview_file_load_data() seeks before every read
+    if (mc_lseek (view->ds_file_fd, offset + (off_t) got, SEEK_SET) != offset + (off_t) got)
+        return -1;
+
+    while (got < size)
+    {
+        const ssize_t n = mc_read (view->ds_file_fd, buffer + got, size - got);
+
+        if (n == -1)
+            return -1;
+        if (n == 0)
+            break;
+        got += (size_t) n;
+    }
+
+    return (ssize_t) got;
 }
 
 /* --------------------------------------------------------------------------------------------- */
