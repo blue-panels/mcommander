@@ -293,7 +293,7 @@ mcview_do_search_in_filter (WView *view, off_t want_search_start)
             view->search_nroff_seq->index = from;
             mcview_nroff_seq_info (view->search_nroff_seq);
 
-            if (mc_search_run (view->search, (void *) &vsm, from, eol, &match_len))
+            if (mc_search_run (view->search, (void *) &vsm, from, eol - 1, &match_len))
             {
                 mcview_search_show_result (view, match_len);
                 found = TRUE;
@@ -326,7 +326,7 @@ mcview_do_search_in_filter (WView *view, off_t want_search_start)
                     view->search_nroff_seq->index = bol;
                     mcview_nroff_seq_info (view->search_nroff_seq);
 
-                    if (mc_search_run (view->search, (void *) &vsm, bol, eol, &match_len))
+                    if (mc_search_run (view->search, (void *) &vsm, bol, eol - 1, &match_len))
                     {
                         mcview_search_show_result (view, match_len);
                         found = TRUE;
@@ -360,7 +360,7 @@ mcview_do_search_in_filter (WView *view, off_t want_search_start)
                 view->search_nroff_seq->index = try_start;
                 mcview_nroff_seq_info (view->search_nroff_seq);
 
-                if (mc_search_run (view->search, (void *) &vsm, try_start, eol, &match_len)
+                if (mc_search_run (view->search, (void *) &vsm, try_start, eol - 1, &match_len)
                     && view->search->normal_offset == try_start)
                 {
                     mcview_search_show_result (view, match_len);
@@ -407,6 +407,10 @@ mcview_do_search (WView *view, off_t want_search_start)
     gboolean incomplete = FALSE;
 
     size_t match_len;
+
+    view->search->block_fn = (view->datasource == DS_FILE && !view->mode_flags.nroff)
+        ? mcview_search_block_cmd_callback
+        : NULL;
 
     /* In filter mode text search is restricted to the indexed filtered lines. */
     if (view->filter_active && !view->mode_flags.hex)
@@ -653,6 +657,51 @@ mcview_search_cmd_callback (const void *user_data, off_t char_offset, int *curre
     search_cb_char_curr_index++;
 
     return (*current_char != -1) ? MC_SEARCH_CB_OK : MC_SEARCH_CB_INVALID;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+ssize_t
+mcview_search_block_cmd_callback (const void *user_data, off_t offset, char *buffer, size_t size)
+{
+    WView *view = ((const mcview_search_status_msg_t *) user_data)->view;
+    const off_t filesize = mcview_get_filesize (view);
+    size_t got = 0;
+
+    if (offset >= filesize)
+        return 0;
+
+    size = (size_t) MIN ((off_t) size, filesize - offset);
+
+    // a short range, such as a line of a filter: the block the viewer keeps is enough
+    if (size <= view->ds_file_datasize)
+    {
+        int c;
+
+        while (got < size && mcview_get_byte (view, offset + (off_t) got, &c))
+            buffer[got++] = (char) c;
+
+        if (got == size)
+            return (ssize_t) got;
+        // the reason is not known here: the read below tells an error from the end of the file
+    }
+
+    // the descriptor can be left anywhere: mcview_file_load_data() seeks before every read
+    if (mc_lseek (view->ds_file_fd, offset + (off_t) got, SEEK_SET) != offset + (off_t) got)
+        return -1;
+
+    while (got < size)
+    {
+        const ssize_t n = mc_read (view->ds_file_fd, buffer + got, size - got);
+
+        if (n == -1)
+            return -1;
+        if (n == 0)
+            break;
+        got += (size_t) n;
+    }
+
+    return (ssize_t) got;
 }
 
 /* --------------------------------------------------------------------------------------------- */

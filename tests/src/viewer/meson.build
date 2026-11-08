@@ -1,5 +1,6 @@
 foreach name : ['mcview__load_zip_magic', 'mcview__stream', 'mcview__filter', 'mcview__lcache',
-                'mcview__selection', 'mcview__nroff', 'ansi_parser', 'vterm_terminal']
+                'mcview__selection', 'mcview__nroff', 'mcview__fast_search', 'ansi_parser',
+                'vterm_terminal']
   test(name,
     executable(name, name + '.c',
       c_args: test_c_args + [

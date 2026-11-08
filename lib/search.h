@@ -13,6 +13,10 @@ typedef enum mc_search_cbret_t mc_search_cbret_t;
 
 typedef mc_search_cbret_t (*mc_search_fn) (const void *user_data, off_t char_offset,
                                            int *current_char);
+/* Put up to @size bytes from @offset into @buffer. Returns how many, fewer at the end of the data
+   only, and -1 with errno set on an error. */
+typedef ssize_t (*mc_search_block_fn) (const void *user_data, off_t offset, char *buffer,
+                                       size_t size);
 typedef mc_search_cbret_t (*mc_update_fn) (const void *user_data, off_t char_offset);
 
 #define MC_SEARCH__NUM_REPLACE_ARGS 64
@@ -87,6 +91,9 @@ typedef struct mc_search_struct
     // function, used for updatin current search status. NULL if not used
     mc_update_fn update_fn;
 
+    // function, used for getting data by blocks: a plain search then looks at the bytes directly
+    mc_search_block_fn block_fn;
+
     // type of search
     mc_search_type_t search_type;
 
@@ -108,6 +115,9 @@ typedef struct mc_search_struct
     {
         GPtrArray *conditions;
         gboolean result;
+        // what a search by blocks looks for, NULL if it is not a matter of plain bytes
+        struct mc_search_plain *plain;
+        gboolean plain_tried;
     } prepared;
 
     // original search string

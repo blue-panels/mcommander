@@ -56,6 +56,15 @@ typedef enum
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
+/* A number of a hex pattern at @str. @len is how much of @str it takes. */
+static gboolean
+mc_search__hex_number (const char *str, unsigned int *val, int *len)
+{
+    return sscanf (str, "%x%n", val, len) == 1;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static GString *
 mc_search__hex_translate_to_regex (const GString *astr, mc_search_hex_parse_error_t *error_ptr,
                                    int *error_pos_ptr)
@@ -81,7 +90,7 @@ mc_search__hex_translate_to_regex (const GString *astr, mc_search_hex_parse_erro
             while (g_ascii_isspace (str[loop]))
                 loop++;
         }
-        else if (sscanf (str + loop, "%x%n", &val, &ptr) == 1)
+        else if (mc_search__hex_number (str + loop, &val, &ptr))
         {
             if (val > 255)
                 error = MC_SEARCH_HEX_E_NUM_OUT_OF_RANGE;
@@ -131,6 +140,48 @@ mc_search__hex_translate_to_regex (const GString *astr, mc_search_hex_parse_erro
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/**
+ * The bytes of a hex pattern made of numbers only. NULL for anything else: a quoted string, or an
+ * error that mc_search__hex_translate_to_regex() is there to report.
+ */
+GString *
+mc_search__hex_numbers_to_bytes (const GString *astr)
+{
+    GString *bytes;
+    gsize loop = 0;
+
+    bytes = g_string_sized_new (astr->len / 2);
+
+    while (loop < astr->len)
+    {
+        unsigned int val;
+        int ptr;
+
+        if (g_ascii_isspace (astr->str[loop]))
+            loop++;
+        else if (mc_search__hex_number (astr->str + loop, &val, &ptr) && val <= 255)
+        {
+            g_string_append_c (bytes, (char) val);
+            loop += (gsize) ptr;
+        }
+        else
+        {
+            g_string_free (bytes, TRUE);
+            return NULL;
+        }
+    }
+
+    if (bytes->len == 0)
+    {
+        g_string_free (bytes, TRUE);
+        return NULL;
+    }
+
+    return bytes;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 void

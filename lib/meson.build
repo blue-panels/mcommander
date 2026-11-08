@@ -36,6 +36,7 @@ libmc_sources = files(
   'search/hex.c',
   'search/lib.c',
   'search/normal.c',
+  'search/plain.c',
   'search/regex.c',
   'search/search.c',
 

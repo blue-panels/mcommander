@@ -179,6 +179,8 @@ mc_search_free (mc_search_t *lc_mc_search)
     if (lc_mc_search->regex_buffer != NULL)
         g_string_free (lc_mc_search->regex_buffer, TRUE);
 
+    mc_search__plain_free (lc_mc_search->prepared.plain);
+
     g_free (lc_mc_search);
 }
 
@@ -268,6 +270,16 @@ mc_search_run (mc_search_t *lc_mc_search, const void *user_data, off_t start_sea
 
     if (!mc_search_prepare (lc_mc_search))
         return FALSE;
+
+    if (lc_mc_search->block_fn != NULL)
+    {
+        gboolean finished = FALSE;
+
+        ret = mc_search__run_plain (lc_mc_search, user_data, &start_search, end_search, found_len,
+                                    &finished);
+        if (finished)
+            return ret;
+    }
 
     switch (lc_mc_search->search_type)
     {
