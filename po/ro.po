@@ -19,11 +19,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
-"Language-Team: Romanian <https://translate.codeberg.org/projects/mc6/mc6/ro/>"
-"\n"
+"Language-Team: Romanian <https://translate.codeberg.org/projects/mc6/mc6/ro/"
+">\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -606,6 +606,16 @@ msgid "Toggle right panel in terminal mode"
 msgstr ""
 
 #, fuzzy
+#| msgid "Cannot insert file"
+msgid "Apply command to the files"
+msgstr "Nu se poate insera fișierul"
+
+#, fuzzy
+#| msgid "Great than"
+msgid "Clear the command line"
+msgstr "Mai mult decât"
+
+#, fuzzy
 #| msgid "S&hell patterns"
 msgid "Select files by pattern"
 msgstr "Șabloane s&hell"
@@ -617,6 +627,11 @@ msgstr "&Folosire șabloane shell"
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Unselect by extension"
+msgstr "Ignoră &expansiunea tab"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -672,6 +687,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -715,7 +733,94 @@ msgstr "Afișează dosarul de date"
 msgid "Cycle listing format"
 msgstr "formatul de listare"
 
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 1"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 2"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 3"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 4"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 5"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 6"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 7"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 8"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 9"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 10"
+msgstr "Folosește mo&dul de sortare al panoului"
+
+msgid "Keep files unsorted"
+msgstr ""
+
+#, fuzzy
+#| msgid "C&hange time"
+msgid "Sort by change time"
+msgstr "Data sc&himbării"
+
+#, fuzzy
+#| msgid "&Access time"
+msgid "Sort by access time"
+msgstr "Data &accesului"
+
+#, fuzzy
+#| msgid "Compare directories"
+msgid "Go to the root directory"
+msgstr "Compară dosarele"
+
+#, fuzzy
+#| msgid "Select"
+msgid "Select all files"
+msgstr "Selectează"
+
+#, fuzzy
+#| msgid "Unselect"
+msgid "Unselect all files"
+msgstr "Deselectează"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -1196,6 +1301,25 @@ msgstr ""
 msgid "Merge from other file"
 msgstr ""
 
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Next conflict"
+msgstr "Confirmare"
+
+#, fuzzy
+#| msgid "&Previous"
+msgid "Previous conflict"
+msgstr "&Precedentul"
+
 #, c-format
 msgid ""
 "File \"%s\" is already being edited.\n"
@@ -1632,6 +1756,9 @@ msgstr ""
 msgid "Shift"
 msgstr "Shift"
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1771,6 +1898,71 @@ msgstr "Parola:"
 msgid "Screens"
 msgstr "Ecrane"
 
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "Nu pot citi conținutul dosarului"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Save"
+msgid "Save"
+msgstr "&Salvează"
+
+#, fuzzy
+#| msgid "A file already exists with this name"
+msgid "The file exists. Overwrite it?"
+msgstr "Deja există un fișier cu acest nume"
+
+msgid "&Yes"
+msgstr "&Da"
+
+msgid "&No"
+msgstr "&Nu"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Source \"%s\" is not a directory\n"
+#| "%s"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr ""
+"Sursa \"%s\" nu este un dosar\n"
+"%s"
+
+msgid "UP--DIR"
+msgstr "SUS-DIR"
+
+#, fuzzy
+#| msgid "SUB-DIR"
+msgid "DIR"
+msgstr "SUB-DIR"
+
+msgid "Name"
+msgstr "Nume"
+
+msgid "Size"
+msgstr "Mărime"
+
+#, fuzzy
+#| msgid "Modified:   %s"
+msgid "Modified"
+msgstr "Modificat: %s"
+
+msgid "&OK"
+msgstr "&OK"
+
+msgid "&Cancel"
+msgstr "&Renunță"
+
 msgid "History"
 msgstr "Istoric"
 
@@ -1782,12 +1974,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "&Da"
-
-msgid "&No"
-msgstr "&Nu"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr "DialogTitle|Curățare istoric"
@@ -1795,11 +1981,10 @@ msgstr "DialogTitle|Curățare istoric"
 msgid "Do you want clean this history?"
 msgstr "Dorești curățarea acestui istoric?"
 
-msgid "&OK"
-msgstr "&OK"
-
-msgid "&Cancel"
-msgstr "&Renunță"
+#, fuzzy
+#| msgid "Filter"
+msgid "Filter:"
+msgstr "Filtru"
 
 msgid "Background process:"
 msgstr "Sarcină în fundal:"
@@ -1845,6 +2030,12 @@ msgstr "Editează fișiere"
 
 msgid "<file> ..."
 msgstr "<file> ..."
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
+msgstr ""
 
 msgid "Forces xterm features"
 msgstr "Forțează facilitățile xterm"
@@ -1896,6 +2087,12 @@ msgstr "fișierul"
 msgid "file1 file2"
 msgstr "file1 file2"
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[acest_dir] [celălalt_panou_dir]"
 
@@ -1936,6 +2133,12 @@ msgstr "Nu au fost date argumente către vizualizator."
 
 msgid "Two files are required to invoke the diffviewer."
 msgstr "Sunt necesare două fișiere pentru a invoca diffviewer."
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
+msgstr ""
 
 msgid "Background protocol error"
 msgstr "Eroare în protocolul de fundal"
@@ -1986,6 +2189,14 @@ msgstr "Căutarea este dezactivată"
 msgid "Cannot create temporary diff file"
 msgstr ""
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -1994,6 +2205,42 @@ msgstr ""
 
 msgid "Cannot create temporary merge file"
 msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"Nu se poate scrie în fișierul %s:\n"
+"%s\n"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid ""
+"Cannot save the merge result\n"
+"%s"
+msgstr ""
+"Nu se poate salva fișierul %s:\n"
+"%s"
 
 msgid "&Fastest (Assume large files)"
 msgstr "Rapid (Presupune &fișiere mari)"
@@ -2025,6 +2272,12 @@ msgstr "Înlătură semnul de sfârșit de linie &final"
 msgid "Diff Options"
 msgstr "Opțiuni diff"
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr "Editare"
 
@@ -2037,8 +2290,46 @@ msgstr "Mergi la linia (stânga)"
 msgid "Goto line (right)"
 msgstr "Mergi la linia (dreapta)"
 
+#, fuzzy
+#| msgid "Goto line (right)"
+msgid "Goto line (merged)"
+msgstr "Mergi la linia (dreapta)"
+
 msgid "Enter line:"
 msgstr "Introdu linia:"
+
+msgid "ButtonBar|Edit"
+msgstr "ButtonBar|Editare"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|<-Copy"
+msgstr "ButtonBar|Copie"
+
+#, fuzzy
+#| msgid "ButtonBar|Parse"
+msgid "ButtonBar|Base"
+msgstr "ButtonBar|Interpretează"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Next"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Copy->"
+msgstr "ButtonBar|Copie"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|-Left"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|-Right"
+msgstr "ButtonBar|Editare"
 
 msgid "ButtonBar|Help"
 msgstr "ButtonBar|Ajutor"
@@ -2046,11 +2337,15 @@ msgstr "ButtonBar|Ajutor"
 msgid "ButtonBar|Save"
 msgstr "ButtonBar|Salvare"
 
-msgid "ButtonBar|Edit"
-msgstr "ButtonBar|Editare"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|+Left"
+msgstr "ButtonBar|Hex"
 
-msgid "ButtonBar|Merge"
-msgstr "ButtonBar|Combină"
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|+Right"
+msgstr "ButtonBar|Editare"
 
 msgid "ButtonBar|Search"
 msgstr "ButtonBar|Caută"
@@ -2061,6 +2356,12 @@ msgstr "ButtonBar|Opțiuni"
 msgid "ButtonBar|Quit"
 msgstr "ButtonBar|Ieșire"
 
+msgid "Quit"
+msgstr "Ieși"
+
+msgid "The merge result is not saved. Save it?"
+msgstr ""
+
 msgid "File(s) was modified. Save with exit?"
 msgstr "Fișierul a fost modificat. Salvezi la ieșire?"
 
@@ -2070,11 +2371,46 @@ msgid ""
 "Save modified file(s)?"
 msgstr ""
 
-msgid "Quit"
-msgstr "Ieși"
+#, fuzzy
+#| msgid "You have to chdir to extract files first"
+msgid "Save the changes of the two files first."
+msgstr "Trebuie mai întâi să chdir pentru a extrage fișierele"
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot create pipe streams"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr "Nu pot crea fluxul filtrului"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"Nu pot deschide fișierul %s pentru scriere:\n"
+"%s\n"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr "Diff:"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"Nu se poate salva fișierul:\n"
+"%s"
 
 msgid "File name is empty!"
 msgstr ""
@@ -2083,12 +2419,6 @@ msgstr ""
 msgid ""
 "%s\n"
 "is a directory"
-msgstr ""
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
 msgstr ""
 
 msgid "Diff viewer: invalid mode"
@@ -2689,6 +3019,13 @@ msgstr "&Salvează"
 msgid "Load"
 msgstr "Încarcă"
 
+#, fuzzy, c-format
+#| msgid "Cannot create %s directory"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr "Nu se poate crea dosarul %s"
+
 msgid "Syntax file edit"
 msgstr "Editare fișier sintaxă"
 
@@ -3196,11 +3533,29 @@ msgstr "Deschide fișiere"
 msgid "Edit: "
 msgstr "Editează: "
 
-msgid "ButtonBar|Mark"
-msgstr "ButtonBar|Marc"
+msgid "ButtonBar|Menu"
+msgstr "ButtonBar|Meniu"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|SaveAs"
+msgstr "ButtonBar|Salvare"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Column"
+msgstr "ButtonBar|Copie"
 
 msgid "ButtonBar|Replac"
 msgstr "ButtonBar|Înloc"
+
+#, fuzzy
+#| msgid "ButtonBar|Index"
+msgid "ButtonBar|Insert"
+msgstr "ButtonBar|Index"
+
+msgid "ButtonBar|Mark"
+msgstr "ButtonBar|Marc"
 
 msgid "ButtonBar|Copy"
 msgstr "ButtonBar|Copie"
@@ -3412,6 +3767,12 @@ msgstr "Suprascriere sigură"
 
 msgid "A&uto save setup"
 msgstr "Auto-salvare a configurației"
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
+msgstr ""
 
 msgid "Configure options"
 msgstr "Opțiuni de configurare"
@@ -3788,17 +4149,11 @@ msgstr "Setează &grupuri"
 msgid "Set &users"
 msgstr "Setează &utilizatori"
 
-msgid "Name"
-msgstr "Nume"
-
 msgid "Owner name"
 msgstr "Nume proprietar"
 
 msgid "Group name"
 msgstr "Nume grup"
-
-msgid "Size"
-msgstr "Mărime"
 
 msgid "Chown command"
 msgstr "Comanda chown"
@@ -3866,6 +4221,23 @@ msgstr "Afișare filtrată"
 
 msgid "Filter command and arguments:"
 msgstr "Comanda și argumentele pentru filtrare:"
+
+#, fuzzy
+#| msgid "Chmod command"
+msgid "Apply command"
+msgstr "Comanda chmod"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4729,14 +5101,66 @@ msgstr "&Dedesubt"
 msgid "&Right"
 msgstr "D&reapta"
 
-msgid "ButtonBar|Menu"
-msgstr "ButtonBar|Meniu"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Left"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Right"
+msgstr "ButtonBar|Editare"
+
+#, fuzzy
+#| msgid "ButtonBar|Search"
+msgid "ButtonBar|Console"
+msgstr "ButtonBar|Caută"
 
 msgid "ButtonBar|View"
 msgstr "ButtonBar|Vezi"
 
 msgid "ButtonBar|RenMov"
 msgstr "ButtonBar|RedMut"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Name"
+msgstr "ButtonBar|Salvare"
+
+#, fuzzy
+#| msgid "ButtonBar|Rescan"
+msgid "ButtonBar|Version"
+msgstr "ButtonBar|Rescanează"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Ext"
+msgstr "ButtonBar|Editare"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Size"
+msgstr "ButtonBar|Salvare"
+
+#, fuzzy
+#| msgid "ButtonBar|Move"
+msgid "ButtonBar|MTime"
+msgstr "ButtonBar|Mută"
+
+#, fuzzy
+#| msgid "ButtonBar|Unform"
+msgid "ButtonBar|Unsort"
+msgstr "ButtonBar|Unform"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|CTime"
+msgstr "ButtonBar|Vezi"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|ATime"
+msgstr "ButtonBar|Vezi"
 
 msgid "ButtonBar|Mkdir"
 msgstr "ButtonBar|Mkdir"
@@ -5205,9 +5629,6 @@ msgstr "Proprietar"
 msgid "[dev]"
 msgstr "[dev]"
 
-msgid "UP--DIR"
-msgstr "SUS-DIR"
-
 #, fuzzy
 #| msgid "Filter"
 msgid "Filter: "
@@ -5454,6 +5875,13 @@ msgid "Cannot delete local file %s"
 msgstr "Nu se poate deschide fișierul %s"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5473,6 +5901,11 @@ msgstr "Data sc&himbării"
 
 msgid "No plugins with drive menu support are loaded."
 msgstr ""
+
+#, fuzzy
+#| msgid "Tabulation"
+msgid "Plugin action"
+msgstr "Tabulare"
 
 #, c-format
 msgid ""
@@ -5615,6 +6048,15 @@ msgstr "Shift"
 msgid "Edit &term file"
 msgstr "Editare fișier &meniuri"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5637,6 +6079,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -5837,6 +6282,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "Apăsați o tastă pentru a continua..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -5982,6 +6436,510 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose group"
+msgstr "Alege pagina de cod"
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose user"
+msgstr "Alege pagina de cod"
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Overwrite"
+msgid "&Write"
+msgstr "S&uprascrie"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecute"
+msgstr "Mai întâ&i executabilele"
+
+#, fuzzy
+#| msgid "Group"
+msgid "&Group"
+msgstr "Grup"
+
+#, fuzzy
+#| msgid "Name:"
+msgid "Names:"
+msgstr "Nume:"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "Add entry"
+msgstr "&Adaugă nou"
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "other"
+msgid "Other"
+msgstr "alții"
+
+#, fuzzy
+#| msgid "New hotlist entry"
+msgid "Edit entry"
+msgstr "Intrare nouă în lista rapidă"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+#, fuzzy
+#| msgid "< Default >"
+msgid "Default ACL"
+msgstr "< Implicit >"
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+#, fuzzy
+#| msgid "A&sk new file name"
+msgid "&New files inside"
+msgstr "Ce&re nume nou de fișier"
+
+#, fuzzy
+#| msgid "&List..."
+msgid "List"
+msgstr "&Listă..."
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write"
+msgstr "sc&rie de către alții"
+
+msgid "Exec"
+msgstr ""
+
+#, fuzzy
+#| msgid "directories"
+msgid "Effective"
+msgstr "dosare"
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "&Add"
+msgstr "&Adaugă nou"
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "Delete"
+msgid "De&lete"
+msgstr "Delete"
+
+#, fuzzy
+#| msgid "Set &all"
+msgid "Set a&ll"
+msgstr "Set. &tot"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "S-au pierdut schimbările efectuate în fișier"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+#, fuzzy
+#| msgid "Casefolded file"
+msgid "This folder and files"
+msgstr "Dosar împăturit"
+
+#, fuzzy
+#| msgid "Re&verse files only"
+msgid "Subfolders and files only"
+msgstr "Afișare in&versă doar pentru fișiere"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Subfolders only"
+msgstr "Numai &fișiere"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Files only"
+msgstr "Numai &fișiere"
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "allow"
+msgstr "Urmărește &legăturile"
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "Allow"
+msgstr "Urmărește &legăturile"
+
+msgid "Deny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Copies to"
+msgid "Applies to:"
+msgstr "Copie către"
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Advanced rights"
+msgstr "Chown &avansat"
+
+#, fuzzy
+#| msgid "A&ll"
+msgid "A&llow"
+msgstr "Toa&te"
+
+msgid "De&ny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Save file"
+msgid "&Special"
+msgstr "Salvează fișier"
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Ad&vanced..."
+msgstr "Chown &avansat"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+#, fuzzy
+#| msgid "File"
+msgid "File:"
+msgstr "Fișier"
+
+#, fuzzy
+#| msgid "Owner"
+msgid "Owner:"
+msgstr "Proprietar"
+
+#, fuzzy
+#| msgid "Group"
+msgid "Group:"
+msgstr "Grup"
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Right"
+msgid "Rights"
+msgstr "D&reapta"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modify"
+msgstr "Data &modificării"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "&Modify"
+msgstr "Data &modificării"
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "Execute file"
+msgstr "Mai întâ&i executabilele"
+
+#, fuzzy
+#| msgid "Sort order"
+msgid "Traverse folder"
+msgstr "Ordinea de sortare"
+
+#, fuzzy
+#| msgid "User data"
+msgid "Read data"
+msgstr "Date utilizator"
+
+#, fuzzy
+#| msgid "Listing format"
+msgid "List folder"
+msgstr "formatul de listare"
+
+#, fuzzy
+#| msgid "read &by others"
+msgid "Read attributes"
+msgstr "citește de către &alții"
+
+#, fuzzy
+#| msgid "Preserve &attributes"
+msgid "Read extended attributes"
+msgstr "Păstrează &atributele"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write data"
+msgstr "sc&rie de către alții"
+
+#, fuzzy
+#| msgid "Open files"
+msgid "Create files"
+msgstr "Deschide fișiere"
+
+#, fuzzy
+#| msgid "&Append"
+msgid "Append data"
+msgstr "&Adaugă"
+
+#, fuzzy
+#| msgid "Cache directory:"
+msgid "Create folders"
+msgstr "Dosarul pentru cache:"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write attributes"
+msgstr "sc&rie de către alții"
+
+#, fuzzy
+#| msgid "Preserve &attributes"
+msgid "Write extended attributes"
+msgstr "Păstrează &atributele"
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "Transfer fișierul"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Read permissions"
+msgstr "&Permisiuni"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Change permissions"
+msgstr "&Permisiuni"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot stat"
+msgstr ""
+"Nu se poate salva fișierul:\n"
+"%s"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the access control list of"
+msgstr "Nu pot citi conținutul dosarului"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the default access control list of"
+msgstr "Nu pot citi conținutul dosarului"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid "Reading failed"
+msgid "Reading archive"
+msgstr "Citirea a eșuat"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -6243,9 +7201,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6671,8 +7626,110 @@ msgstr "Nu se poate deschide fișierul %s"
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create a directory"
+msgstr "Creează un nou dosar"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot fetch a local copy of %s"
+msgid "Cannot fetch %s at %.10s."
+msgstr "Nu se poate prelua o copie locală a %s"
+
+#, fuzzy
+#| msgid "Cannot open file %s"
+msgid "Cannot open the diff viewer."
+msgstr "Nu se poate deschide fișierul %s"
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot run %s: %s"
+msgstr "Nu se poate deschide fișierul %s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open tar archive\n"
+#| "%s"
+msgid "Cannot open the browser"
+msgstr ""
+"Nu pot deschide arhiva tar\n"
+"%s"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Added to favorites."
+msgstr "Adaugă la lista rapidă"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Already in favorites."
+msgstr "Adaugă la lista rapidă"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Add to favorites"
+msgstr "Adaugă la lista rapidă"
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Preserve &attributes"
+msgid "Change the favorite"
+msgstr "Păstrează &atributele"
+
+#, fuzzy, c-format
+#| msgid "Cannot fetch a local copy of %s"
+msgid "The local clone of %s/%s:"
+msgstr "Nu se poate prelua o copie locală a %s"
+
+#, fuzzy
+#| msgid "Extension file edit"
+msgid "Open in Git"
+msgstr "Editează fișierul de extensii"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Time: %s"
+msgid "Showing: %s"
+msgstr "Timp: %s"
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6692,9 +7749,17 @@ msgid "&Reset"
 msgstr "&Redimensionează"
 
 #, fuzzy
-#| msgid "Add to hotlist"
-msgid "Add to favorites"
-msgstr "Adaugă la lista rapidă"
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "S-au pierdut schimbările efectuate în fișier"
+
+msgid "Reword is available only for commits on the current branch."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot find coole executable: %s"
+msgstr "Nu se poate deschide fișierul %s"
 
 #, fuzzy
 #| msgid "Directory path:"
@@ -7117,11 +8182,6 @@ msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
 #, fuzzy
-#| msgid "&Save"
-msgid "Save"
-msgstr "&Salvează"
-
-#, fuzzy
 #| msgid "File was modified. Save with exit?"
 msgid "File was modified. Save changes?"
 msgstr "Fișierul a fost modificat. Salvezi la ieșire?"
@@ -7191,6 +8251,23 @@ msgstr ""
 "Nu se poate salva fișierul:\n"
 "%s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot start %s."
+msgstr ""
+"Nu se poate salva fișierul:\n"
+"%s"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, fuzzy, c-format
 #| msgid "Cannot fetch a local copy of %s"
 msgid "Cannot fetch document: %s"
@@ -7208,6 +8285,20 @@ msgstr "Nu se poate deschide fișierul %s"
 #| msgid "Unable to save to file"
 msgid "Failed to write temp file."
 msgstr "Nu se poate salva în fișier"
+
+#, fuzzy, c-format
+#| msgid "Loading..."
+msgid "Loading %s..."
+msgstr "Se încarcă..."
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid "Cannot list documents in '%s': %s"
+msgstr ""
+"Nu se poate salva fișierul %s:\n"
+"%s"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -7323,15 +8414,6 @@ msgstr ""
 msgid "Loading %s (%"
 msgstr "Se încarcă: %3d%%"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-"Nu se poate salva fișierul %s:\n"
-"%s"
-
 #, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
@@ -7406,6 +8488,12 @@ msgstr ""
 #| msgid "Repeat times:"
 msgid "Op max time (ms):"
 msgstr "Număr de repetări:"
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
+msgstr ""
 
 msgid "MongoDB settings"
 msgstr ""
@@ -7509,9 +8597,6 @@ msgstr "esperanto"
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -7593,6 +8678,245 @@ msgstr "Ș&terge"
 
 msgid "Command"
 msgstr "Comandă"
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "&Listing format..."
+msgid "%s: databases"
+msgstr "formatul de  &listare "
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connections"
+msgstr "SFTP către mașina"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot open %s for writing"
+msgstr ""
+"Nu pot deschide fișierul %s pentru scriere:\n"
+"%s\n"
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot write %s: %s"
+msgstr "Nu se poate deschide fișierul %s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot write postgres.ini"
+msgstr ""
+"Nu se poate scrie în fișierul %s:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid "Invalid token number %d"
+msgid "Invalid connection name"
+msgstr "Număr jeton nevalid %d"
+
+#, fuzzy
+#| msgid "not enough memory"
+msgid "Out of memory"
+msgstr "nu există destulă memorie"
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter password for %s "
+msgid "Password for \"%s\":"
+msgstr "sftp: Introdu parola pentru %s "
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled."
+msgstr "Renunță"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connection"
+msgstr "SFTP către mașina"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Confirmation"
+msgid "Connected: %s"
+msgstr "Confirmare"
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "&Service"
+msgstr "Dispozitiv: %s"
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Connect by:"
+msgstr "Confirmare"
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "Service:"
+msgstr "Dispozitiv: %s"
+
+#, fuzzy
+#| msgid "Save file"
+msgid "Database:"
+msgstr "Salvează fișier"
+
+msgid "SSL mode:"
+msgstr ""
+
+#, fuzzy
+#| msgid "User name"
+msgid "Username:"
+msgstr "Nume proprietar"
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "Parola:"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "New PostgreSQL connection"
+msgstr "SFTP către mașina"
+
+#, fuzzy
+#| msgid "Editor options"
+msgid "Edit PostgreSQL connection"
+msgstr "Opțiuni editor"
+
+#, fuzzy
+#| msgid "sftp: host key verification failed"
+msgid " Authentication "
+msgstr "sftp: verificarea cheii gazdă a eșuat"
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "&Test connection"
+msgstr "SFTP către mașina"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot save the connection: %s"
+msgstr ""
+"Nu se poate salva fișierul:\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot delete the connection: %s"
+msgstr ""
+"Nu se poate salva fișierul:\n"
+"%s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr "Nu se poate deschide fișierul %s"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "Default connection:"
+msgstr "SFTP către mașina"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr ""
 
 msgid "S3"
 msgstr ""
@@ -7701,6 +9025,19 @@ msgstr "Nu se poate deschide fișierul %s"
 
 #, fuzzy
 #| msgid "SFTP to machine"
+msgid "SFTP authentication"
+msgstr "SFTP către mașina"
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter passphrase for %s "
+msgid "Enter passphrase for key %s"
+msgstr "sftp: Introdu parola pentru %s "
+
+msgid "SFTP key passphrase"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
 msgid "SFTP connection"
 msgstr "SFTP către mașina"
 
@@ -7726,12 +9063,10 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "sftp: Enter passphrase for %s "
-msgid "Enter passphrase for key %s"
-msgstr "sftp: Introdu parola pentru %s "
+msgid "Authenticating with a default key..."
+msgstr ""
 
-msgid "SFTP key passphrase"
+msgid "Authenticating with keyboard-interactive..."
 msgstr ""
 
 msgid "Authenticating with password..."
@@ -8058,11 +9393,6 @@ msgstr "Eticheta pentru \"%s\":"
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Create a new Directory"
-msgid "Create a directory"
-msgstr "Creează un nou dosar"
 
 #, fuzzy
 #| msgid "Cannot create %s directory"
@@ -8576,6 +9906,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -8765,6 +10101,25 @@ msgid "Changed line, filler"
 msgstr "Nu se poate insera fișierul"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Line number"
+msgid "Line mark"
+msgstr "Număr &linie"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+#, fuzzy
+#| msgid "Panelize"
+msgid "Inactive frame"
+msgstr "Panelizare"
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -9000,33 +10355,53 @@ msgstr "Opțiuni editor"
 msgid "Editor: fold closed"
 msgstr "Opțiuni editor"
 
-#, fuzzy
-#| msgid "&Up"
-msgid "Up"
-msgstr "&Sus"
+msgid "Vertical: top arrow"
+msgstr ""
 
-msgid "Not read by mc today"
+msgid "Vertical: bottom arrow"
 msgstr ""
 
 #, fuzzy
-#| msgid "Page Down"
-msgid "Down"
-msgstr "Page Down"
+#| msgid "&Vertical"
+msgid "Vertical: track"
+msgstr "&Verticală"
 
-#, fuzzy
-#| msgid "&Left"
-msgid "Left"
-msgstr "&Stânga"
-
-#, fuzzy
-#| msgid "&Right"
-msgid "Right"
-msgstr "D&reapta"
-
-msgid "Thumb"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Track"
+#, fuzzy
+#| msgid "&Vertical"
+msgid "Vertical: thumb"
+msgstr "&Verticală"
+
+msgid "Vertical: thumb length"
+msgstr ""
+
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: left arrow"
+msgstr "Ori&zontală"
+
+msgid "Horizontal: right arrow"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: track"
+msgstr "Ori&zontală"
+
+msgid "Default: horiz of the lines"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: thumb"
+msgstr "Ori&zontală"
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -9109,7 +10484,7 @@ msgstr "Panouri:"
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -9256,9 +10631,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 #, fuzzy
 #| msgid "Save As"
 msgid "Save skin as"
@@ -9376,6 +10748,130 @@ msgstr "Alege pagina de cod"
 
 msgid "-  < No translation >"
 msgstr "-  < Fără translatare >"
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions"
+msgstr "&Permisiuni"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "State        Start  Directory"
+msgstr "Creează un nou dosar"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions..."
+msgstr "&Permisiuni"
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Compress"
+msgid "M-Commander sessions"
+msgstr "Comprimare"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Refresh"
+msgid "refresh"
+msgstr "&Reîncarcă"
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
+msgstr ""
 
 msgid "%b %e  %Y"
 msgstr "%b %e  %Y"
@@ -9516,9 +11012,6 @@ msgstr "Adevărat:"
 msgid "False:"
 msgstr "Fals:"
 
-msgid "Error calling program"
-msgstr "Eroare la executarea programului"
-
 msgid "Warning -- ignoring file"
 msgstr "Atenție -- se ignoră fișierul"
 
@@ -9550,6 +11043,93 @@ msgid "User menu"
 msgstr "Meniu utilizator"
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+#, fuzzy
+#| msgid "&Continue copy"
+msgid "&Convert"
+msgstr "&Continuați să copiați"
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr "Nu se poate deschide fișierul %s"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit file"
+msgid "&Edit the file"
+msgstr "Editează fișier"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -9564,10 +11144,97 @@ msgstr ""
 #| "%s"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
 "Nu se poate salva fișierul:\n"
 "%s"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Conditions"
+msgstr "Confirmare"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "Other options"
+msgid "Ot&her panel"
+msgstr "Alte opțiuni"
+
+#, fuzzy
+#| msgid "&Never"
+msgid "N&ever"
+msgstr "&Niciodată"
+
+#, fuzzy
+#| msgid "Alwa&ys"
+msgid "&Always"
+msgstr "&Întotdeauna"
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+#, fuzzy
+#| msgid "Block Size"
+msgid "Block device"
+msgstr "Mărimea blocului"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecutable only"
+msgstr "Mai întâ&i executabilele"
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Con&tinue"
+msgid "Con&ditions"
+msgstr "Con&tinuă"
 
 msgid "Add a submenu"
 msgstr ""
@@ -9595,6 +11262,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -9612,8 +11282,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 #, fuzzy
@@ -9648,6 +11326,18 @@ msgstr ""
 #| msgid "&Add new"
 msgid "&Add an entry"
 msgstr "&Adaugă nou"
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr ""
@@ -9774,6 +11464,16 @@ msgstr "Decalaj &zecimal"
 
 msgid "He&xadecimal offset"
 msgstr "Decalaj he&xazecimal"
+
+#, fuzzy
+#| msgid "ButtonBar|Static"
+msgid "ButtonBar|Syntax"
+msgstr "ButtonBar|Static"
+
+#, fuzzy
+#| msgid "ButtonBar|Ascii"
+msgid "ButtonBar|Ansi"
+msgstr "ButtonBar|Ascii"
 
 #, fuzzy
 #| msgid "ButtonBar|Hex"
@@ -10021,6 +11721,27 @@ msgstr "Nu se poate insera fișierul"
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr "Nu se poate aduce o copie locală a /ftp://some.host/editme.txt"
 
+#~ msgid "ButtonBar|Merge"
+#~ msgstr "ButtonBar|Combină"
+
+#, fuzzy
+#~| msgid "&Up"
+#~ msgid "Up"
+#~ msgstr "&Sus"
+
+#, fuzzy
+#~| msgid "Page Down"
+#~ msgid "Down"
+#~ msgstr "Page Down"
+
+#, fuzzy
+#~| msgid "&Left"
+#~ msgid "Left"
+#~ msgstr "&Stânga"
+
+#~ msgid "Error calling program"
+#~ msgstr "Eroare la executarea programului"
+
 #~ msgid "Timeout for freeing VFSs (sec):"
 #~ msgstr "Intervalul de timp pentru eliberarea VFS (sec):"
 
@@ -10032,11 +11753,6 @@ msgstr "Nu se poate aduce o copie locală a /ftp://some.host/editme.txt"
 
 #~ msgid "&Virtual FS..."
 #~ msgstr "Sistem &virtual de fișiere..."
-
-#, fuzzy
-#~| msgid "ButtonBar|Search"
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "ButtonBar|Caută"
 
 #, fuzzy, c-format
 #~| msgid "Reading failed"
@@ -10256,9 +11972,6 @@ msgstr "Nu se poate aduce o copie locală a /ftp://some.host/editme.txt"
 
 #~ msgid "&Free VFSs now"
 #~ msgstr "&Eliberează VFS acum"
-
-#~ msgid "&Refresh"
-#~ msgstr "&Reîncarcă"
 
 #~ msgid "&Add current"
 #~ msgstr "&Adaugă pe cel curent"
@@ -10577,9 +12290,6 @@ msgstr "Nu se poate aduce o copie locală a /ftp://some.host/editme.txt"
 #~ msgid "&Undelete files (ext2fs only)"
 #~ msgstr "Rec&uperare fișiere (doar ext2fs)"
 
-#~ msgid "not enough memory"
-#~ msgstr "nu există destulă memorie"
-
 #~ msgid "while allocating block buffer"
 #~ msgstr "în timp ce se aloca tamponul de blocuri"
 
@@ -10630,9 +12340,6 @@ msgstr "Nu se poate aduce o copie locală a /ftp://some.host/editme.txt"
 
 #~ msgid "vfs_info is not fs!"
 #~ msgstr "vfs_info nu este fs!"
-
-#~ msgid "You have to chdir to extract files first"
-#~ msgstr "Trebuie mai întâi să chdir pentru a extrage fișierele"
 
 #~ msgid "while iterating over blocks"
 #~ msgstr "în timpul parcurgerii blocurilor"

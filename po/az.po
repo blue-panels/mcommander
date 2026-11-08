@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
 "Language-Team: Azerbaijani <https://translate.codeberg.org/projects/mc6/mc6/"
@@ -513,6 +513,12 @@ msgstr ""
 msgid "Toggle right panel in terminal mode"
 msgstr ""
 
+msgid "Apply command to the files"
+msgstr ""
+
+msgid "Clear the command line"
+msgstr ""
+
 msgid "Select files by pattern"
 msgstr ""
 
@@ -523,6 +529,11 @@ msgstr "Shel paternləri &İstifadə edilər"
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "&Using shell patterns"
+msgid "Unselect by extension"
+msgstr "Shel paternləri &İstifadə edilər"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -572,6 +583,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -611,7 +625,72 @@ msgstr " Təzə Qovluq yarat"
 msgid "Cycle listing format"
 msgstr "Şəkilləndirmə düzəldicisinin &Sıralaması "
 
+msgid "Far listing mode 1"
+msgstr ""
+
+msgid "Far listing mode 2"
+msgstr ""
+
+msgid "Far listing mode 3"
+msgstr ""
+
+msgid "Far listing mode 4"
+msgstr ""
+
+msgid "Far listing mode 5"
+msgstr ""
+
+msgid "Far listing mode 6"
+msgstr ""
+
+msgid "Far listing mode 7"
+msgstr ""
+
+msgid "Far listing mode 8"
+msgstr ""
+
+msgid "Far listing mode 9"
+msgstr ""
+
+msgid "Far listing mode 10"
+msgstr ""
+
+msgid "Keep files unsorted"
+msgstr ""
+
+msgid "Sort by change time"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Access time"
+msgid "Sort by access time"
+msgstr "&Çatma vaxtı"
+
+#, fuzzy
+#| msgid "directory"
+msgid "Go to the root directory"
+msgstr "qovluq"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Select all files"
+msgstr "Dəyişiklikləri itirdim"
+
+#, fuzzy
+#| msgid "&Using shell patterns"
+msgid "Unselect all files"
+msgstr "Shel paternləri &İstifadə edilər"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -986,6 +1065,23 @@ msgid "Merge current hunk"
 msgstr ""
 
 msgid "Merge from other file"
+msgstr ""
+
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Next conflict"
+msgstr "Faylı alıram"
+
+msgid "Previous conflict"
 msgstr ""
 
 #, c-format
@@ -1410,6 +1506,9 @@ msgstr ""
 msgid "Shift"
 msgstr ""
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1539,6 +1638,65 @@ msgstr "Parol :"
 msgid "Screens"
 msgstr ""
 
+#, fuzzy, c-format
+#| msgid "Cannot translate from %s to %s"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "%s %s olaraq çevrilə bilmir"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Save"
+msgid "Save"
+msgstr "&Qeyd Et"
+
+msgid "The file exists. Overwrite it?"
+msgstr ""
+
+msgid "&Yes"
+msgstr "&Bəli"
+
+msgid "&No"
+msgstr "&Xeyr"
+
+#, fuzzy, c-format
+#| msgid "Create a new Directory"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr " Təzə Qovluq yarat"
+
+msgid "UP--DIR"
+msgstr "UP--DIR"
+
+#, fuzzy
+#| msgid "SUB-DIR"
+msgid "DIR"
+msgstr "SUB-DIR"
+
+msgid "Name"
+msgstr "Ad :"
+
+msgid "Size"
+msgstr "Böyüklük"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modified"
+msgstr "&Vaxtı düzəlt"
+
+msgid "&OK"
+msgstr "&Oldu"
+
+msgid "&Cancel"
+msgstr "&Ləğv Et"
+
 msgid "History"
 msgstr ""
 
@@ -1550,12 +1708,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "&Bəli"
-
-msgid "&No"
-msgstr "&Xeyr"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr ""
@@ -1563,11 +1715,10 @@ msgstr ""
 msgid "Do you want clean this history?"
 msgstr ""
 
-msgid "&OK"
-msgstr "&Oldu"
-
-msgid "&Cancel"
-msgstr "&Ləğv Et"
+#, fuzzy
+#| msgid "&Filter..."
+msgid "Filter:"
+msgstr "&Süzgəc ..."
 
 msgid "Background process:"
 msgstr "Arxaplan gedişatı:"
@@ -1612,6 +1763,12 @@ msgid "Edit files"
 msgstr ""
 
 msgid "<file> ..."
+msgstr ""
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
 msgstr ""
 
 msgid "Forces xterm features"
@@ -1662,6 +1819,12 @@ msgstr "fayl"
 msgid "file1 file2"
 msgstr ""
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr ""
 
@@ -1697,6 +1860,12 @@ msgid "No arguments given to the viewer."
 msgstr ""
 
 msgid "Two files are required to invoke the diffviewer."
+msgstr ""
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
 msgstr ""
 
 msgid "Background protocol error"
@@ -1746,6 +1915,14 @@ msgstr ""
 msgid "Cannot create temporary diff file"
 msgstr ""
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -1753,6 +1930,36 @@ msgid ""
 msgstr ""
 
 msgid "Cannot create temporary merge file"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"%s faylına yaza bilmirəm:\n"
+"%s\n"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Cannot save the merge result\n"
+"%s"
 msgstr ""
 
 msgid "&Fastest (Assume large files)"
@@ -1785,6 +1992,12 @@ msgstr ""
 msgid "Diff Options"
 msgstr ""
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr ""
 
@@ -1797,7 +2010,31 @@ msgstr ""
 msgid "Goto line (right)"
 msgstr ""
 
+msgid "Goto line (merged)"
+msgstr ""
+
 msgid "Enter line:"
+msgstr ""
+
+msgid "ButtonBar|Edit"
+msgstr ""
+
+msgid "ButtonBar|<-Copy"
+msgstr ""
+
+msgid "ButtonBar|Base"
+msgstr ""
+
+msgid "ButtonBar|Next"
+msgstr ""
+
+msgid "ButtonBar|Copy->"
+msgstr ""
+
+msgid "ButtonBar|-Left"
+msgstr ""
+
+msgid "ButtonBar|-Right"
 msgstr ""
 
 msgid "ButtonBar|Help"
@@ -1806,10 +2043,10 @@ msgstr ""
 msgid "ButtonBar|Save"
 msgstr ""
 
-msgid "ButtonBar|Edit"
+msgid "ButtonBar|+Left"
 msgstr ""
 
-msgid "ButtonBar|Merge"
+msgid "ButtonBar|+Right"
 msgstr ""
 
 msgid "ButtonBar|Search"
@@ -1821,6 +2058,12 @@ msgstr ""
 msgid "ButtonBar|Quit"
 msgstr ""
 
+msgid "Quit"
+msgstr "Çıx"
+
+msgid "The merge result is not saved. Save it?"
+msgstr ""
+
 msgid "File(s) was modified. Save with exit?"
 msgstr ""
 
@@ -1830,11 +2073,48 @@ msgid ""
 "Save modified file(s)?"
 msgstr ""
 
-msgid "Quit"
-msgstr "Çıx"
+msgid "Save the changes of the two files first."
+msgstr ""
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr ""
+"%s faylına yaza bilmirəm:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"%s faylını yazmaq üçün aça bilmədim :\n"
+"%s\n"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"%s faylına yaza bilmirəm:\n"
+"%s\n"
 
 msgid "File name is empty!"
 msgstr ""
@@ -1843,12 +2123,6 @@ msgstr ""
 msgid ""
 "%s\n"
 "is a directory"
-msgstr ""
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
 msgstr ""
 
 msgid "Diff viewer: invalid mode"
@@ -2394,6 +2668,13 @@ msgstr "&Qeyd Et"
 msgid "Load"
 msgstr ""
 
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr "Daraya bilmədim :"
+
 msgid "Syntax file edit"
 msgstr ""
 
@@ -2880,10 +3161,22 @@ msgstr ""
 msgid "Edit: "
 msgstr ""
 
-msgid "ButtonBar|Mark"
+msgid "ButtonBar|Menu"
+msgstr ""
+
+msgid "ButtonBar|SaveAs"
+msgstr ""
+
+msgid "ButtonBar|Column"
 msgstr ""
 
 msgid "ButtonBar|Replac"
+msgstr ""
+
+msgid "ButtonBar|Insert"
+msgstr ""
+
+msgid "ButtonBar|Mark"
 msgstr ""
 
 msgid "ButtonBar|Copy"
@@ -3088,6 +3381,12 @@ msgid "Safe overwrite"
 msgstr ""
 
 msgid "A&uto save setup"
+msgstr ""
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
 msgstr ""
 
 msgid "Configure options"
@@ -3455,17 +3754,11 @@ msgstr "&qrupları daxil et"
 msgid "Set &users"
 msgstr "&istifadəçiləri daxil et"
 
-msgid "Name"
-msgstr "Ad :"
-
 msgid "Owner name"
 msgstr "Sahibinin adı"
 
 msgid "Group name"
 msgstr "Qrup adı"
-
-msgid "Size"
-msgstr "Böyüklük"
 
 msgid "Chown command"
 msgstr ""
@@ -3530,6 +3823,22 @@ msgstr ""
 
 msgid "Filter command and arguments:"
 msgstr ""
+
+#, fuzzy
+#| msgid "Chmod command"
+msgid "Apply command"
+msgstr "Chmod əmri"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4345,13 +4654,43 @@ msgstr ""
 msgid "&Right"
 msgstr ""
 
-msgid "ButtonBar|Menu"
+msgid "ButtonBar|Left"
+msgstr ""
+
+msgid "ButtonBar|Right"
+msgstr ""
+
+msgid "ButtonBar|Console"
 msgstr ""
 
 msgid "ButtonBar|View"
 msgstr ""
 
 msgid "ButtonBar|RenMov"
+msgstr ""
+
+msgid "ButtonBar|Name"
+msgstr ""
+
+msgid "ButtonBar|Version"
+msgstr ""
+
+msgid "ButtonBar|Ext"
+msgstr ""
+
+msgid "ButtonBar|Size"
+msgstr ""
+
+msgid "ButtonBar|MTime"
+msgstr ""
+
+msgid "ButtonBar|Unsort"
+msgstr ""
+
+msgid "ButtonBar|CTime"
+msgstr ""
+
+msgid "ButtonBar|ATime"
 msgstr ""
 
 msgid "ButtonBar|Mkdir"
@@ -4798,9 +5137,6 @@ msgstr "Yiyəsi"
 msgid "[dev]"
 msgstr ""
 
-msgid "UP--DIR"
-msgstr "UP--DIR"
-
 #, fuzzy
 #| msgid "&Filter..."
 msgid "Filter: "
@@ -5036,6 +5372,13 @@ msgstr ""
 "%s\n"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5052,6 +5395,9 @@ msgid "Change drive"
 msgstr ""
 
 msgid "No plugins with drive menu support are loaded."
+msgstr ""
+
+msgid "Plugin action"
 msgstr ""
 
 #, c-format
@@ -5185,6 +5531,15 @@ msgstr ""
 msgid "Edit &term file"
 msgstr "&Menyunu dəyişdir"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5207,6 +5562,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -5378,6 +5736,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "Davam etmək üçün istədiyiniz bir düyməyə basın..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -5515,6 +5882,474 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Set &groups"
+msgid "Choose group"
+msgstr "&qrupları daxil et"
+
+msgid "Choose user"
+msgstr ""
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+msgid "&Write"
+msgstr ""
+
+msgid "E&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Group"
+msgid "&Group"
+msgstr "Qrup"
+
+#, fuzzy
+#| msgid "Name"
+msgid "Names:"
+msgstr "Ad :"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "Add entry"
+msgstr "Təzə bir d&ədə əlavə et"
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "other"
+msgid "Other"
+msgstr "başqa"
+
+#, fuzzy
+#| msgid "New hotlist entry"
+msgid "Edit entry"
+msgstr "Təzə nişanlarım girişi"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+msgid "Default ACL"
+msgstr ""
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+msgid "&New files inside"
+msgstr ""
+
+msgid "List"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+msgid "Write"
+msgstr ""
+
+msgid "Exec"
+msgstr ""
+
+#, fuzzy
+#| msgid "directories"
+msgid "Effective"
+msgstr "qovluqlar"
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "&Add"
+msgstr "Təzə bir d&ədə əlavə et"
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Delete"
+msgid "De&lete"
+msgstr "&Sil"
+
+#, fuzzy
+#| msgid "Set &all"
+msgid "Set a&ll"
+msgstr "&Hamısını seç"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "Dəyişiklikləri itirdim"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+msgid "This folder and files"
+msgstr ""
+
+msgid "Subfolders and files only"
+msgstr ""
+
+msgid "Subfolders only"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Size only"
+msgid "Files only"
+msgstr "&Böyüklüyünə görə"
+
+msgid "allow"
+msgstr ""
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+msgid "Allow"
+msgstr ""
+
+msgid "Deny"
+msgstr ""
+
+msgid "Applies to:"
+msgstr ""
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Advanced rights"
+msgstr "&Ləğv Et"
+
+#, fuzzy
+#| msgid "A&ll"
+msgid "A&llow"
+msgstr "A&ll"
+
+msgid "De&ny"
+msgstr ""
+
+msgid "&Special"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Ad&vanced..."
+msgstr "&Ləğv Et"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+#, fuzzy
+#| msgid "File"
+msgid "File:"
+msgstr "Fayl"
+
+#, fuzzy
+#| msgid "Owner"
+msgid "Owner:"
+msgstr "Yiyəsi"
+
+#, fuzzy
+#| msgid "Group"
+msgid "Group:"
+msgstr "Qrup"
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+msgid "Rights"
+msgstr ""
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modify"
+msgstr "&Vaxtı düzəlt"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "&Modify"
+msgstr "&Vaxtı düzəlt"
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Execute file"
+msgstr "Faylı alıram"
+
+#, fuzzy
+#| msgid "Sort order"
+msgid "Traverse folder"
+msgstr "Süzmə əmri"
+
+msgid "Read data"
+msgstr ""
+
+msgid "List folder"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Size only"
+msgid "Read attributes"
+msgstr "&Böyüklüyünə görə"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Read extended attributes"
+msgstr "Dəyişiklikləri itirdim"
+
+msgid "Write data"
+msgstr ""
+
+#, fuzzy
+#| msgid "files"
+msgid "Create files"
+msgstr "fayllar"
+
+#, fuzzy
+#| msgid "&Append"
+msgid "Append data"
+msgstr "&ƏLavə Et"
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create folders"
+msgstr " Təzə Qovluq yarat"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Write attributes"
+msgstr "Dəyişiklikləri itirdim"
+
+msgid "Write extended attributes"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "Faylı alıram"
+
+#, fuzzy
+#| msgid "Permission"
+msgid "Read permissions"
+msgstr "İstifadəhaqları"
+
+#, fuzzy
+#| msgid "Permission"
+msgid "Change permissions"
+msgstr "İstifadəhaqları"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cannot parse:"
+msgid "Cannot stat"
+msgstr "Daraya bilmədim :"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot read the access control list of"
+msgstr ""
+"%s faylına yaza bilmirəm:\n"
+"%s\n"
+
+msgid "Cannot read the default access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open tar archive\n"
+#| "%s"
+msgid "Reading archive"
+msgstr ""
+"%s\n"
+"tar arxivini aça bilmədim"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -5745,9 +6580,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6146,8 +6978,102 @@ msgstr "%s deyə adlandırılmış borunu aça bilmirəm\n"
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create a directory"
+msgstr " Təzə Qovluq yarat"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot fetch %s at %.10s."
+msgstr "Daraya bilmədim :"
+
+#, fuzzy
+#| msgid "Cannot open named pipe %s\n"
+msgid "Cannot open the diff viewer."
+msgstr "%s deyə adlandırılmış borunu aça bilmirəm\n"
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot run %s: %s"
+msgstr "Daraya bilmədim :"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open tar archive\n"
+#| "%s"
+msgid "Cannot open the browser"
+msgstr ""
+"%s\n"
+"tar arxivini aça bilmədim"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+msgid "Added to favorites."
+msgstr ""
+
+msgid "Already in favorites."
+msgstr ""
+
+msgid "Add to favorites"
+msgstr ""
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Change the favorite"
+msgstr "Dəyişiklikləri itirdim"
+
+#, c-format
+msgid "The local clone of %s/%s:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Extension file edit"
+msgid "Open in Git"
+msgstr "Uzantılar faylı düzəldilməsi"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, c-format
+msgid "Showing: %s"
+msgstr ""
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6166,8 +7092,18 @@ msgstr ""
 msgid "&Reset"
 msgstr "T&əzədən davam et"
 
-msgid "Add to favorites"
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "Dəyişiklikləri itirdim"
+
+msgid "Reword is available only for commits on the current branch."
 msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open named pipe %s\n"
+msgid "Cannot find coole executable: %s"
+msgstr "%s deyə adlandırılmış borunu aça bilmirəm\n"
 
 #, fuzzy
 #| msgid "Directory path"
@@ -6560,11 +7496,6 @@ msgstr ""
 msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
-#, fuzzy
-#| msgid "&Save"
-msgid "Save"
-msgstr "&Qeyd Et"
-
 msgid "File was modified. Save changes?"
 msgstr ""
 
@@ -6622,6 +7553,19 @@ msgstr ""
 msgid "Cannot save connection: %s"
 msgstr "ftpfs : %s a(ə) bağlanılır"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot start %s."
+msgstr "Daraya bilmədim :"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, c-format
 msgid "Cannot fetch document: %s"
 msgstr ""
@@ -6635,6 +7579,15 @@ msgid "Cannot open temp file: %s"
 msgstr "%s deyə adlandırılmış borunu aça bilmirəm\n"
 
 msgid "Failed to write temp file."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Moving %s"
+msgid "Loading %s..."
+msgstr "%s Daşınır "
+
+#, c-format
+msgid "Cannot list documents in '%s': %s"
 msgstr ""
 
 #, fuzzy, c-format
@@ -6745,10 +7698,6 @@ msgid "Loading %s (%"
 msgstr "%s Daşınır "
 
 #, c-format
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-
-#, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
 
@@ -6815,6 +7764,12 @@ msgid "Socket (ms):"
 msgstr ""
 
 msgid "Op max time (ms):"
+msgstr ""
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
 msgstr ""
 
 msgid "MongoDB settings"
@@ -6911,9 +7866,6 @@ msgstr ""
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -6989,6 +7941,223 @@ msgstr "&Sil"
 
 msgid "Command"
 msgstr "Əmr"
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Aborting transfer..."
+msgid "%s: databases"
+msgstr "Daşıma ləğv edilər..."
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "Configure options"
+msgid "PostgreSQL connections"
+msgstr "Seçənəkləri quraşdır"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot open %s for writing"
+msgstr ""
+"%s faylını yazmaq üçün aça bilmədim :\n"
+"%s\n"
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot write %s: %s"
+msgstr "Daraya bilmədim :"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot write postgres.ini"
+msgstr ""
+"%s faylına yaza bilmirəm:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid "ftpfs: connection to server failed: %s"
+msgid "Invalid connection name"
+msgstr "ftpfs : vericiyə bağlantı qurula bilmədi: %s"
+
+msgid "Out of memory"
+msgstr ""
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Label for \"%s\":"
+msgid "Password for \"%s\":"
+msgstr "\"%s\" üçün Etiket:"
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled."
+msgstr "Ləğv Et"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Configure options"
+msgid "PostgreSQL connection"
+msgstr "Seçənəkləri quraşdır"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "File: %s"
+msgid "Connected: %s"
+msgstr "Fayl : %s"
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+msgid "&Service"
+msgstr ""
+
+msgid "Connect by:"
+msgstr ""
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Error"
+msgid "Service:"
+msgstr "XƏTA"
+
+msgid "Database:"
+msgstr ""
+
+msgid "SSL mode:"
+msgstr ""
+
+#, fuzzy
+#| msgid "&User"
+msgid "Username:"
+msgstr "&İstifadəçi"
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "Parol :"
+
+msgid "New PostgreSQL connection"
+msgstr ""
+
+msgid "Edit PostgreSQL connection"
+msgstr ""
+
+msgid " Authentication "
+msgstr ""
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "Configure options"
+msgid "&Test connection"
+msgstr "Seçənəkləri quraşdır"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "ftpfs: making connection to %s"
+msgid "Cannot save the connection: %s"
+msgstr "ftpfs : %s a(ə) bağlanılır"
+
+#, fuzzy, c-format
+#| msgid "ftpfs: making connection to %s"
+msgid "Cannot delete the connection: %s"
+msgstr "ftpfs : %s a(ə) bağlanılır"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open named pipe %s\n"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr "%s deyə adlandırılmış borunu aça bilmirəm\n"
+
+#, fuzzy
+#| msgid "Configure options"
+msgid "Default connection:"
+msgstr "Seçənəkləri quraşdır"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr ""
 
 msgid "S3"
 msgstr ""
@@ -7089,6 +8258,16 @@ msgstr ""
 msgid "Cannot resolve %s: %s"
 msgstr "Daraya bilmədim :"
 
+msgid "SFTP authentication"
+msgstr ""
+
+#, c-format
+msgid "Enter passphrase for key %s"
+msgstr ""
+
+msgid "SFTP key passphrase"
+msgstr ""
+
 msgid "SFTP connection"
 msgstr ""
 
@@ -7109,11 +8288,10 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, c-format
-msgid "Enter passphrase for key %s"
+msgid "Authenticating with a default key..."
 msgstr ""
 
-msgid "SFTP key passphrase"
+msgid "Authenticating with keyboard-interactive..."
 msgstr ""
 
 msgid "Authenticating with password..."
@@ -7384,11 +8562,6 @@ msgstr "\"%s\" üçün Etiket:"
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Create a new Directory"
-msgid "Create a directory"
-msgstr " Təzə Qovluq yarat"
 
 msgid "shell: cannot create the directory"
 msgstr ""
@@ -7834,6 +9007,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -8001,6 +9180,25 @@ msgid "Changed line, filler"
 msgstr "Dəyişiklikləri itirdim"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "S&et marked"
+msgid "Line mark"
+msgstr "Seçilənləri D&xil et"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+#, fuzzy
+#| msgid "Pane&lize"
+msgid "Inactive frame"
+msgstr "Pane&lböyüklüyü"
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -8214,27 +9412,53 @@ msgstr ""
 msgid "Editor: fold closed"
 msgstr ""
 
+msgid "Vertical: top arrow"
+msgstr ""
+
+msgid "Vertical: bottom arrow"
+msgstr ""
+
 #, fuzzy
-#| msgid "&Up"
-msgid "Up"
-msgstr "&Yuxarı"
+#| msgid "&Vertical"
+msgid "Vertical: track"
+msgstr "Ş&aquli"
 
-msgid "Not read by mc today"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Down"
+#, fuzzy
+#| msgid "&Vertical"
+msgid "Vertical: thumb"
+msgstr "Ş&aquli"
+
+msgid "Vertical: thumb length"
 msgstr ""
 
-msgid "Left"
+msgid "Cells of the thumb when it fits, else half the track"
 msgstr ""
 
-msgid "Right"
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: left arrow"
+msgstr "Ü&füqi"
+
+msgid "Horizontal: right arrow"
 msgstr ""
 
-msgid "Thumb"
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: track"
+msgstr "Ü&füqi"
+
+msgid "Default: horiz of the lines"
 msgstr ""
 
-msgid "Track"
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: thumb"
+msgstr "Ü&füqi"
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -8301,7 +9525,7 @@ msgstr ""
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -8428,9 +9652,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 msgid "Save skin as"
 msgstr ""
 
@@ -8540,6 +9761,126 @@ msgstr ""
 
 msgid "-  < No translation >"
 msgstr "-  < Tərcüməsiz >"
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "Permission"
+msgid "Sessions"
+msgstr "İstifadəhaqları"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "State        Start  Directory"
+msgstr " Təzə Qovluq yarat"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+msgid "Sessions..."
+msgstr ""
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Configure options"
+msgid "M-Commander sessions"
+msgstr "Seçənəkləri quraşdır"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+msgid "refresh"
+msgstr ""
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
+msgstr ""
 
 msgid "%b %e  %Y"
 msgstr "%b %e  %Y"
@@ -8672,9 +10013,6 @@ msgstr ""
 msgid "False:"
 msgstr ""
 
-msgid "Error calling program"
-msgstr ""
-
 msgid "Warning -- ignoring file"
 msgstr ""
 
@@ -8705,6 +10043,95 @@ msgid "User menu"
 msgstr ""
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+msgid "&Convert"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open tar archive\n"
+#| "%s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr ""
+"%s\n"
+"tar arxivini aça bilmədim"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit &menu file"
+msgid "&Edit the file"
+msgstr "&Menyunu dəyişdir"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -8719,10 +10146,93 @@ msgstr ""
 #| "%s\n"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
 "%s faylına yaza bilmirəm:\n"
 "%s\n"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Configuration..."
+msgid "Conditions"
+msgstr "&Qurğular..."
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "External panelize"
+msgid "Ot&her panel"
+msgstr "Xarici panelləşdirmə"
+
+#, fuzzy
+#| msgid "&Never"
+msgid "N&ever"
+msgstr "Heç bir vax&t"
+
+#, fuzzy
+#| msgid "Alwa&ys"
+msgid "&Always"
+msgstr "hə&mişə"
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+msgid "Block device"
+msgstr ""
+
+msgid "E&xecutable only"
+msgstr ""
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Con&tinue"
+msgid "Con&ditions"
+msgstr "Davam&Et"
 
 msgid "Add a submenu"
 msgstr ""
@@ -8750,6 +10260,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -8767,8 +10280,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 #, fuzzy
@@ -8803,6 +10324,18 @@ msgstr ""
 #| msgid "&Add new"
 msgid "&Add an entry"
 msgstr "Təzə bir d&ədə əlavə et"
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr ""
@@ -8921,6 +10454,12 @@ msgid "&Decimal offset"
 msgstr ""
 
 msgid "He&xadecimal offset"
+msgstr ""
+
+msgid "ButtonBar|Syntax"
+msgstr ""
+
+msgid "ButtonBar|Ansi"
 msgstr ""
 
 msgid "ButtonBar|Text"
@@ -9139,6 +10678,11 @@ msgstr ""
 
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr ""
+
+#, fuzzy
+#~| msgid "&Up"
+#~ msgid "Up"
+#~ msgstr "&Yuxarı"
 
 #~ msgid "Edit &menu file"
 #~ msgstr "&Menyunu dəyişdir"

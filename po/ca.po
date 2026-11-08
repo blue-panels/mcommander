@@ -19,11 +19,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
-"Language-Team: Catalan <https://translate.codeberg.org/projects/mc6/mc6/ca/>"
-"\n"
+"Language-Team: Catalan <https://translate.codeberg.org/projects/mc6/mc6/ca/"
+">\n"
 "Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -615,6 +615,16 @@ msgid "Toggle right panel in terminal mode"
 msgstr "Canvia e&l marge dret"
 
 #, fuzzy
+#| msgid "shell: storing file"
+msgid "Apply command to the files"
+msgstr "intèrpret d'ordres: fitxer d'emmagatzematge"
+
+#, fuzzy
+#| msgid "Great than"
+msgid "Clear the command line"
+msgstr "Més que"
+
+#, fuzzy
 #| msgid "S&hell patterns"
 msgid "Select files by pattern"
 msgstr "Patrons per a l'&intèrpret d'ordres"
@@ -626,6 +636,11 @@ msgstr "Amb patrons per a l'&intèrpret d'ordres"
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Unselect by extension"
+msgstr "Igno&ra l'expansió de tabulació"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -681,6 +696,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -724,7 +742,94 @@ msgstr "Imprimeix el directori de dades"
 msgid "Cycle listing format"
 msgstr "Format del llistat"
 
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 1"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 2"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 3"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 4"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 5"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 6"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 7"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 8"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 9"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 10"
+msgstr "Usa el pla&fó en el mode ordenació"
+
+msgid "Keep files unsorted"
+msgstr ""
+
+#, fuzzy
+#| msgid "C&hange time"
+msgid "Sort by change time"
+msgstr "C&anvia l'hora"
+
+#, fuzzy
+#| msgid "&Access time"
+msgid "Sort by access time"
+msgstr "Data d'&accés"
+
+#, fuzzy
+#| msgid "Compare directories"
+msgid "Go to the root directory"
+msgstr "Compara els directoris"
+
+#, fuzzy
+#| msgid "Select"
+msgid "Select all files"
+msgstr "Selecciona"
+
+#, fuzzy
+#| msgid "Unselect"
+msgid "Unselect all files"
+msgstr "No seleccionis"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -1207,6 +1312,25 @@ msgstr ""
 msgid "Merge from other file"
 msgstr ""
 
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Next conflict"
+msgstr "Confirmació"
+
+#, fuzzy
+#| msgid "&Previous"
+msgid "Previous conflict"
+msgstr "&Anterior"
+
 #, c-format
 msgid ""
 "File \"%s\" is already being edited.\n"
@@ -1645,6 +1769,9 @@ msgstr ""
 msgid "Shift"
 msgstr "Majús"
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1789,6 +1916,73 @@ msgstr "Contrasenya:"
 msgid "Screens"
 msgstr "Pantalles"
 
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "No s'ha pogut llegir el contingut del directori"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+"No s'ha pogut fer estat\n"
+"%s"
+
+#, fuzzy
+#| msgid "&Save"
+msgid "Save"
+msgstr "&Desa"
+
+#, fuzzy
+#| msgid "A file already exists with this name"
+msgid "The file exists. Overwrite it?"
+msgstr "Ja existeix un fitxer amb aquest nom"
+
+msgid "&Yes"
+msgstr "&Sí"
+
+msgid "&No"
+msgstr "&No"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "%s\n"
+#| "is a directory"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr ""
+"%s\n"
+"és un directori"
+
+msgid "UP--DIR"
+msgstr "DIR--AMUNT"
+
+#, fuzzy
+#| msgid "SUB-DIR"
+msgid "DIR"
+msgstr "SUB-DIR"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Size"
+msgstr "Mida"
+
+#, fuzzy
+#| msgid "Modified:   %s"
+msgid "Modified"
+msgstr "Modificat: %s"
+
+msgid "&OK"
+msgstr "&D'acord"
+
+msgid "&Cancel"
+msgstr "&Cancel·la"
+
 msgid "History"
 msgstr "Historial"
 
@@ -1800,12 +1994,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "&Sí"
-
-msgid "&No"
-msgstr "&No"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr "DialogTitle|Neteja l'historial"
@@ -1813,11 +2001,10 @@ msgstr "DialogTitle|Neteja l'historial"
 msgid "Do you want clean this history?"
 msgstr "De veritat voleu netejar aquest historial?"
 
-msgid "&OK"
-msgstr "&D'acord"
-
-msgid "&Cancel"
-msgstr "&Cancel·la"
+#, fuzzy
+#| msgid "Filter"
+msgid "Filter:"
+msgstr "Filtre"
 
 msgid "Background process:"
 msgstr "Procés de fons:"
@@ -1863,6 +2050,12 @@ msgstr "Edita els fitxers"
 
 msgid "<file> ..."
 msgstr "<file> ..."
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
+msgstr ""
 
 msgid "Forces xterm features"
 msgstr "Força l'ús de les característiques del xterm"
@@ -1915,6 +2108,12 @@ msgstr "fitxer"
 msgid "file1 file2"
 msgstr "fitxer_1 fitxer_2"
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[aquest_dir] [altre_plafó_dir]"
 
@@ -1959,6 +2158,12 @@ msgstr "No s'han donat arguments al visor."
 
 msgid "Two files are required to invoke the diffviewer."
 msgstr "Calen dos fitxers per a invocar el visualitzador de diferències."
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
+msgstr ""
 
 msgid "Background protocol error"
 msgstr "S'ha produït un error de protocol en segon pla"
@@ -2009,6 +2214,14 @@ msgstr "La cerca està inhabilitada"
 msgid "Cannot create temporary diff file"
 msgstr "No s'ha pogut crear un fitxer temporal de diff"
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -2019,6 +2232,41 @@ msgstr ""
 
 msgid "Cannot create temporary merge file"
 msgstr "No s'ha pogut crear un fitxer temporal de fusió"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"No s'ha pogut escriure al fitxer %s:\n"
+"%s\n"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid ""
+"Cannot save the merge result\n"
+"%s"
+msgstr ""
+"No s'ha pogut desar el fitxer %s:\n"
+"%s"
 
 msgid "&Fastest (Assume large files)"
 msgstr "Més &ràpid (assumeix fitxers grans)"
@@ -2050,6 +2298,12 @@ msgstr "Re&torn de carro"
 msgid "Diff Options"
 msgstr "Opcions de les diferències"
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr "Editar"
 
@@ -2062,8 +2316,46 @@ msgstr "Ves a la línia (esquerra)"
 msgid "Goto line (right)"
 msgstr "Ves a la línia (dreta)"
 
+#, fuzzy
+#| msgid "Goto line (right)"
+msgid "Goto line (merged)"
+msgstr "Ves a la línia (dreta)"
+
 msgid "Enter line:"
 msgstr "Introduïu la línia:"
+
+msgid "ButtonBar|Edit"
+msgstr "ButtonBar|Edita"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|<-Copy"
+msgstr "ButtonBar|Copia"
+
+#, fuzzy
+#| msgid "ButtonBar|Parse"
+msgid "ButtonBar|Base"
+msgstr "ButtonBar|Analitza"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Next"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Copy->"
+msgstr "ButtonBar|Copia"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|-Left"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|-Right"
+msgstr "ButtonBar|Edita"
 
 msgid "ButtonBar|Help"
 msgstr "ButtonBar|Ajuda"
@@ -2071,11 +2363,15 @@ msgstr "ButtonBar|Ajuda"
 msgid "ButtonBar|Save"
 msgstr "ButtonBar|Desa"
 
-msgid "ButtonBar|Edit"
-msgstr "ButtonBar|Edita"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|+Left"
+msgstr "ButtonBar|Hex"
 
-msgid "ButtonBar|Merge"
-msgstr "ButtonBar|Fusiona"
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|+Right"
+msgstr "ButtonBar|Edita"
 
 msgid "ButtonBar|Search"
 msgstr "ButtonBar|Cerca"
@@ -2085,6 +2381,12 @@ msgstr "ButtonBar|Opcions"
 
 msgid "ButtonBar|Quit"
 msgstr "ButtonBar|Surt"
+
+msgid "Quit"
+msgstr "Surt"
+
+msgid "The merge result is not saved. Save it?"
+msgstr ""
 
 msgid "File(s) was modified. Save with exit?"
 msgstr "El/s fitxer/s ha/n estat modificat/s. Voleu desar abans de sortir?"
@@ -2097,11 +2399,50 @@ msgstr ""
 "S'està tancant %s.\n"
 "Voleu desar el/s fitxer/s modificat/s?"
 
-msgid "Quit"
-msgstr "Surt"
+#, fuzzy
+#| msgid "You have to chdir to extract files first"
+msgid "Save the changes of the two files first."
+msgstr "Primer haureu de canviar al directori per a extreure els fitxers"
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create backup file\n"
+#| "%s~~~"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr ""
+"No s'ha pogut crear un fitxer de còpia de seguretat\n"
+"%s~~~"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"No s'ha pogut obrir el fitxer %s per a escriptura:\n"
+"%s\n"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr "Diferència:"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot remove file\n"
+#| "%s"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"No s'ha pogut eliminar el fitxer\n"
+"%s"
 
 msgid "File name is empty!"
 msgstr "El nom del fitxer és buit!"
@@ -2113,14 +2454,6 @@ msgid ""
 msgstr ""
 "%s\n"
 "és un directori"
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
-msgstr ""
-"No s'ha pogut fer estat\n"
-"%s"
 
 msgid "Diff viewer: invalid mode"
 msgstr "Visor de diferències: mode no vàlid"
@@ -2736,6 +3069,17 @@ msgstr "&Desa"
 msgid "Load"
 msgstr "Carrega"
 
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create link\n"
+#| "%s"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr ""
+"No s'ha pogut crear l'enllaç\n"
+"%s"
+
 msgid "Syntax file edit"
 msgstr "Edita el fitxer de sintaxi"
 
@@ -3247,11 +3591,29 @@ msgstr "Obre fitxers"
 msgid "Edit: "
 msgstr "Edita: "
 
-msgid "ButtonBar|Mark"
-msgstr "ButtonBar|Marca"
+msgid "ButtonBar|Menu"
+msgstr "ButtonBar|Menú"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|SaveAs"
+msgstr "ButtonBar|Desa"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Column"
+msgstr "ButtonBar|Copia"
 
 msgid "ButtonBar|Replac"
 msgstr "ButtonBar|Susbst."
+
+#, fuzzy
+#| msgid "ButtonBar|Index"
+msgid "ButtonBar|Insert"
+msgstr "ButtonBar|Índex"
+
+msgid "ButtonBar|Mark"
+msgstr "ButtonBar|Marca"
 
 msgid "ButtonBar|Copy"
 msgstr "ButtonBar|Copia"
@@ -3473,6 +3835,12 @@ msgstr "Sobreescriptura segura"
 
 msgid "A&uto save setup"
 msgstr "Desa &automàticament la configuració"
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
+msgstr ""
 
 msgid "Configure options"
 msgstr "Opcions de configuració"
@@ -3857,17 +4225,11 @@ msgstr "Estableix els &grups"
 msgid "Set &users"
 msgstr "Estableix els &usuaris"
 
-msgid "Name"
-msgstr "Nom"
-
 msgid "Owner name"
 msgstr "Nom del propietari"
 
 msgid "Group name"
 msgstr "Nom del grup"
-
-msgid "Size"
-msgstr "Mida"
 
 msgid "Chown command"
 msgstr "Ordre canvia de propietari"
@@ -3939,6 +4301,22 @@ msgstr "Vista filtrada"
 
 msgid "Filter command and arguments:"
 msgstr "Ordre i arguments del filtratge:"
+
+#, fuzzy
+#| msgid "Chmod command"
+msgid "Apply command"
+msgstr "Canvi dels permisos"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4821,14 +5199,66 @@ msgstr "A &sota"
 msgid "&Right"
 msgstr "&Dreta"
 
-msgid "ButtonBar|Menu"
-msgstr "ButtonBar|Menú"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Left"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Right"
+msgstr "ButtonBar|Edita"
+
+#, fuzzy
+#| msgid "ButtonBar|Search"
+msgid "ButtonBar|Console"
+msgstr "ButtonBar|Cerca"
 
 msgid "ButtonBar|View"
 msgstr "ButtonBar|Visualitza"
 
 msgid "ButtonBar|RenMov"
 msgstr "ButtonBar|ReanMou"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Name"
+msgstr "ButtonBar|Desa"
+
+#, fuzzy
+#| msgid "ButtonBar|Rescan"
+msgid "ButtonBar|Version"
+msgstr "ButtonBar|TornEsc"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Ext"
+msgstr "ButtonBar|Edita"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Size"
+msgstr "ButtonBar|Desa"
+
+#, fuzzy
+#| msgid "ButtonBar|Move"
+msgid "ButtonBar|MTime"
+msgstr "ButtonBar|Mou"
+
+#, fuzzy
+#| msgid "ButtonBar|Unform"
+msgid "ButtonBar|Unsort"
+msgstr "ButtonBar|Treu form"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|CTime"
+msgstr "ButtonBar|Visualitza"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|ATime"
+msgstr "ButtonBar|Visualitza"
 
 msgid "ButtonBar|Mkdir"
 msgstr "ButtonBar|CreaDir"
@@ -5294,9 +5724,6 @@ msgstr "Propietari"
 msgid "[dev]"
 msgstr "[dev]"
 
-msgid "UP--DIR"
-msgstr "DIR--AMUNT"
-
 #, fuzzy
 #| msgid "Filter"
 msgid "Filter: "
@@ -5552,6 +5979,13 @@ msgid "Cannot delete local file %s"
 msgstr "No s'ha pogut obrir el fitxer %s"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5571,6 +6005,11 @@ msgstr "C&anvia l'hora"
 
 msgid "No plugins with drive menu support are loaded."
 msgstr ""
+
+#, fuzzy
+#| msgid "Tabulation"
+msgid "Plugin action"
+msgstr "Tabulació"
 
 #, c-format
 msgid ""
@@ -5718,6 +6157,15 @@ msgstr "Majús"
 msgid "Edit &term file"
 msgstr "Edita el fitxer de &menús"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5740,6 +6188,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -5940,6 +6391,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "Premeu qualsevol tecla per a continuar..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -6090,6 +6550,510 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose group"
+msgstr "Escolliu la pàgina de codis"
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose user"
+msgstr "Escolliu la pàgina de codis"
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Overwrite"
+msgid "&Write"
+msgstr "S&obreescriu"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecute"
+msgstr "E&xecutables primer"
+
+#, fuzzy
+#| msgid "Group"
+msgid "&Group"
+msgstr "Grup"
+
+#, fuzzy
+#| msgid "Name:"
+msgid "Names:"
+msgstr "Nom:"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "Add entry"
+msgstr "Afegeix un &nou"
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "other"
+msgid "Other"
+msgstr "altres"
+
+#, fuzzy
+#| msgid "New hotlist entry"
+msgid "Edit entry"
+msgstr "Entrada nova als favorits"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+#, fuzzy
+#| msgid "< Default >"
+msgid "Default ACL"
+msgstr "< Predeterminat >"
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+#, fuzzy
+#| msgid "A&sk new file name"
+msgid "&New files inside"
+msgstr "Demana pe&l nom del fitxer nou"
+
+#, fuzzy
+#| msgid "&List..."
+msgid "List"
+msgstr "&Llista..."
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write"
+msgstr "escr&iptura pels altres"
+
+msgid "Exec"
+msgstr ""
+
+#, fuzzy
+#| msgid "directories"
+msgid "Effective"
+msgstr "directoris"
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "&Add"
+msgstr "Afegeix un &nou"
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "Delete"
+msgid "De&lete"
+msgstr "Suprimeix"
+
+#, fuzzy
+#| msgid "Set &all"
+msgid "Set a&ll"
+msgstr "Estableix a &tots"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "Canvia al fitxer perdut"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+#, fuzzy
+#| msgid "Casefolded file"
+msgid "This folder and files"
+msgstr "Fitxer insensible a majúscules"
+
+#, fuzzy
+#| msgid "Re&verse files only"
+msgid "Subfolders and files only"
+msgstr "In&verteix només els fitxers"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Subfolders only"
+msgstr "Només els &fitxers"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Files only"
+msgstr "Només els &fitxers"
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "allow"
+msgstr "Segueix els en&llaços"
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "Allow"
+msgstr "Segueix els en&llaços"
+
+msgid "Deny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Copies to"
+msgid "Applies to:"
+msgstr "Còpies a"
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Advanced rights"
+msgstr "C&anvi avançat del propietari"
+
+#, fuzzy
+#| msgid "A&ll"
+msgid "A&llow"
+msgstr "&Tots"
+
+msgid "De&ny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Save file"
+msgid "&Special"
+msgstr "Desa el fitxer"
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Ad&vanced..."
+msgstr "C&anvi avançat del propietari"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+#, fuzzy
+#| msgid "File"
+msgid "File:"
+msgstr "Fitxer"
+
+#, fuzzy
+#| msgid "Owner"
+msgid "Owner:"
+msgstr "Propietari"
+
+#, fuzzy
+#| msgid "Group"
+msgid "Group:"
+msgstr "Grup"
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Right"
+msgid "Rights"
+msgstr "&Dreta"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modify"
+msgstr "Data de &modificació"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "&Modify"
+msgstr "Data de &modificació"
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "Execute file"
+msgstr "E&xecutables primer"
+
+#, fuzzy
+#| msgid "Sort order"
+msgid "Traverse folder"
+msgstr "Ordre de classificació"
+
+#, fuzzy
+#| msgid "User data"
+msgid "Read data"
+msgstr "Dades d'usuari"
+
+#, fuzzy
+#| msgid "Listing format"
+msgid "List folder"
+msgstr "Format del llistat"
+
+#, fuzzy
+#| msgid "read &by others"
+msgid "Read attributes"
+msgstr "lectura &pels altres"
+
+#, fuzzy
+#| msgid "Preserve e&xt2 attributes"
+msgid "Read extended attributes"
+msgstr "Conserva els atributs e&xt2"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write data"
+msgstr "escr&iptura pels altres"
+
+#, fuzzy
+#| msgid "Open files"
+msgid "Create files"
+msgstr "Obre fitxers"
+
+#, fuzzy
+#| msgid "&Append"
+msgid "Append data"
+msgstr "A&nnexa"
+
+#, fuzzy
+#| msgid "Cache directory:"
+msgid "Create folders"
+msgstr "Directori de memòria cau:"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write attributes"
+msgstr "escr&iptura pels altres"
+
+#, fuzzy
+#| msgid "Preserve e&xt2 attributes"
+msgid "Write extended attributes"
+msgstr "Conserva els atributs e&xt2"
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "S'està recuperant el fitxer"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Read permissions"
+msgstr "&Permisos"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Change permissions"
+msgstr "&Permisos"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot stat\n"
+#| "%s"
+msgid "Cannot stat"
+msgstr ""
+"No s'ha pogut fer estat\n"
+"%s"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the access control list of"
+msgstr "No s'ha pogut llegir el contingut del directori"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the default access control list of"
+msgstr "No s'ha pogut llegir el contingut del directori"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid "Reading failed"
+msgid "Reading archive"
+msgstr "Ha fallat la lectura"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -6357,9 +7321,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6795,8 +7756,122 @@ msgstr ""
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create a directory"
+msgstr "Crea un directori nou"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot chown\n"
+#| "%s"
+msgid "Cannot fetch %s at %.10s."
+msgstr ""
+"No s'ha pogut fer «chown»\n"
+"%s"
+
+#, fuzzy
+#| msgid "Cannot open file %s"
+msgid "Cannot open the diff viewer."
+msgstr "No s'ha pogut obrir el fitxer %s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot remove file\n"
+#| "%s"
+msgid "Cannot run %s: %s"
+msgstr ""
+"No s'ha pogut eliminar el fitxer\n"
+"%s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open\n"
+#| "%s"
+msgid "Cannot open the browser"
+msgstr ""
+"No s'ha pogut obrir\n"
+"%s"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Added to favorites."
+msgstr "Afegeix als favorits"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Already in favorites."
+msgstr "Afegeix als favorits"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Add to favorites"
+msgstr "Afegeix als favorits"
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot get ext2 attributes of\n"
+#| "%s"
+msgid "Change the favorite"
+msgstr ""
+"No s'han pogut obtenir els atributs «ext2» de\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid "Cannot fetch a local copy of %s"
+msgid "The local clone of %s/%s:"
+msgstr "No s'ha pogut obtenir una còpia local de %s"
+
+#, fuzzy
+#| msgid "Extension file edit"
+msgid "Open in Git"
+msgstr "Edita el fitxer d'extensions"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Time: %s"
+msgid "Showing: %s"
+msgstr "Temps: %s"
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6816,9 +7891,17 @@ msgid "&Reset"
 msgstr "&Canvia de mida"
 
 #, fuzzy
-#| msgid "Add to hotlist"
-msgid "Add to favorites"
-msgstr "Afegeix als favorits"
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "Canvia al fitxer perdut"
+
+msgid "Reword is available only for commits on the current branch."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot find coole executable: %s"
+msgstr "No s'ha pogut obrir el fitxer %s"
 
 #, fuzzy
 #| msgid "Directory path:"
@@ -7247,11 +8330,6 @@ msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
 #, fuzzy
-#| msgid "&Save"
-msgid "Save"
-msgstr "&Desa"
-
-#, fuzzy
 #| msgid "File was modified. Save with exit?"
 msgid "File was modified. Save changes?"
 msgstr "El fitxer ha estat modificat. Voleu desar-lo abans de sortir?"
@@ -7321,6 +8399,23 @@ msgstr ""
 "No s'ha pogut desar el fitxer:\n"
 "%s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot stat\n"
+#| "%s"
+msgid "Cannot start %s."
+msgstr ""
+"No s'ha pogut fer estat\n"
+"%s"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, fuzzy, c-format
 #| msgid ""
 #| "Cannot chown\n"
@@ -7342,6 +8437,20 @@ msgstr "No s'ha pogut obrir el fitxer %s"
 #| msgid "Unable to save to file"
 msgid "Failed to write temp file."
 msgstr "No s'ha pogut desar al fitxer"
+
+#, fuzzy, c-format
+#| msgid "Loading..."
+msgid "Loading %s..."
+msgstr "S'està carregant..."
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid "Cannot list documents in '%s': %s"
+msgstr ""
+"No s'ha pogut desar el fitxer %s:\n"
+"%s"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -7466,15 +8575,6 @@ msgstr ""
 msgid "Loading %s (%"
 msgstr "S'està carregant: %3d%%"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-"No s'ha pogut desar el fitxer %s:\n"
-"%s"
-
 #, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
@@ -7549,6 +8649,12 @@ msgstr ""
 #| msgid "Repeat times:"
 msgid "Op max time (ms):"
 msgstr "Repeteix vegades:"
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
+msgstr ""
 
 msgid "MongoDB settings"
 msgstr ""
@@ -7652,9 +8758,6 @@ msgstr "Esperanto"
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -7736,6 +8839,255 @@ msgstr "&Elimina"
 
 msgid "Command"
 msgstr "Ordre"
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "&Listing format..."
+msgid "%s: databases"
+msgstr "Format del &llistat..."
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connections"
+msgstr "SFTP amb la màquina"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open file\n"
+#| "%s\n"
+#| "for writing"
+msgid "Cannot open %s for writing"
+msgstr ""
+"No s'ha pogut obrir el fitxer\n"
+"%s\n"
+"per a escriptura"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot remove file\n"
+#| "%s"
+msgid "Cannot write %s: %s"
+msgstr ""
+"No s'ha pogut eliminar el fitxer\n"
+"%s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot write postgres.ini"
+msgstr ""
+"No s'ha pogut escriure al fitxer %s:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid "Invalid token number %d"
+msgid "Invalid connection name"
+msgstr "Testimoni no vàlid núm. %d"
+
+#, fuzzy
+#| msgid "not enough memory"
+msgid "Out of memory"
+msgstr "no hi ha prou memòria"
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter password for %s "
+msgid "Password for \"%s\":"
+msgstr "sftp: introduïu la contrasenya per a %s "
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled."
+msgstr "Cancel·la"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connection"
+msgstr "SFTP amb la màquina"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Confirmation"
+msgid "Connected: %s"
+msgstr "Confirmació"
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "&Service"
+msgstr "Dispositiu: %s"
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Connect by:"
+msgstr "Confirmació"
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "Service:"
+msgstr "Dispositiu: %s"
+
+#, fuzzy
+#| msgid "Save file"
+msgid "Database:"
+msgstr "Desa el fitxer"
+
+msgid "SSL mode:"
+msgstr ""
+
+#, fuzzy
+#| msgid "User name"
+msgid "Username:"
+msgstr "Nom d'usuari/a"
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "Contrasenya:"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "New PostgreSQL connection"
+msgstr "SFTP amb la màquina"
+
+#, fuzzy
+#| msgid "Editor options"
+msgid "Edit PostgreSQL connection"
+msgstr "Opcions de l'editor"
+
+#, fuzzy
+#| msgid "shell: storing file"
+msgid " Authentication "
+msgstr "intèrpret d'ordres: fitxer d'emmagatzematge"
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "&Test connection"
+msgstr "SFTP amb la màquina"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot save the connection: %s"
+msgstr ""
+"No s'ha pogut desar el fitxer:\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot delete the connection: %s"
+msgstr ""
+"No s'ha pogut desar el fitxer:\n"
+"%s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot change directory to\n"
+#| "%s"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr ""
+"No s'ha pogut canviar el directori a\n"
+"%s"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "Default connection:"
+msgstr "SFTP amb la màquina"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr ""
 
 msgid "S3"
 msgstr ""
@@ -7848,6 +9200,19 @@ msgstr ""
 
 #, fuzzy
 #| msgid "SFTP to machine"
+msgid "SFTP authentication"
+msgstr "SFTP amb la màquina"
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter passphrase for %s "
+msgid "Enter passphrase for key %s"
+msgstr "sftp: introduïu la frase de pas per a %s "
+
+msgid "SFTP key passphrase"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
 msgid "SFTP connection"
 msgstr "SFTP amb la màquina"
 
@@ -7873,13 +9238,15 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "sftp: Enter passphrase for %s "
-msgid "Enter passphrase for key %s"
-msgstr "sftp: introduïu la frase de pas per a %s "
+#, fuzzy
+#| msgid "shell: Sending password..."
+msgid "Authenticating with a default key..."
+msgstr "intèrpret d'ordres: S'està enviant la contrasenya..."
 
-msgid "SFTP key passphrase"
-msgstr ""
+#, fuzzy
+#| msgid "shell: Sending password..."
+msgid "Authenticating with keyboard-interactive..."
+msgstr "intèrpret d'ordres: S'està enviant la contrasenya..."
 
 #, fuzzy
 #| msgid "shell: Sending password..."
@@ -8234,11 +9601,6 @@ msgstr "Etiqueta per a «%s»:"
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Create a new Directory"
-msgid "Create a directory"
-msgstr "Crea un directori nou"
 
 #, fuzzy
 #| msgid "Cannot create %s directory"
@@ -8776,6 +10138,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -8965,6 +10333,25 @@ msgid "Changed line, filler"
 msgstr "No s'ha pogut inserir el fitxer"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Line number"
+msgid "Line mark"
+msgstr "Número de &línia"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+#, fuzzy
+#| msgid "Panelize"
+msgid "Inactive frame"
+msgstr "Quadre de cerca"
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -9202,33 +10589,53 @@ msgstr "Opcions de l'editor"
 msgid "Editor: fold closed"
 msgstr "Opcions de l'editor"
 
-#, fuzzy
-#| msgid "&Up"
-msgid "Up"
-msgstr "A&munt"
+msgid "Vertical: top arrow"
+msgstr ""
 
-msgid "Not read by mc today"
+msgid "Vertical: bottom arrow"
 msgstr ""
 
 #, fuzzy
-#| msgid "Page Down"
-msgid "Down"
-msgstr "Av Pàg"
+#| msgid "&Vertical"
+msgid "Vertical: track"
+msgstr "&Vertical"
 
-#, fuzzy
-#| msgid "&Left"
-msgid "Left"
-msgstr "&Esquerra"
-
-#, fuzzy
-#| msgid "&Right"
-msgid "Right"
-msgstr "&Dreta"
-
-msgid "Thumb"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Track"
+#, fuzzy
+#| msgid "&Vertical"
+msgid "Vertical: thumb"
+msgstr "&Vertical"
+
+msgid "Vertical: thumb length"
+msgstr ""
+
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: left arrow"
+msgstr "&Horitzontal"
+
+msgid "Horizontal: right arrow"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: track"
+msgstr "&Horitzontal"
+
+msgid "Default: horiz of the lines"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: thumb"
+msgstr "&Horitzontal"
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -9311,7 +10718,7 @@ msgstr "Plafons:"
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -9458,9 +10865,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 #, fuzzy
 #| msgid "Save As"
 msgid "Save skin as"
@@ -9584,6 +10988,130 @@ msgstr "Escolliu la pàgina de codis"
 
 msgid "-  < No translation >"
 msgstr "-  < Cap traducció >"
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions"
+msgstr "&Permisos"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "State        Start  Directory"
+msgstr "Crea un directori nou"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions..."
+msgstr "&Permisos"
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Compress"
+msgid "M-Commander sessions"
+msgstr "Comprimeix"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Refresh"
+msgid "refresh"
+msgstr "&Actualitza"
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
+msgstr ""
 
 msgid "%b %e  %Y"
 msgstr "%b %e %Y"
@@ -9724,9 +11252,6 @@ msgstr "Cert:"
 msgid "False:"
 msgstr "Fals:"
 
-msgid "Error calling program"
-msgstr "Error en la crida al programa"
-
 msgid "Warning -- ignoring file"
 msgstr "Avís - es fa cas omís del fitxer"
 
@@ -9757,6 +11282,102 @@ msgid "User menu"
 msgstr "Menú d'usuari"
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "%s\n"
+#| "is not a regular file"
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+"%s\n"
+"no és un fitxer normal"
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+#, fuzzy
+#| msgid "&Continue copy"
+msgid "&Convert"
+msgstr "&Continua la còpia"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot remove file\n"
+#| "%s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr ""
+"No s'ha pogut eliminar el fitxer\n"
+"%s"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit file"
+msgid "&Edit the file"
+msgstr "Edita el fitxer"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -9771,10 +11392,97 @@ msgstr ""
 #| "%s"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
 "No s'ha pogut eliminar el fitxer\n"
 "%s"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Conditions"
+msgstr "Confirmació"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "Other options"
+msgid "Ot&her panel"
+msgstr "Altres opcions"
+
+#, fuzzy
+#| msgid "&Never"
+msgid "N&ever"
+msgstr "&Mai"
+
+#, fuzzy
+#| msgid "Alwa&ys"
+msgid "&Always"
+msgstr "&Sempre"
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+#, fuzzy
+#| msgid "Block Size"
+msgid "Block device"
+msgstr "Mida del bloc"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecutable only"
+msgstr "E&xecutables primer"
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Con&tinue"
+msgid "Con&ditions"
+msgstr "&Continua"
 
 msgid "Add a submenu"
 msgstr ""
@@ -9802,6 +11510,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -9819,8 +11530,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 #, fuzzy
@@ -9855,6 +11574,18 @@ msgstr ""
 #| msgid "&Add new"
 msgid "&Add an entry"
 msgstr "Afegeix un &nou"
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr ""
@@ -9989,6 +11720,16 @@ msgstr "Desplaçament en &decimal"
 
 msgid "He&xadecimal offset"
 msgstr "Desplaçament en He&xadecimal"
+
+#, fuzzy
+#| msgid "ButtonBar|Static"
+msgid "ButtonBar|Syntax"
+msgstr "ButtonBar|Estàtic"
+
+#, fuzzy
+#| msgid "ButtonBar|Ascii"
+msgid "ButtonBar|Ansi"
+msgstr "ButtonBar|ASCII"
 
 #, fuzzy
 #| msgid "ButtonBar|Hex"
@@ -10241,6 +11982,27 @@ msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr ""
 "No s'ha pogut obtenir una còpia local de /ftp://algun.amfitrió/editam.txt"
 
+#~ msgid "ButtonBar|Merge"
+#~ msgstr "ButtonBar|Fusiona"
+
+#, fuzzy
+#~| msgid "&Up"
+#~ msgid "Up"
+#~ msgstr "A&munt"
+
+#, fuzzy
+#~| msgid "Page Down"
+#~ msgid "Down"
+#~ msgstr "Av Pàg"
+
+#, fuzzy
+#~| msgid "&Left"
+#~ msgid "Left"
+#~ msgstr "&Esquerra"
+
+#~ msgid "Error calling program"
+#~ msgstr "Error en la crida al programa"
+
 #~ msgid "Timeout for freeing VFSs (sec):"
 #~ msgstr "Temps d'espera per a alliberar els VFS (seg):"
 
@@ -10252,11 +12014,6 @@ msgstr ""
 
 #~ msgid "&Virtual FS..."
 #~ msgstr "Sistema de fitxers &virtual..."
-
-#, fuzzy
-#~| msgid "ButtonBar|Search"
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "ButtonBar|Cerca"
 
 #, fuzzy
 #~| msgid "shell: Reading directory %s..."
@@ -10530,9 +12287,6 @@ msgstr ""
 
 #~ msgid "&Free VFSs now"
 #~ msgstr "A&llibera els VFS ara"
-
-#~ msgid "&Refresh"
-#~ msgstr "&Actualitza"
 
 #~ msgid "&Add current"
 #~ msgstr "Afe&geix l'actual"
@@ -10911,9 +12665,6 @@ msgstr ""
 #~ msgid "&Undelete files (ext2fs only)"
 #~ msgstr "Recupera el&s fitxers (només ext2fs)"
 
-#~ msgid "not enough memory"
-#~ msgstr "no hi ha prou memòria"
-
 #~ msgid "while allocating block buffer"
 #~ msgstr "mentre s'assigna un bloc de la memòria intermèdia"
 
@@ -10965,9 +12716,6 @@ msgstr ""
 
 #~ msgid "vfs_info is not fs!"
 #~ msgstr "vfs_info no és un FS!"
-
-#~ msgid "You have to chdir to extract files first"
-#~ msgstr "Primer haureu de canviar al directori per a extreure els fitxers"
 
 #~ msgid "while iterating over blocks"
 #~ msgstr "mentre s'iterava entre els blocs"

@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
 "Language-Team: Indonesian <https://translate.codeberg.org/projects/mc6/mc6/"
@@ -494,6 +494,14 @@ msgstr ""
 msgid "Toggle right panel in terminal mode"
 msgstr ""
 
+msgid "Apply command to the files"
+msgstr ""
+
+#, fuzzy
+#| msgid "Great than"
+msgid "Clear the command line"
+msgstr "Lebih dari"
+
 msgid "Select files by pattern"
 msgstr ""
 
@@ -502,6 +510,11 @@ msgstr ""
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Unselect by extension"
+msgstr "Abaikan tab &expansion"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -553,6 +566,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -590,7 +606,74 @@ msgstr "Cetak data directory"
 msgid "Cycle listing format"
 msgstr ""
 
+msgid "Far listing mode 1"
+msgstr ""
+
+msgid "Far listing mode 2"
+msgstr ""
+
+msgid "Far listing mode 3"
+msgstr ""
+
+msgid "Far listing mode 4"
+msgstr ""
+
+msgid "Far listing mode 5"
+msgstr ""
+
+msgid "Far listing mode 6"
+msgstr ""
+
+msgid "Far listing mode 7"
+msgstr ""
+
+msgid "Far listing mode 8"
+msgstr ""
+
+msgid "Far listing mode 9"
+msgstr ""
+
+msgid "Far listing mode 10"
+msgstr ""
+
+msgid "Keep files unsorted"
+msgstr ""
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Sort by change time"
+msgstr "Abaikan tab &expansion"
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Sort by access time"
+msgstr "Abaikan tab &expansion"
+
+#, fuzzy
+#| msgid "Print data directory"
+msgid "Go to the root directory"
+msgstr "Cetak data directory"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Select all files"
+msgstr "Perubahan file tidak tersimpan"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Unselect all files"
+msgstr "Perubahan file tidak tersimpan"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -969,6 +1052,23 @@ msgid "Merge current hunk"
 msgstr ""
 
 msgid "Merge from other file"
+msgstr ""
+
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Next conflict"
+msgstr "Mendapatkan file"
+
+msgid "Previous conflict"
 msgstr ""
 
 #, c-format
@@ -1400,6 +1500,9 @@ msgstr ""
 msgid "Shift"
 msgstr "Shift"
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1533,6 +1636,59 @@ msgstr "Password:"
 msgid "Screens"
 msgstr "Screens"
 
+#, fuzzy, c-format
+#| msgid "Cannot create %s directory"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "Tidak bisa membuat direktori %s"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "The file exists. Overwrite it?"
+msgstr ""
+
+msgid "&Yes"
+msgstr "&Ya"
+
+msgid "&No"
+msgstr "&No"
+
+#, fuzzy, c-format
+#| msgid "Print data directory"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr "Cetak data directory"
+
+msgid "UP--DIR"
+msgstr ""
+
+msgid "DIR"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Size"
+msgstr ""
+
+msgid "Modified"
+msgstr ""
+
+msgid "&OK"
+msgstr "&Oke"
+
+msgid "&Cancel"
+msgstr "&Cancel"
+
 msgid "History"
 msgstr "History"
 
@@ -1544,12 +1700,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "&Ya"
-
-msgid "&No"
-msgstr "&No"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr "Pembersihan DialogTitle|History"
@@ -1557,11 +1707,10 @@ msgstr "Pembersihan DialogTitle|History"
 msgid "Do you want clean this history?"
 msgstr "Apakah anda mau membersihkan history?"
 
-msgid "&OK"
-msgstr "&Oke"
-
-msgid "&Cancel"
-msgstr "&Cancel"
+#, fuzzy
+#| msgid "Internal error:"
+msgid "Filter:"
+msgstr "Kesalahan internal."
 
 msgid "Background process:"
 msgstr "Proses Background:"
@@ -1607,6 +1756,12 @@ msgid "Edit files"
 msgstr "Menyunting files"
 
 msgid "<file> ..."
+msgstr ""
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
 msgstr ""
 
 msgid "Forces xterm features"
@@ -1657,6 +1812,12 @@ msgstr ""
 msgid "file1 file2"
 msgstr ""
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[this_dir] [other_panel_dir]"
 
@@ -1696,6 +1857,12 @@ msgid "No arguments given to the viewer."
 msgstr "Tidak ada argumen yang diberikan kepada viewer"
 
 msgid "Two files are required to invoke the diffviewer."
+msgstr ""
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
 msgstr ""
 
 msgid "Background protocol error"
@@ -1747,6 +1914,14 @@ msgstr "Pencarian dinon aktifkan"
 msgid "Cannot create temporary diff file"
 msgstr ""
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -1754,6 +1929,31 @@ msgid ""
 msgstr ""
 
 msgid "Cannot create temporary merge file"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot create pipe streams"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr "Gagal membuat pipe streams"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Cannot save the merge result\n"
+"%s"
 msgstr ""
 
 msgid "&Fastest (Assume large files)"
@@ -1786,6 +1986,12 @@ msgstr "Hilangkan &trailing carriage return"
 msgid "Diff Options"
 msgstr "Opsi Diff"
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr "Menyunting"
 
@@ -1798,8 +2004,46 @@ msgstr "Pindah ke baris (kiri)"
 msgid "Goto line (right)"
 msgstr "Pindah ke baris (kanan)"
 
+#, fuzzy
+#| msgid "Goto line (right)"
+msgid "Goto line (merged)"
+msgstr "Pindah ke baris (kanan)"
+
 msgid "Enter line:"
 msgstr "Masukkan baris:"
+
+msgid "ButtonBar|Edit"
+msgstr "ButtonBar|Menyunting"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|<-Copy"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Base"
+msgstr "ButtonBar|Simpan"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|Next"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|Copy->"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|-Left"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|-Right"
+msgstr "ButtonBar|Menyunting"
 
 msgid "ButtonBar|Help"
 msgstr "ButtonBar|Bantuan"
@@ -1807,11 +2051,15 @@ msgstr "ButtonBar|Bantuan"
 msgid "ButtonBar|Save"
 msgstr "ButtonBar|Simpan"
 
-msgid "ButtonBar|Edit"
-msgstr "ButtonBar|Menyunting"
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|+Left"
+msgstr "ButtonBar|Bantuan"
 
-msgid "ButtonBar|Merge"
-msgstr "ButtonBar|Gabung"
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|+Right"
+msgstr "ButtonBar|Menyunting"
 
 msgid "ButtonBar|Search"
 msgstr "ButtonBar|Cari"
@@ -1822,6 +2070,12 @@ msgstr "ButtonBar|Opsi"
 msgid "ButtonBar|Quit"
 msgstr "ButtonBar|Keluar"
 
+msgid "Quit"
+msgstr "Keluar"
+
+msgid "The merge result is not saved. Save it?"
+msgstr ""
+
 msgid "File(s) was modified. Save with exit?"
 msgstr "File(s) telah dirubah. Simpan saat keluar?"
 
@@ -1831,11 +2085,40 @@ msgid ""
 "Save modified file(s)?"
 msgstr ""
 
-msgid "Quit"
-msgstr "Keluar"
+msgid "Save the changes of the two files first."
+msgstr ""
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot create pipe streams"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr "Gagal membuat pipe streams"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open cpio archive\n"
+#| "%s"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"Tak bisa membuka arsip cpio\n"
+"%s"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr "Diff:"
+
+#, fuzzy, c-format
+#| msgid "Cannot create pipe streams"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr "Gagal membuat pipe streams"
 
 msgid "File name is empty!"
 msgstr ""
@@ -1844,12 +2127,6 @@ msgstr ""
 msgid ""
 "%s\n"
 "is a directory"
-msgstr ""
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
 msgstr ""
 
 msgid "Diff viewer: invalid mode"
@@ -2385,6 +2662,13 @@ msgstr ""
 msgid "Load"
 msgstr ""
 
+#, fuzzy, c-format
+#| msgid "Cannot create %s directory"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr "Tidak bisa membuat direktori %s"
+
 msgid "Syntax file edit"
 msgstr ""
 
@@ -2873,10 +3157,28 @@ msgstr ""
 msgid "Edit: "
 msgstr ""
 
-msgid "ButtonBar|Mark"
+msgid "ButtonBar|Menu"
 msgstr ""
 
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|SaveAs"
+msgstr "ButtonBar|Simpan"
+
+#, fuzzy
+#| msgid "ButtonBar|Search"
+msgid "ButtonBar|Column"
+msgstr "ButtonBar|Cari"
+
 msgid "ButtonBar|Replac"
+msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|Insert"
+msgstr "ButtonBar|Bantuan"
+
+msgid "ButtonBar|Mark"
 msgstr ""
 
 msgid "ButtonBar|Copy"
@@ -3082,6 +3384,12 @@ msgid "Safe overwrite"
 msgstr ""
 
 msgid "A&uto save setup"
+msgstr ""
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
 msgstr ""
 
 msgid "Configure options"
@@ -3447,16 +3755,10 @@ msgstr ""
 msgid "Set &users"
 msgstr ""
 
-msgid "Name"
-msgstr ""
-
 msgid "Owner name"
 msgstr ""
 
 msgid "Group name"
-msgstr ""
-
-msgid "Size"
 msgstr ""
 
 msgid "Chown command"
@@ -3524,6 +3826,19 @@ msgstr ""
 
 msgid "Filter command and arguments:"
 msgstr ""
+
+msgid "Apply command"
+msgstr ""
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4340,14 +4655,66 @@ msgstr ""
 msgid "&Right"
 msgstr ""
 
-msgid "ButtonBar|Menu"
-msgstr ""
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|Left"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Right"
+msgstr "ButtonBar|Menyunting"
+
+#, fuzzy
+#| msgid "ButtonBar|Search"
+msgid "ButtonBar|Console"
+msgstr "ButtonBar|Cari"
 
 msgid "ButtonBar|View"
 msgstr ""
 
 msgid "ButtonBar|RenMov"
 msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Name"
+msgstr "ButtonBar|Simpan"
+
+#, fuzzy
+#| msgid "ButtonBar|Options"
+msgid "ButtonBar|Version"
+msgstr "ButtonBar|Opsi"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Ext"
+msgstr "ButtonBar|Menyunting"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Size"
+msgstr "ButtonBar|Simpan"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|MTime"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Unsort"
+msgstr "ButtonBar|Menyunting"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|CTime"
+msgstr "ButtonBar|Bantuan"
+
+#, fuzzy
+#| msgid "ButtonBar|Help"
+msgid "ButtonBar|ATime"
+msgstr "ButtonBar|Bantuan"
 
 msgid "ButtonBar|Mkdir"
 msgstr ""
@@ -4790,9 +5157,6 @@ msgstr ""
 msgid "[dev]"
 msgstr ""
 
-msgid "UP--DIR"
-msgstr ""
-
 msgid "Filter: "
 msgstr ""
 
@@ -5013,6 +5377,13 @@ msgid "Cannot delete local file %s"
 msgstr ""
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5029,6 +5400,9 @@ msgid "Change drive"
 msgstr ""
 
 msgid "No plugins with drive menu support are loaded."
+msgstr ""
+
+msgid "Plugin action"
 msgstr ""
 
 #, c-format
@@ -5162,6 +5536,15 @@ msgstr "Shift"
 msgid "Edit &term file"
 msgstr "Menyunting files"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5184,6 +5567,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -5361,6 +5747,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "Tekan sebarang tombol untuk melanjutkan..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -5500,6 +5895,440 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+msgid "Choose group"
+msgstr ""
+
+msgid "Choose user"
+msgstr ""
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+msgid "&Write"
+msgstr ""
+
+msgid "E&xecute"
+msgstr ""
+
+msgid "&Group"
+msgstr ""
+
+#, fuzzy
+#| msgid "Backspace"
+msgid "Names:"
+msgstr "Backspace"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+msgid "Add entry"
+msgstr ""
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit files"
+msgid "Other"
+msgstr "Menyunting files"
+
+#, fuzzy
+#| msgid "Edit files"
+msgid "Edit entry"
+msgstr "Menyunting files"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+msgid "Default ACL"
+msgstr ""
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+msgid "&New files inside"
+msgstr ""
+
+msgid "List"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+msgid "Write"
+msgstr ""
+
+msgid "Exec"
+msgstr ""
+
+msgid "Effective"
+msgstr ""
+
+msgid "&Add"
+msgstr ""
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "Delete"
+msgid "De&lete"
+msgstr "Delete"
+
+msgid "Set a&ll"
+msgstr ""
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "Perubahan file tidak tersimpan"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+msgid "This folder and files"
+msgstr ""
+
+msgid "Subfolders and files only"
+msgstr ""
+
+msgid "Subfolders only"
+msgstr ""
+
+msgid "Files only"
+msgstr ""
+
+msgid "allow"
+msgstr ""
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+msgid "Allow"
+msgstr ""
+
+msgid "Deny"
+msgstr ""
+
+msgid "Applies to:"
+msgstr ""
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Advanced rights"
+msgstr "&Cancel"
+
+msgid "A&llow"
+msgstr ""
+
+msgid "De&ny"
+msgstr ""
+
+msgid "&Special"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Ad&vanced..."
+msgstr "&Cancel"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+msgid "File:"
+msgstr ""
+
+msgid "Owner:"
+msgstr ""
+
+msgid "Group:"
+msgstr ""
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+#, fuzzy
+#| msgid "Right arrow"
+msgid "Rights"
+msgstr "Right arrow"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+msgid "Modify"
+msgstr ""
+
+msgid "&Modify"
+msgstr ""
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Execute file"
+msgstr "Mendapatkan file"
+
+msgid "Traverse folder"
+msgstr ""
+
+msgid "Read data"
+msgstr ""
+
+msgid "List folder"
+msgstr ""
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Read attributes"
+msgstr "Perubahan file tidak tersimpan"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Read extended attributes"
+msgstr "Perubahan file tidak tersimpan"
+
+msgid "Write data"
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit files"
+msgid "Create files"
+msgstr "Menyunting files"
+
+msgid "Append data"
+msgstr ""
+
+#, fuzzy
+#| msgid "Cannot create %s directory"
+msgid "Create folders"
+msgstr "Tidak bisa membuat direktori %s"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Write attributes"
+msgstr "Perubahan file tidak tersimpan"
+
+msgid "Write extended attributes"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "Mendapatkan file"
+
+#, fuzzy
+#| msgid "Re&gular expression"
+msgid "Read permissions"
+msgstr "Re&gular expression"
+
+#, fuzzy
+#| msgid "Enter line:"
+msgid "Change permissions"
+msgstr "Masukkan baris:"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cannot parse:"
+msgid "Cannot stat"
+msgstr "Gagal mengurai:"
+
+#, fuzzy
+#| msgid "Cannot create pipe streams"
+msgid "Cannot read the access control list of"
+msgstr "Gagal membuat pipe streams"
+
+#, fuzzy
+#| msgid "Cannot create pipe streams"
+msgid "Cannot read the default access control list of"
+msgstr "Gagal membuat pipe streams"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid "Reading failed"
+msgid "Reading archive"
+msgstr "Kesalahan membaca"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -5727,9 +6556,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6106,8 +6932,100 @@ msgstr ""
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Cannot create %s directory"
+msgid "Create a directory"
+msgstr "Tidak bisa membuat direktori %s"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot fetch %s at %.10s."
+msgstr "Gagal mengurai:"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open cpio archive\n"
+#| "%s"
+msgid "Cannot open the diff viewer."
+msgstr ""
+"Tak bisa membuka arsip cpio\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot run %s: %s"
+msgstr "Gagal mengurai:"
+
+#, fuzzy
+#| msgid "Cannot parse:"
+msgid "Cannot open the browser"
+msgstr "Gagal mengurai:"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+msgid "Added to favorites."
+msgstr ""
+
+msgid "Already in favorites."
+msgstr ""
+
+msgid "Add to favorites"
+msgstr ""
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Change the favorite"
+msgstr "Perubahan file tidak tersimpan"
+
+#, c-format
+msgid "The local clone of %s/%s:"
+msgstr ""
+
+msgid "Open in Git"
+msgstr ""
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, c-format
+msgid "Showing: %s"
+msgstr ""
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6124,8 +7042,18 @@ msgstr ""
 msgid "&Reset"
 msgstr ""
 
-msgid "Add to favorites"
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "Perubahan file tidak tersimpan"
+
+msgid "Reword is available only for commits on the current branch."
 msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot create %s directory"
+msgid "Cannot find coole executable: %s"
+msgstr "Tidak bisa membuat direktori %s"
 
 msgid "Repository path:"
 msgstr ""
@@ -6510,9 +7438,6 @@ msgstr "Pe&gang kunci"
 msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
-msgid "Save"
-msgstr ""
-
 #, fuzzy
 #| msgid "File(s) was modified. Save with exit?"
 msgid "File was modified. Save changes?"
@@ -6578,6 +7503,19 @@ msgstr ""
 msgid "Cannot save connection: %s"
 msgstr "Tak bisa menerjemahkan dari %s ke %s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot start %s."
+msgstr "Gagal mengurai:"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, c-format
 msgid "Cannot fetch document: %s"
 msgstr ""
@@ -6595,6 +7533,15 @@ msgstr ""
 "%s"
 
 msgid "Failed to write temp file."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Loading..."
+msgid "Loading %s..."
+msgstr "Memuat..."
+
+#, c-format
+msgid "Cannot list documents in '%s': %s"
 msgstr ""
 
 #, fuzzy, c-format
@@ -6695,10 +7642,6 @@ msgid "Loading %s (%"
 msgstr "Memuat: %3d%%"
 
 #, c-format
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-
-#, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
 
@@ -6765,6 +7708,12 @@ msgid "Socket (ms):"
 msgstr ""
 
 msgid "Op max time (ms):"
+msgstr ""
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
 msgstr ""
 
 msgid "MongoDB settings"
@@ -6859,9 +7808,6 @@ msgstr ""
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -6934,6 +7880,215 @@ msgid "&Remove"
 msgstr ""
 
 msgid "Command"
+msgstr ""
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, c-format
+msgid "%s: databases"
+msgstr ""
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "Color options"
+msgid "PostgreSQL connections"
+msgstr "Opsi warna"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open cpio archive\n"
+#| "%s"
+msgid "Cannot open %s for writing"
+msgstr ""
+"Tak bisa membuka arsip cpio\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid "Cannot write %s: %s"
+msgstr "Gagal mengurai:"
+
+#, fuzzy
+#| msgid "Cannot create pipe streams"
+msgid "Cannot write postgres.ini"
+msgstr "Gagal membuat pipe streams"
+
+#, fuzzy
+#| msgid "Invalid token number %d"
+msgid "Invalid connection name"
+msgstr "Nomor token %d tak valid"
+
+msgid "Out of memory"
+msgstr ""
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Password:"
+msgid "Password for \"%s\":"
+msgstr "Password:"
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Cancelled."
+msgstr "&Cancel"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Color options"
+msgid "PostgreSQL connection"
+msgstr "Opsi warna"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, c-format
+msgid "Connected: %s"
+msgstr ""
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+msgid "&Service"
+msgstr ""
+
+msgid "Connect by:"
+msgstr ""
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Error"
+msgid "Service:"
+msgstr "Error"
+
+msgid "Database:"
+msgstr ""
+
+msgid "SSL mode:"
+msgstr ""
+
+msgid "Username:"
+msgstr ""
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "Password:"
+
+msgid "New PostgreSQL connection"
+msgstr ""
+
+msgid "Edit PostgreSQL connection"
+msgstr ""
+
+msgid " Authentication "
+msgstr ""
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "Color options"
+msgid "&Test connection"
+msgstr "Opsi warna"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot translate from %s to %s"
+msgid "Cannot save the connection: %s"
+msgstr "Tak bisa menerjemahkan dari %s ke %s"
+
+#, fuzzy, c-format
+#| msgid "Cannot translate from %s to %s"
+msgid "Cannot delete the connection: %s"
+msgstr "Tak bisa menerjemahkan dari %s ke %s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot translate from %s to %s"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr "Tak bisa menerjemahkan dari %s ke %s"
+
+#, fuzzy
+#| msgid "Color options"
+msgid "Default connection:"
+msgstr "Opsi warna"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
 msgstr ""
 
 msgid "S3"
@@ -7037,6 +8192,16 @@ msgstr ""
 msgid "Cannot resolve %s: %s"
 msgstr "Gagal mengurai:"
 
+msgid "SFTP authentication"
+msgstr ""
+
+#, c-format
+msgid "Enter passphrase for key %s"
+msgstr ""
+
+msgid "SFTP key passphrase"
+msgstr ""
+
 msgid "SFTP connection"
 msgstr ""
 
@@ -7057,11 +8222,10 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, c-format
-msgid "Enter passphrase for key %s"
+msgid "Authenticating with a default key..."
 msgstr ""
 
-msgid "SFTP key passphrase"
+msgid "Authenticating with keyboard-interactive..."
 msgstr ""
 
 msgid "Authenticating with password..."
@@ -7325,11 +8489,6 @@ msgstr ""
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Cannot create %s directory"
-msgid "Create a directory"
-msgstr "Tidak bisa membuat direktori %s"
 
 #, fuzzy
 #| msgid "Cannot create %s directory"
@@ -7751,6 +8910,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -7919,6 +9084,23 @@ msgid "Changed line, filler"
 msgstr "Perubahan file tidak tersimpan"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "Question mark"
+msgid "Line mark"
+msgstr "Tanda tanya"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+msgid "Inactive frame"
+msgstr ""
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -8126,29 +9308,43 @@ msgstr ""
 msgid "Editor: fold closed"
 msgstr ""
 
-msgid "Up"
+msgid "Vertical: top arrow"
 msgstr ""
 
-msgid "Not read by mc today"
+msgid "Vertical: bottom arrow"
 msgstr ""
 
-#, fuzzy
-#| msgid "Page Down"
-msgid "Down"
-msgstr "Page Down"
-
-msgid "Left"
+msgid "Vertical: track"
 msgstr ""
 
-#, fuzzy
-#| msgid "Right arrow"
-msgid "Right"
-msgstr "Right arrow"
-
-msgid "Thumb"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Track"
+msgid "Vertical: thumb"
+msgstr ""
+
+msgid "Vertical: thumb length"
+msgstr ""
+
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr ""
+
+msgid "Horizontal: left arrow"
+msgstr ""
+
+msgid "Horizontal: right arrow"
+msgstr ""
+
+msgid "Horizontal: track"
+msgstr ""
+
+msgid "Default: horiz of the lines"
+msgstr ""
+
+msgid "Horizontal: thumb"
+msgstr ""
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -8221,7 +9417,7 @@ msgstr ""
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -8352,9 +9548,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 msgid "Save skin as"
 msgstr ""
 
@@ -8454,6 +9647,126 @@ msgid "Choose codepage"
 msgstr ""
 
 msgid "-  < No translation >"
+msgstr ""
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "Re&gular expression"
+msgid "Sessions"
+msgstr "Re&gular expression"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Print data directory"
+msgid "State        Start  Directory"
+msgstr "Cetak data directory"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+msgid "Sessions..."
+msgstr ""
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Main options"
+msgid "M-Commander sessions"
+msgstr "Opsi utama"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+msgid "refresh"
+msgstr ""
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
 msgstr ""
 
 msgid "%b %e  %Y"
@@ -8587,9 +9900,6 @@ msgstr ""
 msgid "False:"
 msgstr ""
 
-msgid "Error calling program"
-msgstr ""
-
 msgid "Warning -- ignoring file"
 msgstr ""
 
@@ -8618,6 +9928,95 @@ msgid "User menu"
 msgstr ""
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+msgid "&Convert"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open cpio archive\n"
+#| "%s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr ""
+"Tak bisa membuka arsip cpio\n"
+"%s"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit files"
+msgid "&Edit the file"
+msgstr "Menyunting files"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -8630,8 +10029,87 @@ msgstr ""
 #| msgid "Cannot create pipe streams"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr "Gagal membuat pipe streams"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Print configure options"
+msgid "Conditions"
+msgstr "Cetak opsi konfigurasi"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit files"
+msgid "Ot&her panel"
+msgstr "Menyunting files"
+
+msgid "N&ever"
+msgstr ""
+
+msgid "&Always"
+msgstr ""
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+msgid "Block device"
+msgstr ""
+
+msgid "E&xecutable only"
+msgstr ""
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Print configure options"
+msgid "Con&ditions"
+msgstr "Cetak opsi konfigurasi"
 
 msgid "Add a submenu"
 msgstr ""
@@ -8659,6 +10137,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -8676,8 +10157,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 msgid "Import a menu file"
@@ -8707,6 +10196,18 @@ msgid ""
 msgstr ""
 
 msgid "&Add an entry"
+msgstr ""
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
 msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
@@ -8819,6 +10320,16 @@ msgstr ""
 
 msgid "He&xadecimal offset"
 msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Syntax"
+msgstr "ButtonBar|Simpan"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Ansi"
+msgstr "ButtonBar|Menyunting"
 
 #, fuzzy
 #| msgid "ButtonBar|Help"
@@ -9058,10 +10569,13 @@ msgstr ""
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr ""
 
+#~ msgid "ButtonBar|Merge"
+#~ msgstr "ButtonBar|Gabung"
+
 #, fuzzy
-#~| msgid "ButtonBar|Search"
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "ButtonBar|Cari"
+#~| msgid "Page Down"
+#~ msgid "Down"
+#~ msgstr "Page Down"
 
 #, fuzzy, c-format
 #~| msgid "Reading failed"
