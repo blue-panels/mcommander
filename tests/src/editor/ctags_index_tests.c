@@ -119,7 +119,7 @@ START_TEST (test_find_prefix)
     r = ctags_index_find_prefix (idx, "foo", FALSE);
     mctest_assert_not_null (r);
     ck_assert_int_eq (r->len, 2);
-    g_ptr_array_free (r, FALSE);
+    g_ptr_array_free (r, TRUE);
 
     /* No match. */
     r = ctags_index_find_prefix (idx, "zzz", FALSE);
@@ -152,7 +152,7 @@ START_TEST (test_find_basename_anchored)
     r = ctags_index_find_basename (idx, "edit.h");
     mctest_assert_not_null (r);
     ck_assert_int_eq (r->len, 1);
-    g_ptr_array_free (r, FALSE);
+    g_ptr_array_free (r, TRUE);
 
     /* Bare "h" is a one-char tail that does NOT begin at a separator in any of
        the indexed paths.  Must NOT return everything.  May match basename

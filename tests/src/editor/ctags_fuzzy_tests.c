@@ -110,7 +110,7 @@ START_TEST (test_fuzzy_search_orders_results)
                           ctags_fuzzy_score (second->name, "wid"));
     }
 
-    g_ptr_array_free (result, FALSE);
+    g_ptr_array_free (result, TRUE);
     g_ptr_array_free (entries, TRUE);
 }
 END_TEST

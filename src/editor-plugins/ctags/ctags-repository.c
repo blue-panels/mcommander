@@ -401,7 +401,7 @@ ctags_repos_find_exact (GSList *repos, const char *name)
 
     if (result->len == 0)
     {
-        g_ptr_array_free (result, FALSE);
+        g_ptr_array_free (result, TRUE);
         return NULL;
     }
 
@@ -434,13 +434,13 @@ ctags_repos_find_prefix (GSList *repos, const char *prefix, gboolean ci)
         {
             for (i = 0; i < found->len; i++)
                 g_ptr_array_add (result, g_ptr_array_index (found, i));
-            g_ptr_array_free (found, FALSE);
+            g_ptr_array_free (found, TRUE);
         }
     }
 
     if (result->len == 0)
     {
-        g_ptr_array_free (result, FALSE);
+        g_ptr_array_free (result, TRUE);
         return NULL;
     }
 
@@ -505,13 +505,13 @@ ctags_repos_find_basename (GSList *repos, const char *name)
         {
             for (i = 0; i < found->len; i++)
                 g_ptr_array_add (result, g_ptr_array_index (found, i));
-            g_ptr_array_free (found, FALSE);
+            g_ptr_array_free (found, TRUE);
         }
     }
 
     if (result->len == 0)
     {
-        g_ptr_array_free (result, FALSE);
+        g_ptr_array_free (result, TRUE);
         return NULL;
     }
 
