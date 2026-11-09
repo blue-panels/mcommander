@@ -25,16 +25,16 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-10-08 06:27+0000\n"
+"PO-Revision-Date: 2026-11-09 10:34+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
-"Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/"
-">\n"
+"Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
+"\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.9.1\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 # "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 msgid "No translation"
@@ -461,15 +461,11 @@ msgstr "Växla vänster panel i terminalläge"
 msgid "Toggle right panel in terminal mode"
 msgstr "Växla höger panel i terminalläge"
 
-#, fuzzy
-#| msgid "shell: cannot store the file"
 msgid "Apply command to the files"
-msgstr "shell: kan inte lagra filen"
+msgstr "Använd kommando på filerna"
 
-#, fuzzy
-#| msgid "Selected text in the command line"
 msgid "Clear the command line"
-msgstr "Markerad text på kommandoraden"
+msgstr "Rensa kommandoraden"
 
 msgid "Select files by pattern"
 msgstr "Markera filer efter mönster"
@@ -480,10 +476,8 @@ msgstr "Avmarkera filer efter mönster"
 msgid "Select by extension"
 msgstr "Markera efter filändelse"
 
-#, fuzzy
-#| msgid "Select by extension"
 msgid "Unselect by extension"
-msgstr "Markera efter filändelse"
+msgstr "Avmarkera efter filändelse"
 
 msgid "Scroll panel left"
 msgstr "Rulla panelen åt vänster"
@@ -528,7 +522,7 @@ msgid "Drive menu (right panel)"
 msgstr "Enhetsmeny (höger panel)"
 
 msgid "Console of the panel plugin"
-msgstr ""
+msgstr "Konsol för panelinsticksprogrammet"
 
 msgid "Sync other panel"
 msgstr "Synkronisera andra panelen"
@@ -563,92 +557,64 @@ msgstr "Smart överordnad katalog"
 msgid "Cycle listing format"
 msgstr "Växla listformat"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 1"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 1"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 2"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 2"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 3"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 3"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 4"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 4"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 5"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 5"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 6"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 6"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 7"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 7"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 8"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 8"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 9"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 9"
 
-#, fuzzy
-#| msgid "Panel listing mode"
 msgid "Far listing mode 10"
-msgstr "Panellistningsläge"
+msgstr "Far-listningsläge 10"
 
 msgid "Keep files unsorted"
-msgstr ""
+msgstr "Behåll filer osorterade"
 
-#, fuzzy
-#| msgid "Sort by modification time"
 msgid "Sort by change time"
 msgstr "Sortera efter ändringstid"
 
-#, fuzzy
-#| msgid "Sort by name"
 msgid "Sort by access time"
-msgstr "Sortera efter namn"
+msgstr "Sortera efter åtkomsttid"
 
 #, fuzzy
 #| msgid "Go to parent directory"
 msgid "Go to the root directory"
 msgstr "Gå till överordnad katalog"
 
-#, fuzzy
-#| msgid "Select all"
 msgid "Select all files"
-msgstr "Markera allt"
+msgstr "Markera alla filer"
 
-#, fuzzy
-#| msgid "Deselect all"
 msgid "Unselect all files"
-msgstr "Avmarkera allt"
+msgstr "Avmarkera alla filer"
 
 msgid "Focus the default button"
-msgstr ""
+msgstr "Flytta fokus till standardknappen"
 
 msgid "Yank (paste kill buffer)"
 msgstr "Klistra in raderad text"
 
 msgid "Insert the file name from the active panel"
-msgstr ""
+msgstr "Infoga filnamnet från den aktiva panelen"
 
 #, fuzzy
 #| msgid "Delete file from plugin panel?"
@@ -1010,13 +976,13 @@ msgid "Merge from other file"
 msgstr "Sammanfoga från andra filen"
 
 msgid "Add the right file to the merge"
-msgstr ""
+msgstr "Lägg till den högra filen i sammanslagningen"
 
 msgid "Take the right file out of the merge"
-msgstr ""
+msgstr "Ta bort den högra filen från sammanslagningen"
 
 msgid "Merge the two files against a base file"
-msgstr ""
+msgstr "Sammanfoga de två filerna med en basfil"
 
 #, fuzzy
 #| msgid "Conflict"
@@ -1484,7 +1450,7 @@ msgid "Shift"
 msgstr "Skift"
 
 msgid "Super"
-msgstr ""
+msgstr "Super"
 
 #, c-format
 msgid ""
@@ -1767,10 +1733,10 @@ msgid "<file> ..."
 msgstr "<fil> …"
 
 msgid "Diff viewer: save the merge of three files into this file"
-msgstr ""
+msgstr "Diffvisare: spara sammanslagningen av tre filer i den här filen"
 
 msgid "Diff viewer: merge the two files against this common base"
-msgstr ""
+msgstr "Diffvisare: sammanfoga de två filerna med denna gemensamma bas"
 
 msgid "Forces xterm features"
 msgstr "Tvinga fram xtermfinesser"
@@ -1821,10 +1787,10 @@ msgid "file1 file2"
 msgstr "fil1 fil2"
 
 msgid "local base remote [-o output]"
-msgstr ""
+msgstr "local base remote [-o output]"
 
 msgid "local remote -B base [-o output]"
-msgstr ""
+msgstr "local remote -B base [-o output]"
 
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[denna_katalog] [andra_panelens_katalog]"
@@ -1867,10 +1833,10 @@ msgid "Two files are required to invoke the diffviewer."
 msgstr "Två filer krävs för att starta diffvisaren."
 
 msgid "The -B option needs two files: local remote."
-msgstr ""
+msgstr "Alternativet -B kräver två filer: local remote."
 
 msgid "The -o option needs three files: local base remote."
-msgstr ""
+msgstr "Alternativet -o kräver tre filer: local base remote."
 
 msgid "Background protocol error"
 msgstr "Fel i bakgrundsprotokollet"
@@ -1922,12 +1888,14 @@ msgid "Cannot create temporary diff file"
 msgstr "Det går inte att skapa en tillfällig diff-fil"
 
 msgid "Merge"
-msgstr ""
+msgstr "Sammanfoga"
 
 msgid ""
 "This side is a copy to look at:\n"
 "changes to it would be lost."
 msgstr ""
+"Den här sidan är en kopia som bara visas:\n"
+"ändringar i den skulle gå förlorade."
 
 #, c-format
 msgid ""
@@ -1959,10 +1927,14 @@ msgid_plural ""
 "%d conflicts are left.\n"
 "Save the merge anyway?"
 msgstr[0] ""
+"%d konflikt återstår.\n"
+"Spara sammanslagningen ändå?"
 msgstr[1] ""
+"%d konflikter återstår.\n"
+"Spara sammanslagningen ändå?"
 
 msgid "Save the merge into:"
-msgstr ""
+msgstr "Spara sammanslagningen i:"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -2006,10 +1978,10 @@ msgid "Diff Options"
 msgstr "Diff-alternativ"
 
 msgid "Result:"
-msgstr ""
+msgstr "Resultat:"
 
 msgid "Base:"
-msgstr ""
+msgstr "Bas:"
 
 msgid "Edit"
 msgstr "Redigera"
@@ -2093,7 +2065,7 @@ msgid "Quit"
 msgstr "Avsluta"
 
 msgid "The merge result is not saved. Save it?"
-msgstr ""
+msgstr "Sammanslagningsresultatet är inte sparat. Vill du spara det?"
 
 msgid "File(s) was modified. Save with exit?"
 msgstr "Filer har ändrats. Spara vid nedstängning?"
@@ -2112,7 +2084,7 @@ msgid "Save the changes of the two files first."
 msgstr "Du måste byta katalog med chdir för att extrahera filer först"
 
 msgid "The common base of the two files"
-msgstr ""
+msgstr "De två filernas gemensamma bas"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -2135,7 +2107,7 @@ msgstr ""
 "%s\n"
 
 msgid "Merge:"
-msgstr ""
+msgstr "Sammanfoga:"
 
 msgid "Diff:"
 msgstr "Diff:"
