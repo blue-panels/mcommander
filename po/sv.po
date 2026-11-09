@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:52+0000\n"
+"PO-Revision-Date: 2026-11-09 10:54+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -6239,14 +6239,18 @@ msgid ""
 "This entry is inherited from the folder above.\n"
 "Change it there."
 msgstr ""
+"Den här posten ärvs från katalogen ovanför.\n"
+"Ändra den där."
 
 msgid ""
 "This kind of entry cannot be edited here.\n"
 "Its data is kept when other entries change."
 msgstr ""
+"Den här typen av post kan inte redigeras här.\n"
+"Dess data behålls när andra poster ändras."
 
 msgid "Access control list (Windows)"
-msgstr ""
+msgstr "Åtkomstkontrollista (Windows)"
 
 #, fuzzy
 #| msgid "File"
@@ -6264,10 +6268,10 @@ msgid "Group:"
 msgstr "Grupp"
 
 msgid "From:"
-msgstr ""
+msgstr "Från:"
 
 msgid "Who"
-msgstr ""
+msgstr "Vem"
 
 #, fuzzy
 #| msgid "Right"
@@ -6275,10 +6279,10 @@ msgid "Rights"
 msgstr "Höger"
 
 msgid "F3 shows the rights of an entry one by one."
-msgstr ""
+msgstr "F3 visar rättigheterna för en post en i taget."
 
 msgid "Full control"
-msgstr ""
+msgstr "Fullständig behörighet"
 
 #, fuzzy
 #| msgid "&Full traffic"
@@ -6296,10 +6300,10 @@ msgid "&Modify"
 msgstr "Tid &innehållsändr"
 
 msgid "Read & execute"
-msgstr ""
+msgstr "Läs och &kör"
 
 msgid "Read and e&xecute"
-msgstr ""
+msgstr "Läs oc&h kör"
 
 #, fuzzy
 #| msgid "Executable"
@@ -6377,7 +6381,7 @@ msgid "Change permissions"
 msgstr "Rä&ttigheter"
 
 msgid "Take ownership"
-msgstr ""
+msgstr "Ta ägarskap"
 
 #, fuzzy
 #| msgid "Nothing to undo."
@@ -6395,6 +6399,9 @@ msgid ""
 "The access control list changed while the dialog was open.\n"
 "Open it again before saving."
 msgstr ""
+"%s\n"
+"Åtkomstkontrollistan ändrades medan dialogrutan var öppen.\n"
+"Öppna den igen innan du sparar."
 
 #, fuzzy
 #| msgid ""
@@ -6421,9 +6428,12 @@ msgid ""
 "The server stored the list in a form of its own.\n"
 "Open the dialog again to see it."
 msgstr ""
+"%s\n"
+"Servern lagrade listan i ett eget format.\n"
+"Öppna dialogrutan igen för att se den."
 
 msgid "Cannot set the access control list of"
-msgstr ""
+msgstr "Kan inte ange åtkomstkontrollistan för"
 
 #, c-format
 msgid ""
@@ -6431,19 +6441,22 @@ msgid ""
 "has an NFSv4 access control list (%s).\n"
 "M-Commander does not show these yet; nfs4_getfacl does."
 msgstr ""
+"%s\n"
+"har en NFSv4-åtkomstkontrollista (%s).\n"
+"M-Commander visar inte dessa ännu; nfs4_getfacl gör det."
 
 #, c-format
 msgid "Access control lists are not supported on this file system (%s)"
-msgstr ""
+msgstr "Åtkomstkontrollistor stöds inte på det här filsystemet (%s)"
 
 msgid "Cannot set the default access control list of"
-msgstr ""
+msgstr "Kan inte ange standardåtkomstkontrollistan för"
 
 msgid "Cannot set a POSIX access control list on"
-msgstr ""
+msgstr "Kan inte ange en POSIX-åtkomstkontrollista för"
 
 msgid "Access control lists work only on local files"
-msgstr ""
+msgstr "Åtkomstkontrollistor fungerar endast för lokala filer"
 
 #, fuzzy
 #| msgid "The file under the cursor"
@@ -6451,7 +6464,7 @@ msgid "There is no file under the cursor"
 msgstr "Filen under markören"
 
 msgid "Access control &list..."
-msgstr ""
+msgstr "Å&tkomstkontrollista..."
 
 #, fuzzy
 #| msgid "Creating archive..."
@@ -7048,7 +7061,7 @@ msgid "Cannot open the browser"
 msgstr "Kan inte öppna databas."
 
 msgid "GitHub"
-msgstr ""
+msgstr "GitHub"
 
 msgid "gh failed with no message"
 msgstr "gh misslyckades utan meddelande"
