@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:56+0000\n"
+"PO-Revision-Date: 2026-11-09 10:57+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -5958,33 +5958,25 @@ msgstr "&Läs"
 msgid "&Write"
 msgstr "&Skriv"
 
-#, fuzzy
-#| msgid "Executable"
 msgid "E&xecute"
-msgstr "Körbar fil"
+msgstr "&Kör"
 
-#, fuzzy
-#| msgid "Group"
 msgid "&Group"
-msgstr "Grupp"
+msgstr "&Grupp"
 
-#, fuzzy
-#| msgid "Name:"
 msgid "Names:"
 msgstr "Namn:"
 
 msgid "C&hoose..."
 msgstr "&Välj..."
 
-#, fuzzy, c-format
-#| msgid "There is no group to move \"%s\" to"
+#, c-format
 msgid "There is no group \"%s\""
-msgstr "Det finns ingen grupp att flytta ”%s” till"
+msgstr "Det finns ingen grupp med namnet \"%s\""
 
-#, fuzzy, c-format
-#| msgid "There is no group to move \"%s\" to"
+#, c-format
 msgid "There is no user \"%s\""
-msgstr "Det finns ingen grupp att flytta ”%s” till"
+msgstr "Det finns ingen användare med namnet \"%s\""
 
 msgid "An entry is changed one at a time: give one name."
 msgstr "En post ändras i taget: ange ett namn."
@@ -6001,23 +5993,17 @@ msgstr "Ingen: nya filer får läget från umask."
 msgid "Mas&k"
 msgstr "Mas&k"
 
-#, fuzzy
-#| msgid "&Add an entry"
 msgid "Add entry"
-msgstr "&Lägg till en post"
+msgstr "Lägg till post"
 
 msgid "Mask"
 msgstr "Mask"
 
-#, fuzzy
-#| msgid "O&ther:"
 msgid "Other"
-msgstr "A&nnat:"
+msgstr "Övriga"
 
-#, fuzzy
-#| msgid "Edit hotlist entry"
 msgid "Edit entry"
-msgstr "Redigera katalogfavorit"
+msgstr "Redigera post"
 
 msgid "The owner, the group of the file and other cannot be removed."
 msgstr "Ägaren, filens grupp och övriga kan inte tas bort."
@@ -6031,10 +6017,8 @@ msgstr "Ta bort posterna för användare och grupp innan du tar bort masken."
 msgid "Remove the user and group entries of the default ACL first."
 msgstr "Ta först bort posterna för användare och grupp i standard-ACL:en."
 
-#, fuzzy
-#| msgid "< Default >"
 msgid "Default ACL"
-msgstr "< Fördefinierat >"
+msgstr "Standard-ACL"
 
 msgid "Remove the whole default ACL?"
 msgstr "Ta bort hela standard-ACL:en?"
@@ -6047,10 +6031,8 @@ msgstr ""
 msgid "The most that users and groups get:"
 msgstr "Det högsta som användare och grupper får:"
 
-#, fuzzy
-#| msgid "&Right of the tree"
 msgid "&Set it from the entries"
-msgstr "Till &höger om trädet"
+msgstr "&Ange den från posterna"
 
 msgid "Access control list (read only)"
 msgstr "Åtkomstkontrollista (skrivskyddad)"
@@ -6064,15 +6046,11 @@ msgstr "Läge"
 msgid "This fol&der"
 msgstr "Den här &katalogen"
 
-#, fuzzy
-#| msgid "A&sk new file name"
 msgid "&New files inside"
-msgstr "Be om &namn på ny fil"
+msgstr "&Nya filer inuti"
 
-#, fuzzy
-#| msgid "&List..."
 msgid "List"
-msgstr "&Lista…"
+msgstr "Lista"
 
 msgid "Type"
 msgstr "Typ"
@@ -6080,41 +6058,29 @@ msgstr "Typ"
 msgid "Read"
 msgstr "Läs"
 
-#, fuzzy
-#| msgid "Write bytes"
 msgid "Write"
-msgstr "Skriv byte"
+msgstr "Skriv"
 
 msgid "Exec"
 msgstr "Kör"
 
-#, fuzzy
-#| msgid "Directive"
 msgid "Effective"
-msgstr "Direktiv"
+msgstr "Effektiv"
 
-#, fuzzy
-#| msgid "&Add new"
 msgid "&Add"
-msgstr "Lägg till &Ny"
+msgstr "&Lägg till"
 
 msgid "Ed&it"
 msgstr "&Redigera"
 
-#, fuzzy
-#| msgid "Delete"
 msgid "De&lete"
-msgstr "Ta bort"
+msgstr "Ta &bort"
 
-#, fuzzy
-#| msgid "Set &all"
 msgid "Set a&ll"
-msgstr "Sät&t alla"
+msgstr "Ange a&lla"
 
-#, fuzzy
-#| msgid "Changes to file lost"
 msgid "C&hanges to all"
-msgstr "Ändringar i filen gick förlorade"
+msgstr "Ä&ndringar för alla"
 
 msgid "This folder only"
 msgstr "Endast den här katalogen"
@@ -6125,30 +6091,20 @@ msgstr "Den här katalogen, underkataloger och filer"
 msgid "This folder and subfolders"
 msgstr "Den här katalogen och underkataloger"
 
-#, fuzzy
-#| msgid "Casefolded file"
 msgid "This folder and files"
-msgstr "Fil med casefold"
+msgstr "Den här katalogen och filer"
 
-#, fuzzy
-#| msgid "Re&verse files only"
 msgid "Subfolders and files only"
-msgstr "&Invertera bara filmark"
+msgstr "Endast underkataloger och filer"
 
-#, fuzzy
-#| msgid "&Files only"
 msgid "Subfolders only"
-msgstr "Endast &filer"
+msgstr "Endast underkataloger"
 
-#, fuzzy
-#| msgid "&Files only"
 msgid "Files only"
-msgstr "Endast &filer"
+msgstr "Endast filer"
 
-#, fuzzy
-#| msgid "Follow"
 msgid "allow"
-msgstr "Följ"
+msgstr "tillåt"
 
 msgid "deny"
 msgstr "neka"
@@ -6156,10 +6112,8 @@ msgstr "neka"
 msgid "  (inside only)"
 msgstr "  (endast inuti)"
 
-#, fuzzy
-#| msgid "inherited"
 msgid "  (inherited)"
-msgstr "ärvt"
+msgstr "  (ärvd)"
 
 msgid "Who:"
 msgstr "Vem:"
@@ -6167,28 +6121,20 @@ msgstr "Vem:"
 msgid "SID:"
 msgstr "SID:"
 
-#, fuzzy
-#| msgid "Type"
 msgid "Type:"
-msgstr "Typ"
+msgstr "Typ:"
 
-#, fuzzy
-#| msgid "Follow"
 msgid "Allow"
-msgstr "Följ"
+msgstr "Tillåt"
 
 msgid "Deny"
 msgstr "Neka"
 
-#, fuzzy
-#| msgid "Copies to"
 msgid "Applies to:"
-msgstr "Kopior till"
+msgstr "Gäller för:"
 
-#, fuzzy
-#| msgid "inherited"
 msgid "Inherited:"
-msgstr "ärvt"
+msgstr "Ärvd:"
 
 msgid "yes"
 msgstr "ja"
