@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:51+0000\n"
+"PO-Revision-Date: 2026-11-09 10:52+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -2042,25 +2042,16 @@ msgstr "Spara ändringarna i de två filerna först."
 msgid "The common base of the two files"
 msgstr "De två filernas gemensamma bas"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot create target file\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot read the base file\n"
 "%s"
 msgstr ""
-"Kan inte skapa målfil\n"
+"Kan inte läsa basfilen\n"
 "%s"
 
-#, fuzzy
-#| msgid ""
-#| "Cannot open the %s file for writing:\n"
-#| "%s\n"
 msgid "Cannot compare the files to merge"
-msgstr ""
-"Kan inte öppna filen %s för skrivning:\n"
-"%s\n"
+msgstr "Kan inte jämföra filerna som ska sammanfogas"
 
 msgid "Merge:"
 msgstr "Sammanfoga:"
@@ -2068,19 +2059,12 @@ msgstr "Sammanfoga:"
 msgid "Diff:"
 msgstr "Diff:"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot move file\n"
-#| "%s\n"
-#| "to\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot merge the files into\n"
 "%s"
 msgstr ""
-"Det går inte att flytta filen\n"
-"%s\n"
-"till\n"
+"Kan inte sammanfoga filerna till\n"
 "%s"
 
 msgid "File name is empty!"
@@ -2635,12 +2619,13 @@ msgstr "&Spara"
 msgid "Load"
 msgstr "Ladda"
 
-#, fuzzy, c-format
-#| msgid "Cannot create %s"
+#, c-format
 msgid ""
 "Cannot create %s:\n"
 "%s"
-msgstr "Kan inte skapa %s"
+msgstr ""
+"Kan inte skapa %s:\n"
+"%s"
 
 msgid "Syntax file edit"
 msgstr "Redigera syntaxfil"
@@ -3131,23 +3116,17 @@ msgstr "Redigera: "
 msgid "ButtonBar|Menu"
 msgstr "Meny"
 
-#, fuzzy
-#| msgid "ButtonBar|Save"
 msgid "ButtonBar|SaveAs"
-msgstr "Spara"
+msgstr "Spara som"
 
-#, fuzzy
-#| msgid "ButtonBar|Copy"
 msgid "ButtonBar|Column"
-msgstr "Kopier"
+msgstr "Kolumn"
 
 msgid "ButtonBar|Replac"
 msgstr "Ersätt"
 
-#, fuzzy
-#| msgid "ButtonBar|Index"
 msgid "ButtonBar|Insert"
-msgstr "Index"
+msgstr "Infoga"
 
 msgid "ButtonBar|Mark"
 msgstr "Marker"
@@ -3819,10 +3798,8 @@ msgstr "Filtrerad vy"
 msgid "Filter command and arguments:"
 msgstr "Filterkommando och argument:"
 
-#, fuzzy
-#| msgid "Add a &command"
 msgid "Apply command"
-msgstr "Lägg till ett &kommando"
+msgstr "Använd kommando"
 
 #, c-format
 msgid ""
@@ -4756,20 +4733,14 @@ msgstr "&Under"
 msgid "&Right"
 msgstr "&Höger"
 
-#, fuzzy
-#| msgid "ButtonBar|Text"
 msgid "ButtonBar|Left"
-msgstr "Text"
+msgstr "Vänster"
 
-#, fuzzy
-#| msgid "ButtonBar|Edit"
 msgid "ButtonBar|Right"
-msgstr "Redig"
+msgstr "Höger"
 
-#, fuzzy
-#| msgid "ButtonBar|Clear"
 msgid "ButtonBar|Console"
-msgstr "Rensa"
+msgstr "Konsol"
 
 msgid "ButtonBar|View"
 msgstr "Visa"
@@ -4777,45 +4748,29 @@ msgstr "Visa"
 msgid "ButtonBar|RenMov"
 msgstr "DöpFly"
 
-#, fuzzy
-#| msgid "ButtonBar|Save"
 msgid "ButtonBar|Name"
-msgstr "Spara"
+msgstr "Namn"
 
-#, fuzzy
-#| msgid "ButtonBar|Rescan"
 msgid "ButtonBar|Version"
-msgstr "Läs om"
+msgstr "Version"
 
-#, fuzzy
-#| msgid "ButtonBar|Edit"
 msgid "ButtonBar|Ext"
-msgstr "Redig"
+msgstr "Filänd"
 
-#, fuzzy
-#| msgid "ButtonBar|Save"
 msgid "ButtonBar|Size"
-msgstr "Spara"
+msgstr "Storlek"
 
-#, fuzzy
-#| msgid "ButtonBar|Move"
 msgid "ButtonBar|MTime"
-msgstr "Flytta"
+msgstr "Ändring"
 
-#, fuzzy
-#| msgid "ButtonBar|Unform"
 msgid "ButtonBar|Unsort"
-msgstr "Oform"
+msgstr "Osort"
 
-#, fuzzy
-#| msgid "ButtonBar|View"
 msgid "ButtonBar|CTime"
-msgstr "Visa"
+msgstr "C-tid"
 
-#, fuzzy
-#| msgid "ButtonBar|View"
 msgid "ButtonBar|ATime"
-msgstr "Visa"
+msgstr "Åtkomst"
 
 msgid "ButtonBar|Mkdir"
 msgstr "NyKat"
@@ -5474,10 +5429,9 @@ msgstr "Kan inte flytta %s till insticksmodulen"
 msgid "Cannot delete local file %s"
 msgstr "Kan inte ta bort lokal fil %s"
 
-#, fuzzy, c-format
-#| msgid "No plugins loaded."
+#, c-format
 msgid "No plugin opens %s."
-msgstr "Inga insticksmoduler inlästa."
+msgstr "Ingen insticksmodul öppnar %s."
 
 msgid "The other half of the screen shows no panel to open it in."
 msgstr "Den andra halvan av skärmen visar ingen panel som går att öppna i."
@@ -5501,10 +5455,8 @@ msgstr "Byt enhet"
 msgid "No plugins with drive menu support are loaded."
 msgstr "Inga insticksmoduler med stöd för enhetsmenyn är inlästa."
 
-#, fuzzy
-#| msgid "Plugin info"
 msgid "Plugin action"
-msgstr "Insticksmodulinfo"
+msgstr "Insticksmodulåtgärd"
 
 #, c-format
 msgid ""
@@ -5845,10 +5797,9 @@ msgstr "Inga insticksmoduler inlästa."
 msgid "%s has exited with code %d. Press any key to close"
 msgstr "%s avslutades med koden %d. Tryck på valfri tangent för att stänga"
 
-#, fuzzy, c-format
-#| msgid "Press any key to continue..."
+#, c-format
 msgid "%s has exited. Press any key to close"
-msgstr "Tryck valfri tangent för att fortsätta…"
+msgstr "%s har avslutats. Tryck på valfri tangent för att stänga"
 
 msgid "JSON parse error at byte %"
 msgstr "JSON-tolkningsfel vid byte %"
@@ -5992,15 +5943,11 @@ msgstr "användare"
 msgid "mask"
 msgstr "mask"
 
-#, fuzzy
-#| msgid "Choose codepage"
 msgid "Choose group"
-msgstr "Välj teckenkodning"
+msgstr "Välj grupp"
 
-#, fuzzy
-#| msgid "Choose codepage"
 msgid "Choose user"
-msgstr "Välj teckenkodning"
+msgstr "Välj användare"
 
 msgid "Show &system accounts"
 msgstr "Visa &systemkonton"
@@ -6008,10 +5955,8 @@ msgstr "Visa &systemkonton"
 msgid "&Read"
 msgstr "&Läs"
 
-#, fuzzy
-#| msgid "&Overwrite"
 msgid "&Write"
-msgstr "&Skriv över"
+msgstr "&Skriv"
 
 #, fuzzy
 #| msgid "Executable"
