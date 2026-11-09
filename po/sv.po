@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 11:00+0000\n"
+"PO-Revision-Date: 2026-11-09 11:01+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -9796,10 +9796,9 @@ msgstr "en nyckel före den första [group]"
 msgid "a value without a key"
 msgstr "ett värde utan en nyckel"
 
-#, fuzzy, c-format
-#| msgid "\"%s\" is already in the hotlist as \"%s\""
+#, c-format
 msgid "%s= is already at line %d"
-msgstr "”%s” finns redan i katalogfavoriter som ”%s”"
+msgstr "%s= finns redan på rad %d"
 
 msgid "the block opened here has no closing line"
 msgstr "blocket som öppnades här saknar avslutande rad"
@@ -9808,12 +9807,13 @@ msgstr "blocket som öppnades här saknar avslutande rad"
 msgid "[%s]: %s= takes true or false"
 msgstr "[%s]: %s= tar true eller false"
 
-#, fuzzy, c-format
-#| msgid "%s is not a regular file"
+#, c-format
 msgid ""
 "[%s]: %s=%s: not a regular expression:\n"
 "%s"
-msgstr "%s är inte en vanlig fil"
+msgstr ""
+"[%s]: %s=%s: inte ett reguljärt uttryck:\n"
+"%s"
 
 #, c-format
 msgid ""
@@ -9841,26 +9841,19 @@ msgstr ""
 "Vill du konvertera den till formatet? Filen i sitt nuvarande skick\n"
 "behålls som %s.old."
 
-#, fuzzy
-#| msgid "&Connection"
 msgid "&Convert"
-msgstr "&Anslutning"
+msgstr "&Konvertera"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot move file\n"
-#| "%s\n"
-#| "to\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot convert the menu file\n"
 "%s\n"
 "\n"
 "%s"
 msgstr ""
-"Det går inte att flytta filen\n"
+"Kan inte konvertera menyfilen\n"
 "%s\n"
-"till\n"
+"\n"
 "%s"
 
 #, c-format
@@ -9881,10 +9874,8 @@ msgstr ""
 "Dess poster visas inte, och menyn skriver inte till den\n"
 "förrän den har rättats."
 
-#, fuzzy
-#| msgid "Edit other file"
 msgid "&Edit the file"
-msgstr "Redigera andra filen"
+msgstr "&Redigera filen"
 
 #, c-format
 msgid ""
@@ -9900,26 +9891,23 @@ msgstr ""
 "som du inte kan skriva till. Kopiera den till en egen meny\n"
 "med Ins eller fråga den som äger filen."
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot write file\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot write file\n"
 "%s\n"
 "\n"
 "%s"
 msgstr ""
-"Kan inte skriva fil\n"
+"Kan inte skriva filen\n"
+"%s\n"
+"\n"
 "%s"
 
 msgid "always"
 msgstr "alltid"
 
-#, fuzzy
-#| msgid "Confirmation"
 msgid "Conditions"
-msgstr "Bekräftelse"
+msgstr "Villkor"
 
 msgid ""
 "These conditions look at both panels, and the dialog shows one.\n"
@@ -9937,25 +9925,17 @@ msgstr ""
 "och dialogrutan visar en av dem. Ändra dem i filen: knappen\n"
 "Redigerare öppnar den."
 
-#, fuzzy
-#| msgid "Shrink current panel"
 msgid "C&urrent panel"
-msgstr "Förminska aktuell panel"
+msgstr "A&ktuell panel"
 
-#, fuzzy
-#| msgid "Sync other panel"
 msgid "Ot&her panel"
-msgstr "Synkronisera andra panelen"
+msgstr "An&nan panel"
 
-#, fuzzy
-#| msgid "&Never"
 msgid "N&ever"
-msgstr "Al&drig"
+msgstr "A&ldrig"
 
-#, fuzzy
-#| msgid "Alwa&ys"
 msgid "&Always"
-msgstr "All&tid"
+msgstr "A&lltid"
 
 msgid "&When:"
 msgstr "&När:"
@@ -9972,44 +9952,32 @@ msgstr "Visa för (inget markerat = valfritt):"
 msgid "Fifo"
 msgstr "Fifo"
 
-#, fuzzy
-#| msgid "Socket (ms):"
 msgid "Socket"
-msgstr "Uttag (ms):"
+msgstr "Uttag"
 
-#, fuzzy
-#| msgid "Bookmarked line"
 msgid "Broken link"
-msgstr "Bokmärkt rad"
+msgstr "Bruten länk"
 
 msgid "Char device"
 msgstr "Teckenenhet"
 
-#, fuzzy
-#| msgid "Block Size"
 msgid "Block device"
-msgstr "Blockstorlek"
+msgstr "Blockenhet"
 
-#, fuzzy
-#| msgid "Executable"
 msgid "E&xecutable only"
-msgstr "Körbar fil"
+msgstr "Endast &körbara"
 
 msgid "Only when files are &marked"
 msgstr "Endast när filer är &markerade"
 
-#, fuzzy
-#| msgid "Quit program"
 msgid "Needs program:"
-msgstr "Avsluta programmet"
+msgstr "Kräver program:"
 
 msgid "The menu opens on it:"
 msgstr "Menyn öppnas för den:"
 
-#, fuzzy
-#| msgid "Con&tinue"
 msgid "Con&ditions"
-msgstr "&Fortsätt"
+msgstr "Vi&llkor"
 
 msgid "Add a submenu"
 msgstr "Lägg till en undermeny"
@@ -10035,10 +10003,8 @@ msgstr "Visa utdata i &visaren"
 msgid "Run without the &shell of the panel"
 msgstr "Kör utan panelens &skal"
 
-#, fuzzy
-#| msgid "Show help"
 msgid "Show when:"
-msgstr "Visa hjälp"
+msgstr "Visa när:"
 
 msgid "The entry needs a label"
 msgstr "Posten behöver en etikett"
@@ -10054,13 +10020,7 @@ msgstr ""
 "Inget hämtades från\n"
 "%s"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Taken into\n"
-#| "%s\n"
-#| "\n"
-#| "Entries: %u. The file they came from is left where it is,\n"
-#| "and conditions and masks were dropped."
+#, c-format
 msgid ""
 "Taken into\n"
 "%s\n"
@@ -10070,16 +10030,9 @@ msgstr ""
 "Hämtat till\n"
 "%s\n"
 "\n"
-"Poster: %u. Ursprungliga filen ligger kvar\n"
-"och villkor och masker togs bort."
+"Poster: %u. Filen de kom från ligger kvar där den är."
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Taken into\n"
-#| "%s\n"
-#| "\n"
-#| "Entries: %u. The file they came from is left where it is,\n"
-#| "and conditions and masks were dropped."
+#, c-format
 msgid ""
 "Taken into\n"
 "%s\n"
@@ -10090,8 +10043,9 @@ msgstr ""
 "Hämtat till\n"
 "%s\n"
 "\n"
-"Poster: %u. Ursprungliga filen ligger kvar\n"
-"och villkor och masker togs bort."
+"Poster: %u. Filen de kom från ligger kvar där den är.\n"
+"Villkor som inte konverterades: %u, bevarades som kommentarer ovanför sina "
+"poster."
 
 msgid "Import a menu file"
 msgstr "Importera en menyfil"
@@ -10275,15 +10229,11 @@ msgstr "&Decimal position"
 msgid "He&xadecimal offset"
 msgstr "He&xadecimal position"
 
-#, fuzzy
-#| msgid "ButtonBar|Static"
 msgid "ButtonBar|Syntax"
-msgstr "Statis"
+msgstr "Syntax"
 
-#, fuzzy
-#| msgid "ButtonBar|Ascii"
 msgid "ButtonBar|Ansi"
-msgstr "Ascii"
+msgstr "Ansi"
 
 msgid "ButtonBar|Text"
 msgstr "Text"
