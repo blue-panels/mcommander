@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:34+0000\n"
+"PO-Revision-Date: 2026-11-09 10:50+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -3413,10 +3413,10 @@ msgid "A&uto save setup"
 msgstr "A&utospara inställningar"
 
 msgid "Far Manager keys"
-msgstr ""
+msgstr "Far Manager-tangenter"
 
 msgid "Alt-letter fast find"
-msgstr ""
+msgstr "Snabbsökning med Alt-bokstav"
 
 msgid "Configure options"
 msgstr "Inställningar"
@@ -3872,12 +3872,13 @@ msgstr "Lägg till ett &kommando"
 msgid ""
 "Command for the files (%f name, %n name without extension, %x extension):"
 msgstr ""
+"Kommando för filerna (%f filnamn, %n namn utan filändelse, %x filändelse):"
 
 #, c-format
 msgid "%d file is skipped: its name has a line break"
 msgid_plural "%d files are skipped: their names have a line break"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d fil hoppas över: namnet innehåller en radbrytning"
+msgstr[1] "%d filer hoppas över: namnen innehåller en radbrytning"
 
 msgid "This plugin does not support file editing"
 msgstr "Denna insticksmodul stöder inte filredigering"
@@ -5523,7 +5524,7 @@ msgid "No plugin opens %s."
 msgstr "Inga insticksmoduler inlästa."
 
 msgid "The other half of the screen shows no panel to open it in."
-msgstr ""
+msgstr "Den andra halvan av skärmen visar ingen panel som går att öppna i."
 
 #, c-format
 msgid "%s produced nothing to view for %s"
@@ -5684,13 +5685,13 @@ msgid "Edit &term file"
 msgstr "Redigera &term-fil"
 
 msgid "Release:"
-msgstr ""
+msgstr "Släpp:"
 
 msgid "Then:"
-msgstr ""
+msgstr "Sedan:"
 
 msgid "(modifier key)"
-msgstr ""
+msgstr "(modifierartangent)"
 
 msgid "(not recognized)"
 msgstr "(okänd)"
@@ -5720,7 +5721,7 @@ msgid "Keycode:"
 msgstr "Tangentkod:"
 
 msgid "Kitty:"
-msgstr ""
+msgstr "Kitty:"
 
 msgid "&Capture key"
 msgstr "&Läs av tangent"
@@ -5886,7 +5887,7 @@ msgstr "Inga insticksmoduler inlästa."
 
 #, c-format
 msgid "%s has exited with code %d. Press any key to close"
-msgstr ""
+msgstr "%s avslutades med koden %d. Tryck på valfri tangent för att stänga"
 
 #, fuzzy, c-format
 #| msgid "Press any key to continue..."
@@ -6030,10 +6031,10 @@ msgid "unexpected indentation"
 msgstr "oväntat indrag"
 
 msgid "user"
-msgstr ""
+msgstr "användare"
 
 msgid "mask"
-msgstr ""
+msgstr "mask"
 
 #, fuzzy
 #| msgid "Choose codepage"
@@ -6046,10 +6047,10 @@ msgid "Choose user"
 msgstr "Välj teckenkodning"
 
 msgid "Show &system accounts"
-msgstr ""
+msgstr "Visa &systemkonton"
 
 msgid "&Read"
-msgstr ""
+msgstr "&Läs"
 
 #, fuzzy
 #| msgid "&Overwrite"
@@ -6072,7 +6073,7 @@ msgid "Names:"
 msgstr "Namn:"
 
 msgid "C&hoose..."
-msgstr ""
+msgstr "&Välj..."
 
 #, fuzzy, c-format
 #| msgid "There is no group to move \"%s\" to"
@@ -6085,19 +6086,19 @@ msgid "There is no user \"%s\""
 msgstr "Det finns ingen grupp att flytta ”%s” till"
 
 msgid "An entry is changed one at a time: give one name."
-msgstr ""
+msgstr "En post ändras i taget: ange ett namn."
 
 msgid "  masked"
-msgstr ""
+msgstr "  maskerad"
 
 msgid "Read only: you are not the owner."
-msgstr ""
+msgstr "Skrivskyddad: du är inte ägaren."
 
 msgid "None: new files get the mode from umask."
-msgstr ""
+msgstr "Ingen: nya filer får läget från umask."
 
 msgid "Mas&k"
-msgstr ""
+msgstr "Mas&k"
 
 #, fuzzy
 #| msgid "&Add an entry"
@@ -6105,7 +6106,7 @@ msgid "Add entry"
 msgstr "&Lägg till en post"
 
 msgid "Mask"
-msgstr ""
+msgstr "Mask"
 
 #, fuzzy
 #| msgid "O&ther:"
@@ -6118,16 +6119,16 @@ msgid "Edit entry"
 msgstr "Redigera katalogfavorit"
 
 msgid "The owner, the group of the file and other cannot be removed."
-msgstr ""
+msgstr "Ägaren, filens grupp och övriga kan inte tas bort."
 
 msgid "Remove the marked users and groups?"
-msgstr ""
+msgstr "Ta bort de markerade användarna och grupperna?"
 
 msgid "Remove the user and group entries before removing the mask."
-msgstr ""
+msgstr "Ta bort posterna för användare och grupp innan du tar bort masken."
 
 msgid "Remove the user and group entries of the default ACL first."
-msgstr ""
+msgstr "Ta först bort posterna för användare och grupp i standard-ACL:en."
 
 #, fuzzy
 #| msgid "< Default >"
@@ -6135,13 +6136,15 @@ msgid "Default ACL"
 msgstr "< Fördefinierat >"
 
 msgid "Remove the whole default ACL?"
-msgstr ""
+msgstr "Ta bort hela standard-ACL:en?"
 
 msgid "There is no mask yet: it comes with the first user or group entry."
 msgstr ""
+"Det finns ännu ingen mask: den skapas med den första posten för en användare "
+"eller grupp."
 
 msgid "The most that users and groups get:"
-msgstr ""
+msgstr "Det högsta som användare och grupper får:"
 
 #, fuzzy
 #| msgid "&Right of the tree"
@@ -6149,16 +6152,16 @@ msgid "&Set it from the entries"
 msgstr "Till &höger om trädet"
 
 msgid "Access control list (read only)"
-msgstr ""
+msgstr "Åtkomstkontrollista (skrivskyddad)"
 
 msgid "Access control list"
-msgstr ""
+msgstr "Åtkomstkontrollista"
 
 msgid "Mode"
-msgstr ""
+msgstr "Läge"
 
 msgid "This fol&der"
-msgstr ""
+msgstr "Den här &katalogen"
 
 #, fuzzy
 #| msgid "A&sk new file name"
@@ -6174,7 +6177,7 @@ msgid "Type"
 msgstr "Typ"
 
 msgid "Read"
-msgstr ""
+msgstr "Läs"
 
 #, fuzzy
 #| msgid "Write bytes"
@@ -6182,7 +6185,7 @@ msgid "Write"
 msgstr "Skriv byte"
 
 msgid "Exec"
-msgstr ""
+msgstr "Kör"
 
 #, fuzzy
 #| msgid "Directive"
@@ -6195,7 +6198,7 @@ msgid "&Add"
 msgstr "Lägg till &Ny"
 
 msgid "Ed&it"
-msgstr ""
+msgstr "&Redigera"
 
 #, fuzzy
 #| msgid "Delete"
@@ -6213,13 +6216,13 @@ msgid "C&hanges to all"
 msgstr "Ändringar i filen gick förlorade"
 
 msgid "This folder only"
-msgstr ""
+msgstr "Endast den här katalogen"
 
 msgid "This folder, subfolders and files"
-msgstr ""
+msgstr "Den här katalogen, underkataloger och filer"
 
 msgid "This folder and subfolders"
-msgstr ""
+msgstr "Den här katalogen och underkataloger"
 
 #, fuzzy
 #| msgid "Casefolded file"
@@ -6247,10 +6250,10 @@ msgid "allow"
 msgstr "Följ"
 
 msgid "deny"
-msgstr ""
+msgstr "neka"
 
 msgid "  (inside only)"
-msgstr ""
+msgstr "  (endast inuti)"
 
 #, fuzzy
 #| msgid "inherited"
@@ -6258,10 +6261,10 @@ msgid "  (inherited)"
 msgstr "ärvt"
 
 msgid "Who:"
-msgstr ""
+msgstr "Vem:"
 
 msgid "SID:"
-msgstr ""
+msgstr "SID:"
 
 #, fuzzy
 #| msgid "Type"
@@ -6274,7 +6277,7 @@ msgid "Allow"
 msgstr "Följ"
 
 msgid "Deny"
-msgstr ""
+msgstr "Neka"
 
 #, fuzzy
 #| msgid "Copies to"
@@ -6287,13 +6290,13 @@ msgid "Inherited:"
 msgstr "ärvt"
 
 msgid "yes"
-msgstr ""
+msgstr "ja"
 
 msgid "no"
 msgstr "nej"
 
 msgid "Mask:"
-msgstr ""
+msgstr "Mask:"
 
 #, fuzzy
 #| msgid "Word right"
@@ -6301,7 +6304,7 @@ msgid "no rights"
 msgstr "Ett ord åt höger"
 
 msgid "Entry"
-msgstr ""
+msgstr "Post"
 
 #, fuzzy
 #| msgid "Advanced"
@@ -6314,7 +6317,7 @@ msgid "A&llow"
 msgstr "A&lla"
 
 msgid "De&ny"
-msgstr ""
+msgstr "&Neka"
 
 #, fuzzy
 #| msgid "Special"
@@ -7147,10 +7150,10 @@ msgid "GitHub"
 msgstr ""
 
 msgid "gh failed with no message"
-msgstr ""
+msgstr "gh misslyckades utan meddelande"
 
 msgid "Owner, or a path below it:"
-msgstr ""
+msgstr "Ägare eller en sökväg under den:"
 
 #, c-format
 msgid ""
@@ -7158,6 +7161,9 @@ msgid ""
 "nor a GitHub address:\n"
 "%s"
 msgstr ""
+"Varken en ägare, en sökväg under en ägare\n"
+"eller en GitHub-adress:\n"
+"%s"
 
 #, fuzzy
 #| msgid "Add to favorites"
@@ -7173,7 +7179,7 @@ msgid "Add to favorites"
 msgstr "Lägg till i favoriter"
 
 msgid "Only a favorite can be changed."
-msgstr ""
+msgstr "Endast en favorit kan ändras."
 
 #, fuzzy
 #| msgid "Change file attributes"
@@ -7192,14 +7198,15 @@ msgstr "Öppna fil i redigeraren"
 
 #, c-format
 msgid "%s is a clone of %s/%s, not of %s/%s."
-msgstr ""
+msgstr "%s är en klon av %s/%s, inte av %s/%s."
 
 #, c-format
 msgid "%s is no clone of a GitHub repository."
-msgstr ""
+msgstr "%s är ingen klon av ett GitHub-förråd."
 
 msgid "This mc cannot open another plugin from a panel."
 msgstr ""
+"Den här mc-instansen kan inte öppna ett annat insticksprogram från en panel."
 
 #, fuzzy, c-format
 #| msgid "Packing: %s"
@@ -7208,11 +7215,11 @@ msgstr "Packar: %s"
 
 #, c-format
 msgid "the first %u files, base %.7s"
-msgstr ""
+msgstr "de första %u filerna, bas %.7s"
 
 #, c-format
 msgid "%u files, base %.7s"
-msgstr ""
+msgstr "%u filer, bas %.7s"
 
 msgid "Git panel"
 msgstr "Git-panel"
@@ -7240,6 +7247,7 @@ msgstr "Markera till filens början"
 
 msgid "Reword is available only for commits on the current branch."
 msgstr ""
+"Omformulering är endast tillgänglig för incheckningar på den aktuella grenen."
 
 #, fuzzy, c-format
 #| msgid "Cannot delete %s"
@@ -7664,6 +7672,8 @@ msgid ""
 "Install coole for the query editor, or mongosh. Their paths can be given in "
 "the MongoDB settings."
 msgstr ""
+"Installera coole för frågeredigeraren, eller mongosh. Sökvägarna kan anges i "
+"MongoDB-inställningarna."
 
 #, fuzzy, c-format
 #| msgid "Cannot stat %s"
@@ -7671,7 +7681,7 @@ msgid "Cannot start %s."
 msgstr "Kan inte läsa filstatus för %s"
 
 msgid "This build of mc has no terminal for coole."
-msgstr ""
+msgstr "Den här mc-versionen har ingen terminal för coole."
 
 #, c-format
 msgid "Cannot fetch document: %s"
@@ -7856,10 +7866,10 @@ msgid "Op max time (ms):"
 msgstr "Max. åtgärdstid (ms):"
 
 msgid "coole, the query editor (empty: from PATH):"
-msgstr ""
+msgstr "coole, frågeredigeraren (tomt: från PATH):"
 
 msgid "mongosh (empty: from PATH):"
-msgstr ""
+msgstr "mongosh (tomt: från PATH):"
 
 msgid "MongoDB settings"
 msgstr "MongoDB-inställningar"
@@ -8028,12 +8038,14 @@ msgid "Command"
 msgstr "Kommando"
 
 msgid "PostgreSQL"
-msgstr ""
+msgstr "PostgreSQL"
 
 msgid ""
 "The panel only shows the objects of the database: change them with SQL in "
 "the query editor (Alt-F3)."
 msgstr ""
+"Panelen visar bara databasens objekt: ändra dem med SQL i frågeredigeraren "
+"(Alt-F3)."
 
 #, fuzzy, c-format
 #| msgid "Listing databases..."
@@ -8042,11 +8054,11 @@ msgstr "Listar databaser…"
 
 #, c-format
 msgid "%s/%s: schemas"
-msgstr ""
+msgstr "%s/%s: scheman"
 
 #, c-format
 msgid "%s/%s/%s: relations"
-msgstr ""
+msgstr "%s/%s/%s: relationer"
 
 #, fuzzy
 #| msgid "S3 connection"
@@ -8086,7 +8098,7 @@ msgstr "Fel: slut på minne"
 
 #, c-format
 msgid "No answer from the server in %d s."
-msgstr ""
+msgstr "Inget svar från servern inom %d s."
 
 #, fuzzy, c-format
 #| msgid "Enter password for %s@%s"
@@ -8100,14 +8112,14 @@ msgstr "Ansluter till %s…"
 
 #, c-format
 msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
-msgstr ""
+msgstr "Servern kör PostgreSQL %s: panelen kräver version 10 eller senare."
 
 #, c-format
 msgid "Cannot save the password to ~/.pgpass: %s"
-msgstr ""
+msgstr "Kan inte spara lösenordet i ~/.pgpass: %s"
 
 msgid "Cancelled. The server did not answer: the connection is closed."
-msgstr ""
+msgstr "Avbruten. Servern svarade inte: anslutningen är stängd."
 
 #, fuzzy
 #| msgid "Cancel"
@@ -8115,11 +8127,11 @@ msgid "Cancelled."
 msgstr "Avbryt"
 
 msgid "The server returned nothing."
-msgstr ""
+msgstr "Servern returnerade ingenting."
 
 #, c-format
 msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
-msgstr ""
+msgstr "PostgreSQL %s, databas \"%s\" som \"%s\" på %s:%s"
 
 #, fuzzy
 #| msgid "S3 connection"
@@ -8144,7 +8156,7 @@ msgid "&Host"
 msgstr "Värd:"
 
 msgid "&URL"
-msgstr ""
+msgstr "&URL"
 
 #, fuzzy
 #| msgid "Device"
@@ -8157,7 +8169,7 @@ msgid "Connect by:"
 msgstr "Anslutning (ms):"
 
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
 #, fuzzy
 #| msgid "Device"
@@ -8183,7 +8195,7 @@ msgid "Description:"
 msgstr "Beskrivning:"
 
 msgid "Show all d&atabases"
-msgstr ""
+msgstr "Visa alla d&atabaser"
 
 #, fuzzy
 #| msgid "SFTP password"
@@ -8206,7 +8218,7 @@ msgid " Authentication "
 msgstr "shell: autentisering misslyckades"
 
 msgid "&Read-only: the query editor opens read-only transactions"
-msgstr ""
+msgstr "&Skrivskyddad: frågeredigeraren öppnar skrivskyddade transaktioner"
 
 #, fuzzy
 #| msgid "FTP connection"
@@ -8232,6 +8244,8 @@ msgid ""
 "Install coole for the query editor, or psql. Their paths can be given in the "
 "PostgreSQL settings."
 msgstr ""
+"Installera coole för frågeredigeraren, eller psql. Sökvägarna kan anges i "
+"PostgreSQL-inställningarna."
 
 #, fuzzy, c-format
 #| msgid "Cannot connect to %s:%d"
@@ -8251,16 +8265,16 @@ msgid "Connect timeout (s, 0: none):"
 msgstr "Tidsgräns för anslutning:"
 
 msgid "Statement timeout (s, 0: none):"
-msgstr ""
+msgstr "Satsens tidsgräns (s, 0: ingen):"
 
 msgid "Rows shown by F3 (0: none):"
-msgstr ""
+msgstr "Rader som visas med F3 (0: inga):"
 
 msgid "Show &system schemas"
-msgstr ""
+msgstr "Visa &systemscheman"
 
 msgid "psql, without coole (empty: from PATH):"
-msgstr ""
+msgstr "psql, utan coole (tomt: från PATH):"
 
 #, fuzzy
 #| msgid "Layout settings"
@@ -8268,7 +8282,7 @@ msgid "PostgreSQL settings"
 msgstr "Layoutinställningar"
 
 msgid "A timeout and the rows are whole numbers, 0 for none."
-msgstr ""
+msgstr "Tidsgränsen och antalet rader ska vara heltal; 0 betyder ingen gräns."
 
 msgid "S3"
 msgstr "S3"
@@ -9091,7 +9105,7 @@ msgid "Check box under the cursor"
 msgstr "Filen under markören"
 
 msgid "Check box under the cursor in the selected row of a table"
-msgstr ""
+msgstr "Kryssruta under markören på den markerade raden i en tabell"
 
 msgid "Title"
 msgstr "Rubrik"
@@ -9251,6 +9265,8 @@ msgstr "Resten av en ändrad rad och dess motsvarighet"
 
 msgid "Lines both sides of a merge changed; the removed color when absent"
 msgstr ""
+"Rader på båda sidor av en sammanslagning har ändrats; färgen för borttaget "
+"när den saknas"
 
 #, fuzzy
 #| msgid "Line number"
@@ -9258,7 +9274,7 @@ msgid "Line mark"
 msgstr "Radnummer"
 
 msgid "The mark on the frame at the line the keys act on"
-msgstr ""
+msgstr "Markeringen på ramen vid raden som tangenterna påverkar"
 
 #, fuzzy
 #| msgid "Panel frame"
@@ -9266,7 +9282,7 @@ msgid "Inactive frame"
 msgstr "Panelram"
 
 msgid "The frame of the file that is not active"
-msgstr ""
+msgstr "Ramen för den inaktiva filen"
 
 msgid "Structured view of JSON, YAML and the like"
 msgstr "Strukturerad vy av JSON, YAML och liknande"
@@ -9466,10 +9482,10 @@ msgid "Editor: fold closed"
 msgstr "Redigerare: kod invikt"
 
 msgid "Vertical: top arrow"
-msgstr ""
+msgstr "Lodrätt: övre pil"
 
 msgid "Vertical: bottom arrow"
-msgstr ""
+msgstr "Lodrätt: nedre pil"
 
 #, fuzzy
 #| msgid "&Vertical"
@@ -9485,10 +9501,10 @@ msgid "Vertical: thumb"
 msgstr "&Vertikal"
 
 msgid "Vertical: thumb length"
-msgstr ""
+msgstr "Lodrätt: rullningsknappens längd"
 
 msgid "Cells of the thumb when it fits, else half the track"
-msgstr ""
+msgstr "Rullningsknappens celler när den ryms, annars halva spåret"
 
 #, fuzzy
 #| msgid "&Horizontal"
@@ -9496,7 +9512,7 @@ msgid "Horizontal: left arrow"
 msgstr "&Horisontell"
 
 msgid "Horizontal: right arrow"
-msgstr ""
+msgstr "Vågrätt: högerpil"
 
 #, fuzzy
 #| msgid "&Horizontal"
@@ -9512,7 +9528,7 @@ msgid "Horizontal: thumb"
 msgstr "&Horisontell"
 
 msgid "Horizontal: thumb length"
-msgstr ""
+msgstr "Vågrätt: rullningsknappens längd"
 
 msgid "Spinner frames"
 msgstr "Aktivitetsindikatorns bildrutor"
@@ -9795,16 +9811,16 @@ msgid "-  < No translation >"
 msgstr "-  < Ingen översättning >"
 
 msgid "this one"
-msgstr ""
+msgstr "den här"
 
 msgid "detached"
-msgstr ""
+msgstr "frånkopplad"
 
 msgid "looks lost"
-msgstr ""
+msgstr "verkar borttappad"
 
 msgid "attached"
-msgstr ""
+msgstr "ansluten"
 
 #, fuzzy
 #| msgid "&Permissions"
@@ -9812,10 +9828,10 @@ msgid "Sessions"
 msgstr "Rä&ttigheter"
 
 msgid "&Switch"
-msgstr ""
+msgstr "&Byt"
 
 msgid "&Detach"
-msgstr ""
+msgstr "&Koppla från"
 
 #, fuzzy
 #| msgid "Create a new Directory"
@@ -9823,25 +9839,27 @@ msgid "State        Start  Directory"
 msgstr "Skapa en ny katalog"
 
 msgid "That session was started in another kind of terminal."
-msgstr ""
+msgstr "Den sessionen startades i en annan typ av terminal."
 
 msgid "That session is in use in another terminal. Take it?"
-msgstr ""
+msgstr "Den sessionen används i en annan terminal. Ta över den?"
 
 msgid "This is the session you are in: F10 ends it."
-msgstr ""
+msgstr "Det här är sessionen du är i: F10 avslutar den."
 
 msgid "That session is in use in another terminal. End it?"
-msgstr ""
+msgstr "Den sessionen används i en annan terminal. Avsluta den?"
 
 msgid ""
 "That session has an editor, a viewer or a dialog open: switch to it and end "
 "it there."
 msgstr ""
+"Den sessionen har en redigerare, visare eller dialogruta öppen: byt till den "
+"och avsluta den där."
 
 #, c-format
 msgid "The session did not end: %s"
-msgstr ""
+msgstr "Sessionen avslutades inte: %s"
 
 #, fuzzy
 #| msgid "&Permissions"
@@ -9849,10 +9867,10 @@ msgid "Sessions..."
 msgstr "Rä&ttigheter"
 
 msgid "another version of M-Commander"
-msgstr ""
+msgstr "en annan version av M-Commander"
 
 msgid "another kind of terminal (TERM)"
-msgstr ""
+msgstr "en annan typ av terminal (TERM)"
 
 #, fuzzy
 #| msgid "Compression"
@@ -9860,17 +9878,17 @@ msgid "M-Commander sessions"
 msgstr "Komprimering"
 
 msgid "attached, looks lost"
-msgstr ""
+msgstr "ansluten, verkar borttappad"
 
 #, c-format
 msgid "TERM=%s, cannot be taken here"
-msgstr ""
+msgstr "TERM=%s, kan inte tas över här"
 
 msgid "new session"
-msgstr ""
+msgstr "ny session"
 
 msgid "end session N"
-msgstr ""
+msgstr "avsluta session N"
 
 #, fuzzy
 #| msgid "&Refresh"
@@ -9884,41 +9902,43 @@ msgstr "shell: %s"
 
 #, c-format
 msgid "Session %u is in use in another terminal. End it?"
-msgstr ""
+msgstr "Session %u används i en annan terminal. Avsluta den?"
 
 #, c-format
 msgid "Session %u is ended.\n"
-msgstr ""
+msgstr "Session %u har avslutats.\n"
 
 #, c-format
 msgid ""
 "Session %u has an editor, a viewer or a dialog open: take it and end it "
 "there.\n"
 msgstr ""
+"Session %u har en redigerare, visare eller dialogruta öppen: ta över den och "
+"avsluta den där.\n"
 
 #, c-format
 msgid "Session %u did not end: %s.\n"
-msgstr ""
+msgstr "Session %u avslutades inte: %s.\n"
 
 msgid "Number to take, Enter, k N, r or q: "
-msgstr ""
+msgstr "Nummer att ta över, Retur, k N, r eller q: "
 
 #, c-format
 msgid "Session %u is in use in another terminal. Take it?"
-msgstr ""
+msgstr "Session %u används i en annan terminal. Ta över den?"
 
 msgid "detached; run M-Commander again to take it back"
-msgstr ""
+msgstr "frånkopplad; kör M-Commander igen för att ta tillbaka den"
 
 msgid "the session was taken by another terminal"
-msgstr ""
+msgstr "sessionen togs över av en annan terminal"
 
 #, c-format
 msgid "The session cannot be taken: %s\n"
-msgstr ""
+msgstr "Sessionen kan inte tas över: %s\n"
 
 msgid "The session is gone."
-msgstr ""
+msgstr "Sessionen finns inte längre."
 
 msgid "%b %e  %Y"
 msgstr "%e %b  %Y"
@@ -10082,10 +10102,10 @@ msgstr "Användarmeny"
 
 #, c-format
 msgid "%s, line %d: %s"
-msgstr ""
+msgstr "%s, rad %d: %s"
 
 msgid "the first line is not \""
-msgstr ""
+msgstr "den första raden är inte \""
 
 #, fuzzy, c-format
 #| msgid "\"%s\" is already in the hotlist as \"%s\""
@@ -10097,12 +10117,14 @@ msgid ""
 "not a key=value, a [group] or a comment:\n"
 "%s"
 msgstr ""
+"inte ett key=value, en [group] eller en kommentar:\n"
+"%s"
 
 msgid "a key before the first [group]"
-msgstr ""
+msgstr "en nyckel före den första [group]"
 
 msgid "a value without a key"
-msgstr ""
+msgstr "ett värde utan en nyckel"
 
 #, fuzzy, c-format
 #| msgid "\"%s\" is already in the hotlist as \"%s\""
@@ -10110,11 +10132,11 @@ msgid "%s= is already at line %d"
 msgstr "”%s” finns redan i katalogfavoriter som ”%s”"
 
 msgid "the block opened here has no closing line"
-msgstr ""
+msgstr "blocket som öppnades här saknar avslutande rad"
 
 #, c-format
 msgid "[%s]: %s= takes true or false"
-msgstr ""
+msgstr "[%s]: %s= tar true eller false"
 
 #, fuzzy, c-format
 #| msgid "%s is not a regular file"
@@ -10128,6 +10150,8 @@ msgid ""
 "[%s]: %s=%s: \"%s\" is not a type.\n"
 "Types: file, dir, link, broken, char, block, fifo, socket"
 msgstr ""
+"[%s]: %s=%s: \"%s\" är ingen typ.\n"
+"Typer: file, dir, link, broken, char, block, fifo, socket"
 
 #, c-format
 msgid ""
@@ -10206,7 +10230,7 @@ msgstr ""
 "%s"
 
 msgid "always"
-msgstr ""
+msgstr "alltid"
 
 #, fuzzy
 #| msgid "Confirmation"
@@ -10245,19 +10269,19 @@ msgid "&Always"
 msgstr "All&tid"
 
 msgid "&When:"
-msgstr ""
+msgstr "&När:"
 
 msgid "Where the menu opens on it"
-msgstr ""
+msgstr "Där menyn öppnas för den"
 
 msgid "Path mask:"
-msgstr ""
+msgstr "Sökvägsmask:"
 
 msgid "Show on (none checked = any):"
-msgstr ""
+msgstr "Visa för (inget markerat = valfritt):"
 
 msgid "Fifo"
-msgstr ""
+msgstr "Fifo"
 
 #, fuzzy
 #| msgid "Socket (ms):"
@@ -10270,7 +10294,7 @@ msgid "Broken link"
 msgstr "Bokmärkt rad"
 
 msgid "Char device"
-msgstr ""
+msgstr "Teckenenhet"
 
 #, fuzzy
 #| msgid "Block Size"
@@ -10283,7 +10307,7 @@ msgid "E&xecutable only"
 msgstr "Körbar fil"
 
 msgid "Only when files are &marked"
-msgstr ""
+msgstr "Endast när filer är &markerade"
 
 #, fuzzy
 #| msgid "Quit program"
@@ -10291,7 +10315,7 @@ msgid "Needs program:"
 msgstr "Avsluta programmet"
 
 msgid "The menu opens on it:"
-msgstr ""
+msgstr "Menyn öppnas för den:"
 
 #, fuzzy
 #| msgid "Con&tinue"
@@ -10417,16 +10441,18 @@ msgid "&Add an entry"
 msgstr "&Lägg till en post"
 
 msgid "(all entries)"
-msgstr ""
+msgstr "(alla poster)"
 
 #, c-format
 msgid "(%u hidden, Alt-A)"
-msgstr ""
+msgstr "(%u dolda, Alt-A)"
 
 msgid ""
 "The conditions of this entry do not hold here,\n"
 "so it is not run. F4 edits them."
 msgstr ""
+"Villkoren för den här posten gäller inte här,\n"
+"så den körs inte. F4 redigerar dem."
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr "Lägg till ett kommando eller en undermeny för andra poster?"
