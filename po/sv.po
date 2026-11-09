@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:58+0000\n"
+"PO-Revision-Date: 2026-11-09 10:59+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -7825,55 +7825,37 @@ msgstr "%s/%s: scheman"
 msgid "%s/%s/%s: relations"
 msgstr "%s/%s/%s: relationer"
 
-#, fuzzy
-#| msgid "S3 connection"
 msgid "PostgreSQL connections"
-msgstr "S3-anslutning"
+msgstr "PostgreSQL-anslutningar"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot open file\n"
-#| "%s\n"
-#| "for writing"
+#, c-format
 msgid "Cannot open %s for writing"
-msgstr ""
-"Det går inte att öppna filen\n"
-"%s\n"
-"för skrivning"
+msgstr "Kan inte öppna %s för skrivning"
 
-#, fuzzy, c-format
-#| msgid "Cannot resolve %s: %s"
+#, c-format
 msgid "Cannot write %s: %s"
-msgstr "Kan inte slå upp %s: %s"
+msgstr "Kan inte skriva %s: %s"
 
-#, fuzzy
-#| msgid "Cannot write the settings file"
 msgid "Cannot write postgres.ini"
-msgstr "Kan inte skriva inställningsfilen"
+msgstr "Kan inte skriva postgres.ini"
 
-#, fuzzy
-#| msgid "New connection name:"
 msgid "Invalid connection name"
-msgstr "Nytt anslutningsnamn:"
+msgstr "Ogiltigt anslutningsnamn"
 
-#, fuzzy
-#| msgid "Error: out of memory"
 msgid "Out of memory"
-msgstr "Fel: slut på minne"
+msgstr "Slut på minne"
 
 #, c-format
 msgid "No answer from the server in %d s."
 msgstr "Inget svar från servern inom %d s."
 
-#, fuzzy, c-format
-#| msgid "Enter password for %s@%s"
+#, c-format
 msgid "Password for \"%s\":"
-msgstr "Ange lösenord för %s@%s"
+msgstr "Lösenord för \"%s\":"
 
-#, fuzzy, c-format
-#| msgid "Connecting to %s..."
+#, c-format
 msgid "Connecting to \"%s\"..."
-msgstr "Ansluter till %s…"
+msgstr "Ansluter till \"%s\"..."
 
 #, c-format
 msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
@@ -7886,10 +7868,8 @@ msgstr "Kan inte spara lösenordet i ~/.pgpass: %s"
 msgid "Cancelled. The server did not answer: the connection is closed."
 msgstr "Avbruten. Servern svarade inte: anslutningen är stängd."
 
-#, fuzzy
-#| msgid "Cancel"
 msgid "Cancelled."
-msgstr "Avbryt"
+msgstr "Avbruten."
 
 msgid "The server returned nothing."
 msgstr "Servern returnerade ingenting."
@@ -7898,63 +7878,43 @@ msgstr "Servern returnerade ingenting."
 msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
 msgstr "PostgreSQL %s, databas \"%s\" som \"%s\" på %s:%s"
 
-#, fuzzy
-#| msgid "S3 connection"
 msgid "PostgreSQL connection"
-msgstr "S3-anslutning"
+msgstr "PostgreSQL-anslutning"
 
-#, fuzzy
-#| msgid ""
-#| "Connection name must be non-empty and contain no '[', ']' characters."
 msgid "The name of a connection must not be empty nor contain '[' or ']'."
 msgstr ""
-"Anslutningsnamnet får inte vara tomt eller innehålla tecknen '[' och ']'."
+"Namnet på en anslutning får inte vara tomt eller innehålla '[' eller ']'."
 
-#, fuzzy, c-format
-#| msgid "Connected"
+#, c-format
 msgid "Connected: %s"
-msgstr "Ansluten"
+msgstr "Ansluten: %s"
 
-#, fuzzy
-#| msgid "Host:"
 msgid "&Host"
-msgstr "Värd:"
+msgstr "&Värd"
 
 msgid "&URL"
 msgstr "&URL"
 
-#, fuzzy
-#| msgid "Device"
 msgid "&Service"
-msgstr "Enhet"
+msgstr "&Tjänst"
 
-#, fuzzy
-#| msgid "Connect (ms):"
 msgid "Connect by:"
-msgstr "Anslutning (ms):"
+msgstr "Anslut med:"
 
 msgid "URL:"
 msgstr "URL:"
 
-#, fuzzy
-#| msgid "Device"
 msgid "Service:"
-msgstr "Enhet"
+msgstr "Tjänst:"
 
-#, fuzzy
-#| msgid "Database"
 msgid "Database:"
-msgstr "Databas"
+msgstr "Databas:"
 
-#, fuzzy
-#| msgid "Lua modules:"
 msgid "SSL mode:"
-msgstr "Lua-moduler:"
+msgstr "SSL-läge:"
 
-#, fuzzy
-#| msgid "User name"
 msgid "Username:"
-msgstr "Användarnamn"
+msgstr "Användarnamn:"
 
 msgid "Description:"
 msgstr "Beskrivning:"
@@ -7962,38 +7922,27 @@ msgstr "Beskrivning:"
 msgid "Show all d&atabases"
 msgstr "Visa alla d&atabaser"
 
-#, fuzzy
-#| msgid "SFTP password"
 msgid "Sa&ve password"
-msgstr "SFTP-lösenord"
+msgstr "Spara &lösenord"
 
-#, fuzzy
-#| msgid "New MongoDB connection"
 msgid "New PostgreSQL connection"
-msgstr "Ny MongoDB-anslutning"
+msgstr "Ny PostgreSQL-anslutning"
 
-#, fuzzy
-#| msgid "Edit MongoDB connection"
 msgid "Edit PostgreSQL connection"
-msgstr "Redigera MongoDB-anslutning"
+msgstr "Redigera PostgreSQL-anslutning"
 
-#, fuzzy
-#| msgid "shell: authentication failed"
 msgid " Authentication "
-msgstr "shell: autentisering misslyckades"
+msgstr " Autentisering "
 
 msgid "&Read-only: the query editor opens read-only transactions"
 msgstr "&Skrivskyddad: frågeredigeraren öppnar skrivskyddade transaktioner"
 
-#, fuzzy
-#| msgid "FTP connection"
 msgid "&Test connection"
-msgstr "FTP-anslutning"
+msgstr "&Testa anslutning"
 
-#, fuzzy, c-format
-#| msgid "A connection named '%s' already exists."
+#, c-format
 msgid "A connection named \"%s\" already exists."
-msgstr "En anslutning med namnet ”%s” finns redan."
+msgstr "En anslutning med namnet \"%s\" finns redan."
 
 #, fuzzy, c-format
 #| msgid "Cannot save connection: %s"
