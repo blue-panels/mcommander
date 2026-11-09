@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:50+0000\n"
+"PO-Revision-Date: 2026-11-09 10:51+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -596,10 +596,8 @@ msgstr "Sortera efter ändringstid"
 msgid "Sort by access time"
 msgstr "Sortera efter åtkomsttid"
 
-#, fuzzy
-#| msgid "Go to parent directory"
 msgid "Go to the root directory"
-msgstr "Gå till överordnad katalog"
+msgstr "Gå till rotkatalogen"
 
 msgid "Select all files"
 msgstr "Markera alla filer"
@@ -616,10 +614,8 @@ msgstr "Klistra in raderad text"
 msgid "Insert the file name from the active panel"
 msgstr "Infoga filnamnet från den aktiva panelen"
 
-#, fuzzy
-#| msgid "Delete file from plugin panel?"
 msgid "Insert the file name from the passive panel"
-msgstr "Ta bort fil från insticksmodulpanelen?"
+msgstr "Infoga filnamnet från den passiva panelen"
 
 msgid "Help index"
 msgstr "Hjälpindex"
@@ -984,15 +980,11 @@ msgstr "Ta bort den högra filen från sammanslagningen"
 msgid "Merge the two files against a base file"
 msgstr "Sammanfoga de två filerna med en basfil"
 
-#, fuzzy
-#| msgid "Conflict"
 msgid "Next conflict"
-msgstr "Konflikt"
+msgstr "Nästa konflikt"
 
-#, fuzzy
-#| msgid "Previous file"
 msgid "Previous conflict"
-msgstr "Föregående fil"
+msgstr "Föregående konflikt"
 
 #, c-format
 msgid ""
@@ -1599,12 +1591,13 @@ msgstr "Lösenord:"
 msgid "Screens"
 msgstr "Skärmar"
 
-#, fuzzy, c-format
-#| msgid "Cannot read directory contents"
+#, c-format
 msgid ""
 "Cannot read directory contents\n"
 "%s"
-msgstr "Kan inte läsa kataloginnehåll"
+msgstr ""
+"Kan inte läsa kataloginnehållet\n"
+"%s"
 
 #, c-format
 msgid ""
@@ -1617,10 +1610,8 @@ msgstr ""
 msgid "Save"
 msgstr "Spara"
 
-#, fuzzy
-#| msgid "The file exists. Overwrite?"
 msgid "The file exists. Overwrite it?"
-msgstr "Filen finns. Skriva över?"
+msgstr "Filen finns. Vill du skriva över den?"
 
 msgid "&Yes"
 msgstr "&Ja"
@@ -1628,24 +1619,19 @@ msgstr "&Ja"
 msgid "&No"
 msgstr "&Nej"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "%s\n"
-#| "is a directory"
+#, c-format
 msgid ""
 "%s\n"
 "is not a directory"
 msgstr ""
 "%s\n"
-"är en katalog"
+"är ingen katalog"
 
 msgid "UP--DIR"
 msgstr "UPPKAT"
 
-#, fuzzy
-#| msgid "SUB-DIR"
 msgid "DIR"
-msgstr "UNDERKAT"
+msgstr "KAT"
 
 msgid "Name"
 msgstr "Namn"
@@ -1653,10 +1639,8 @@ msgstr "Namn"
 msgid "Size"
 msgstr "Storlek"
 
-#, fuzzy
-#| msgid "Modified:   %s"
 msgid "Modified"
-msgstr "Modifierad: %s"
+msgstr "Ändrad"
 
 msgid "&OK"
 msgstr "&OK"
@@ -1684,10 +1668,8 @@ msgstr "Rensa historik"
 msgid "Do you want clean this history?"
 msgstr "Vill du rensa denna historik?"
 
-#, fuzzy
-#| msgid "Filter: "
 msgid "Filter:"
-msgstr "Filter: "
+msgstr "Filter:"
 
 msgid "Background process:"
 msgstr "Bakgrundsprocess:"
@@ -1908,15 +1890,12 @@ msgstr ""
 msgid "Cannot create temporary merge file"
 msgstr "Det går inte att skapa en tillfällig sammanslagningsfil"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot write target file\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot write the merge result\n"
 "%s"
 msgstr ""
-"Det går inte att skriva målfilen\n"
+"Kan inte skriva sammanslagningsresultatet\n"
 "%s"
 
 #, c-format
@@ -1936,15 +1915,12 @@ msgstr[1] ""
 msgid "Save the merge into:"
 msgstr "Spara sammanslagningen i:"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot save the merge result\n"
 "%s"
 msgstr ""
-"Kan inte spara filen %s:\n"
+"Kan inte spara sammanslagningsresultatet\n"
 "%s"
 
 msgid "&Fastest (Assume large files)"
@@ -1995,10 +1971,8 @@ msgstr "Gå till rad (vänster)"
 msgid "Goto line (right)"
 msgstr "Gå till rad (höger)"
 
-#, fuzzy
-#| msgid "Goto line (right)"
 msgid "Goto line (merged)"
-msgstr "Gå till rad (höger)"
+msgstr "Gå till rad (sammanfogad)"
 
 msgid "Enter line:"
 msgstr "Ange rad:"
@@ -2006,35 +1980,23 @@ msgstr "Ange rad:"
 msgid "ButtonBar|Edit"
 msgstr "Redig"
 
-#, fuzzy
-#| msgid "ButtonBar|Copy"
 msgid "ButtonBar|<-Copy"
-msgstr "Kopier"
+msgstr "←Kopiera"
 
-#, fuzzy
-#| msgid "ButtonBar|Parse"
 msgid "ButtonBar|Base"
-msgstr "Tolkad"
+msgstr "Bas"
 
-#, fuzzy
-#| msgid "ButtonBar|Text"
 msgid "ButtonBar|Next"
-msgstr "Text"
+msgstr "Nästa"
 
-#, fuzzy
-#| msgid "ButtonBar|Copy"
 msgid "ButtonBar|Copy->"
-msgstr "Kopier"
+msgstr "Kopiera→"
 
-#, fuzzy
-#| msgid "ButtonBar|Text"
 msgid "ButtonBar|-Left"
-msgstr "Text"
+msgstr "-Vänster"
 
-#, fuzzy
-#| msgid "ButtonBar|Edit"
 msgid "ButtonBar|-Right"
-msgstr "Redig"
+msgstr "-Höger"
 
 msgid "ButtonBar|Help"
 msgstr "Hjälp"
@@ -2042,15 +2004,11 @@ msgstr "Hjälp"
 msgid "ButtonBar|Save"
 msgstr "Spara"
 
-#, fuzzy
-#| msgid "ButtonBar|Text"
 msgid "ButtonBar|+Left"
-msgstr "Text"
+msgstr "+Vänster"
 
-#, fuzzy
-#| msgid "ButtonBar|Edit"
 msgid "ButtonBar|+Right"
-msgstr "Redig"
+msgstr "+Höger"
 
 msgid "ButtonBar|Search"
 msgstr "Sök"
@@ -2078,10 +2036,8 @@ msgstr ""
 "%s håller på att stängas ner.\n"
 "Spara modifierade filer?"
 
-#, fuzzy
-#| msgid "You have to chdir to extract files first"
 msgid "Save the changes of the two files first."
-msgstr "Du måste byta katalog med chdir för att extrahera filer först"
+msgstr "Spara ändringarna i de två filerna först."
 
 msgid "The common base of the two files"
 msgstr "De två filernas gemensamma bas"
