@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:59+0000\n"
+"PO-Revision-Date: 2026-11-09 11:00+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -7944,15 +7944,13 @@ msgstr "&Testa anslutning"
 msgid "A connection named \"%s\" already exists."
 msgstr "En anslutning med namnet \"%s\" finns redan."
 
-#, fuzzy, c-format
-#| msgid "Cannot save connection: %s"
+#, c-format
 msgid "Cannot save the connection: %s"
-msgstr "Kan inte spara anslutning: %s"
+msgstr "Kan inte spara anslutningen: %s"
 
-#, fuzzy, c-format
-#| msgid "Cannot save connection: %s"
+#, c-format
 msgid "Cannot delete the connection: %s"
-msgstr "Kan inte spara anslutning: %s"
+msgstr "Kan inte ta bort anslutningen: %s"
 
 msgid ""
 "Install coole for the query editor, or psql. Their paths can be given in the "
@@ -7961,22 +7959,19 @@ msgstr ""
 "Installera coole för frågeredigeraren, eller psql. Sökvägarna kan anges i "
 "PostgreSQL-inställningarna."
 
-#, fuzzy, c-format
-#| msgid "Cannot connect to %s:%d"
+#, c-format
 msgid ""
 "Cannot connect to \"%s\":\n"
 "%s"
-msgstr "Kan inte ansluta till %s:%d"
+msgstr ""
+"Kan inte ansluta till \"%s\":\n"
+"%s"
 
-#, fuzzy
-#| msgid "S3 connection"
 msgid "Default connection:"
-msgstr "S3-anslutning"
+msgstr "Standardanslutning:"
 
-#, fuzzy
-#| msgid "Connect timeout:"
 msgid "Connect timeout (s, 0: none):"
-msgstr "Tidsgräns för anslutning:"
+msgstr "Tidsgräns för anslutning (s, 0: ingen):"
 
 msgid "Statement timeout (s, 0: none):"
 msgstr "Satsens tidsgräns (s, 0: ingen):"
@@ -7990,10 +7985,8 @@ msgstr "Visa &systemscheman"
 msgid "psql, without coole (empty: from PATH):"
 msgstr "psql, utan coole (tomt: från PATH):"
 
-#, fuzzy
-#| msgid "Layout settings"
 msgid "PostgreSQL settings"
-msgstr "Layoutinställningar"
+msgstr "PostgreSQL-inställningar"
 
 msgid "A timeout and the rows are whole numbers, 0 for none."
 msgstr "Tidsgränsen och antalet rader ska vara heltal; 0 betyder ingen gräns."
@@ -8098,10 +8091,8 @@ msgstr "SMB-anslutning"
 msgid "Cannot resolve %s: %s"
 msgstr "Kan inte slå upp %s: %s"
 
-#, fuzzy
-#| msgid "SFTP connection"
 msgid "SFTP authentication"
-msgstr "SFTP-anslutning"
+msgstr "SFTP-autentisering"
 
 #, c-format
 msgid "Enter passphrase for key %s"
@@ -8130,15 +8121,11 @@ msgstr "Autentiserar via ssh-agent…"
 msgid "Authenticating with public key..."
 msgstr "Autentiserar med publik nyckel…"
 
-#, fuzzy
-#| msgid "Authenticating with public key..."
 msgid "Authenticating with a default key..."
-msgstr "Autentiserar med publik nyckel…"
+msgstr "Autentiserar med en standardnyckel..."
 
-#, fuzzy
-#| msgid "Authenticating with public key..."
 msgid "Authenticating with keyboard-interactive..."
-msgstr "Autentiserar med publik nyckel…"
+msgstr "Autentiserar med tangentbordsinteraktiv metod..."
 
 msgid "Authenticating with password..."
 msgstr "Autentiserar med lösenord…"
@@ -8813,10 +8800,8 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr "Vald post i listan med fokus, t.ex. sökresultat eller temalistan"
 
-#, fuzzy
-#| msgid "The file under the cursor"
 msgid "Check box under the cursor"
-msgstr "Filen under markören"
+msgstr "Kryssruta under markören"
 
 msgid "Check box under the cursor in the selected row of a table"
 msgstr "Kryssruta under markören på den markerade raden i en tabell"
@@ -8982,18 +8967,14 @@ msgstr ""
 "Rader på båda sidor av en sammanslagning har ändrats; färgen för borttaget "
 "när den saknas"
 
-#, fuzzy
-#| msgid "Line number"
 msgid "Line mark"
-msgstr "Radnummer"
+msgstr "Radmarkering"
 
 msgid "The mark on the frame at the line the keys act on"
 msgstr "Markeringen på ramen vid raden som tangenterna påverkar"
 
-#, fuzzy
-#| msgid "Panel frame"
 msgid "Inactive frame"
-msgstr "Panelram"
+msgstr "Inaktiv ram"
 
 msgid "The frame of the file that is not active"
 msgstr "Ramen för den inaktiva filen"
@@ -9201,18 +9182,14 @@ msgstr "Lodrätt: övre pil"
 msgid "Vertical: bottom arrow"
 msgstr "Lodrätt: nedre pil"
 
-#, fuzzy
-#| msgid "&Vertical"
 msgid "Vertical: track"
-msgstr "&Vertikal"
+msgstr "Lodrätt: spår"
 
 msgid "Default: vert of the lines"
 msgstr "Standard: lodrät linje"
 
-#, fuzzy
-#| msgid "&Vertical"
 msgid "Vertical: thumb"
-msgstr "&Vertikal"
+msgstr "Lodrätt: rullningsknapp"
 
 msgid "Vertical: thumb length"
 msgstr "Lodrätt: rullningsknappens längd"
@@ -9220,26 +9197,20 @@ msgstr "Lodrätt: rullningsknappens längd"
 msgid "Cells of the thumb when it fits, else half the track"
 msgstr "Rullningsknappens celler när den ryms, annars halva spåret"
 
-#, fuzzy
-#| msgid "&Horizontal"
 msgid "Horizontal: left arrow"
-msgstr "&Horisontell"
+msgstr "Vågrätt: vänsterpil"
 
 msgid "Horizontal: right arrow"
 msgstr "Vågrätt: högerpil"
 
-#, fuzzy
-#| msgid "&Horizontal"
 msgid "Horizontal: track"
-msgstr "&Horisontell"
+msgstr "Vågrätt: spår"
 
 msgid "Default: horiz of the lines"
 msgstr "Standard: vågrät linje"
 
-#, fuzzy
-#| msgid "&Horizontal"
 msgid "Horizontal: thumb"
-msgstr "&Horisontell"
+msgstr "Vågrätt: rullningsknapp"
 
 msgid "Horizontal: thumb length"
 msgstr "Vågrätt: rullningsknappens längd"
@@ -9304,10 +9275,8 @@ msgstr "Panelmarkeringar"
 msgid "Find and editor marks"
 msgstr "Sök- och redigerarmarkeringar"
 
-#, fuzzy
-#| msgid "Scrollbar (unused)"
 msgid "Scrollbar"
-msgstr "Rullningslist (oanvänd)"
+msgstr "Rullningslist"
 
 msgid "Spinner"
 msgstr "Aktivitetsindikator"
@@ -9536,10 +9505,8 @@ msgstr "verkar borttappad"
 msgid "attached"
 msgstr "ansluten"
 
-#, fuzzy
-#| msgid "&Permissions"
 msgid "Sessions"
-msgstr "Rä&ttigheter"
+msgstr "Sessioner"
 
 msgid "&Switch"
 msgstr "&Byt"
@@ -9547,10 +9514,8 @@ msgstr "&Byt"
 msgid "&Detach"
 msgstr "&Koppla från"
 
-#, fuzzy
-#| msgid "Create a new Directory"
 msgid "State        Start  Directory"
-msgstr "Skapa en ny katalog"
+msgstr "Status       Start  Katalog"
 
 msgid "That session was started in another kind of terminal."
 msgstr "Den sessionen startades i en annan typ av terminal."
@@ -9575,10 +9540,8 @@ msgstr ""
 msgid "The session did not end: %s"
 msgstr "Sessionen avslutades inte: %s"
 
-#, fuzzy
-#| msgid "&Permissions"
 msgid "Sessions..."
-msgstr "Rä&ttigheter"
+msgstr "Sessioner..."
 
 msgid "another version of M-Commander"
 msgstr "en annan version av M-Commander"
@@ -9586,10 +9549,8 @@ msgstr "en annan version av M-Commander"
 msgid "another kind of terminal (TERM)"
 msgstr "en annan typ av terminal (TERM)"
 
-#, fuzzy
-#| msgid "Compression"
 msgid "M-Commander sessions"
-msgstr "Komprimering"
+msgstr "M-Commander-sessioner"
 
 msgid "attached, looks lost"
 msgstr "ansluten, verkar borttappad"
@@ -9604,15 +9565,11 @@ msgstr "ny session"
 msgid "end session N"
 msgstr "avsluta session N"
 
-#, fuzzy
-#| msgid "&Refresh"
 msgid "refresh"
-msgstr "U&ppdatera"
+msgstr "uppdatera"
 
-#, fuzzy
-#| msgid "shell: %s"
 msgid "shell"
-msgstr "shell: %s"
+msgstr "skal"
 
 #, c-format
 msgid "Session %u is in use in another terminal. End it?"
@@ -9821,10 +9778,9 @@ msgstr "%s, rad %d: %s"
 msgid "the first line is not \""
 msgstr "den första raden är inte \""
 
-#, fuzzy, c-format
-#| msgid "\"%s\" is already in the hotlist as \"%s\""
+#, c-format
 msgid "[%s] is already at line %d"
-msgstr "”%s” finns redan i katalogfavoriter som ”%s”"
+msgstr "[%s] finns redan på rad %d"
 
 #, c-format
 msgid ""
