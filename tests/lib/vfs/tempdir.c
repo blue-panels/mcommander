@@ -113,6 +113,7 @@ START_TEST (test_mc_mkstemps)
     ck_assert_msg (strncmp (pname, begin_pname, strlen (begin_pname)) == 0,
                    "\nstart of %s should be equal to %s\n", pname, begin_pname);
     vfs_path_free (pname_vpath, TRUE);
+    g_free (begin_pname);
 }
 END_TEST
 

@@ -150,6 +150,7 @@ static void
 my_setup (void)
 {
     WRect r;
+    vfs_path_t *vpath;
     edit_arg_t arg;
 
     str_init_strings (NULL);
@@ -168,8 +169,10 @@ my_setup (void)
     edit_options.filesize_threshold = (char *) "64M";
 
     rect_init (&r, 0, 0, 24, 80);
-    edit_arg_init (&arg, vfs_path_from_str ("edit_complete_word_cmd_test_data.txt"), 1);
+    vpath = vfs_path_from_str ("edit_complete_word_cmd_test_data.txt");
+    edit_arg_init (&arg, vpath, 1);
     test_edit = edit_init (NULL, &r, &arg);
+    vfs_path_free (vpath, TRUE);
     memset (&owner, 0, sizeof (owner));
     group_add_widget (&owner.group, WIDGET (test_edit));
     edit_completion_dialog_show__init ();

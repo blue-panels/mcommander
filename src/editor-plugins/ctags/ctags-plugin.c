@@ -546,7 +546,7 @@ ctags_goto_declaration (ctags_data_t *d, WEdit *edit)
         g_free (path);
     }
 
-    g_ptr_array_free (found, FALSE);
+    g_ptr_array_free (found, TRUE);
     g_free (word);
 
     if (d->host->redraw != NULL)
@@ -599,7 +599,7 @@ ctags_find_symbol (ctags_data_t *d, WEdit *edit)
     }
 
     if (found != NULL)
-        g_ptr_array_free (found, FALSE);
+        g_ptr_array_free (found, TRUE);
     g_free (word);
 
     if (d->host->redraw != NULL)
@@ -650,7 +650,7 @@ ctags_grep_refs (ctags_data_t *d, WEdit *edit)
         g_free (word);
         return;
     }
-    g_ptr_array_free (in_index, FALSE);
+    g_ptr_array_free (in_index, TRUE);
 
     /* Build the grep target list in a temp file, one path per line.  This sidesteps
      * the ARG_MAX limit hit by very large indexes when all paths were placed on the
@@ -845,7 +845,7 @@ ctags_search_symbol (ctags_data_t *d, WEdit *edit)
         g_free (path);
     }
 
-    g_ptr_array_free (all, FALSE);
+    g_ptr_array_free (all, TRUE);
     g_free (word);
 
     if (d->host->redraw != NULL)
@@ -924,7 +924,7 @@ ctags_search_current_file (ctags_data_t *d, WEdit *edit)
         g_free (path);
     }
 
-    g_ptr_array_free (found, FALSE);
+    g_ptr_array_free (found, TRUE);
 
     if (d->host->redraw != NULL)
         d->host->redraw (d->host);
@@ -973,7 +973,7 @@ ctags_search_file (ctags_data_t *d, WEdit *edit)
         g_free (path);
     }
 
-    g_ptr_array_free (found, FALSE);
+    g_ptr_array_free (found, TRUE);
     g_free (query);
 
     if (d->host->redraw != NULL)
@@ -1033,7 +1033,7 @@ ctags_complete_symbol (ctags_data_t *d, WEdit *edit)
             }
         }
 
-        g_ptr_array_free (found, FALSE);
+        g_ptr_array_free (found, TRUE);
         g_hash_table_destroy (seen);
         found = deduped;
     }
@@ -1059,7 +1059,7 @@ ctags_complete_symbol (ctags_data_t *d, WEdit *edit)
             d->host->insert_text (d->host, edit, chosen->name, word_len);
     }
 
-    g_ptr_array_free (found, FALSE);
+    g_ptr_array_free (found, TRUE);
     g_free (word);
 
     if (d->host->redraw != NULL)
@@ -1195,7 +1195,7 @@ ctags_build_member_rows (ctags_data_t *d, GPtrArray *entries)
                 g_ptr_array_add (rows, row);
             }
 
-            g_ptr_array_free (children, FALSE);
+            g_ptr_array_free (children, TRUE);
         }
         else
         {
@@ -1260,7 +1260,7 @@ ctags_show_members (ctags_data_t *d, WEdit *edit)
     else
     {
         /* No direct hit - ask the user to enter a scope name. */
-        g_ptr_array_free (copy, FALSE);
+        g_ptr_array_free (copy, TRUE);
         copy = NULL;
         scope = ctags_ui_prompt_scope (cur_word);
         g_free (cur_word);
@@ -1288,7 +1288,7 @@ ctags_show_members (ctags_data_t *d, WEdit *edit)
 
         if (copy->len == 0)
         {
-            g_ptr_array_free (copy, FALSE);
+            g_ptr_array_free (copy, TRUE);
             message (D_NORMAL, _ ("Ctags"), _ ("No members found for '%s'."), scope);
             g_free (scope);
             return;
@@ -1311,7 +1311,7 @@ ctags_show_members (ctags_data_t *d, WEdit *edit)
         g_free (path);
     }
 
-    g_ptr_array_free (copy, FALSE);
+    g_ptr_array_free (copy, TRUE);
     g_free (scope);
 
     if (d->host->redraw != NULL)
@@ -1533,7 +1533,7 @@ ctags_show_history (ctags_data_t *d, WEdit *edit)
 
     if (all->len == 0)
     {
-        g_ptr_array_free (all, FALSE);
+        g_ptr_array_free (all, TRUE);
         message (D_NORMAL, _ ("Ctags"), _ ("Navigation history is empty."));
         return;
     }
@@ -1553,7 +1553,7 @@ ctags_show_history (ctags_data_t *d, WEdit *edit)
         g_free (file);
     }
 
-    g_ptr_array_free (all, FALSE);
+    g_ptr_array_free (all, TRUE);
 
     if (d->host->redraw != NULL)
         d->host->redraw (d->host);

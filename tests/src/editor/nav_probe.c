@@ -157,6 +157,7 @@ fresh (void)
     if (ed != NULL)
     {
         edit_clean (ed);
+        group_remove_widget (ed);
         g_free (ed);
     }
     memset (&owner, 0, sizeof (owner));

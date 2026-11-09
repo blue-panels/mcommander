@@ -138,6 +138,8 @@ START_PARAMETRIZED_TEST (test_complete_engine_fill_completions,
     ck_assert_int_eq (try_complete__lc_start__captured, data->expected_start);
     ck_assert_int_eq (try_complete__lc_end__captured, data->expected_end);
     ck_assert_int_eq (try_complete__flags__captured, data->input_completion_flags);
+
+    widget_destroy (WIDGET (w_input));
 }
 END_PARAMETRIZED_TEST
 

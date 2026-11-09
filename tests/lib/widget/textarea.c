@@ -217,13 +217,16 @@ END_TEST
 START_TEST (test_the_mark_goes_away_when_it_is_turned_off)
 {
     WTextArea *area;
+    char *text;
 
     area = area_new ("alpha\nbeta");
 
     cursor_at (area, 0, 0);
     textarea_mark (area, TRUE);
     cursor_at (area, 1, 4);
-    ck_assert_ptr_ne (textarea_get_marked (area), NULL);
+    text = textarea_get_marked (area);
+    ck_assert_ptr_ne (text, NULL);
+    g_free (text);
 
     textarea_mark (area, FALSE);
     ck_assert_ptr_eq (textarea_get_marked (area), NULL);

@@ -63,7 +63,7 @@ index_ensure_bucket (GHashTable *ht, const char *key)
 static void
 index_bucket_free (gpointer p)
 {
-    g_ptr_array_free ((GPtrArray *) p, FALSE);
+    g_ptr_array_free ((GPtrArray *) p, TRUE);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -176,7 +176,7 @@ ctags_index_free (ctags_index_t *idx)
     if (idx->by_scope != NULL)
         g_hash_table_destroy (idx->by_scope);
     if (idx->all != NULL)
-        g_ptr_array_free (idx->all, FALSE);
+        g_ptr_array_free (idx->all, TRUE);
 
     g_free (idx);
 }
@@ -269,7 +269,7 @@ ctags_index_find_prefix (const ctags_index_t *idx, const char *prefix, gboolean 
 
     if (result->len == 0)
     {
-        g_ptr_array_free (result, FALSE);
+        g_ptr_array_free (result, TRUE);
         return NULL;
     }
 
@@ -333,7 +333,7 @@ ctags_index_find_basename (const ctags_index_t *idx, const char *name)
 
     if (result->len == 0)
     {
-        g_ptr_array_free (result, FALSE);
+        g_ptr_array_free (result, TRUE);
         return NULL;
     }
 
