@@ -6262,33 +6262,23 @@ msgstr "Skriv attribut"
 msgid "Write extended attributes"
 msgstr "Skriv utökade attribut"
 
-#, fuzzy
-#| msgid "Delete single file"
 msgid "Delete subfolders and files"
-msgstr "Ta bort en fil"
+msgstr "Ta bort underkataloger och filer"
 
-#, fuzzy
-#| msgid "&Permissions"
 msgid "Read permissions"
-msgstr "Rä&ttigheter"
+msgstr "Läs behörigheter"
 
-#, fuzzy
-#| msgid "&Permissions"
 msgid "Change permissions"
-msgstr "Rä&ttigheter"
+msgstr "Ändra behörigheter"
 
 msgid "Take ownership"
 msgstr "Ta ägarskap"
 
-#, fuzzy
-#| msgid "Nothing to undo."
 msgid "Nothing"
-msgstr "Inget att ångra."
+msgstr "Ingenting"
 
-#, fuzzy
-#| msgid "XML input is not valid UTF-8"
 msgid "The list is not valid"
-msgstr "XML-indata är inte giltig UTF-8"
+msgstr "Listan är inte giltig"
 
 #, c-format
 msgid ""
@@ -6300,24 +6290,14 @@ msgstr ""
 "Åtkomstkontrollistan ändrades medan dialogrutan var öppen.\n"
 "Öppna den igen innan du sparar."
 
-#, fuzzy
-#| msgid ""
-#| "Cannot stat\n"
-#| "%s"
 msgid "Cannot stat"
-msgstr ""
-"Kan inte läsa filstatus för\n"
-"%s"
+msgstr "Kan inte läsa filstatus"
 
-#, fuzzy
-#| msgid "Cannot read the contents"
 msgid "Cannot read the access control list of"
-msgstr "Kan inte läsa innehållet"
+msgstr "Kan inte läsa åtkomstkontrollistan för"
 
-#, fuzzy
-#| msgid "Cannot read the contents"
 msgid "Cannot read the default access control list of"
-msgstr "Kan inte läsa innehållet"
+msgstr "Kan inte läsa standardåtkomstkontrollistan för"
 
 #, c-format
 msgid ""
@@ -6355,18 +6335,14 @@ msgstr "Kan inte ange en POSIX-åtkomstkontrollista för"
 msgid "Access control lists work only on local files"
 msgstr "Åtkomstkontrollistor fungerar endast för lokala filer"
 
-#, fuzzy
-#| msgid "The file under the cursor"
 msgid "There is no file under the cursor"
-msgstr "Filen under markören"
+msgstr "Det finns ingen fil under markören"
 
 msgid "Access control &list..."
 msgstr "Å&tkomstkontrollista..."
 
-#, fuzzy
-#| msgid "Creating archive..."
 msgid "Reading archive"
-msgstr "Skapar arkiv…"
+msgstr "Läser arkiv"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -6937,25 +6913,19 @@ msgstr "Skapa en katalog"
 msgid "Copy of %s"
 msgstr "Kopia av %s"
 
-#, fuzzy, c-format
-#| msgid "Cannot fetch document: %s"
+#, c-format
 msgid "Cannot fetch %s at %.10s."
-msgstr "Kan inte hämta dokument: %s"
+msgstr "Kan inte hämta %s vid %.10s."
 
-#, fuzzy
-#| msgid "Cannot open temp file: %s"
 msgid "Cannot open the diff viewer."
-msgstr "Kan inte öppna temporär fil: %s"
+msgstr "Kan inte öppna diffvisaren."
 
-#, fuzzy, c-format
-#| msgid "Cannot resolve %s: %s"
+#, c-format
 msgid "Cannot run %s: %s"
-msgstr "Kan inte slå upp %s: %s"
+msgstr "Kan inte köra %s: %s"
 
-#, fuzzy
-#| msgid "Cannot open database."
 msgid "Cannot open the browser"
-msgstr "Kan inte öppna databas."
+msgstr "Kan inte öppna bläddraren"
 
 msgid "GitHub"
 msgstr "GitHub"
@@ -6976,15 +6946,11 @@ msgstr ""
 "eller en GitHub-adress:\n"
 "%s"
 
-#, fuzzy
-#| msgid "Add to favorites"
 msgid "Added to favorites."
-msgstr "Lägg till i favoriter"
+msgstr "Lades till i favoriter."
 
-#, fuzzy
-#| msgid "Add to favorites"
 msgid "Already in favorites."
-msgstr "Lägg till i favoriter"
+msgstr "Finns redan i favoriter."
 
 msgid "Add to favorites"
 msgstr "Lägg till i favoriter"
@@ -6992,20 +6958,15 @@ msgstr "Lägg till i favoriter"
 msgid "Only a favorite can be changed."
 msgstr "Endast en favorit kan ändras."
 
-#, fuzzy
-#| msgid "Change file attributes"
 msgid "Change the favorite"
-msgstr "Ändra filattribut"
+msgstr "Ändra favoriten"
 
-#, fuzzy, c-format
-#| msgid "Cannot get local copy of %s"
+#, c-format
 msgid "The local clone of %s/%s:"
-msgstr "Kan inte hämta lokal kopia av %s"
+msgstr "Den lokala klonen av %s/%s:"
 
-#, fuzzy
-#| msgid "Open file in editor"
 msgid "Open in Git"
-msgstr "Öppna fil i redigeraren"
+msgstr "Öppna i Git"
 
 #, c-format
 msgid "%s is a clone of %s/%s, not of %s/%s."
@@ -7019,10 +6980,9 @@ msgid "This mc cannot open another plugin from a panel."
 msgstr ""
 "Den här mc-instansen kan inte öppna ett annat insticksprogram från en panel."
 
-#, fuzzy, c-format
-#| msgid "Packing: %s"
+#, c-format
 msgid "Showing: %s"
-msgstr "Packar: %s"
+msgstr "Visar: %s"
 
 #, c-format
 msgid "the first %u files, base %.7s"
@@ -7051,19 +7011,16 @@ msgstr ""
 msgid "&Reset"
 msgstr "Å&terställ"
 
-#, fuzzy
-#| msgid "Select to file start"
 msgid "Select a commit first."
-msgstr "Markera till filens början"
+msgstr "Välj först en incheckning."
 
 msgid "Reword is available only for commits on the current branch."
 msgstr ""
 "Omformulering är endast tillgänglig för incheckningar på den aktuella grenen."
 
-#, fuzzy, c-format
-#| msgid "Cannot delete %s"
+#, c-format
 msgid "Cannot find coole executable: %s"
-msgstr "Kan inte ta bort %s"
+msgstr "Kan inte hitta körbar fil för coole: %s"
 
 msgid "Repository path:"
 msgstr "Sökväg till förråd:"
@@ -7486,10 +7443,9 @@ msgstr ""
 "Installera coole för frågeredigeraren, eller mongosh. Sökvägarna kan anges i "
 "MongoDB-inställningarna."
 
-#, fuzzy, c-format
-#| msgid "Cannot stat %s"
+#, c-format
 msgid "Cannot start %s."
-msgstr "Kan inte läsa filstatus för %s"
+msgstr "Kan inte starta %s."
 
 msgid "This build of mc has no terminal for coole."
 msgstr "Den här mc-versionen har ingen terminal för coole."
@@ -7508,10 +7464,9 @@ msgstr "Kan inte öppna temporär fil: %s"
 msgid "Failed to write temp file."
 msgstr "Kunde inte skriva temporär fil."
 
-#, fuzzy, c-format
-#| msgid "Loading..."
+#, c-format
 msgid "Loading %s..."
-msgstr "Laddar…"
+msgstr "Läser in %s..."
 
 #, c-format
 msgid "Cannot list documents in '%s': %s"
@@ -7858,10 +7813,9 @@ msgstr ""
 "Panelen visar bara databasens objekt: ändra dem med SQL i frågeredigeraren "
 "(Alt-F3)."
 
-#, fuzzy, c-format
-#| msgid "Listing databases..."
+#, c-format
 msgid "%s: databases"
-msgstr "Listar databaser…"
+msgstr "%s: databaser"
 
 #, c-format
 msgid "%s/%s: schemas"
