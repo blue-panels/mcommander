@@ -25,7 +25,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-09 10:57+0000\n"
+"PO-Revision-Date: 2026-11-09 10:58+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
@@ -6145,41 +6145,30 @@ msgstr "nej"
 msgid "Mask:"
 msgstr "Mask:"
 
-#, fuzzy
-#| msgid "Word right"
 msgid "no rights"
-msgstr "Ett ord åt höger"
+msgstr "inga rättigheter"
 
 msgid "Entry"
 msgstr "Post"
 
-#, fuzzy
-#| msgid "Advanced"
 msgid "Advanced rights"
-msgstr "Avancerat"
+msgstr "Avancerade rättigheter"
 
-#, fuzzy
-#| msgid "A&ll"
 msgid "A&llow"
-msgstr "A&lla"
+msgstr "T&illåt"
 
 msgid "De&ny"
 msgstr "&Neka"
 
-#, fuzzy
-#| msgid "Special"
 msgid "&Special"
-msgstr "Special"
+msgstr "&Särskilda"
 
-#, fuzzy
-#| msgid "Advanced"
 msgid "Ad&vanced..."
-msgstr "Avancerat"
+msgstr "A&vancerade..."
 
-#, fuzzy, c-format
-#| msgid "There is no group to move \"%s\" to"
+#, c-format
 msgid "There is no user or group \"%s\""
-msgstr "Det finns ingen grupp att flytta ”%s” till"
+msgstr "Det finns ingen användare eller grupp med namnet \"%s\""
 
 msgid ""
 "This entry is inherited from the folder above.\n"
@@ -6198,20 +6187,14 @@ msgstr ""
 msgid "Access control list (Windows)"
 msgstr "Åtkomstkontrollista (Windows)"
 
-#, fuzzy
-#| msgid "File"
 msgid "File:"
-msgstr "Fil"
+msgstr "Fil:"
 
-#, fuzzy
-#| msgid "Owner"
 msgid "Owner:"
-msgstr "Ägare"
+msgstr "Ägare:"
 
-#, fuzzy
-#| msgid "Group"
 msgid "Group:"
-msgstr "Grupp"
+msgstr "Grupp:"
 
 msgid "From:"
 msgstr "Från:"
@@ -6219,10 +6202,8 @@ msgstr "Från:"
 msgid "Who"
 msgstr "Vem"
 
-#, fuzzy
-#| msgid "Right"
 msgid "Rights"
-msgstr "Höger"
+msgstr "Rättigheter"
 
 msgid "F3 shows the rights of an entry one by one."
 msgstr "F3 visar rättigheterna för en post en i taget."
@@ -6230,20 +6211,14 @@ msgstr "F3 visar rättigheterna för en post en i taget."
 msgid "Full control"
 msgstr "Fullständig behörighet"
 
-#, fuzzy
-#| msgid "&Full traffic"
 msgid "&Full control"
-msgstr "&All trafik"
+msgstr "&Fullständig behörighet"
 
-#, fuzzy
-#| msgid "&Modify time"
 msgid "Modify"
-msgstr "Tid &innehållsändr"
+msgstr "Ändra"
 
-#, fuzzy
-#| msgid "&Modify time"
 msgid "&Modify"
-msgstr "Tid &innehållsändr"
+msgstr "Ä&ndra"
 
 msgid "Read & execute"
 msgstr "Läs och &kör"
@@ -6251,65 +6226,41 @@ msgstr "Läs och &kör"
 msgid "Read and e&xecute"
 msgstr "Läs oc&h kör"
 
-#, fuzzy
-#| msgid "Executable"
 msgid "Execute file"
-msgstr "Körbar fil"
+msgstr "Kör fil"
 
-#, fuzzy
-#| msgid "Reverse sort order"
 msgid "Traverse folder"
-msgstr "Omvänd sorteringsordning"
+msgstr "Genomkorsa katalog"
 
-#, fuzzy
-#| msgid "User data"
 msgid "Read data"
-msgstr "Användardata"
+msgstr "Läs data"
 
-#, fuzzy
-#| msgid "Listing format"
 msgid "List folder"
-msgstr "Listformat"
+msgstr "Lista katalog"
 
-#, fuzzy
-#| msgid "Read bytes"
 msgid "Read attributes"
-msgstr "Läs byte"
+msgstr "Läs attribut"
 
-#, fuzzy
-#| msgid "Preserve e&xt2 attributes"
 msgid "Read extended attributes"
-msgstr "Bevara e&xt2-attribut"
+msgstr "Läs utökade attribut"
 
-#, fuzzy
-#| msgid "Write bytes"
 msgid "Write data"
-msgstr "Skriv byte"
+msgstr "Skriv data"
 
-#, fuzzy
-#| msgid "Other files"
 msgid "Create files"
-msgstr "Andra filer"
+msgstr "Skapa filer"
 
-#, fuzzy
-#| msgid "&Append"
 msgid "Append data"
-msgstr "&Lägg till"
+msgstr "Lägg till data"
 
-#, fuzzy
-#| msgid "Create directory"
 msgid "Create folders"
-msgstr "Skapa katalog"
+msgstr "Skapa kataloger"
 
-#, fuzzy
-#| msgid "Write bytes"
 msgid "Write attributes"
-msgstr "Skriv byte"
+msgstr "Skriv attribut"
 
-#, fuzzy
-#| msgid "Preserve e&xt2 attributes"
 msgid "Write extended attributes"
-msgstr "Bevara e&xt2-attribut"
+msgstr "Skriv utökade attribut"
 
 #, fuzzy
 #| msgid "Delete single file"
