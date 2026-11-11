@@ -43,7 +43,10 @@ static char *test_plugins_dir = NULL;
 
 #include "lib/panel-plugin-loader.c"
 
-#define FIXTURE_FILE       "panel-plugin-fixture.so"
+#define FIXTURE_FILE "panel-plugin-fixture.so"
+/* A copy must not have the name of a file in the build directory: dyld looks for the name in
+   DYLD_LIBRARY_PATH first, and meson puts the build directory there. */
+#define COPY_PREFIX        "copy-"
 #define FIXTURE_EAGER_FILE "panel-plugin-eager-fixture.so"
 #define FIXTURE_OTHER_FILE "panel-plugin-other-fixture.so"
 #define FIXTURE_V2_FILE    "panel-plugin-v2-fixture.so"
@@ -145,7 +148,7 @@ setup (void)
     /* the system directory: user packages are opened at start */
     package = g_build_filename (test_plugins_dir, "fixture", (char *) NULL);
     ck_assert_int_eq (g_mkdir_with_parents (package, 0700), 0);
-    test_so = g_build_filename (package, FIXTURE_FILE, (char *) NULL);
+    test_so = g_build_filename (package, COPY_PREFIX FIXTURE_FILE, (char *) NULL);
     g_free (package);
 
     test_cache_file = mc_panel_plugins_cache_file ();
@@ -179,7 +182,7 @@ copy_fixture (const char *built_file, const char *package_dir, const char *packa
     source = g_build_filename (TEST_PANEL_PLUGIN_DIR, built_file, (char *) NULL);
     dir = g_build_filename (package_dir, package, (char *) NULL);
     ck_assert_int_eq (g_mkdir_with_parents (dir, 0700), 0);
-    dest = g_build_filename (dir, built_file, (char *) NULL);
+    dest = g_strconcat (dir, G_DIR_SEPARATOR_S COPY_PREFIX, built_file, (char *) NULL);
     ck_assert (g_file_get_contents (source, &data, &length, NULL));
     ck_assert (g_file_set_contents (dest, data, (gssize) length, NULL));
     g_free (data);
@@ -253,6 +256,7 @@ stub_of_module (void)
 
 /* --------------------------------------------------------------------------------------------- */
 
+#ifdef __linux__
 static gboolean
 module_is_mapped (void)
 {
@@ -266,6 +270,7 @@ module_is_mapped (void)
     g_free (maps);
     return found;
 }
+#endif
 
 /* --------------------------------------------------------------------------------------------- */
 
