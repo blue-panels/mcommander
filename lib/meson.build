@@ -8,6 +8,7 @@ libmc_sources = files(
   'lock.c',
   'panel-plugin-loader.c',
   'panel-plugin.c',
+  'panel_plugin_cache.c',
   'plugin-prefs.c',
   'runtime-events.c',
   'serialize.c',

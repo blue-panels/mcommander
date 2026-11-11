@@ -65,9 +65,12 @@ typedef enum
     MC_PPF_COPY_TREE = 1 << 11,         /* copy_to_local() takes a directory and
                                            writes everything below it; without
                                            this the core walks the tree itself */
-    MC_PPF_VIEW_ON_ENTER = 1 << 12      /* Enter on a regular file that enter()
+    MC_PPF_VIEW_ON_ENTER = 1 << 12,     /* Enter on a regular file that enter()
                                            returns MC_PPR_NOT_SUPPORTED for opens
                                            the viewer instead of doing nothing */
+    MC_PPF_EAGER_LOAD = 1 << 13         /* open the module at every start: what
+                                           register() returns depends on more than
+                                           the module file */
 } mc_pp_flags_t;
 
 /* What a listed entry is beyond its struct stat. Both bits are about a
