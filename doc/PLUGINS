@@ -79,6 +79,27 @@ api_version does not match MC_PANEL_PLUGIN_API_VERSION exactly.  No
 soft/legacy fallback -- rebuild your plugin every time the header
 version is bumped.
 
+A module in the system directory is opened at startup only once.  What
+register() returned is kept in the user's cache directory, in a file
+panel-plugins-<id>.cache of its own for each install of mc (its version,
+as "mc -V" prints it, and its plugin directory), for this very .so file
+(path, inode, size, mtime and ctime).  While that entry is valid, the
+next starts list the plugin from the cache, and the module is opened
+the first time its panel, action, file operation or settings are used.
+A module put in place again, even with the old mtime, is opened and
+described anew at the next start.  One replaced while mc runs, by a
+package update say, is used only when it says all that its entry said;
+otherwise it is not used until mc is restarted.  The cache of an install
+that has not run for 30 days is removed.
+
+So register() must only return a descriptor that depends on nothing but
+the module file, and the plugin must not change that descriptor later:
+the core keeps a copy of it.  A plugin that needs more, such as a menu
+hotkey from the user's config, sets MC_PPF_EAGER_LOAD and is opened at
+every start.  Packages in the user directory are opened at every start
+too: a user copy that cannot be opened leaves its place to the system
+package of the same plugin.
+
 The Manage Plugins dialog (panel menu -> Manage Plugins) lets the
 user enable/disable individual plugins at runtime; a disabled plugin
 is unloaded and does not appear in mc_panel_plugin_list().
@@ -162,6 +183,7 @@ Set in the descriptor's .flags field.  Multiple flags may be combined.
   MC_PPF_VIEW_ON_ENTER        Enter on a regular file that enter() returns
                               MC_PPR_NOT_SUPPORTED for opens the viewer
                               instead of doing nothing
+  MC_PPF_EAGER_LOAD           open the module at every start; see 3.0
 
 
 3.3 Host Services (mc_panel_host_t)

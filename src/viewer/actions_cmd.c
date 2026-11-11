@@ -893,6 +893,7 @@ static void
 mcview_struct_view (WView *view)
 {
     const mc_panel_plugin_t *plugin;
+    char *error = NULL;
     char *path, *command;
     char *hint;
     off_t offset;
@@ -908,10 +909,14 @@ mcview_struct_view (WView *view)
     }
     if (!mcview_ok_to_quit (view))
         return;
-    plugin = mc_panel_plugin_load_named ("mcstruct");
+    plugin = mc_panel_plugin_load_named ("mcstruct", &error);
     if (plugin == NULL)
     {
-        message (D_ERROR, MSG_ERROR, _ ("Plugin %s is not available"), "mcstruct");
+        if (error != NULL)
+            message (D_ERROR, MSG_ERROR, _ ("Cannot load plugin %s:\n%s"), "mcstruct", error);
+        else
+            message (D_ERROR, MSG_ERROR, _ ("Plugin %s is not available"), "mcstruct");
+        g_free (error);
         return;
     }
     path = g_strdup (vfs_path_as_str (view->filename_vpath));

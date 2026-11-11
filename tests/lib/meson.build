@@ -64,6 +64,8 @@ if have_gmodule
       workdir: meson.current_build_dir(),
       suite: 'lib')
   endif
+
+  subdir('panel_plugin')
 endif
 
 subdir('mcconfig')

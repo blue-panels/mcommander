@@ -36,11 +36,13 @@
 #include "lib/editor-plugin.h"
 #include "lib/extension-runtime.h"
 #include "lib/panel-plugin.h"
+#include "lib/panel_plugin_cache.h"
 #include "lib/plugin-prefs.h"
 
 #include "src/editor-plugins/builtin-plugins.h"  // editor_plugins_register_all
 #include "src/filemanager/cmd.h"                 // edit_file_at_line()
 #include "src/filemanager/mcmagic.h"
+#include "src/filemanager/panel.h"
 
 #include "manage_plugins.h"
 
@@ -911,11 +913,14 @@ mp_invoke_settings (const mp_ctx_t *ctx)
     if (r->settings != NULL)
         return r->settings ();
 
-    if (r->panel_plugin == NULL || r->panel_plugin->configure == NULL)
+    if (!mc_panel_plugin_offers (r->panel_plugin, MC_PP_OFFERS_CONFIGURE))
     {
         message (D_NORMAL, _ ("Manage Plugins"), "%s", _ ("This plugin has no settings."));
         return FALSE;
     }
+
+    if (!panel_plugin_ensure_loaded (r->panel_plugin) || r->panel_plugin->configure == NULL)
+        return FALSE;
 
     r->panel_plugin->configure ();
 

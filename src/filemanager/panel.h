@@ -235,6 +235,8 @@ void panel_deinit (void);
 void panel_plugin_apply_default_columns_format (WPanel *panel);
 void panel_plugin_refresh (WPanel *panel);
 void panel_plugin_reload (WPanel *panel);
+/* FALSE when the module could not be opened; the user has been told why. */
+gboolean panel_plugin_ensure_loaded (const mc_panel_plugin_t *plugin);
 void panel_plugin_activate (WPanel *panel, const mc_panel_plugin_t *plugin, const char *open_path);
 gboolean panel_plugin_activate_input_stream (WPanel *panel, const mc_panel_plugin_t *plugin,
                                              const char *display_name,
