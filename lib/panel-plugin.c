@@ -43,6 +43,7 @@
 #include "lib/global.h"
 #include "lib/editor-plugin.h"
 #include "lib/panel-plugin.h"
+#include "lib/panel_plugin_cache.h"
 #include "lib/plugin-prefs.h"
 
 #include "src/filemanager/dir.h"
@@ -445,6 +446,22 @@ mc_panel_plugin_add (const mc_panel_plugin_t *plugin)
         return FALSE;
 
     panel_plugin_registry = g_slist_append (panel_plugin_registry, (gpointer) plugin);
+    return TRUE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+gboolean
+mc_panel_plugin_add_lazy (const mc_panel_plugin_t *stub)
+{
+    if (stub == NULL || stub->name == NULL)
+        return FALSE;
+
+    if (mc_plugin_prefs_is_disabled (MC_PLUGIN_KIND_PANEL, stub->name)
+        || mc_panel_plugin_find_by_name (stub->name) != NULL)
+        return FALSE;
+
+    panel_plugin_registry = g_slist_append (panel_plugin_registry, (gpointer) stub);
     return TRUE;
 }
 

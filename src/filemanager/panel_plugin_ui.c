@@ -42,6 +42,7 @@
 #include "lib/vfs/vfs.h"
 #include "lib/widget.h"
 #include "lib/panel-plugin.h"
+#include "lib/panel_plugin_cache.h"
 
 #include "src/execute.h"
 #include "src/selcodepage.h"  // SELECT_CHARSET_NO_TRANSLATE
@@ -735,13 +736,28 @@ panel_plugin_activate_finish (WPanel *panel, const mc_panel_plugin_t *plugin, mc
 
 /* --------------------------------------------------------------------------------------------- */
 
+gboolean
+panel_plugin_ensure_loaded (const mc_panel_plugin_t *plugin)
+{
+    char *error = NULL;
+
+    if (mc_panel_plugin_ensure_loaded (plugin, &error))
+        return TRUE;
+
+    message (D_ERROR, MSG_ERROR, _ ("Cannot load plugin %s:\n%s"), plugin->name, error);
+    g_free (error);
+    return FALSE;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 void
 panel_plugin_activate (WPanel *panel, const mc_panel_plugin_t *plugin, const char *open_path)
 {
     mc_panel_host_t *host;
     void *new_data;
 
-    if (panel == NULL || plugin == NULL)
+    if (panel == NULL || plugin == NULL || !panel_plugin_ensure_loaded (plugin))
         return;
 
     /* Keep the previous plugin active until the new open() returns data. */
@@ -787,7 +803,9 @@ panel_plugin_activate_input_stream (WPanel *panel, const mc_panel_plugin_t *plug
     mc_panel_host_t *host;
     void *new_data;
 
-    if (panel == NULL || plugin == NULL || plugin->open_input_stream == NULL || stream == NULL)
+    if (panel == NULL || plugin == NULL || stream == NULL
+        || !mc_panel_plugin_offers (plugin, MC_PP_OFFERS_OPEN_INPUT_STREAM)
+        || !panel_plugin_ensure_loaded (plugin) || plugin->open_input_stream == NULL)
         return FALSE;
 
     host = g_new0 (mc_panel_host_t, 1);
@@ -884,6 +902,39 @@ panel_plugin_find_file_operation (const mc_panel_plugin_t *plugin, const char *o
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* Loading replaces the array of operations, so the search comes after it. */
+static const mc_pp_file_operation_t *
+panel_plugin_loaded_operation (const char *plugin_name, const char *operation_name,
+                               const mc_panel_plugin_t **plugin)
+{
+    *plugin = mc_panel_plugin_find_by_name (plugin_name);
+    if (*plugin == NULL || panel_plugin_find_file_operation (*plugin, operation_name) == NULL
+        || !panel_plugin_ensure_loaded (*plugin))
+        return NULL;
+
+    return panel_plugin_find_file_operation (*plugin, operation_name);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static gboolean
+panel_plugin_operation_may_open (const mc_panel_plugin_t *plugin, const char *operation_name,
+                                 const char *name)
+{
+    const mc_pp_file_operation_t *operation;
+
+    /* the module may differ from its description: ask the operation that will be opened */
+    if (!mc_panel_plugin_ensure_loaded (plugin, NULL))
+        return FALSE;
+
+    operation = panel_plugin_find_file_operation (plugin, operation_name);
+    return operation != NULL && operation->kind == MC_PP_FILE_OPERATION_OPEN
+        && operation->open_input_stream != NULL && operation->may_open_name != NULL
+        && operation->may_open_name (name);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 gboolean
 panel_plugin_open_entry_by_operation (WPanel *panel, const char *fname, const char *plugin_name,
                                       const char *operation_name, char **local_copy)
@@ -897,8 +948,7 @@ panel_plugin_open_entry_by_operation (WPanel *panel, const char *fname, const ch
         || panel->plugin_data == NULL)
         return FALSE;
 
-    target = mc_panel_plugin_find_by_name (plugin_name);
-    operation = panel_plugin_find_file_operation (target, operation_name);
+    operation = panel_plugin_loaded_operation (plugin_name, operation_name, &target);
     if (operation == NULL || operation->kind != MC_PP_FILE_OPERATION_OPEN
         || operation->open_input_stream == NULL)
     {
@@ -958,8 +1008,7 @@ panel_plugin_open_local_file_by_operation (WPanel *panel, const char *display_na
         || operation_name == NULL)
         return FALSE;
 
-    target = mc_panel_plugin_find_by_name (plugin_name);
-    operation = panel_plugin_find_file_operation (target, operation_name);
+    operation = panel_plugin_loaded_operation (plugin_name, operation_name, &target);
     if (operation == NULL || operation->kind != MC_PP_FILE_OPERATION_OPEN
         || operation->open_input_stream == NULL)
         return FALSE;
@@ -996,8 +1045,9 @@ panel_plugin_open_entry_auto (WPanel *panel, const char *fname, char **local_cop
             const mc_pp_file_operation_t *operation = &plugin->file_operations[i];
 
             if (operation->kind == MC_PP_FILE_OPERATION_OPEN && operation->name != NULL
-                && operation->open_input_stream != NULL && operation->may_open_name != NULL
-                && operation->may_open_name (fname)
+                && mc_panel_plugin_operation_offers (
+                    plugin, i, MC_PP_OP_OFFERS_OPEN_INPUT_STREAM | MC_PP_OP_OFFERS_MAY_OPEN_NAME)
+                && panel_plugin_operation_may_open (plugin, operation->name, fname)
                 && panel_plugin_open_entry_by_operation (panel, fname, plugin->name,
                                                          operation->name, local_copy))
                 return TRUE;
@@ -1028,8 +1078,9 @@ panel_plugin_open_local_file_auto (WPanel *panel, const char *display_name, cons
             const mc_pp_file_operation_t *operation = &plugin->file_operations[i];
 
             if (operation->kind == MC_PP_FILE_OPERATION_OPEN && operation->name != NULL
-                && operation->open_input_stream != NULL && operation->may_open_name != NULL
-                && operation->may_open_name (display_name)
+                && mc_panel_plugin_operation_offers (
+                    plugin, i, MC_PP_OP_OFFERS_OPEN_INPUT_STREAM | MC_PP_OP_OFFERS_MAY_OPEN_NAME)
+                && panel_plugin_operation_may_open (plugin, operation->name, display_name)
                 && panel_plugin_open_local_file_by_operation (panel, display_name, local_path,
                                                               plugin->name, operation->name))
                 return TRUE;
@@ -1100,8 +1151,7 @@ panel_plugin_view_entry_by_operation (WPanel *panel, const char *fname, const ch
         return FALSE;
     }
 
-    target = mc_panel_plugin_find_by_name (plugin_name);
-    operation = panel_plugin_find_file_operation (target, operation_name);
+    operation = panel_plugin_loaded_operation (plugin_name, operation_name, &target);
     if (operation == NULL || operation->kind != MC_PP_FILE_OPERATION_VIEW
         || operation->view_input_stream == NULL)
     {
@@ -1163,6 +1213,13 @@ panel_plugin_view_operation_usable (const char *plugin_name, const char *operati
     const mc_pp_file_operation_t *operation;
 
     target = mc_panel_plugin_find_by_name (plugin_name);
+    if (panel_plugin_find_file_operation (target, operation_name) == NULL)
+        return FALSE;
+
+    /* a module that cannot be opened is not usable: the plain viewer takes the file */
+    if (!mc_panel_plugin_ensure_loaded (target, NULL))
+        return FALSE;
+
     operation = panel_plugin_find_file_operation (target, operation_name);
     if (operation == NULL)
         return FALSE;
@@ -1190,8 +1247,7 @@ panel_plugin_view_local_file_by_operation (WPanel *panel, const char *display_na
         || operation_name == NULL || view_path == NULL)
         return FALSE;
 
-    target = mc_panel_plugin_find_by_name (plugin_name);
-    operation = panel_plugin_find_file_operation (target, operation_name);
+    operation = panel_plugin_loaded_operation (plugin_name, operation_name, &target);
     if (operation == NULL)
         return FALSE;
 
@@ -1444,7 +1500,8 @@ panel_plugin_collect_file_list_sinks (void)
     {
         const mc_panel_plugin_t *pp = (const mc_panel_plugin_t *) iter->data;
 
-        if ((pp->flags & MC_PPF_ACCEPTS_FILE_LIST) != 0 && pp->open_file_list != NULL)
+        if ((pp->flags & MC_PPF_ACCEPTS_FILE_LIST) != 0
+            && mc_panel_plugin_offers (pp, MC_PP_OFFERS_OPEN_FILE_LIST))
             sinks = g_slist_prepend (sinks, (gpointer) pp);
     }
 
@@ -1462,7 +1519,8 @@ panel_plugin_have_file_list_sink (void)
     {
         const mc_panel_plugin_t *pp = (const mc_panel_plugin_t *) iter->data;
 
-        if ((pp->flags & MC_PPF_ACCEPTS_FILE_LIST) != 0 && pp->open_file_list != NULL)
+        if ((pp->flags & MC_PPF_ACCEPTS_FILE_LIST) != 0
+            && mc_panel_plugin_offers (pp, MC_PP_OFFERS_OPEN_FILE_LIST))
             return TRUE;
     }
     return FALSE;
@@ -1478,7 +1536,8 @@ panel_plugin_open_file_list_one (WPanel *panel, const mc_panel_plugin_t *plugin,
     mc_panel_host_t *host;
     void *new_data;
 
-    if (plugin->open_file_list == NULL)
+    if (!mc_panel_plugin_offers (plugin, MC_PP_OFFERS_OPEN_FILE_LIST)
+        || !panel_plugin_ensure_loaded (plugin) || plugin->open_file_list == NULL)
         return FALSE;
 
     host = g_new0 (mc_panel_host_t, 1);
@@ -1616,7 +1675,7 @@ panel_plugin_run_action (WPanel *panel, const mc_panel_plugin_t *plugin, int act
     void *pdata;
     const char *path;
 
-    if (panel == NULL || plugin == NULL)
+    if (panel == NULL || plugin == NULL || !panel_plugin_ensure_loaded (plugin))
         return;
     if (plugin->actions == NULL || action_index < 0 || action_index >= plugin->action_count
         || (plugin->actions[action_index].callback == NULL

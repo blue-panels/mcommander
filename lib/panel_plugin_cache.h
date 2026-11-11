@@ -58,6 +58,17 @@ void mc_pp_cache_store (mc_pp_cache_t *cache, const char *so_path, const struct 
 /* Writes the file if it changed; entries neither made into stubs nor stored are dropped. */
 void mc_pp_cache_close (mc_pp_cache_t *cache);
 
+/* The registry side of a stub; these are for the core, not for plugins. */
+gboolean mc_panel_plugin_add_lazy (const mc_panel_plugin_t *stub);
+/* Open the module behind a stub.  TRUE at once for a plugin that is loaded.  On FALSE @error,
+   if not NULL, gets the reason, and the plugin offers nothing from then on. */
+gboolean mc_panel_plugin_ensure_loaded (const mc_panel_plugin_t *plugin, char **error);
+/* Does the plugin have all of @what (mc_pp_offers_t bits), loaded or not.  Ask this, not the
+   callback fields: those of a plugin that is not loaded yet are NULL. */
+gboolean mc_panel_plugin_offers (const mc_panel_plugin_t *plugin, int what);
+/* the same for an operation, @what: mc_pp_op_offers_t bits */
+gboolean mc_panel_plugin_operation_offers (const mc_panel_plugin_t *plugin, int index, int what);
+
 /*** inline functions ****************************************************************************/
 
 #endif

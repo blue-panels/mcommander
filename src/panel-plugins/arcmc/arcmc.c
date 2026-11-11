@@ -194,7 +194,7 @@ static const mc_panel_plugin_t arcmc_plugin = {
     .proto = "Arcmc",
     .prefix = "Arcmc:",
     .flags = MC_PPF_NAVIGATE | MC_PPF_GET_FILES | MC_PPF_CUSTOM_TITLE | MC_PPF_SHOW_IN_MENU
-        | MC_PPF_COPY_TREE | MC_PPF_VIEW_ON_ENTER,
+        | MC_PPF_COPY_TREE | MC_PPF_VIEW_ON_ENTER | MC_PPF_EAGER_LOAD,
 
     .open = arcmc_open,
     .close = arcmc_close,

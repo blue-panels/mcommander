@@ -500,8 +500,9 @@ const mc_panel_plugin_t *mc_panel_plugin_find_by_prefix (const char *prefix);
 extern void (*const mc_plugin_widgets[]) (void);
 
 void mc_panel_plugins_load (void);
-/* load one package by name without the others; NULL when there is none */
-const mc_panel_plugin_t *mc_panel_plugin_load_named (const char *name);
+/* load one package by name without the others; NULL when there is none, or when it cannot be
+   opened, and then @error, if not NULL, gets the reason */
+const mc_panel_plugin_t *mc_panel_plugin_load_named (const char *name, char **error);
 void mc_panel_plugins_shutdown (void);
 
 /*** inline functions ****************************************************************************/

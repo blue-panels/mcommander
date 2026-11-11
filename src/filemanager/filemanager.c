@@ -2095,6 +2095,7 @@ static gboolean
 plugin_show_file (const vfs_path_t *vpath, const char *hint)
 {
     const mc_panel_plugin_t *plugin;
+    char *error = NULL;
     const char *path;
     int i;
 
@@ -2104,10 +2105,14 @@ plugin_show_file (const vfs_path_t *vpath, const char *hint)
         return FALSE;
     }
     path = vfs_path_as_str (vpath);
-    plugin = mc_panel_plugin_load_named ("mcstruct");
+    plugin = mc_panel_plugin_load_named ("mcstruct", &error);
     if (plugin == NULL)
     {
-        message (D_ERROR, MSG_ERROR, _ ("Plugin %s is not available"), "mcstruct");
+        if (error != NULL)
+            message (D_ERROR, MSG_ERROR, _ ("Cannot load plugin %s:\n%s"), "mcstruct", error);
+        else
+            message (D_ERROR, MSG_ERROR, _ ("Plugin %s is not available"), "mcstruct");
+        g_free (error);
         return FALSE;
     }
     for (i = 0; i < plugin->file_operation_count; i++)
