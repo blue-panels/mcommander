@@ -241,6 +241,16 @@ panel_magic_runtime_view (const mc_magic_action_t *action, const char *display_n
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A local panel, or a plugin whose entries are files on the disk below the panel directory */
+static gboolean
+panel_has_local_files (const WPanel *panel)
+{
+    return !panel->is_plugin_panel
+        || (panel->plugin != NULL && (panel->plugin->flags & MC_PPF_LOCAL_FILES) != 0);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static gboolean
 panel_magic_view_local_file (WPanel *panel, const char *fname, const vfs_path_t *full_name_vpath,
                              WView *target)
@@ -443,7 +453,7 @@ do_view_cmd (WPanel *panel, gboolean plain_view)
     {
         gboolean handled;
 
-        if (panel->is_plugin_panel)
+        if (!panel_has_local_files (panel))
             handled = panel_magic_view_plugin_file (panel, fe, NULL, &magic_copy);
         else
         {
@@ -571,7 +581,7 @@ mcview_load_panel_current (struct WView *view, WPanel *panel)
     {
         gboolean handled;
 
-        if (panel->is_plugin_panel)
+        if (!panel_has_local_files (panel))
             handled = panel_magic_view_plugin_file (panel, fe, (WView *) view, &magic_copy);
         else
         {
