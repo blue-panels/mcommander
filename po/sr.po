@@ -15,10 +15,10 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-10-12 22:27+0000\n"
+"PO-Revision-Date: 2026-11-12 15:50+0000\n"
 "Last-Translator: Strahinja <strahinja@noreply.codeberg.org>\n"
-"Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/"
-">\n"
+"Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/>"
+"\n"
 "Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -483,16 +483,16 @@ msgid "Scroll panel right"
 msgstr "Скролуј панел десно"
 
 msgid "Scroll to left edge"
-msgstr ""
+msgstr "Скролуј до леве ивице"
 
 msgid "Scroll to right edge"
-msgstr ""
+msgstr "Скролуј до десне ивице"
 
 msgid "Other panel cd here"
-msgstr ""
+msgstr "Други панел: cd овде"
 
 msgid "Other panel cd link target"
-msgstr ""
+msgstr "Други панел: cd у одредиште везе"
 
 #, fuzzy
 #| msgid "Close file"
@@ -523,16 +523,16 @@ msgid "Panel plugin menu"
 msgstr "Подела панела"
 
 msgid "Drive menu (left panel)"
-msgstr ""
+msgstr "Мени дискова (леви панел)"
 
 msgid "Drive menu (right panel)"
-msgstr ""
+msgstr "Мени дискова (десни панел)"
 
 msgid "Console of the panel plugin"
-msgstr ""
+msgstr "Конзола панела са додацима"
 
 msgid "Sync other panel"
-msgstr ""
+msgstr "Синхронизуј други панел"
 
 #, fuzzy
 #| msgid "Use panel sort mo&de"
@@ -540,7 +540,7 @@ msgid "Next sort mode"
 msgstr "Користи &режим сортирања панела"
 
 msgid "Previous sort mode"
-msgstr ""
+msgstr "Претходни режим сортирања"
 
 #, fuzzy
 #| msgid "Sort order"
@@ -548,10 +548,10 @@ msgid "Reverse sort order"
 msgstr "Поредак сортирања"
 
 msgid "Sort by name"
-msgstr ""
+msgstr "Сортирај по називу"
 
 msgid "Sort by version"
-msgstr ""
+msgstr "Сортирај по верзији"
 
 #, fuzzy
 #| msgid "Ignore tab &expansion"
@@ -559,10 +559,10 @@ msgid "Sort by extension"
 msgstr "Занемари &експанзију табулатора"
 
 msgid "Sort by size"
-msgstr ""
+msgstr "Сортирај по величини"
 
 msgid "Sort by modification time"
-msgstr ""
+msgstr "Сортирај по времену измене"
 
 #, fuzzy
 #| msgid "Print data directory"
@@ -625,7 +625,7 @@ msgid "Far listing mode 10"
 msgstr "Режим сортирања панела"
 
 msgid "Keep files unsorted"
-msgstr ""
+msgstr "Не сортирај датотеке"
 
 #, fuzzy
 #| msgid "C&hange time"
@@ -653,25 +653,25 @@ msgid "Unselect all files"
 msgstr "Одбирање"
 
 msgid "Focus the default button"
-msgstr ""
+msgstr "Фокусирај подразумевано дугме"
 
 msgid "Yank (paste kill buffer)"
-msgstr ""
+msgstr "Повуци (налепи бафер обрисаног)"
 
 msgid "Insert the file name from the active panel"
-msgstr ""
+msgstr "Убаци назив датотеке из активног панела"
 
 msgid "Insert the file name from the passive panel"
-msgstr ""
+msgstr "Убаци назив датотеке из пасивног панела"
 
 msgid "Help index"
-msgstr ""
+msgstr "Садржај помоћи"
 
 msgid "Go back"
-msgstr ""
+msgstr "Иди назад"
 
 msgid "Next link"
-msgstr ""
+msgstr "Следећа веза"
 
 #, fuzzy
 #| msgid "&Previous"
@@ -690,181 +690,127 @@ msgid "Forget directory"
 msgstr "Заборави директоријум"
 
 msgid "Toggle attribute and move down"
-msgstr ""
+msgstr "Смени атрибут и иди доле"
 
 msgid "Scroll up"
-msgstr ""
+msgstr "Скролуј навише"
 
 msgid "Scroll down"
-msgstr ""
+msgstr "Скролуј наниже"
 
-#, fuzzy
-#| msgid "Unselect"
 msgid "Deselect all"
-msgstr "Одбирање"
+msgstr "Од-одабери све"
 
-#, fuzzy
-#| msgid "Select &group"
 msgid "Select page up"
-msgstr "Изабери &групу"
+msgstr "Изабери страницу навише"
 
-#, fuzzy
-#| msgid "Select language"
 msgid "Select page down"
-msgstr "Изабери језик"
+msgstr "Изабери страницу наниже"
 
-#, fuzzy
-#| msgid "Close file"
 msgid "Close editor"
-msgstr "Затвори датотеку"
+msgstr "Затвори уређивач"
 
 msgid "Paragraph up"
-msgstr ""
+msgstr "Пасус навише"
 
 msgid "Paragraph down"
-msgstr ""
+msgstr "Пасус наниже"
 
-#, fuzzy
-#| msgid "Extension file edit"
 msgid "Open file in editor"
-msgstr "Уређивање датотеке проширења"
+msgstr "Отвори датотеку у уређивачу"
 
-#, fuzzy
-#| msgid "Select"
 msgid "Select word"
-msgstr "Бирање"
+msgstr "Изабери реч"
 
-#, fuzzy
-#| msgid "Select language"
 msgid "Select line"
-msgstr "Изабери језик"
+msgstr "Изабери линију"
 
-#, fuzzy
-#| msgid "Select"
 msgid "Select all"
-msgstr "Бирање"
+msgstr "Изабери све"
 
-#, fuzzy
-#| msgid "In se&lection"
 msgid "Column selection mode"
-msgstr "У &избору"
+msgstr "Режим избора колоне"
 
-#, fuzzy
-#| msgid "Save block"
 msgid "Save selected block"
-msgstr "Сачувај блок"
+msgstr "Сачувај изабрани блок"
 
 msgid "Insert file"
 msgstr "Убаци датотеку"
 
-#, fuzzy
-#| msgid "&Toggle ins/overw"
 msgid "Toggle insert/overwrite"
-msgstr "&Смени уметање/преписивање"
+msgstr "Смени уметање/преписивање"
 
-#, fuzzy
-#| msgid "Insert &date/time"
 msgid "Insert date/time (Lua action)"
-msgstr "Убаци &датум/време"
+msgstr "Убаци датум/време (Lua акција)"
 
-#, fuzzy
-#| msgid "Deleting"
 msgid "Delete line"
-msgstr "Брисање"
+msgstr "Обриши линију"
 
-#, fuzzy
-#| msgid "file1 file2"
 msgid "Mail file"
-msgstr "дато1 дато2"
+msgstr "Пошаљи датотеку мејлом"
 
-#, fuzzy
-#| msgid "Command &history"
 msgid "Undo history"
-msgstr "Историја &наредби"
+msgstr "Историја опозива"
 
-#, fuzzy
-#| msgid "&Format paragraph"
 msgid "Format paragraph (Lua action)"
-msgstr "&Форматирај пасус"
+msgstr "Форматирај пасус (Lua акција)"
 
-#, fuzzy
-#| msgid "Left bracket"
 msgid "Match bracket"
-msgstr "Лева угласта заграда"
+msgstr "Нађи заграду"
 
 msgid "Sort selection (Lua action)"
-msgstr ""
+msgstr "Сортирај избор (Lua акција)"
 
 msgid "Insert command output (Lua action)"
-msgstr ""
+msgstr "Убаци излаз наредбе (Lua акција)"
 
 msgid "Start macro recording"
-msgstr ""
+msgstr "Почни снимање макроа"
 
 msgid "Stop macro recording"
-msgstr ""
+msgstr "Прекини снимање макроа"
 
 msgid "Toggle macro recording"
-msgstr ""
+msgstr "Смени снимање макроа"
 
 msgid "Macro explorer"
-msgstr ""
+msgstr "Прегледач макроа"
 
-#, fuzzy
-#| msgid "Repeat last commands"
 msgid "Repeat last macro"
-msgstr "Понови последње наредбе"
+msgstr "Понови последњи макро"
 
-#, fuzzy
-#| msgid "S&pell check"
 msgid "Spell check"
-msgstr "Провери &правопис"
+msgstr "Провери правопис"
 
-#, fuzzy
-#| msgid "S&pell check"
 msgid "Spell check current word"
-msgstr "Провери &правопис"
+msgstr "Провери правопис текуће речи"
 
-#, fuzzy
-#| msgid "Select language"
 msgid "Select spell language"
-msgstr "Изабери језик"
+msgstr "Изабери језик за проверу правописа"
 
-#, fuzzy
-#| msgid "&Flush bookmarks"
 msgid "Clear all bookmarks"
-msgstr "Обриши све &обележиваче"
+msgstr "Обриши све обележиваче"
 
-#, fuzzy
-#| msgid "&Next bookmark"
 msgid "Next bookmark"
-msgstr "&Следећи обележивач"
+msgstr "Следећи обележивач"
 
-#, fuzzy
-#| msgid "&Prev bookmark"
 msgid "Previous bookmark"
-msgstr "&Претходни обележивач"
+msgstr "Претходни обележивач"
 
 msgid "Toggle code fold"
-msgstr ""
+msgstr "Смени замотавање кода"
 
-#, fuzzy
-#| msgid "&Find all"
 msgid "Unfold all"
-msgstr "&Тражи све"
+msgstr "Одмотај све"
 
-#, fuzzy
-#| msgid "&Toggle line state"
 msgid "Toggle line filter"
-msgstr "&Промени стање линије"
+msgstr "Промени филтер линије"
 
 msgid "Filter by selection or word"
-msgstr ""
+msgstr "Филтрирај према избору или речи"
 
-#, fuzzy
-#| msgid "Changes to file lost"
 msgid "Select to file start"
-msgstr "Измене датотеке су изгубљене"
+msgstr "Изабери до почетка датотеке"
 
 msgid "Select to file end"
 msgstr "Изабери до краја датотеке"
@@ -875,200 +821,146 @@ msgstr "Изабери до почетка странице"
 msgid "Select to page end"
 msgstr "Изабери до краја странице"
 
-#, fuzzy
-#| msgid "Select &group"
 msgid "Select scroll up"
-msgstr "Изабери &групу"
+msgstr "Изабери скролујући навише"
 
 msgid "Select scroll down"
-msgstr ""
+msgstr "Изабери скролујући наниже"
 
-#, fuzzy
-#| msgid "Select &group"
 msgid "Select paragraph up"
-msgstr "Изабери &групу"
+msgstr "Изабери пасус навише"
 
 msgid "Select paragraph down"
-msgstr ""
+msgstr "Изабери пасус наниже"
 
-#, fuzzy
-#| msgid "U&nselect group"
 msgid "Column select page up"
-msgstr "&Одизабери групу"
+msgstr "Колонски изабери страницу навише"
 
 msgid "Column select page down"
-msgstr ""
+msgstr "Колонски изабери страницу наниже"
 
 msgid "Column select left"
-msgstr ""
+msgstr "Колонски изабери налево"
 
 msgid "Column select right"
-msgstr ""
+msgstr "Колонски изабери надесно"
 
-#, fuzzy
-#| msgid "U&nselect group"
 msgid "Column select up"
-msgstr "&Одизабери групу"
+msgstr "Колонски изабери навише"
 
-#, fuzzy
-#| msgid "In se&lection"
 msgid "Column select down"
-msgstr "У &избору"
+msgstr "Колонски изабери наниже"
 
-#, fuzzy
-#| msgid "U&nselect group"
 msgid "Column select scroll up"
-msgstr "&Одизабери групу"
+msgstr "Колонски изабери скролујући навише"
 
 msgid "Column select scroll down"
-msgstr ""
+msgstr "Колонски изабери скролујући наниже"
 
-#, fuzzy
-#| msgid "&Format paragraph"
 msgid "Column select paragraph up"
-msgstr "&Форматирај пасус"
+msgstr "Колонски изабери пасус навише"
 
 msgid "Column select paragraph down"
-msgstr ""
+msgstr "Колонски изабери пасус наниже"
 
 msgid "Shift block left"
-msgstr ""
+msgstr "Помери блок налево"
 
 msgid "Shift block right"
-msgstr ""
+msgstr "Помери блок надесно"
 
 msgid "Insert literal character (Lua action)"
-msgstr ""
+msgstr "Убаци дословни знак (Lua акција)"
 
-#, fuzzy
-#| msgid "&Visible trailing spaces"
 msgid "Toggle visible tabs/spaces"
-msgstr "&Видљиви размаци на крају"
+msgstr "Смени видљивост табова/размака"
 
 msgid "Toggle control characters"
-msgstr ""
+msgstr "Смени контролне знаке"
 
-#, fuzzy
-#| msgid "Toggle s&yntax highlighting"
 msgid "Toggle syntax highlighting"
-msgstr "Смени &истицање синтаксе"
+msgstr "Смени истицање синтаксе"
 
 msgid "Choose syntax highlighting"
 msgstr "Изаберите истицање синтаксе"
 
-#, fuzzy
-#| msgid "Togg&le right margin"
 msgid "Toggle right margin"
-msgstr "Смени &десну маргину"
+msgstr "Смени десну маргину"
 
-#, fuzzy
-#| msgid "Panel options"
 msgid "Save mode options"
-msgstr "Опције панела"
+msgstr "Сачувај опције режима"
 
-#, fuzzy
-#| msgid "With builtin editor"
 msgid "About editor"
-msgstr "Са уграђеним уређивачем"
+msgstr "О уређивачу"
 
-#, fuzzy
-#| msgid "Executable &first"
 msgid "Execute script"
-msgstr "Прво &извршне"
+msgstr "Изврши скрипт"
 
 msgid "Move window"
-msgstr ""
+msgstr "Премести прозор"
 
-#, fuzzy
-#| msgid "&Resize"
 msgid "Resize window"
-msgstr "Промени &величину"
+msgstr "Промени величину прозора"
 
-#, fuzzy
-#| msgid "&Toggle fullscreen"
 msgid "Toggle fullscreen"
-msgstr "Смени приказ преко &целог екрана"
+msgstr "Смени приказ преко целог екрана"
 
-#, fuzzy
-#| msgid "&Window"
 msgid "Window list"
-msgstr "&Прозор"
+msgstr "Листа прозора"
 
 msgid "Next window"
-msgstr ""
+msgstr "Следећи прозор"
 
-#, fuzzy
-#| msgid "&Previous"
 msgid "Previous window"
-msgstr "&Претходно"
+msgstr "Претходни прозор"
 
-#, fuzzy
-#| msgid "&Toggle line state"
 msgid "Toggle line wrap"
-msgstr "&Промени стање линије"
+msgstr "Смени прелом линије"
 
 msgid "Hex edit mode"
-msgstr ""
+msgstr "Режим хекс. уређивања"
 
-#, fuzzy
-#| msgid "&Toggle line state"
 msgid "Toggle hex mode"
-msgstr "&Промени стање линије"
+msgstr "Смени хекс. режим"
 
-#, fuzzy
-#| msgid "To&ggle mark"
 msgid "Toggle magic mode"
-msgstr "Смени &ознаку"
+msgstr "Смени магични режим"
 
 msgid "Toggle nroff mode"
-msgstr ""
+msgstr "Смени nroff режим"
 
 msgid "Toggle ANSI color mode"
-msgstr ""
+msgstr "Смени режим ANSI боја"
 
 msgid "Cycle ESC render mode: None/SGR/Term"
-msgstr ""
+msgstr "Кружи режим ESC приказа: Ништа/SGR/Терм"
 
-#, fuzzy
-#| msgid "&Next bookmark"
 msgid "Go to bookmark"
-msgstr "&Следећи обележивач"
+msgstr "Иди на  обележивач"
 
-#, fuzzy
-#| msgid "&Toggle fullscreen"
 msgid "Toggle ruler"
-msgstr "Смени приказ преко &целог екрана"
+msgstr "Смени лењир"
 
-#, fuzzy
-#| msgid "Search done"
 msgid "Search forward"
-msgstr "Претрага је завршена"
+msgstr "Тражи напред"
 
-#, fuzzy
-#| msgid "Search &again"
 msgid "Search backward"
-msgstr "Тражи &опет"
+msgstr "Тражи уназад"
 
-#, fuzzy
-#| msgid "Sea&rch for content"
 msgid "Search forward next"
-msgstr "&Тражи садржај"
+msgstr "Тражи следеће напред"
 
-#, fuzzy
-#| msgid "Search done"
 msgid "Search backward next"
-msgstr "Претрага је завршена"
+msgstr "Тражи следеће уназад"
 
 msgid "Search opposite direction"
-msgstr ""
+msgstr "Тражи у супротном правцу"
 
-#, fuzzy
-#| msgid "Getting file"
 msgid "Set line filter"
-msgstr "Добавља се датотека"
+msgstr "Постави филтер линија"
 
 msgid "Toggle filter follow mode"
-msgstr ""
+msgstr "Смени режим праћења филтера"
 
 msgid "Jump to next filter match"
 msgstr ""
