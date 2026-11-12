@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
 "POT-Creation-Date: 2026-11-08 16:54+0000\n"
-"PO-Revision-Date: 2026-11-12 15:50+0000\n"
+"PO-Revision-Date: 2026-11-12 17:09+0000\n"
 "Last-Translator: Strahinja <strahinja@noreply.codeberg.org>\n"
 "Language-Team: Serbian <https://translate.codeberg.org/projects/mc6/mc6/sr/>"
 "\n"
@@ -452,10 +452,8 @@ msgstr "Смени леви панел у терминалском режиму"
 msgid "Toggle right panel in terminal mode"
 msgstr "Смени десни панел у терминалском режиму"
 
-#, fuzzy
-#| msgid "shell: storing file"
 msgid "Apply command to the files"
-msgstr "shell: смештање датотеке"
+msgstr "Примени наредбу на датотеке"
 
 #, fuzzy
 #| msgid "Create hard link"
@@ -494,20 +492,14 @@ msgstr "Други панел: cd овде"
 msgid "Other panel cd link target"
 msgstr "Други панел: cd у одредиште везе"
 
-#, fuzzy
-#| msgid "Close file"
 msgid "Copy single file"
-msgstr "Затвори датотеку"
+msgstr "Копирај једну датотеку"
 
-#, fuzzy
-#| msgid "Getting file"
 msgid "Move single file"
-msgstr "Добавља се датотека"
+msgstr "Премести једну датотеку"
 
-#, fuzzy
-#| msgid "Getting file"
 msgid "Delete single file"
-msgstr "Добавља се датотека"
+msgstr "Обриши једну датотеку"
 
 #, fuzzy
 #| msgid "Compare directories"
@@ -534,10 +526,8 @@ msgstr "Конзола панела са додацима"
 msgid "Sync other panel"
 msgstr "Синхронизуј други панел"
 
-#, fuzzy
-#| msgid "Use panel sort mo&de"
 msgid "Next sort mode"
-msgstr "Користи &режим сортирања панела"
+msgstr "Следећи режим сортирања"
 
 msgid "Previous sort mode"
 msgstr "Претходни режим сортирања"
@@ -642,15 +632,11 @@ msgstr "Датум &приступа"
 msgid "Go to the root directory"
 msgstr "Упоређивање директоријума"
 
-#, fuzzy
-#| msgid "Select"
 msgid "Select all files"
-msgstr "Бирање"
+msgstr "Изабери све датотеке"
 
-#, fuzzy
-#| msgid "Unselect"
 msgid "Unselect all files"
-msgstr "Одбирање"
+msgstr "Одизабери све датотеке"
 
 msgid "Focus the default button"
 msgstr "Фокусирај подразумевано дугме"
@@ -673,18 +659,14 @@ msgstr "Иди назад"
 msgid "Next link"
 msgstr "Следећа веза"
 
-#, fuzzy
-#| msgid "&Previous"
 msgid "Previous link"
-msgstr "&Претходно"
+msgstr "Претходна веза"
 
 msgid "Next node"
 msgstr "Следећи чвор"
 
-#, fuzzy
-#| msgid "&Previous"
 msgid "Previous node"
-msgstr "&Претходно"
+msgstr "Претходни режим"
 
 msgid "Forget directory"
 msgstr "Заборави директоријум"
@@ -936,7 +918,7 @@ msgid "Cycle ESC render mode: None/SGR/Term"
 msgstr "Кружи режим ESC приказа: Ништа/SGR/Терм"
 
 msgid "Go to bookmark"
-msgstr "Иди на  обележивач"
+msgstr "Иди на обележивач"
 
 msgid "Toggle ruler"
 msgstr "Смени лењир"
@@ -992,10 +974,8 @@ msgstr ""
 msgid "Toggle show symbols"
 msgstr ""
 
-#, fuzzy
-#| msgid "&Toggle fullscreen"
 msgid "Toggle full split"
-msgstr "Смени приказ преко &целог екрана"
+msgstr "Смени пуну поделу"
 
 msgid "Tab size 2"
 msgstr ""
@@ -1646,12 +1626,13 @@ msgstr "Лозинка:"
 msgid "Screens"
 msgstr "Екрани"
 
-#, fuzzy, c-format
-#| msgid "Cannot read directory contents"
+#, c-format
 msgid ""
 "Cannot read directory contents\n"
 "%s"
-msgstr "Не могу да прочитам садржај директоријума"
+msgstr ""
+"Не може се прочитати садржај директоријума\n"
+"%s"
 
 #, c-format
 msgid ""
@@ -1702,10 +1683,8 @@ msgstr "Назив"
 msgid "Size"
 msgstr "Величина"
 
-#, fuzzy
-#| msgid "Modified:   %s"
 msgid "Modified"
-msgstr "Измењено:          %s"
+msgstr "Измењено"
 
 msgid "&OK"
 msgstr "&У реду"
@@ -1731,10 +1710,8 @@ msgstr "DialogTitle|Чишћење историје"
 msgid "Do you want clean this history?"
 msgstr "Да ли желите да очистите ову историју?"
 
-#, fuzzy
-#| msgid "Filter: "
 msgid "Filter:"
-msgstr "Филтрирање: "
+msgstr "Филтрирање:"
 
 msgid "Background process:"
 msgstr "Позадински процес:"
@@ -1984,15 +1961,12 @@ msgstr[2] ""
 msgid "Save the merge into:"
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot save the merge result\n"
 "%s"
 msgstr ""
-"Не може се сачувати датотека %s:\n"
+"Не може се сачувати резултат спајања\n"
 "%s"
 
 msgid "&Fastest (Assume large files)"
@@ -2126,10 +2100,8 @@ msgstr ""
 "%s је у поступку гашења.\n"
 "Сачувати измењену(е) датотеку(е)?"
 
-#, fuzzy
-#| msgid "You have to chdir to extract files first"
 msgid "Save the changes of the two files first."
-msgstr "Да бисте распаковали датотеке, прво морате променити директоријум"
+msgstr "Прво сачувајте измене двеју датотека."
 
 msgid "The common base of the two files"
 msgstr ""
@@ -2145,14 +2117,8 @@ msgstr ""
 "Не може се креирати одредишна датотека\n"
 "%s"
 
-#, fuzzy
-#| msgid ""
-#| "Cannot open the %s file for writing:\n"
-#| "%s\n"
 msgid "Cannot compare the files to merge"
-msgstr ""
-"Не може се отворити датотека %s за упис:\n"
-"%s\n"
+msgstr "Не могу се упоредити датотеке за спајање"
 
 msgid "Merge:"
 msgstr ""
@@ -2160,19 +2126,12 @@ msgstr ""
 msgid "Diff:"
 msgstr "Diff:"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot move file\n"
-#| "%s\n"
-#| "to\n"
-#| "%s"
+#, c-format
 msgid ""
 "Cannot merge the files into\n"
 "%s"
 msgstr ""
-"Не може се преместити датотека\n"
-"%s\n"
-"у\n"
+"Не могу се спојити датотеке у\n"
 "%s"
 
 msgid "File name is empty!"
@@ -2314,10 +2273,9 @@ msgstr ""
 "Не може се креирати одредишна датотека\n"
 "%s"
 
-#, fuzzy, c-format
-#| msgid "Cannot translate from %s to %s"
+#, c-format
 msgid "Cannot rename %s to %s: %s"
-msgstr "Не може се превести из %s у %s"
+msgstr "Не може се преименовати %s у %s: %s"
 
 msgid "Ctags: Create Index"
 msgstr ""
@@ -4877,10 +4835,8 @@ msgstr "&Распоред..."
 msgid "&Panel options..."
 msgstr "Опције &панела..."
 
-#, fuzzy
-#| msgid "Use panel sort mo&de"
 msgid "File panel m&odes..."
-msgstr "Користи &режим сортирања панела"
+msgstr "&Режим сортирања панела..."
 
 msgid "C&onfirmation..."
 msgstr "П&отврђивање..."
@@ -4896,20 +4852,16 @@ msgstr "&Кодирање..."
 msgid "Key &sniffer..."
 msgstr ""
 
-#, fuzzy
-#| msgid "Diff extra options"
 msgid "&Diff viewer options..."
-msgstr "Додатне опције diff-а"
+msgstr "Опције &diff прегледача..."
 
 #, fuzzy
 #| msgid "&Panel options..."
 msgid "Vie&wer options..."
 msgstr "Опције &панела..."
 
-#, fuzzy
-#| msgid "Editor options"
 msgid "&Editor options..."
-msgstr "Опције уређивача"
+msgstr "Опције &уређивача..."
 
 #, fuzzy
 #| msgid "&Panel options..."
@@ -5969,10 +5921,8 @@ msgstr ""
 msgid "&Capture key"
 msgstr ""
 
-#, fuzzy
-#| msgid "&Mail..."
 msgid "&Main"
-msgstr "&Мејл..."
+msgstr "&Главно"
 
 msgid "&Ctrl-X + ..."
 msgstr ""
@@ -6014,10 +5964,8 @@ msgstr "Датотека &менија"
 msgid "&Input"
 msgstr ""
 
-#, fuzzy
-#| msgid "&List..."
 msgid "&Listbox"
-msgstr "&Листај..."
+msgstr "&Листа"
 
 msgid "&Radio"
 msgstr ""
@@ -6166,10 +6114,9 @@ msgstr ""
 msgid "%s has exited with code %d. Press any key to close"
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "Press any key to continue..."
+#, c-format
 msgid "%s has exited. Press any key to close"
-msgstr "Било који тастер за наставак..."
+msgstr "%s је завршио. Било који тастер за затварање"
 
 msgid "JSON parse error at byte %"
 msgstr ""
@@ -6604,10 +6551,8 @@ msgstr ""
 msgid "&Special"
 msgstr "Сачувај датотеку"
 
-#, fuzzy
-#| msgid "&Advanced chown"
 msgid "Ad&vanced..."
-msgstr "&Напредна промена власништва"
+msgstr "&Напредно..."
 
 #, c-format
 msgid "There is no user or group \"%s\""
@@ -7240,14 +7185,8 @@ msgstr ""
 msgid "No container selected."
 msgstr ""
 
-#, fuzzy
-#| msgid ""
-#| "Cannot read source link\n"
-#| "%s"
 msgid "Cannot prepare logs source."
-msgstr ""
-"Не може се прочитам изворна веза\n"
-"%s"
+msgstr "Не може се припремити извор логова."
 
 msgid "Image:"
 msgstr ""
@@ -7324,15 +7263,11 @@ msgstr ""
 msgid "Cannot open docker path: %s"
 msgstr "Не може се отворити датотека %s"
 
-#, fuzzy
-#| msgid "Cannot fetch a local copy of %s"
 msgid "Cannot delete the last local Docker profile."
-msgstr "Не могу да добавим локални примерак %s"
+msgstr "Не може се обрисати последњи локални Docker профил."
 
-#, fuzzy
-#| msgid "Unable to save to file"
 msgid "Failed to save connection profiles."
-msgstr "Не може се сачувати у датотеку"
+msgstr "Не могу се сачувати профили повезивања."
 
 msgid "A profile with this label already exists."
 msgstr ""
@@ -7434,10 +7369,8 @@ msgstr ""
 msgid "Advanced"
 msgstr "&Напредна промена власништва"
 
-#, fuzzy
-#| msgid "&Encoding..."
 msgid "Encoding:"
-msgstr "&Кодирање..."
+msgstr "Кодирање:"
 
 msgid "Commands after login:"
 msgstr ""
@@ -7529,19 +7462,12 @@ msgstr "Креирање новог директоријума"
 msgid "Copy of %s"
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot chown\n"
-#| "%s"
+#, c-format
 msgid "Cannot fetch %s at %.10s."
-msgstr ""
-"Не може се променити власник\n"
-"%s"
+msgstr "Не може се добавити %s у %.10s."
 
-#, fuzzy
-#| msgid "Cannot open file %s"
 msgid "Cannot open the diff viewer."
-msgstr "Не може се отворити датотека %s"
+msgstr "Не може се отворити diff прегледач."
 
 #, fuzzy, c-format
 #| msgid ""
@@ -7577,15 +7503,11 @@ msgid ""
 "%s"
 msgstr ""
 
-#, fuzzy
-#| msgid "Add to hotlist"
 msgid "Added to favorites."
-msgstr "Додај у брзу листу"
+msgstr "Додато у омиљене."
 
-#, fuzzy
-#| msgid "Add to hotlist"
 msgid "Already in favorites."
-msgstr "Додај у брзу листу"
+msgstr "Већ је у омиљеним."
 
 #, fuzzy
 #| msgid "Add to hotlist"
@@ -7650,10 +7572,8 @@ msgstr ""
 msgid "&Reset"
 msgstr "Промени &величину"
 
-#, fuzzy
-#| msgid "Changes to file lost"
 msgid "Select a commit first."
-msgstr "Измене датотеке су изгубљене"
+msgstr "Прво изаберите чување."
 
 msgid "Reword is available only for commits on the current branch."
 msgstr ""
@@ -7829,10 +7749,8 @@ msgstr ""
 msgid "Decompiler: %s"
 msgstr "Датотека: %s"
 
-#, fuzzy
-#| msgid "Searching"
 msgid "Searching..."
-msgstr "Тражи се"
+msgstr "Тражи се..."
 
 msgid "No uses found"
 msgstr ""
@@ -8167,14 +8085,9 @@ msgid ""
 "the MongoDB settings."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot stat\n"
-#| "%s"
+#, c-format
 msgid "Cannot start %s."
-msgstr ""
-"Не може се stat-овати\n"
-"%s"
+msgstr "Не може се покренути %s."
 
 msgid "This build of mc has no terminal for coole."
 msgstr ""
@@ -8770,18 +8683,14 @@ msgstr "SFTP на рачунар"
 msgid "Edit PostgreSQL connection"
 msgstr "Опције уређивача"
 
-#, fuzzy
-#| msgid "shell: storing file"
 msgid " Authentication "
-msgstr "shell: смештање датотеке"
+msgstr " Аутентификација "
 
 msgid "&Read-only: the query editor opens read-only transactions"
 msgstr ""
 
-#, fuzzy
-#| msgid "SFTP to machine"
 msgid "&Test connection"
-msgstr "SFTP на рачунар"
+msgstr "&Тестирај повезивање"
 
 #, c-format
 msgid "A connection named \"%s\" already exists."
@@ -8821,10 +8730,8 @@ msgstr ""
 "Не може се променити директоријум на\n"
 "%s"
 
-#, fuzzy
-#| msgid "SFTP to machine"
 msgid "Default connection:"
-msgstr "SFTP на рачунар"
+msgstr "Подразумевано повезивање:"
 
 msgid "Connect timeout (s, 0: none):"
 msgstr ""
