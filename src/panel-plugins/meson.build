@@ -12,6 +12,7 @@ plugin_deps = [glib_dep, plugin_screen_headers]
 subdir('systemd')
 subdir('hello')
 subdir('panelize')
+subdir('duplicates')
 subdir('mcstruct')
 subdir('skineditor')
 subdir('mcpeek')

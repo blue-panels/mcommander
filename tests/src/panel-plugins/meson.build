@@ -8,6 +8,7 @@ subdir('git')
 subdir('pp_common')
 subdir('mcstruct')
 subdir('skineditor')
+subdir('duplicates')
 if mongoc.found()
   subdir('mongo')
 endif

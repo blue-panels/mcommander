@@ -104,6 +104,9 @@ src/panel-plugins/docker/container-files.c
 src/panel-plugins/docker/docker-logs.c
 src/panel-plugins/docker/docker-ui.c
 src/panel-plugins/docker/docker.c
+src/panel-plugins/duplicates/dup_dialog.c
+src/panel-plugins/duplicates/dup_search.c
+src/panel-plugins/duplicates/duplicates.c
 src/panel-plugins/ftp/ftp.c
 src/panel-plugins/gh/files.c
 src/panel-plugins/gh/gh-cmd.c
