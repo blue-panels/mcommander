@@ -56,7 +56,9 @@ typedef enum
     MC_PPF_SHOW_IN_DRIVE_MENU = 1 << 7, /* show in Alt-F1/Alt-F2 drive menu */
     MC_PPF_LOCAL_FILES = 1 << 8,        /* entries are real local paths;
                                            core uses them directly for view/edit/
-                                           copy/move, bypassing get_local_copy */
+                                           copy/move, bypassing get_local_copy;
+                                           handle_key() sees F6 and Shift-F6
+                                           first and refuses them with MC_PPR_OK */
     MC_PPF_NO_MOVE = 1 << 10,           /* plugin refuses F6: move deletes the source,
                                            set this when the copy cannot be confirmed */
     MC_PPF_ACCEPTS_FILE_LIST = 1 << 9,  /* plugin implements open_file_list(),

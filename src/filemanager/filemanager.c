@@ -1199,6 +1199,19 @@ toggle_show_hidden (void)
 
 static cb_ret_t exec_cmdline_enter (void);
 
+/* The files of a plugin with MC_PPF_LOCAL_FILES are moved by the core; the plugin may refuse
+   first, as the duplicates one does for the files of its reference directory.  Shift-F6 reaches
+   handle_key() through the panel keymap. */
+static gboolean
+local_plugin_refuses_move (WPanel *panel)
+{
+    return panel->is_plugin_panel && panel->plugin != NULL && panel->plugin_data != NULL
+        && (panel->plugin->flags & MC_PPF_LOCAL_FILES) != 0 && panel->plugin->handle_key != NULL
+        && panel->plugin->handle_key (panel->plugin_data, CK_Move) == MC_PPR_OK;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static cb_ret_t
 midnight_execute_cmd (Widget *sender, long command)
 {
@@ -1219,7 +1232,8 @@ midnight_execute_cmd (Widget *sender, long command)
             plugin_panel_put_cmd (current_panel);
             return MSG_HANDLED;
         case CK_Move:
-            plugin_panel_put_move_cmd (current_panel);
+            if (!local_plugin_refuses_move (current_panel))
+                plugin_panel_put_move_cmd (current_panel);
             return MSG_HANDLED;
         default:
             break;
@@ -1247,7 +1261,11 @@ midnight_execute_cmd (Widget *sender, long command)
             return MSG_HANDLED;
         case CK_Move:
             if (local_files)
+            {
+                if (local_plugin_refuses_move (current_panel))
+                    return MSG_HANDLED;
                 break; /* fall through to native move_cmd below */
+            }
             if (current_panel->plugin != NULL && current_panel->plugin->handle_key != NULL
                 && current_panel->plugin->handle_key (current_panel->plugin_data, CK_Move)
                     == MC_PPR_OK)
