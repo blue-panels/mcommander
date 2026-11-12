@@ -1218,7 +1218,11 @@ create_panel (int num, panel_view_mode_t type)
     /* Load quick-view content only after the widget swap settles; plugin
        get_local_copy may open a nested dialog. */
     if (type == view_quick)
+    {
         mcview_load_panel_current ((WView *) new_widget, PANEL (panels[the_other].widget));
+        // the swap has drawn the view empty
+        widget_draw (new_widget);
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
