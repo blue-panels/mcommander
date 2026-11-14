@@ -74,8 +74,8 @@ typedef struct
     gboolean show_system_schemas;
     int preview_rows;  // the rows F3 shows after the SQL of a relation, 0: none
 
-    /* coole, the editor of queries, and psql for Alt-F3; NULL or empty: looked up in PATH */
-    char *coole_path;
+    /* bluerig, the editor of queries, and psql for Alt-F3; NULL or empty: looked up in PATH */
+    char *bluerig_path;
     char *psql_path;
 
     GPtrArray *connections;  // postgres_connection_t *

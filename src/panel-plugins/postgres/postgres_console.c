@@ -1,6 +1,6 @@
 /*
    Panel plugin postgres for the M-Commander
-   the query editor coole in a terminal screen of its own
+   the query editor bluerig in a terminal screen of its own
 
    Copyright (C) 2026
    Ilia Maslakov il.smind@gmail.com
@@ -22,17 +22,17 @@
  */
 
 /** \file postgres_console.c
- *  \brief Source: the query editor coole in a terminal screen of its own
+ *  \brief Source: the query editor bluerig in a terminal screen of its own
  *
- *  Alt-F3, and Enter on a relation, run "coole -Q", the editor of queries, for the connection
+ *  Alt-F3, and Enter on a relation, run "bluerig -Q", the editor of queries, for the connection
  *  and the database under the cursor, or the open ones, in a screen beside the panels; without
- *  coole, psql. One of them runs per connection and database, for as long as its screen stays.
+ *  bluerig, psql. One of them runs per connection and database, for as long as its screen stays.
  *
  *  What to connect to goes in the environment, as the PG* variables of libpq: those of the
  *  connection of the panel, as libpq has resolved them (PQconninfo), so that the editor goes
  *  where the panel went, whether the server was named by its host, a URL or a service. A
  *  password typed in the session or written in the URL goes as PGPASSWORD, never on the command
- *  line. MC_PG_CONNECTION, MC_PG_SCHEMA and MC_PG_RELATION tell coole where the cursor was.
+ *  line. MC_PG_CONNECTION, MC_PG_SCHEMA and MC_PG_RELATION tell bluerig where the cursor was.
  */
 
 #include <config.h>
@@ -91,7 +91,7 @@ console_free (gpointer p)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The screen has gone, and coole or psql with it */
+/* The screen has gone, and bluerig or psql with it */
 static void
 console_closed (void *data)
 {
@@ -262,8 +262,8 @@ console_start (postgres_data_t *data, const char *key, const console_target_t *t
     const char *what;
     int password_at = -1;
 
-    program = console_program (data->cfg->coole_path, "coole");
-    what = "coole";
+    program = console_program (data->cfg->bluerig_path, "bluerig");
+    what = "bluerig";
     if (program == NULL)
     {
         // without the editor of queries, psql, connected
@@ -271,14 +271,15 @@ console_start (postgres_data_t *data, const char *key, const console_target_t *t
         what = "psql";
         if (program == NULL)
         {
-            postgres_message (host, TRUE,
-                              _ ("Install coole for the query editor, or psql. Their paths can be "
-                                 "given in the PostgreSQL settings."));
+            postgres_message (
+                host, TRUE,
+                _ ("Install bluerig for the query editor, or psql. Their paths can be "
+                   "given in the PostgreSQL settings."));
             return NULL;
         }
     }
     argv[0] = program;
-    argv[1] = strcmp (what, "coole") == 0 ? "-Q" : NULL;
+    argv[1] = strcmp (what, "bluerig") == 0 ? "-Q" : NULL;
     argv[2] = NULL;
 
     env = g_ptr_array_new_with_free_func (g_free);
@@ -300,7 +301,7 @@ console_start (postgres_data_t *data, const char *key, const console_target_t *t
     if (pc->read_only)
     {
         g_ptr_array_add (env, g_strdup ("MC_QUERY_READ_ONLY=1"));
-        // what coole does with MC_QUERY_READ_ONLY, for psql
+        // what bluerig does with MC_QUERY_READ_ONLY, for psql
         if (strcmp (what, "psql") == 0)
             g_ptr_array_add (env, g_strdup ("PGOPTIONS=-c default_transaction_read_only=on"));
     }
@@ -358,7 +359,7 @@ postgres_console_open (postgres_data_t *data, const char *relation)
     // MC_PPR_SKIPPED all through: nothing in the panel has changed
     if (host->terminal_open == NULL)
     {
-        postgres_message (host, TRUE, _ ("This build of mc has no terminal for coole."));
+        postgres_message (host, TRUE, _ ("This build of mc has no terminal for bluerig."));
         return MC_PPR_SKIPPED;
     }
 

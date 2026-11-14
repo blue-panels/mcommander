@@ -72,8 +72,8 @@ cyrillic 06-cp1251 CP1251
 cyrillic 07-iso88595 ISO-8859-5
 cyrillic 08-koi8u KOI8-U
 
-# A plugin panel that turns a key down: the Git panel runs coole on its hotkey,
-# Alt-q here (config/panels.git.ini), and with no coole in the image it says so
+# A plugin panel that turns a key down: the Git panel runs bluerig on its hotkey,
+# Alt-q here (config/panels.git.ini), and with no bluerig in the image it says so
 # in a message and answers that the user turned it down (MC_PPR_SKIPPED).  For
 # a key outside the keymap of the panels that is no answer, as on master: once
 # the message is gone the key goes on to the fast find.  The Git panel needs
@@ -87,7 +87,7 @@ if command -v git >/dev/null 2>&1; then
 
     cat > 05-plugin/cases.tsv <<CASES
 file	key	expect	why	transports
-cases.tsv	key Escape,type cd git:$dir/05-plugin,Enter,alt q	text: Cannot find coole executable	the Git panel takes Alt-q and puts up its message	local
+cases.tsv	key Escape,type cd git:$dir/05-plugin,Enter,alt q	text: Cannot find bluerig executable	the Git panel takes Alt-q and puts up its message	local
 cases.tsv	key Escape,type cd git:$dir/05-plugin,Enter,alt q,key Escape,type u	text: /qu	the plugin turned the key down, so it goes on to the fast find and the letters after it too	local
 CASES
 fi

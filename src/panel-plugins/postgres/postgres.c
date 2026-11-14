@@ -26,7 +26,7 @@
  *
  *  The panel goes down from the connections of postgres.ini to the databases of a server, their
  *  schemas and the relations of a schema. The rows of a relation are not in the panel: they are
- *  the business of the query editor coole.
+ *  the business of the query editor bluerig.
  */
 
 #include <config.h>
@@ -145,7 +145,7 @@ postgres_handle_key (void *plugin_data, int key)
         return MC_PPR_NOT_SUPPORTED;
     }
 
-    // below the connections the panel only reads: its objects are changed by SQL in coole
+    // below the connections the panel only reads: its objects are changed by SQL in bluerig
     if (key == CK_Edit || key == CK_EditNew || key == CK_Delete || key == CK_MakeDir
         || key == CK_Move)
     {

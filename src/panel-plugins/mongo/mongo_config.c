@@ -48,6 +48,27 @@
 #define DEFAULT_BUCKET_LEAF_SIZE   1000
 #define DEFAULT_BUCKET_FANOUT      10
 
+/*** file scope functions ************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+/* coole, by name or by a path to it: the editor before it was renamed, which is bluerig now */
+static gboolean
+is_old_editor (const char *path)
+{
+    char *copy, *base;
+    gboolean old;
+
+    if (path == NULL)
+        return FALSE;
+    copy = g_strstrip (g_strdup (path));
+    base = g_path_get_basename (copy);
+    old = strcmp (base, "coole") == 0;
+    g_free (base);
+    g_free (copy);
+    return old;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 
 void
@@ -111,10 +132,11 @@ mongo_config_save_general (const mongo_config_t *cfg, char **err_out)
     mc_config_set_int (ini, SECT_GENERAL, "connect_timeout_ms", cfg->connect_timeout_ms);
     mc_config_set_int (ini, SECT_GENERAL, "socket_timeout_ms", cfg->socket_timeout_ms);
     mc_config_set_int (ini, SECT_GENERAL, "op_max_time_ms", cfg->op_max_time_ms);
-    if (cfg->coole_path != NULL && cfg->coole_path[0] != '\0')
-        mc_config_set_string (ini, SECT_GENERAL, "coole", cfg->coole_path);
+    if (cfg->bluerig_path != NULL && cfg->bluerig_path[0] != '\0')
+        mc_config_set_string (ini, SECT_GENERAL, "bluerig", cfg->bluerig_path);
     else
-        mc_config_del_key (ini, SECT_GENERAL, "coole");
+        mc_config_del_key (ini, SECT_GENERAL, "bluerig");
+    mc_config_del_key (ini, SECT_GENERAL, "coole");
     if (cfg->mongosh_path != NULL && cfg->mongosh_path[0] != '\0')
         mc_config_set_string (ini, SECT_GENERAL, "mongosh", cfg->mongosh_path);
     else
@@ -302,7 +324,15 @@ mongo_config_load (void)
         mc_config_get_int (ini, SECT_GENERAL, "socket_timeout_ms", DEFAULT_SOCKET_TIMEOUT_MS);
     cfg->op_max_time_ms =
         mc_config_get_int (ini, SECT_GENERAL, "op_max_time_ms", DEFAULT_OP_MAX_TIME_MS);
-    cfg->coole_path = mc_config_get_string (ini, SECT_GENERAL, "coole", "");
+    cfg->bluerig_path = mc_config_get_string (ini, SECT_GENERAL, "bluerig", "");
+    // the key of the editor when it was called coole; a path to coole itself is no editor now
+    if (cfg->bluerig_path[0] == '\0')
+    {
+        g_free (cfg->bluerig_path);
+        cfg->bluerig_path = mc_config_get_string (ini, SECT_GENERAL, "coole", "");
+        if (is_old_editor (cfg->bluerig_path))
+            cfg->bluerig_path[0] = '\0';
+    }
     cfg->mongosh_path = mc_config_get_string (ini, SECT_GENERAL, "mongosh", "");
 
     cfg->bucket_leaf_size =
@@ -371,7 +401,7 @@ mongo_config_free (mongo_config_t *cfg)
     if (cfg == NULL)
         return;
     g_free (cfg->default_cluster);
-    g_free (cfg->coole_path);
+    g_free (cfg->bluerig_path);
     g_free (cfg->mongosh_path);
     if (cfg->clusters != NULL)
         g_ptr_array_free (cfg->clusters, TRUE);

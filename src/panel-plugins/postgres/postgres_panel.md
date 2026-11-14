@@ -28,9 +28,9 @@
                            100, 0: none)
       show_system_schemas  true also lists pg_catalog,
                            information_schema and pg_toast
-      coole                the query editor; empty: found
+      bluerig              the query editor; empty: found
                            in PATH
-      psql                 psql, run without coole; empty:
+      psql                 psql, run without bluerig; empty:
                            found in PATH
 
     The [General] options are edited from the Manage Plugins
@@ -158,24 +158,24 @@
 
   The query editor
 
-    Alt-F3 runs coole, the editor of queries ("coole -Q"), for
+    Alt-F3 runs bluerig, the editor of queries ("bluerig -Q"), for
     the connection and the database under the cursor, or the
     open ones, in a screen of its own beside the panels; in it
     Alt-F3 comes back. Enter on a relation does the same and
-    tells coole of the relation: coole runs SELECT * on it
+    tells bluerig of the relation: bluerig runs SELECT * on it
     with LIMIT 100, and puts that query in the file of
-    queries when the file is empty. In coole F5 runs the
+    queries when the file is empty. In bluerig F5 runs the
     statement under the cursor. The panel has no level of
     rows: F3 shows the first ones only. The queries of a
     database are kept in
-    ~/.local/share/coole/queries/postgres/<connection>/<db>.sql.
+    ~/.local/share/bluerig/queries/postgres/<connection>/<db>.sql.
 
-    Without coole, Alt-F3 runs psql there, connected; with
+    Without bluerig, Alt-F3 runs psql there, connected; with
     neither it says what to install. One of them runs per
     connection and database: Alt-F3 again brings back the same
-    one, until it is quit. coole learns of a relation when it
+    one, until it is quit. bluerig learns of a relation when it
     starts only: Enter on another relation of the same
-    connection and database brings back the coole that runs,
+    connection and database brings back the bluerig that runs,
     with what it had. Quit it (F10) to start it for the new
     one.
 
@@ -186,7 +186,7 @@
     and the others that differ from what libpq would take
     anyway. A password typed in the session or written in
     the URL goes as PGPASSWORD, never on a command line; one
-    in ~/.pgpass needs nothing. coole is also told MC_QUERY_KIND=postgres,
+    in ~/.pgpass needs nothing. bluerig is also told MC_QUERY_KIND=postgres,
     MC_PG_CONNECTION, MC_PG_SCHEMA and MC_PG_RELATION, where
     the cursor was, and MC_QUERY_READ_ONLY=1 for a read-only
     connection; psql gets PGOPTIONS with

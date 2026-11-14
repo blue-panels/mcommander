@@ -27,6 +27,7 @@
 #include <stdarg.h>
 
 #include "src/panel-plugins/git/git.c"
+#include "src/vfs/local/local.c"  // vfs_init_localfs (): the ini files are read through it
 
 /* --------------------------------------------------------------------------------------------- */
 
@@ -176,6 +177,59 @@ teardown (void)
     g_free (repo);
     repo = NULL;
 }
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* The keys of the user from when the editor was coole win over the new ones of the system file */
+START_TEST (test_old_editor_keys_of_the_user)
+{
+    char *cfg_home, *sys_dir, *path;
+    char *old_sysconfig = mc_global.sysconfig_dir;
+
+    str_init_strings (NULL);
+    vfs_init ();
+    vfs_init_localfs ();
+    vfs_setup_work_dir ();
+
+    cfg_home = g_build_filename (repo, "home", (char *) NULL);
+    sys_dir = g_build_filename (repo, "etc", (char *) NULL);
+    g_setenv ("XDG_CONFIG_HOME", cfg_home, TRUE);
+    mc_config_init_config_paths (NULL);
+    ck_assert_int_eq (g_mkdir_with_parents (mc_config_get_path (), 0700), 0);
+    ck_assert_int_eq (g_mkdir_with_parents (sys_dir, 0700), 0);
+
+    path = g_build_filename (sys_dir, GIT_PANEL_CONFIG_FILE, (char *) NULL);
+    ck_assert (g_file_set_contents (
+        path, "[git-panel]\nbluerig_executable=bluerig\nhotkey_bluerig=alt-g\n", -1, NULL));
+    g_free (path);
+    mc_global.sysconfig_dir = sys_dir;
+
+    // a key of the user, and a path to the old editor, which is bluerig now
+    path = g_build_filename (mc_config_get_path (), GIT_PANEL_CONFIG_FILE, (char *) NULL);
+    ck_assert (g_file_set_contents (
+        path, "[git-panel]\ncoole_executable=/opt/coole/bin/coole\nhotkey_coole=alt-q\n", -1,
+        NULL));
+    git_load_bluerig_settings (&data);
+    ck_assert_int_eq (data.key_bluerig, ALT ('q'));
+    ck_assert_str_eq (data.bluerig_executable, "bluerig");
+
+    // an editor of the user's own is kept
+    ck_assert (
+        g_file_set_contents (path, "[git-panel]\ncoole_executable=/opt/my/editor\n", -1, NULL));
+    git_load_bluerig_settings (&data);
+    ck_assert_str_eq (data.bluerig_executable, "/opt/my/editor");
+    ck_assert_int_eq (data.key_bluerig, ALT ('g'));
+
+    g_free (path);
+    MC_PTR_FREE (data.bluerig_executable);
+    mc_global.sysconfig_dir = old_sysconfig;
+    mc_config_deinit_config_paths ();
+    vfs_shut ();
+    str_uninit_strings ();
+    g_free (sys_dir);
+    g_free (cfg_home);
+}
+END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
@@ -350,6 +404,7 @@ main (void)
     tcase_add_test (tc_core, test_merged_branch);
     tcase_add_test (tc_core, test_squashed_branch);
     tcase_add_test (tc_core, test_divergent_branches);
+    tcase_add_test (tc_core, test_old_editor_keys_of_the_user);
 
     return mctest_run_all (tc_core);
 }

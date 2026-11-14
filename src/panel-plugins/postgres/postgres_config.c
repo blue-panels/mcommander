@@ -157,6 +157,26 @@ config_save (mc_config_t *ini, char *path, char **err_out)
     return ok;
 }
 
+/* --------------------------------------------------------------------------------------------- */
+
+/* coole, by name or by a path to it: the editor before it was renamed, which is bluerig now */
+static gboolean
+is_old_editor (const char *path)
+{
+    char *copy, *base;
+    gboolean old;
+
+    if (path == NULL)
+        return FALSE;
+    copy = g_strstrip (g_strdup (path));
+    base = g_path_get_basename (copy);
+    old = strcmp (base, "coole") == 0;
+    g_free (base);
+    g_free (copy);
+    return old;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 
 char *
@@ -254,7 +274,14 @@ postgres_config_load (void)
     cfg->show_system_schemas = mc_config_get_bool (ini, SECT_GENERAL, "show_system_schemas", FALSE);
     cfg->preview_rows =
         MAX (0, mc_config_get_int (ini, SECT_GENERAL, "preview_rows", DEFAULT_PREVIEW_ROWS));
-    cfg->coole_path = config_get_string (ini, SECT_GENERAL, "coole");
+    cfg->bluerig_path = config_get_string (ini, SECT_GENERAL, "bluerig");
+    // the key of the editor when it was called coole; a path to coole itself is no editor now
+    if (cfg->bluerig_path == NULL)
+    {
+        cfg->bluerig_path = config_get_string (ini, SECT_GENERAL, "coole");
+        if (is_old_editor (cfg->bluerig_path))
+            g_clear_pointer (&cfg->bluerig_path, g_free);
+    }
     cfg->psql_path = config_get_string (ini, SECT_GENERAL, "psql");
 
     groups = mc_config_get_groups (ini, NULL);
@@ -299,7 +326,7 @@ postgres_config_free (postgres_config_t *cfg)
     if (cfg == NULL)
         return;
     g_free (cfg->default_connection);
-    g_free (cfg->coole_path);
+    g_free (cfg->bluerig_path);
     g_free (cfg->psql_path);
     g_ptr_array_free (cfg->connections, TRUE);
     g_free (cfg);
@@ -342,7 +369,8 @@ postgres_config_save_general (const postgres_config_t *cfg, char **err_out)
     mc_config_set_int (ini, SECT_GENERAL, "statement_timeout", cfg->statement_timeout);
     mc_config_set_bool (ini, SECT_GENERAL, "show_system_schemas", cfg->show_system_schemas);
     mc_config_set_int (ini, SECT_GENERAL, "preview_rows", cfg->preview_rows);
-    config_set_string (ini, SECT_GENERAL, "coole", cfg->coole_path);
+    config_set_string (ini, SECT_GENERAL, "bluerig", cfg->bluerig_path);
+    mc_config_del_key (ini, SECT_GENERAL, "coole");
     config_set_string (ini, SECT_GENERAL, "psql", cfg->psql_path);
     return config_save (ini, path, err_out);
 }
