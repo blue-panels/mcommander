@@ -1633,6 +1633,52 @@ mask_of_scanner (syntax_scanner_t *sc)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* the bytes of a text of its own, for a scanner that reads them through its data */
+typedef struct
+{
+    char *s;
+    off_t len;
+} owned_text_t;
+
+static int
+get_owned_byte (void *data, off_t byte_index)
+{
+    const owned_text_t *t = (const owned_text_t *) data;
+
+    return byte_index < 0 || byte_index >= t->len ? '\n' : (unsigned char) t->s[byte_index];
+}
+
+/* The owner of the text moves, the editor reloading a file into its window: the scanner and its
+   layer read the new one, and nothing of the old */
+START_TEST (test_scanner_set_data)
+{
+    owned_text_t old, moved;
+    syntax_scanner_t *sc;
+    char *got;
+
+    ck_assert_int_eq (load_toplevel (LAYERED_RULES), 0);
+    text = "int {x} \"a{b}c\" int";
+    text_len = (off_t) strlen (text);
+    old.s = g_strdup (text);
+    old.len = text_len;
+    moved.s = g_strdup (text);
+    moved.len = text_len;
+
+    sc = syntax_scanner_new (rules, get_owned_byte, &old, text_len);
+    syntax_scanner_set_data (sc, &moved);
+    memset (old.s, '{', (size_t) old.len);
+    got = mask_of_scanner (sc);
+    ck_assert_str_eq (got, "rrr.yyy.ggyyygg.rrr");
+
+    g_free (got);
+    syntax_scanner_free (sc);
+    g_free (old.s);
+    g_free (moved.s);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_overlay_after_edits)
 {
     GString *buf;
@@ -1883,6 +1929,7 @@ add_tests (TCase *tc_core)
     tcase_add_test (tc_core, test_user_syntax_types_listed_with_installed);
     tcase_add_test (tc_core, test_overlay);
     tcase_add_test (tc_core, test_overlay_after_edits);
+    tcase_add_test (tc_core, test_scanner_set_data);
     tcase_add_test (tc_core, test_overlay_errors);
     tcase_add_test (tc_core, test_embed_errors);
     tcase_add_test (tc_core, test_embed_state_from_checkpoints);

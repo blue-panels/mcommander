@@ -163,6 +163,8 @@ syntax_scanner_t *syntax_scanner_new (syntax_rules_t *rules, syntax_get_byte_fn 
                                       void *data, off_t size);
 void syntax_scanner_free (syntax_scanner_t *sc);
 void syntax_scanner_set_size (syntax_scanner_t *sc, off_t size);
+/** The text is the same, read through @data now: the owner of the bytes has moved. */
+void syntax_scanner_set_data (syntax_scanner_t *sc, void *data);
 const syntax_rules_t *syntax_scanner_rules (const syntax_scanner_t *sc);
 
 /** Lexical state at @byte_index.  Cheap going forward, cheap enough going back. */
