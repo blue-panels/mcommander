@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: mcommander v6.1.0-392-g4c0fc8d25\n"
+"Project-Id-Version: mcommander v6.1.0-450-g323d7ecae\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-11-08 16:54+0000\n"
+"POT-Creation-Date: 2026-11-15 02:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -185,7 +185,7 @@ msgstr ""
 msgid "Terminal"
 msgstr ""
 
-#: lib/keybind.c:118 src/editor/editmacros.c:867 src/filemanager/cmd.c:1408
+#: lib/keybind.c:118 src/editor/editmacros.c:867 src/filemanager/cmd.c:1418
 #: src/filemanager/panel_plugin_ops.c:1273
 msgid "Edit file"
 msgstr ""
@@ -385,7 +385,7 @@ msgstr ""
 msgid "Edit with internal editor"
 msgstr ""
 
-#: lib/keybind.c:172 src/filemanager/cmd.c:1026
+#: lib/keybind.c:172 src/filemanager/cmd.c:1036
 msgid "View file"
 msgstr ""
 
@@ -409,7 +409,7 @@ msgstr ""
 msgid "Show directory size"
 msgstr ""
 
-#: lib/keybind.c:178 src/filemanager/cmd.c:1712
+#: lib/keybind.c:178 src/filemanager/cmd.c:1722
 msgid "Compare directories"
 msgstr ""
 
@@ -1333,21 +1333,38 @@ msgstr ""
 msgid "FATAL: not a directory:"
 msgstr ""
 
-#: lib/search/hex.c:195
+#: lib/panel-plugin-loader.c:530
+msgid "the module is the one of another plugin"
+msgstr ""
+
+#: lib/panel-plugin-loader.c:535
+#, c-format
+msgid "symbol %s not found"
+msgstr ""
+
+#: lib/panel-plugin-loader.c:561
+msgid "the module was replaced after mc started; restart mc"
+msgstr ""
+
+#: lib/panel-plugin-loader.c:563
+msgid "the module does not match what is known about it"
+msgstr ""
+
+#: lib/search/hex.c:246
 msgid ""
 "Number out of range (should be in byte range, 0 <= n <= 0xFF, expressed in "
 "hex)"
 msgstr ""
 
-#: lib/search/hex.c:198
+#: lib/search/hex.c:249
 msgid "Invalid character"
 msgstr ""
 
-#: lib/search/hex.c:201
+#: lib/search/hex.c:252
 msgid "Unmatched quotes character"
 msgstr ""
 
-#: lib/search/hex.c:209
+#: lib/search/hex.c:260
 #, c-format
 msgid ""
 "Hex pattern error at position %d:\n"
@@ -2035,7 +2052,7 @@ msgstr ""
 #: src/diffviewer/ydiff.c:3116 src/diffviewer/ydiff.c:4295
 #: src/diffviewer/ydiff.c:4308 src/editor/edit.c:392 src/editor/editcmd.c:404
 #: src/editor/editcmd.c:427 src/editor/editcmd.c:1915 src/editor/editcmd.c:1921
-#: src/editor/editmacros.c:711 src/filemanager/cmd.c:485
+#: src/editor/editmacros.c:711 src/filemanager/cmd.c:495
 #: src/filemanager/file.c:997 src/filemanager/file.c:2028
 #: src/filemanager/filegui.c:465 src/filemanager/filemanager.c:1139
 #: src/filemanager/filemanager.c:1145 src/filemanager/hotlist.c:1566
@@ -2048,6 +2065,7 @@ msgstr ""
 #: src/panel-plugins/acl/acl-dialog.c:1078
 #: src/panel-plugins/acl/acl-dialog.c:1140
 #: src/panel-plugins/arcmc/progress.c:110
+#: src/panel-plugins/duplicates/duplicates.c:567
 #: src/panel-plugins/mcstruct/mcstruct_bytes.c:260
 #: src/panel-plugins/mcstruct/mcstruct_bytes.c:291
 #: src/panel-plugins/mcstruct/mcstruct_cmd.c:826 src/panel-plugins/s3/s3.c:858
@@ -2059,7 +2077,7 @@ msgstr ""
 #: src/panel-plugins/skineditor/skineditor_ui.c:875
 #: src/panel-plugins/skineditor/skineditor_ui.c:914 src/session/session.c:256
 #: src/usermenu_ini.c:2085 src/viewer/actions_cmd.c:862
-#: src/viewer/actions_cmd.c:869 src/viewer/search.c:313 src/viewer/search.c:516
+#: src/viewer/actions_cmd.c:869 src/viewer/search.c:313 src/viewer/search.c:520
 msgid "&Yes"
 msgstr ""
 
@@ -2068,7 +2086,7 @@ msgstr ""
 #: src/diffviewer/ydiff.c:3116 src/diffviewer/ydiff.c:4295
 #: src/diffviewer/ydiff.c:4308 src/editor/edit.c:392 src/editor/editcmd.c:404
 #: src/editor/editcmd.c:1915 src/editor/editcmd.c:1921
-#: src/editor/editmacros.c:711 src/filemanager/cmd.c:485
+#: src/editor/editmacros.c:711 src/filemanager/cmd.c:495
 #: src/filemanager/file.c:998 src/filemanager/file.c:2028
 #: src/filemanager/filegui.c:467 src/filemanager/filemanager.c:1139
 #: src/filemanager/filemanager.c:1146 src/filemanager/hotlist.c:1567
@@ -2081,6 +2099,8 @@ msgstr ""
 #: src/panel-plugins/acl/acl-dialog.c:1078
 #: src/panel-plugins/acl/acl-dialog.c:1140
 #: src/panel-plugins/arcmc/progress.c:111
+#: src/panel-plugins/duplicates/duplicates.c:567
+#: src/panel-plugins/duplicates/duplicates.c:900
 #: src/panel-plugins/mcstruct/mcstruct_bytes.c:260
 #: src/panel-plugins/mcstruct/mcstruct_bytes.c:291
 #: src/panel-plugins/mcstruct/mcstruct_cmd.c:826 src/panel-plugins/s3/s3.c:859
@@ -2092,7 +2112,7 @@ msgstr ""
 #: src/panel-plugins/skineditor/skineditor_ui.c:876
 #: src/panel-plugins/skineditor/skineditor_ui.c:915 src/session/session.c:256
 #: src/usermenu_ini.c:2085 src/viewer/actions_cmd.c:862
-#: src/viewer/actions_cmd.c:869 src/viewer/search.c:313 src/viewer/search.c:516
+#: src/viewer/actions_cmd.c:869 src/viewer/search.c:313 src/viewer/search.c:520
 msgid "&No"
 msgstr ""
 
@@ -2158,14 +2178,16 @@ msgstr ""
 #: src/editor/editsearch.c:167 src/editor/editsearch.c:856
 #: src/filemanager/achown.c:88 src/filemanager/chattr.c:231
 #: src/filemanager/chmod.c:113 src/filemanager/chown.c:87
-#: src/filemanager/cmd.c:1713 src/filemanager/filegui.c:1404
+#: src/filemanager/cmd.c:1723 src/filemanager/filegui.c:1404
 #: src/filemanager/find.c:985 src/filemanager/hotlist.c:176
 #: src/filemanager/hotlist.c:1273 src/filemanager/hotlist.c:1353
 #: src/filemanager/layout.c:504 src/filemanager/panel_modes.c:1247
 #: src/keybind_dialog.c:723 src/keybind_dialog.c:729
 #: src/panel-plugins/acl/acl-dialog.c:397
 #: src/panel-plugins/acl/acl-dialog.c:1554
-#: src/panel-plugins/acl/acl-nt-dialog.c:686 src/panel-plugins/git/git.c:1691
+#: src/panel-plugins/acl/acl-nt-dialog.c:686
+#: src/panel-plugins/duplicates/dup_search.c:126
+#: src/panel-plugins/git/git.c:1700
 #: src/panel-plugins/mcstruct/mcstruct_bytes.c:409
 #: src/panel-plugins/mcstruct/mcstruct_cmd.c:826
 #: src/panel-plugins/mongo/mongo_filter.c:496
@@ -2484,8 +2506,8 @@ msgstr ""
 #: src/panel-plugins/mcstruct/mcstruct_cmd.c:684
 #: src/panel-plugins/mcstruct/mcstruct_cmd.c:710 src/viewer/dialogs.c:101
 #: src/viewer/search.c:258 src/viewer/search.c:271 src/viewer/search.c:389
-#: src/viewer/search.c:391 src/viewer/search.c:460 src/viewer/search.c:528
-#: src/viewer/search.c:548 src/viewer/search.c:552 src/viewer/structured.c:163
+#: src/viewer/search.c:391 src/viewer/search.c:464 src/viewer/search.c:532
+#: src/viewer/search.c:552 src/viewer/search.c:556 src/viewer/structured.c:163
 #: src/viewer/structured.c:177
 msgid "Search"
 msgstr ""
@@ -2625,8 +2647,8 @@ msgid "Enter line:"
 msgstr ""
 
 #: src/diffviewer/ydiff.c:4198 src/diffviewer/ydiff.c:4205
-#: src/diffviewer/ydiff.c:4225 src/filemanager/filemanager.c:2149
-#: src/filemanager/filemanager.c:2170
+#: src/diffviewer/ydiff.c:4225 src/filemanager/filemanager.c:2172
+#: src/filemanager/filemanager.c:2193
 #: src/panel-plugins/mcstruct/mcstruct_ui.c:1469 src/viewer/display.c:132
 msgid "ButtonBar|Edit"
 msgstr ""
@@ -2658,7 +2680,7 @@ msgid "ButtonBar|-Right"
 msgstr ""
 
 #: src/diffviewer/ydiff.c:4223 src/editor/editwidget.c:1553
-#: src/filemanager/filemanager.c:2167 src/filemanager/mcterm_overlay.c:1167
+#: src/filemanager/filemanager.c:2190 src/filemanager/mcterm_overlay.c:1167
 #: src/filemanager/tree.c:1168 src/help.c:1723
 #: src/panel-plugins/mcstruct/mcstruct_ui.c:1466 src/viewer/display.c:99
 msgid "ButtonBar|Help"
@@ -2688,7 +2710,7 @@ msgid "ButtonBar|Options"
 msgstr ""
 
 #: src/diffviewer/ydiff.c:4237 src/editor/editwidget.c:1562
-#: src/filemanager/filemanager.c:2154 src/filemanager/filemanager.c:2176
+#: src/filemanager/filemanager.c:2177 src/filemanager/filemanager.c:2199
 #: src/filemanager/mcterm_overlay.c:1176 src/help.c:1732
 #: src/panel-plugins/mcstruct/mcstruct_ui.c:1475 src/viewer/display.c:120
 #: src/viewer/display.c:122 src/viewer/display.c:166 src/viewer/display.c:173
@@ -3120,8 +3142,8 @@ msgstr ""
 
 #: src/editor-plugins/ctags/ctags-ui.c:485 src/editor/editmenu.c:232
 #: src/key_learn.c:648 src/key_learn.c:658 src/key_sniffer.c:316
-#: src/keybind_dialog.c:1206 src/keybind_dialog.c:1219 src/manage_plugins.c:554
-#: src/manage_plugins.c:1042 src/panel-plugins/ftp/ftp.c:2124
+#: src/keybind_dialog.c:1206 src/keybind_dialog.c:1219 src/manage_plugins.c:556
+#: src/manage_plugins.c:1047 src/panel-plugins/ftp/ftp.c:2124
 #: src/panel-plugins/s3/s3_connect_status.c:154
 #: src/panel-plugins/sftp/sftp.c:984
 msgid "&Close"
@@ -3294,7 +3316,7 @@ msgstr ""
 msgid "Error reading %s"
 msgstr ""
 
-#: src/editor/edit.c:365 src/filemanager/cmd.c:1286
+#: src/editor/edit.c:365 src/filemanager/cmd.c:1296
 #, c-format
 msgid ""
 "%s\n"
@@ -3320,11 +3342,11 @@ msgid ""
 "%s"
 msgstr ""
 
-#: src/editor/edit.c:5015
+#: src/editor/edit.c:5017
 msgid "Undo"
 msgstr ""
 
-#: src/editor/edit.c:5016 src/editor/editcmd.c:3000
+#: src/editor/edit.c:5018 src/editor/editcmd.c:3000
 msgid ""
 "Undo history is not available.\n"
 "The change log was overwritten after a large edit."
@@ -3392,7 +3414,7 @@ msgid "&Macintosh format (CR)"
 msgstr ""
 
 #: src/editor/editcmd.c:614 src/editor/editcmd.c:2216 src/editor/editcmd.c:2247
-#: src/filemanager/cmd.c:1408 src/filemanager/panel_plugin_ops.c:1273
+#: src/filemanager/cmd.c:1418 src/filemanager/panel_plugin_ops.c:1273
 msgid "Enter file name:"
 msgstr ""
 
@@ -3404,7 +3426,7 @@ msgstr ""
 msgid "Save As"
 msgstr ""
 
-#: src/editor/editcmd.c:1114 src/filemanager/cmd.c:1472
+#: src/editor/editcmd.c:1114 src/filemanager/cmd.c:1482
 #: src/panel-plugins/ftp/ftp.c:3157 src/panel-plugins/sftp/sftp.c:2646
 #, c-format
 msgid ""
@@ -3488,8 +3510,8 @@ msgid "Which syntax file you want to edit?"
 msgstr ""
 
 #: src/editor/editcmd.c:1574 src/editor/editcmd.c:1629
-#: src/filemanager/cmd.c:1510 src/filemanager/cmd.c:1555
-#: src/filemanager/cmd.c:1570 src/filemanager/cmd.c:1628
+#: src/filemanager/cmd.c:1520 src/filemanager/cmd.c:1565
+#: src/filemanager/cmd.c:1580 src/filemanager/cmd.c:1638
 #: src/panel-plugins/acl/acl-dialog.c:541
 #: src/panel-plugins/acl/acl-nt-dialog.c:316
 msgid "&User"
@@ -3499,18 +3521,18 @@ msgstr ""
 msgid "&System wide"
 msgstr ""
 
-#: src/editor/editcmd.c:1628 src/filemanager/cmd.c:1554
-#: src/filemanager/cmd.c:1569
+#: src/editor/editcmd.c:1628 src/filemanager/cmd.c:1564
+#: src/filemanager/cmd.c:1579
 msgid "Menu edit"
 msgstr ""
 
-#: src/editor/editcmd.c:1628 src/filemanager/cmd.c:1554
-#: src/filemanager/cmd.c:1569
+#: src/editor/editcmd.c:1628 src/filemanager/cmd.c:1564
+#: src/filemanager/cmd.c:1579
 msgid "Which menu file do you want to edit?"
 msgstr ""
 
-#: src/editor/editcmd.c:1629 src/filemanager/cmd.c:1555
-#: src/filemanager/cmd.c:1570 src/panel-plugins/mcstruct/mcstruct.c:142
+#: src/editor/editcmd.c:1629 src/filemanager/cmd.c:1565
+#: src/filemanager/cmd.c:1580 src/panel-plugins/mcstruct/mcstruct.c:142
 msgid "&Local"
 msgstr ""
 
@@ -3734,6 +3756,7 @@ msgstr ""
 #: src/editor/editmenu.c:271 src/filemanager/file.c:2822
 #: src/filemanager/file.c:2883 src/filemanager/filemanager.c:243
 #: src/panel-plugins/acl/acl-nt-dialog.c:678
+#: src/panel-plugins/duplicates/duplicates.c:900
 msgid "&Delete"
 msgstr ""
 
@@ -4131,8 +4154,8 @@ msgstr ""
 msgid "Edit: "
 msgstr ""
 
-#: src/editor/editwidget.c:1543 src/filemanager/filemanager.c:2153
-#: src/filemanager/filemanager.c:2168
+#: src/editor/editwidget.c:1543 src/filemanager/filemanager.c:2176
+#: src/filemanager/filemanager.c:2191
 msgid "ButtonBar|Menu"
 msgstr ""
 
@@ -4156,8 +4179,8 @@ msgstr ""
 msgid "ButtonBar|Mark"
 msgstr ""
 
-#: src/editor/editwidget.c:1557 src/filemanager/filemanager.c:2150
-#: src/filemanager/filemanager.c:2171 src/filemanager/mcterm_overlay.c:1168
+#: src/editor/editwidget.c:1557 src/filemanager/filemanager.c:2173
+#: src/filemanager/filemanager.c:2194 src/filemanager/mcterm_overlay.c:1168
 #: src/filemanager/tree.c:1174 tests/lib/widget/buttonbar_modifiers.c:69
 msgid "ButtonBar|Copy"
 msgstr ""
@@ -4166,12 +4189,12 @@ msgstr ""
 msgid "ButtonBar|Move"
 msgstr ""
 
-#: src/editor/editwidget.c:1560 src/filemanager/filemanager.c:2152
-#: src/filemanager/filemanager.c:2174
+#: src/editor/editwidget.c:1560 src/filemanager/filemanager.c:2175
+#: src/filemanager/filemanager.c:2197
 msgid "ButtonBar|Delete"
 msgstr ""
 
-#: src/editor/editwidget.c:1561 src/filemanager/filemanager.c:2175
+#: src/editor/editwidget.c:1561 src/filemanager/filemanager.c:2198
 #: src/filemanager/mcterm_overlay.c:1175
 msgid "ButtonBar|PullDn"
 msgstr ""
@@ -4660,7 +4683,7 @@ msgstr ""
 msgid "Confirmation|&History cleanup"
 msgstr ""
 
-#: src/filemanager/boxes.c:1165 src/filemanager/cmd.c:484
+#: src/filemanager/boxes.c:1165 src/filemanager/cmd.c:494
 msgid "Confirmation"
 msgstr ""
 
@@ -4962,181 +4985,181 @@ msgstr ""
 msgid "The runtime file handler failed"
 msgstr ""
 
-#: src/filemanager/cmd.c:484
+#: src/filemanager/cmd.c:494
 msgid "Files tagged, want to cd?"
 msgstr ""
 
-#: src/filemanager/cmd.c:506
+#: src/filemanager/cmd.c:516
 msgid "This plugin does not support file viewing"
 msgstr ""
 
-#: src/filemanager/cmd.c:524 src/filemanager/cmd.c:1295
+#: src/filemanager/cmd.c:534 src/filemanager/cmd.c:1305
 #, c-format
 msgid "Cannot get local copy of %s"
 msgstr ""
 
-#: src/filemanager/cmd.c:640
+#: src/filemanager/cmd.c:650
 msgid "Cannot read the contents"
 msgstr ""
 
-#: src/filemanager/cmd.c:809
+#: src/filemanager/cmd.c:819
 #, c-format
 msgid "Link %s to:"
 msgstr ""
 
-#: src/filemanager/cmd.c:811 src/panel-plugins/skineditor/skinedit_table.c:168
+#: src/filemanager/cmd.c:821 src/panel-plugins/skineditor/skinedit_table.c:168
 #: src/usermenu_ini.c:708
 msgid "Link"
 msgstr ""
 
-#: src/filemanager/cmd.c:820
+#: src/filemanager/cmd.c:830
 #, c-format
 msgid ""
 "Cannot create link\n"
 "%s"
 msgstr ""
 
-#: src/filemanager/cmd.c:859
+#: src/filemanager/cmd.c:869
 #, c-format
 msgid ""
 "Cannot create symbolic link\n"
 "%s"
 msgstr ""
 
-#: src/filemanager/cmd.c:1026
+#: src/filemanager/cmd.c:1036
 msgid "Filename:"
 msgstr ""
 
-#: src/filemanager/cmd.c:1065
+#: src/filemanager/cmd.c:1075
 msgid "Filtered view"
 msgstr ""
 
-#: src/filemanager/cmd.c:1065
+#: src/filemanager/cmd.c:1075
 msgid "Filter command and arguments:"
 msgstr ""
 
-#: src/filemanager/cmd.c:1160 src/filemanager/cmd.c:1175
+#: src/filemanager/cmd.c:1170 src/filemanager/cmd.c:1185
 msgid "Apply command"
 msgstr ""
 
-#: src/filemanager/cmd.c:1161
+#: src/filemanager/cmd.c:1171
 #, c-format
 msgid ""
 "Command for the files (%f name, %n name without extension, %x extension):"
 msgstr ""
 
-#: src/filemanager/cmd.c:1221
+#: src/filemanager/cmd.c:1231
 #, c-format
 msgid "%d file is skipped: its name has a line break"
 msgid_plural "%d files are skipped: their names have a line break"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/filemanager/cmd.c:1278
+#: src/filemanager/cmd.c:1288
 msgid "This plugin does not support file editing"
 msgstr ""
 
-#: src/filemanager/cmd.c:1330 src/filemanager/panel_plugin_ops.c:1320
+#: src/filemanager/cmd.c:1340 src/filemanager/panel_plugin_ops.c:1320
 #, c-format
 msgid "Cannot save %s back to plugin"
 msgstr ""
 
-#: src/filemanager/cmd.c:1448
+#: src/filemanager/cmd.c:1458
 msgid "Create a new Directory"
 msgstr ""
 
-#: src/filemanager/cmd.c:1448 src/panel-plugins/ftp/ftp.c:3147
+#: src/filemanager/cmd.c:1458 src/panel-plugins/ftp/ftp.c:3147
 #: src/panel-plugins/sftp/sftp.c:2636
 #: src/panel-plugins/shell-link/shell-link.c:2895
 msgid "Enter directory name:"
 msgstr ""
 
-#: src/filemanager/cmd.c:1509
+#: src/filemanager/cmd.c:1519
 msgid "Extension file edit"
 msgstr ""
 
-#: src/filemanager/cmd.c:1509
+#: src/filemanager/cmd.c:1519
 msgid "Which extension file you want to edit?"
 msgstr ""
 
-#: src/filemanager/cmd.c:1510 src/filemanager/cmd.c:1570
-#: src/filemanager/cmd.c:1628
+#: src/filemanager/cmd.c:1520 src/filemanager/cmd.c:1580
+#: src/filemanager/cmd.c:1638
 msgid "&System Wide"
 msgstr ""
 
-#: src/filemanager/cmd.c:1626
+#: src/filemanager/cmd.c:1636
 msgid "Highlighting groups file edit"
 msgstr ""
 
-#: src/filemanager/cmd.c:1627
+#: src/filemanager/cmd.c:1637
 msgid "Which highlighting file you want to edit?"
 msgstr ""
 
-#: src/filemanager/cmd.c:1712
+#: src/filemanager/cmd.c:1722
 msgid "Select compare method:"
 msgstr ""
 
-#: src/filemanager/cmd.c:1713
+#: src/filemanager/cmd.c:1723
 msgid "&Quick"
 msgstr ""
 
-#: src/filemanager/cmd.c:1713
+#: src/filemanager/cmd.c:1723
 msgid "&Size only"
 msgstr ""
 
-#: src/filemanager/cmd.c:1713
+#: src/filemanager/cmd.c:1723
 msgid "&Thorough"
 msgstr ""
 
-#: src/filemanager/cmd.c:1727
+#: src/filemanager/cmd.c:1737
 msgid ""
 "Both panels should be in the listing mode\n"
 "to use this command"
 msgstr ""
 
-#: src/filemanager/cmd.c:1789
+#: src/filemanager/cmd.c:1799
 #, c-format
 msgid "'%s' is not a symbolic link"
 msgstr ""
 
-#: src/filemanager/cmd.c:1802
+#: src/filemanager/cmd.c:1812
 #, c-format
 msgid "Symlink '%s' points to:"
 msgstr ""
 
-#: src/filemanager/cmd.c:1803
+#: src/filemanager/cmd.c:1813
 msgid "Edit symlink"
 msgstr ""
 
-#: src/filemanager/cmd.c:1816
+#: src/filemanager/cmd.c:1826
 #, c-format
 msgid ""
 "Edit symlink, unable to remove\n"
 "%s"
 msgstr ""
 
-#: src/filemanager/cmd.c:1823
+#: src/filemanager/cmd.c:1833
 #, c-format
 msgid ""
 "Cannot edit symlink\n"
 "%s"
 msgstr ""
 
-#: src/filemanager/cmd.c:1915 src/filemanager/cmd.c:1949
+#: src/filemanager/cmd.c:1925 src/filemanager/cmd.c:1959
 #: src/filemanager/file.c:756
 msgid "Directory scanning"
 msgstr ""
 
-#: src/filemanager/cmd.c:1996 src/filemanager/cmd.c:1998
+#: src/filemanager/cmd.c:2006 src/filemanager/cmd.c:2008
 msgid "Setup"
 msgstr ""
 
-#: src/filemanager/cmd.c:1996
+#: src/filemanager/cmd.c:2006
 #, c-format
 msgid "Setup saved to %s"
 msgstr ""
 
-#: src/filemanager/cmd.c:1998
+#: src/filemanager/cmd.c:2008
 #, c-format
 msgid "Unable to save setup to %s"
 msgstr ""
@@ -5725,11 +5748,12 @@ msgid "Deleting"
 msgstr ""
 
 #: src/filemanager/filegui.c:1384 src/filemanager/find.c:968
-#: src/filemanager/panel.c:3461
+#: src/filemanager/panel.c:3461 src/panel-plugins/duplicates/dup_dialog.c:392
 msgid "&Using shell patterns"
 msgstr ""
 
-#: src/filemanager/filegui.c:1386
+#: src/filemanager/filegui.c:1386 src/panel-plugins/duplicates/dup_dialog.c:406
+#: src/panel-plugins/duplicates/dup_dialog.c:409
 msgid "to:"
 msgstr ""
 
@@ -6018,96 +6042,104 @@ msgstr[1] ""
 msgid "Do you really want to quit?"
 msgstr ""
 
-#: src/filemanager/filemanager.c:1300 src/filemanager/panel_plugin_ops.c:2070
+#: src/filemanager/filemanager.c:1318 src/filemanager/panel_plugin_ops.c:2070
 msgid "This operation is not supported for plugin panels"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2103
+#: src/filemanager/filemanager.c:2122
 msgid "No file given"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2110 src/viewer/actions_cmd.c:914
+#: src/filemanager/filemanager.c:2130 src/filemanager/panel_plugin_ui.c:747
+#: src/viewer/actions_cmd.c:916
+#, c-format
+msgid ""
+"Cannot load plugin %s:\n"
+"%s"
+msgstr ""
+
+#: src/filemanager/filemanager.c:2132 src/viewer/actions_cmd.c:918
 #, c-format
 msgid "Plugin %s is not available"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2120
+#: src/filemanager/filemanager.c:2143
 #, c-format
 msgid "Plugin %s has no show operation"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2131
+#: src/filemanager/filemanager.c:2154
 msgid "&Above"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2131
+#: src/filemanager/filemanager.c:2154
 msgid "&Left"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2132
+#: src/filemanager/filemanager.c:2155
 msgid "&Below"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2132
+#: src/filemanager/filemanager.c:2155
 msgid "&Right"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2143 src/filemanager/filemanager.c:2145
+#: src/filemanager/filemanager.c:2166 src/filemanager/filemanager.c:2168
 #: tests/lib/widget/buttonbar_modifiers.c:70
 msgid "ButtonBar|Left"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2144 src/filemanager/filemanager.c:2146
+#: src/filemanager/filemanager.c:2167 src/filemanager/filemanager.c:2169
 msgid "ButtonBar|Right"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2147
+#: src/filemanager/filemanager.c:2170
 msgid "ButtonBar|Console"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2148 src/filemanager/filemanager.c:2169
+#: src/filemanager/filemanager.c:2171 src/filemanager/filemanager.c:2192
 #: src/viewer/display.c:130
 msgid "ButtonBar|View"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2151 src/filemanager/filemanager.c:2172
+#: src/filemanager/filemanager.c:2174 src/filemanager/filemanager.c:2195
 #: src/filemanager/tree.c:1175
 msgid "ButtonBar|RenMov"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2155
+#: src/filemanager/filemanager.c:2178
 msgid "ButtonBar|Name"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2156
+#: src/filemanager/filemanager.c:2179
 msgid "ButtonBar|Version"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2157
+#: src/filemanager/filemanager.c:2180
 msgid "ButtonBar|Ext"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2158
+#: src/filemanager/filemanager.c:2181
 msgid "ButtonBar|Size"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2159
+#: src/filemanager/filemanager.c:2182
 msgid "ButtonBar|MTime"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2160
+#: src/filemanager/filemanager.c:2183
 msgid "ButtonBar|Unsort"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2161
+#: src/filemanager/filemanager.c:2184
 msgid "ButtonBar|CTime"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2162
+#: src/filemanager/filemanager.c:2185
 msgid "ButtonBar|ATime"
 msgstr ""
 
-#: src/filemanager/filemanager.c:2173 src/filemanager/mcterm_overlay.c:1173
+#: src/filemanager/filemanager.c:2196 src/filemanager/mcterm_overlay.c:1173
 #: src/filemanager/tree.c:1178
 msgid "ButtonBar|Mkdir"
 msgstr ""
@@ -6175,7 +6207,7 @@ msgstr ""
 msgid "&Find recursively"
 msgstr ""
 
-#: src/filemanager/find.c:967
+#: src/filemanager/find.c:967 src/panel-plugins/duplicates/dup_dialog.c:436
 msgid "Follow s&ymlinks"
 msgstr ""
 
@@ -6207,7 +6239,7 @@ msgstr ""
 msgid "Find File"
 msgstr ""
 
-#: src/filemanager/find.c:1035
+#: src/filemanager/find.c:1035 src/panel-plugins/duplicates/dup_dialog.c:378
 msgid "Start at:"
 msgstr ""
 
@@ -6975,41 +7007,41 @@ msgstr ""
 msgid "Cannot delete local file %s"
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:276
+#: src/filemanager/panel_plugin_ui.c:277
 #, c-format
 msgid "No plugin opens %s."
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:296
+#: src/filemanager/panel_plugin_ui.c:297
 msgid "The other half of the screen shows no panel to open it in."
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:1071
+#: src/filemanager/panel_plugin_ui.c:1122
 #, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:1590
+#: src/filemanager/panel_plugin_ui.c:1649
 msgid "Send to panel"
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:1752
-#: src/filemanager/panel_plugin_ui.c:1756
-#: src/filemanager/panel_plugin_ui.c:1812
+#: src/filemanager/panel_plugin_ui.c:1811
+#: src/filemanager/panel_plugin_ui.c:1815
+#: src/filemanager/panel_plugin_ui.c:1871
 msgid "Plugin panel"
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:1752
-#: src/filemanager/panel_plugin_ui.c:1812
+#: src/filemanager/panel_plugin_ui.c:1811
+#: src/filemanager/panel_plugin_ui.c:1871
 msgid "No panel plugins are loaded."
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:1833
-#: src/filemanager/panel_plugin_ui.c:1838
+#: src/filemanager/panel_plugin_ui.c:1892
+#: src/filemanager/panel_plugin_ui.c:1897
 msgid "Change drive"
 msgstr ""
 
-#: src/filemanager/panel_plugin_ui.c:1834
+#: src/filemanager/panel_plugin_ui.c:1893
 msgid "No plugins with drive menu support are loaded."
 msgstr ""
 
@@ -7357,69 +7389,69 @@ msgid ""
 "%s\n"
 msgstr ""
 
-#: src/manage_plugins.c:212 src/manage_plugins.c:220 src/manage_plugins.c:230
+#: src/manage_plugins.c:214 src/manage_plugins.c:222 src/manage_plugins.c:232
 msgid "unspecified"
 msgstr ""
 
-#: src/manage_plugins.c:401 src/manage_plugins.c:482 src/manage_plugins.c:525
+#: src/manage_plugins.c:403 src/manage_plugins.c:484 src/manage_plugins.c:527
 msgid "Lua scripts"
 msgstr ""
 
-#: src/manage_plugins.c:401
+#: src/manage_plugins.c:403
 msgid "This script has no entry file."
 msgstr ""
 
-#: src/manage_plugins.c:453 src/manage_plugins.c:457 src/manage_plugins.c:650
+#: src/manage_plugins.c:455 src/manage_plugins.c:459 src/manage_plugins.c:652
 msgid "Lua"
 msgstr ""
 
-#: src/manage_plugins.c:453 src/manage_plugins.c:634
+#: src/manage_plugins.c:455 src/manage_plugins.c:636
 #: src/panel-plugins/arcmc/archive-io.c:3235
 #: src/panel-plugins/postgres/postgres_conn.c:149
 msgid "Unknown error"
 msgstr ""
 
-#: src/manage_plugins.c:457
+#: src/manage_plugins.c:459
 msgid "This script has no settings."
 msgstr ""
 
-#: src/manage_plugins.c:484
+#: src/manage_plugins.c:486
 msgid "No global or user Lua scripts were found."
 msgstr ""
 
-#: src/manage_plugins.c:485
+#: src/manage_plugins.c:487
 msgid "Lua runtime is disabled. Enable Lua engine and restart MC."
 msgstr ""
 
-#: src/manage_plugins.c:551
+#: src/manage_plugins.c:553
 msgid "&Settings"
 msgstr ""
 
-#: src/manage_plugins.c:633
+#: src/manage_plugins.c:635
 msgid "Lua action failed"
 msgstr ""
 
-#: src/manage_plugins.c:650
+#: src/manage_plugins.c:652
 msgid "The selected script has no runnable actions."
 msgstr ""
 
-#: src/manage_plugins.c:663
+#: src/manage_plugins.c:665
 msgid "Run Lua action"
 msgstr ""
 
-#: src/manage_plugins.c:802
+#: src/manage_plugins.c:804
 msgid "(disabled, not loaded)"
 msgstr ""
 
-#: src/manage_plugins.c:916 src/manage_plugins.c:984 src/manage_plugins.c:1020
+#: src/manage_plugins.c:918 src/manage_plugins.c:989 src/manage_plugins.c:1025
 msgid "Manage Plugins"
 msgstr ""
 
-#: src/manage_plugins.c:916
+#: src/manage_plugins.c:918
 msgid "This plugin has no settings."
 msgstr ""
 
-#: src/manage_plugins.c:984
+#: src/manage_plugins.c:989
 msgid "No plugins loaded."
 msgstr ""
 
@@ -8746,6 +8778,313 @@ msgstr ""
 msgid "New Connection"
 msgstr ""
 
+#: src/panel-plugins/duplicates/dup_dialog.c:225
+#, c-format
+msgid "No such directory: %s"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:233
+msgid "The other panel shows no local directory"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:238
+msgid "The reference directory is the start directory"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:250
+msgid "This build reads no images: libjpeg and libpng were not found"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:255
+msgid "The similarity is a percent from 1 to 100"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:261
+msgid "Choose what the duplicates have in common"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:274
+msgid "Malformed size"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:276
+msgid "The lower size limit is above the upper one"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:280
+msgid "Malformed date"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:282
+msgid "The first date is after the last one"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:290
+#, c-format
+msgid "Malformed file name pattern: %s"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:357
+msgid "By &file type"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:358
+msgid "Ima&ges: perceptual hash"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:359
+msgid "Te&xt: ignore line endings and spaces"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:365
+#, c-format
+msgid "Also in the other &panel (%s)"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:366
+msgid "Also in the other &panel"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:382
+msgid "    The other panel is a &reference: never move or delete there"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:384
+msgid "Enable &ignore directories:"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:388
+msgid "File mask:"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:393
+msgid "Case sensi&tive"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:395
+msgid "Skip h&idden"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:398
+msgid "Size from (e.g. 10M):"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:401
+msgid "Modified from (e.g. 2024-01-01 or 30d):"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:415
+msgid "Same si&ze"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:416
+msgid "Same na&me"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:418
+msgid "Same co&ntent"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:420
+msgid "Name case sensiti&ve"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:423
+msgid "Simi&lar content, not only the same bytes"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:428
+msgid "Similarity (e.g. 90%):"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:434
+msgid "Find &recursively"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_dialog.c:447
+#: src/panel-plugins/duplicates/dup_search.c:106
+#: src/panel-plugins/duplicates/duplicates.c:565
+#: src/panel-plugins/duplicates/duplicates.c:638
+#: src/panel-plugins/duplicates/duplicates.c:656
+#: src/panel-plugins/duplicates/duplicates.c:900
+#: src/panel-plugins/duplicates/duplicates.c:934
+#: src/panel-plugins/duplicates/duplicates.c:939
+#: src/panel-plugins/duplicates/duplicates.c:995
+msgid "Find duplicates"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_search.c:125
+msgid "&Show found"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_search.c:191
+msgid "Walking: "
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_search.c:193
+#, c-format
+msgid "Files: %u   taken: %u (%s)"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_search.c:206
+#, c-format
+msgid "Hashing %u / %u files, %s / %s"
+msgstr ""
+
+#: src/panel-plugins/duplicates/dup_search.c:220
+#, c-format
+msgid "Found so far: %u group, %s can be freed"
+msgid_plural "Found so far: %u groups, %s can be freed"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:114
+#: src/panel-plugins/duplicates/duplicates.c:119
+msgid "Find &duplicates..."
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:115
+#: src/panel-plugins/duplicates/duplicates.c:120
+msgid "Stop the search for duplicates"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:124
+msgid "Grp"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:125
+msgid "Ref"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:126
+msgid "Sim"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:132
+msgid "Duplicates"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:218
+#, c-format
+msgid "walking, %u files"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:222
+#, c-format
+msgid "%u/%u hashed, %u group"
+msgid_plural "%u/%u hashed, %u groups"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:226
+#, c-format
+msgid "stopped, %u group, %s"
+msgid_plural "stopped, %u groups, %s"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:230
+#, c-format
+msgid "%u group, %s"
+msgid_plural "%u groups, %s"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:242
+#, c-format
+msgid ", %u unread"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:566
+msgid ""
+"A search for duplicates is running.\n"
+"Stop it and start a new one?"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:582
+#, c-format
+msgid ""
+"Cannot create a pipe:\n"
+"%s"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:610
+msgid "No group was complete when stopped."
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:612
+#, c-format
+msgid "No duplicates found among %u file."
+msgid_plural "No duplicates found among %u files."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:620
+#, c-format
+msgid ""
+"%s\n"
+"%u file could not be read, it was not compared."
+msgid_plural ""
+"%s\n"
+"%u files could not be read, they were not compared."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:631
+#, c-format
+msgid ""
+"%s\n"
+"%u directory could not be read, its files were not seen."
+msgid_plural ""
+"%s\n"
+"%u directories could not be read, their files were not seen."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:656
+msgid "No search for duplicates is running."
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:778
+msgid "ref"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:896
+#, c-format
+msgid ""
+"No copy of %u group is left after this.\n"
+"Delete the files anyway?"
+msgid_plural ""
+"No copy of %u groups is left after this.\n"
+"Delete the files anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:935
+#, c-format
+msgid "%u file of the reference directory is kept."
+msgid_plural "%u files of the reference directory are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:940
+#, c-format
+msgid "%u file changed since the search and is kept."
+msgid_plural "%u files changed since the search and are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/panel-plugins/duplicates/duplicates.c:945
+#, c-format
+msgid ""
+"Cannot delete\n"
+"%s"
+msgstr ""
+
+#: src/panel-plugins/duplicates/duplicates.c:996
+msgid "The files of the reference directory are not moved."
+msgstr ""
+
 #: src/panel-plugins/ftp/ftp.c:1520
 msgid "FTP"
 msgstr ""
@@ -8998,7 +9337,7 @@ msgstr ""
 msgid "Already in favorites."
 msgstr ""
 
-#: src/panel-plugins/gh/gh.c:606 src/panel-plugins/git/git.c:3236
+#: src/panel-plugins/gh/gh.c:606 src/panel-plugins/git/git.c:3275
 msgid "Add to favorites"
 msgstr ""
 
@@ -9048,12 +9387,12 @@ msgstr ""
 msgid "%u files, base %.7s"
 msgstr ""
 
-#: src/panel-plugins/git/git.c:1686 src/panel-plugins/git/git.c:2247
-#: src/panel-plugins/git/git.c:2260 src/panel-plugins/git/git.c:2273
+#: src/panel-plugins/git/git.c:1695 src/panel-plugins/git/git.c:2286
+#: src/panel-plugins/git/git.c:2299 src/panel-plugins/git/git.c:2312
 msgid "Git panel"
 msgstr ""
 
-#: src/panel-plugins/git/git.c:1687
+#: src/panel-plugins/git/git.c:1696
 msgid ""
 "This operation is irreversible.\n"
 "Selected files will be reset to HEAD.\n"
@@ -9062,25 +9401,25 @@ msgid ""
 "Do you want to continue?"
 msgstr ""
 
-#: src/panel-plugins/git/git.c:1691
+#: src/panel-plugins/git/git.c:1700
 #: src/panel-plugins/skineditor/skineditor_color.c:668
 msgid "&Reset"
 msgstr ""
 
-#: src/panel-plugins/git/git.c:2247
+#: src/panel-plugins/git/git.c:2286
 msgid "Select a commit first."
 msgstr ""
 
-#: src/panel-plugins/git/git.c:2261
+#: src/panel-plugins/git/git.c:2300
 msgid "Reword is available only for commits on the current branch."
 msgstr ""
 
-#: src/panel-plugins/git/git.c:2271
+#: src/panel-plugins/git/git.c:2310
 #, c-format
-msgid "Cannot find coole executable: %s"
+msgid "Cannot find bluerig executable: %s"
 msgstr ""
 
-#: src/panel-plugins/git/git.c:3236
+#: src/panel-plugins/git/git.c:3275
 msgid "Repository path:"
 msgstr ""
 
@@ -9685,19 +10024,19 @@ msgstr ""
 
 #: src/panel-plugins/mongo/mongo_console.c:175
 msgid ""
-"Install coole for the query editor, or mongosh. Their paths can be given in "
-"the MongoDB settings."
+"Install bluerig for the query editor, or mongosh. Their paths can be given "
+"in the MongoDB settings."
 msgstr ""
 
 #: src/panel-plugins/mongo/mongo_console.c:225
-#: src/panel-plugins/postgres/postgres_console.c:336
+#: src/panel-plugins/postgres/postgres_console.c:337
 #, c-format
 msgid "Cannot start %s."
 msgstr ""
 
 #: src/panel-plugins/mongo/mongo_console.c:254
-#: src/panel-plugins/postgres/postgres_console.c:361
-msgid "This build of mc has no terminal for coole."
+#: src/panel-plugins/postgres/postgres_console.c:362
+msgid "This build of mc has no terminal for bluerig."
 msgstr ""
 
 #: src/panel-plugins/mongo/mongo_docops.c:68
@@ -9943,7 +10282,7 @@ msgstr ""
 
 #: src/panel-plugins/mongo/mongo_settings.c:219
 #: src/panel-plugins/postgres/postgres_settings.c:103
-msgid "coole, the query editor (empty: from PATH):"
+msgid "bluerig, the query editor (empty: from PATH):"
 msgstr ""
 
 #: src/panel-plugins/mongo/mongo_settings.c:223
@@ -10226,7 +10565,7 @@ msgstr ""
 msgid "Cannot write postgres.ini"
 msgstr ""
 
-#: src/panel-plugins/postgres/postgres_config.c:362
+#: src/panel-plugins/postgres/postgres_config.c:390
 msgid "Invalid connection name"
 msgstr ""
 
@@ -10375,13 +10714,13 @@ msgstr ""
 msgid "Cannot delete the connection: %s"
 msgstr ""
 
-#: src/panel-plugins/postgres/postgres_console.c:275
+#: src/panel-plugins/postgres/postgres_console.c:276
 msgid ""
-"Install coole for the query editor, or psql. Their paths can be given in the "
-"PostgreSQL settings."
+"Install bluerig for the query editor, or psql. Their paths can be given in "
+"the PostgreSQL settings."
 msgstr ""
 
-#: src/panel-plugins/postgres/postgres_console.c:378
+#: src/panel-plugins/postgres/postgres_console.c:379
 #: src/panel-plugins/postgres/postgres_nav.c:251
 #: src/panel-plugins/postgres/postgres_nav.c:295
 #, c-format
@@ -10411,7 +10750,7 @@ msgid "Show &system schemas"
 msgstr ""
 
 #: src/panel-plugins/postgres/postgres_settings.c:107
-msgid "psql, without coole (empty: from PATH):"
+msgid "psql, without bluerig (empty: from PATH):"
 msgstr ""
 
 #: src/panel-plugins/postgres/postgres_settings.c:118
@@ -13228,7 +13567,7 @@ msgid ""
 "Save modified file?"
 msgstr ""
 
-#: src/viewer/actions_cmd.c:906
+#: src/viewer/actions_cmd.c:907
 msgid "The structure viewer works on local files only"
 msgstr ""
 
@@ -13420,15 +13759,15 @@ msgid ""
 "Not a regular file"
 msgstr ""
 
-#: src/viewer/search.c:312 src/viewer/search.c:515
+#: src/viewer/search.c:312 src/viewer/search.c:519
 msgid "Search done"
 msgstr ""
 
-#: src/viewer/search.c:312 src/viewer/search.c:515
+#: src/viewer/search.c:312 src/viewer/search.c:519
 msgid "Continue from beginning?"
 msgstr ""
 
-#: src/viewer/search.c:549
+#: src/viewer/search.c:553
 msgid "Not found in the text rendered so far."
 msgstr ""
 
