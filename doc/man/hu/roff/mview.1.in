@@ -77,7 +77,6 @@ felel meg. A kettőt keverni is lehet:
 
 .EX
 "Szöveg" 34 0xBB 012 "további szöveg"
-
 .EE
 
 .PP
@@ -126,7 +125,6 @@ F7, /        keresés az egész dokumentumban, a becsukott
 F17, n       a keresés folytatása
 F6           a fa szűrése mintával
 ] / [        a következő / előző találatra lépés
-
 .EE
 
 .PP

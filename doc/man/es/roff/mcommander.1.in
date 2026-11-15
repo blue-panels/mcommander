@@ -409,7 +409,6 @@ orden de prioridad a:
 2) variable de entorno MC_KEYMAP
 3) parámetro keymap de la sección [Midnight\-Commander]
 4) archivo ~/.config/mc6/keymap.ini
-
 .EE
 
 .PP
@@ -421,7 +420,6 @@ se le añade esa extensión, y se busca en (hasta encontrarlo):
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -433,7 +431,6 @@ que se lee el último y no necesita opción alguna:
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Modo Far
@@ -2009,7 +2006,6 @@ componentes de la lista se separan con dos puntos:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -2018,7 +2014,6 @@ directorios propios de los sistemas de control de versiones:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -2044,7 +2039,6 @@ ejecutar el siguiente comando:
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -2059,7 +2053,6 @@ de los archivos de registro (log) de la transferencia:
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -2102,7 +2095,6 @@ F6           mover la entrada a otro grupo: el diálogo lista los
 F9           ordenar el grupo actual por etiqueta, grupos primero
 Ctrl\-s       buscar en la lista según se teclea, Ctrl\-s repite
 Derecha, Izq entrar en un grupo y salir de él
-
 .EE
 
 .PP
@@ -2147,7 +2139,6 @@ Supr         borrar la entrada
 Ctrl\-Arriba  subir la entrada
 Ctrl\-Abajo   bajar la entrada
 Alt\-A        mostrar también las entradas ocultas aquí
-
 .EE
 
 .PP
@@ -2236,7 +2227,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2312,7 +2302,6 @@ el cursor, de la manera en que .gitignore compara sus patrones:
 **/src/*          cualquier cosa justo en un directorio src
 build/            un directorio llamado build
 *.c;!test_*.c     las fuentes en C menos las pruebas
-
 .EE
 
 .PP
@@ -2427,7 +2416,6 @@ K	Realiza una versión del directorio actual
 = f *.tar.gz | f *.tgz & t n
 X       Extrae los contenidos de un archivo tar comprimido
 	tar xzvf %f
-
 .EE
 
 .PP
@@ -2452,7 +2440,6 @@ Sub\-condición es una de las siguientes:
   t <tipo>		¿archivo actual es de tipo <tipo>?
   T <tipo>		¿otro archivo es de tipo <tipo>?
   ! <sub\-cond>		niega el resultado de la sub\-condición
-
 .EE
 
 .PP
@@ -2475,7 +2462,6 @@ Tipo es uno o más de los siguientes caracteres:
   s	socket
   x	ejecutable
   t	marcado (tagged)
-
 .EE
 
 .PP
@@ -2493,7 +2479,6 @@ Las condiciones son calculadas de izquierda a derecha. Esto significa que
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2501,7 +2486,6 @@ es calculado como
 
 .EX
 	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2511,7 +2495,6 @@ He aquí un ejemplo de uso de condiciones:
 = f *.tar.gz | f *.tgz & t n
 L	Lista el contenido de un archivo tar comprimido
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3423,7 +3406,6 @@ Alt\-Mayús\-s    mostrar solo las filas que coinciden
 Ctrl\-l         limpiar la pantalla, conservando la salida
 Ctrl\-Mayús\-l   limpiar la pantalla y toda la salida
                (también Ctrl\-Alt\-l)
-
 .EE
 
 .PP
@@ -3464,7 +3446,6 @@ F4           dejar solo las filas que coinciden con la selección
              o con la palabra bajo el cursor
 F5           quitar ese filtro y volver a ponerlo
 F6           limpiar la pantalla y toda la salida
-
 .EE
 
 .PP
@@ -3963,7 +3944,6 @@ panelize     el resultado de una orden como panel
 mcpeek       una mirada dentro de un archivo
 mcstruct     un archivo binario como árbol de campos con nombre
 skineditor   el aspecto del programa
-
 .EE
 
 .PP
@@ -4001,7 +3981,6 @@ Por ejemplo, para listar las pistas de música del CD, escribir
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -4021,7 +4000,6 @@ comprimido hay que escribir
 
 .EX
   cd documentos.zip/uzip://
-
 .EE
 
 .PP
@@ -4114,7 +4092,6 @@ paquetes Debian:
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH Sistema de archivos de un solo archivo
@@ -4126,7 +4103,6 @@ del sistema de archivos se añade al del archivo, igual que en extfs:
 
 .EX
   cd documentos.gz/ugz://
-
 .EE
 
 .PP
@@ -4172,7 +4148,6 @@ Principio de la cadena               ^
 Final de la cadena                   $
 Límite de palabra                    \eb
 Fuera de un límite de palabra        \eB
-
 .EE
 
 .PP
@@ -4187,7 +4162,6 @@ Final de la cadena                   \eZ
 Final absoluto de la cadena          \ez
 Límite de palabra                    \eb
 Fuera de un límite de palabra        \eB
-
 .EE
 
 .PP
@@ -4198,7 +4172,6 @@ Salto de línea                       \en
 Retorno de carro                     \er
 Tabulación                           \et
 Carácter nulo                        \e0
-
 .EE
 
 .PP
@@ -4246,7 +4219,6 @@ Carácter octal ddd                   \eddd
 Carácter de control Y                \ecY
 Carácter de retroceso                [\eb]
 Hace literal cualquier carácter      \e
-
 .EE
 
 .PP
@@ -4262,7 +4234,6 @@ Entre 3 y 6 a                        a{3,6}
 Cuantificador voraz                  a*
 Cuantificador perezoso               a*?
 Cuantificador posesivo               a*+
-
 .EE
 
 .PP
@@ -4290,7 +4261,6 @@ Caracteres de palabra                [[:word:]]
 Dígitos hexadecimales                [[:xdigit:]]
 Principio de palabra                 [[:<:]]
 Final de palabra                     [[:>:]]
-
 .EE
 
 .PP
@@ -4308,7 +4278,6 @@ Anclado                              A
 Nombres de grupo repetidos           J
 Grupos sin captura                   n
 Ignorar todo espacio / detallado     xx
-
 .EE
 
 .PP
@@ -4353,7 +4322,6 @@ Verbo de control                     (*COMMIT)
 Verbo de control                     (*PRUNE)
 Verbo de control                     (*SKIP)
 Verbo de control                     (*THEN)
-
 .EE
 
 
@@ -4530,12 +4498,10 @@ M\-Commander intente la detección de soporte de color. Ejemplo:
 .EX
 [Colors]
 color_terminals=linux,xterm
-
 .EE
 
 .EX
 color_terminals=nombre\-terminal1,nombre\-terminal2...
-
 .EE
 
 .PP
@@ -4837,7 +4803,6 @@ Ejemplo:
     selected=;blue
     # amarillo sobre negro (por defecto)
     marked=yellow;
-
 .EE
 
 .PP
@@ -4970,7 +4935,6 @@ hace la regla 'extensions' sensible o no a mayúsculas (true o false).
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -5074,7 +5038,6 @@ Por ejemplo:
 
 .EX
 clipboard_store=/usr/bin/xclip \-i
-
 .EE
 
 .TP
@@ -5085,7 +5048,6 @@ Por ejemplo:
 
 .EX
 clipboard_paste=/usr/bin/xclip \-o
-
 .EE
 
 .TP
@@ -5111,7 +5073,6 @@ Por ejemplo:
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -5237,7 +5198,6 @@ Por ejemplo:
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -5282,7 +5242,6 @@ pgup          tecla de retroceso de página
 insert        tecla de insertar
 delete        tecla de suprimir
 complete      tecla para completar
-
 .EE
 
 .PP
@@ -5292,7 +5251,6 @@ a la tecla de insertar, hay que colocar en el archivo
 
 .EX
 insert=\ee[Op
-
 .EE
 
 .PP
@@ -5303,7 +5261,6 @@ Por ejemplo:
 .EX
     ctrl\-alt\-right=\ee[[1;6C
     ctrl\-alt\-left=\ee[[1;6D
-
 .EE
 
 .PP
@@ -5431,7 +5388,6 @@ Para conservar el registro de una conexión ftp que falla:
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -5533,7 +5489,6 @@ terminfo(1), gpm(1).
 .EX
 La página web de M\-Commander está en:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 .PP
@@ -5546,7 +5501,6 @@ original ejecutar en la línea de órdenes:
 
 .EX
         LANG= LC_ALL= man mcommander
-
 .EE
 
 

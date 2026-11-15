@@ -397,7 +397,6 @@ S\-<символ> означает, что нужно держать в нажа
 2) переменная окружения MC_KEYMAP
 3) параметр keymap секции [Midnight\-Commander]
 4) файл ~/.config/mc6/keymap.ini
-
 .EE
 
 .PP
@@ -410,7 +409,6 @@ S\-<символ> означает, что нужно держать в нажа
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -423,7 +421,6 @@ S\-<символ> означает, что нужно держать в нажа
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Режим Far
@@ -1550,7 +1547,6 @@ half name | size:7 | type mode:3
 \- по времени последнего изменения атрибутов файла;
 \- по номеру узла (inode);
 \- без сортировки.
-
 .EE
 
 .PP
@@ -2201,7 +2197,6 @@ M\-Commander создаёт дерево путем просмотра толь�
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -2210,7 +2205,6 @@ M\-Commander создаёт дерево путем просмотра толь�
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -2236,7 +2230,6 @@ M\-Commander создаёт дерево путем просмотра толь�
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -2251,7 +2244,6 @@ find . \-type l \-print
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -2298,7 +2290,6 @@ F6           перенести запись в другую группу: ди�
 F9           отсортировать текущую группу по меткам, группы первыми
 Ctrl\-s       поиск по списку по мере набора, Ctrl\-s ищет дальше
 Right, Left  войти в группу и выйти из неё
-
 .EE
 
 .PP
@@ -2344,7 +2335,6 @@ Del         удалить пункт
 Ctrl\-Up     поднять пункт выше
 Ctrl\-Down   опустить пункт ниже
 Alt\-A       показать и пункты, скрытые здесь
-
 .EE
 
 .PP
@@ -2433,7 +2423,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2508,7 +2497,6 @@ socket, через ';'; достаточно любого из них. Ссыл�
 **/src/*          всё прямо в каталоге src
 build/            каталог с именем build
 *.c;!test_*.c     исходники на C, кроме тестов
-
 .EE
 
 .PP
@@ -2625,7 +2613,6 @@ K	Make a release of the current subdirectory
 = f *.tar.gz | f *.tgz & t n
 X	Extract the contents of a compressed tar file
 	tar xzvf %f
-
 .EE
 
 .PP
@@ -2655,7 +2642,6 @@ X	Extract the contents of a compressed tar file
   T <type>        соответствует ли тип файла в пассивной панели <type>?
   x <filename>    является ли filename исполнимым?
   ! <sub\-cond>   логическое отрицание условия <sub\-cond>
-
 .EE
 
 .PP
@@ -2678,7 +2664,6 @@ X	Extract the contents of a compressed tar file
   s     socket
   x     исполняемый файл
   t     помеченный файл (tagged)
-
 .EE
 
 .PP
@@ -2698,7 +2683,6 @@ trace will be shown whenever the value of the condition is calculated).
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2706,7 +2690,6 @@ trace will be shown whenever the value of the condition is calculated).
 
 .EX
 	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2716,7 +2699,6 @@ trace will be shown whenever the value of the condition is calculated).
 = f *.tar.gz | f *.tgz & t n
 L	List the contents of a compressed tar\-archive
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3702,7 +3684,6 @@ Alt\-Shift\-s    показать только совпавшие строки
 Ctrl\-l         очистить экран, сохранив выдачу
 Ctrl\-Shift\-l   очистить и экран, и всю выдачу
                (то же самое Ctrl\-Alt\-l)
-
 .EE
 
 .PP
@@ -3742,7 +3723,6 @@ F4           оставить только строки, совпавшие с �
              или со словом под курсором
 F5           снять этот фильтр и поставить его снова
 F6           очистить и экран, и всю выдачу
-
 .EE
 
 .PP
@@ -4356,7 +4336,6 @@ chattr \- команде изменения атрибутов файлов и �
 Конец строки                     $
 Граница слова                    \eb
 Не граница слова                 \eB
-
 .EE
 
 .PP
@@ -4371,7 +4350,6 @@ chattr \- команде изменения атрибутов файлов и �
 Абсолютный конец строки  \ez
 Граница слова            \eb
 Не граница слова         \eB
-
 .EE
 
 .PP
@@ -4382,7 +4360,6 @@ chattr \- команде изменения атрибутов файлов и �
 Возврат каретки  \er
 Табуляция        \et
 Нулевой символ   \e0
-
 .EE
 
 .PP
@@ -4430,7 +4407,6 @@ n\-й подшаблон назад от текущего        \eg{\-n}
 Управляющий символ Y                   \ecY
 Символ забоя (backspace)               [\eb]
 Делает любой символ буквальным         \e
-
 .EE
 
 .PP
@@ -4446,7 +4422,6 @@ n\-й подшаблон назад от текущего        \eg{\-n}
 Жадный квантификатор        a*
 Ленивый квантификатор       a*?
 Сверхжадный квантификатор   a*+
-
 .EE
 
 .PP
@@ -4474,7 +4449,6 @@ n\-й подшаблон назад от текущего        \eg{\-n}
 Шестнадцатеричные цифры          [[:xdigit:]]
 Начало слова                     [[:<:]]
 Конец слова                      [[:>:]]
-
 .EE
 
 .PP
@@ -4492,7 +4466,6 @@ n\-й подшаблон назад от текущего        \eg{\-n}
 Одинаковые имена групп                   J
 Группы без захвата                       n
 Пропускать все пробелы, подробный режим  xx
-
 .EE
 
 .PP
@@ -4537,7 +4510,6 @@ n\-й подшаблон назад от текущего        \eg{\-n}
 Управляющее слово                  (*PRUNE)
 Управляющее слово                  (*SKIP)
 Управляющее слово                  (*THEN)
-
 .EE
 
 
@@ -4662,7 +4634,6 @@ panelize     результат команды в виде панели
 mcpeek       заглянуть внутрь файла
 mcstruct     двоичный файл как дерево именованных полей
 skineditor   скин программы
-
 .EE
 
 .PP
@@ -4696,7 +4667,6 @@ skineditor   скин программы
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -4713,7 +4683,6 @@ skineditor   скин программы
 
 .EX
   cd documents.zip/uzip://
-
 .EE
 
 .PP
@@ -4788,7 +4757,6 @@ front end для системы управления пакетами APT (Debia
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH Файловая система одного файла
@@ -4800,7 +4768,6 @@ front end для системы управления пакетами APT (Debia
 
 .EX
   cd documents.gz/ugz://
-
 .EE
 
 .PP
@@ -4852,12 +4819,10 @@ M\-Commander не будет пытаться определить, поддер
 .EX
 [Colors]
 color_terminals=linux,xterm
-
 .EE
 
 .EX
 color_terminals=terminal\-name1,terminal\-name2...
-
 .EE
 
 
@@ -5148,7 +5113,6 @@ color_terminals=terminal\-name1,terminal\-name2...
     selected=;blue
     # жёлтым по чёрному (умолч.) с подчёркиванием
     marked=yellow;;underline
-
 .EE
 
 .PP
@@ -5172,7 +5136,6 @@ color_terminals=terminal\-name1,terminal\-name2...
     myfavattr=bold+italic
 [core]
     _default_=myfavfg;myfavbg;myfavattr
-
 .EE
 
 .SH Линии для отрисовки рамок
@@ -5301,7 +5264,6 @@ color_terminals=terminal\-name1,terminal\-name2...
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -5391,7 +5353,6 @@ extensions.ini\&.
 
 .EX
 clipboard_store=xclip \-i
-
 .EE
 
 .TP
@@ -5403,7 +5364,6 @@ clipboard_store=xclip \-i
 
 .EX
 clipboard_paste=xclip \-o
-
 .EE
 
 .TP
@@ -5428,7 +5388,6 @@ clipboard_paste=xclip \-o
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -5550,7 +5509,6 @@ M\-Commander позволяет задать некоторые параметр
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -5608,7 +5566,6 @@ pgup          то же для клавиши Page Up
 insert        то же для клавиши Insert
 delete        то же для клавиши Delete
 complete      комбинация клавиш для выполнения операции "завершение ввода"
-
 .EE
 
 .PP
@@ -5619,7 +5576,6 @@ complete      комбинация клавиш для выполнения оп
 
 .EX
 insert=\ee[Op
-
 .EE
 
 .PP
@@ -5737,7 +5693,6 @@ insert=\ee[Op
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -5813,7 +5768,6 @@ MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
 
 .EX
  find / \-type d \-print | sort > ~/.cache/mc6/Tree
-
 .EE
 
 .PP
@@ -5862,7 +5816,6 @@ zsh(1), mcedit6(1).
 .EX
 Страница, посвященная M\-Commander, в World Wide Web:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 .PP
@@ -5874,7 +5827,6 @@ zsh(1), mcedit6(1).
 
 .EX
 LANG= man mcommander
-
 .EE
 
 

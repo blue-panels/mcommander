@@ -336,7 +336,6 @@ User\-defined keymap\-file is searched on the following algorithm
 2) environment variable MC_KEYMAP
 3) parameter keymap of the [Midnight\-Commander] section
 4) file ~/.config/mc6/keymap.ini
-
 .EE
 
 .PP
@@ -347,7 +346,6 @@ gets that extension added, and is looked for in (to the first one found):
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -359,7 +357,6 @@ which is read last and needs no option:
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Far mode
@@ -2044,7 +2041,6 @@ with a colon, here is an example:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -2053,7 +2049,6 @@ directories of version control systems:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -2078,7 +2073,6 @@ panelization to run the following command:
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -2095,7 +2089,6 @@ name from the transfer log files:
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -2140,7 +2133,6 @@ F6           move the selected entry into another group: the dialog lists
 F9           sort the current group by label, groups first
 Ctrl\-s       search the list as you type, Ctrl\-s again finds the next match
 Right, Left  enter and leave a group
-
 .EE
 
 .PP
@@ -2186,7 +2178,6 @@ Del         delete the entry
 Ctrl\-Up     move the entry up
 Ctrl\-Down   move the entry down
 Alt\-A       show the entries hidden here as well
-
 .EE
 
 .PP
@@ -2274,7 +2265,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2347,7 +2337,6 @@ the way .gitignore compares its patterns:
 **/src/*          anything right in a directory src
 build/            a directory called build
 *.c;!test_*.c     the C sources but the tests
-
 .EE
 
 .PP
@@ -2456,7 +2445,6 @@ K	Make a release of the current subdirectory
 = f *.tar.gz | f *.tgz & t n
 X       Extract the contents of a compressed tar file
 	tar xzvf %f
-
 .EE
 
 .PP
@@ -2484,7 +2472,6 @@ Sub\-condition is one of following:
   T <type>		other file of type?
   x <filename>		is it executable filename?
   ! <sub\-cond>		negate the result of sub\-condition
-
 .EE
 
 .PP
@@ -2507,7 +2494,6 @@ Type is one or more of the following characters:
   s	socket
   x	executable file
   t	tagged
-
 .EE
 
 .PP
@@ -2525,7 +2511,6 @@ The conditions are calculated from left to right. This means
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2533,7 +2518,6 @@ is calculated as
 
 .EX
 	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2543,7 +2527,6 @@ Here is a sample of the use of conditions:
 = f *.tar.gz | f *.tgz & t n
 L	List the contents of a compressed tar\-archive
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3522,7 +3505,6 @@ Alt\-Shift\-s    show only the rows that match what is typed next
 Ctrl\-l         clear the screen, keeping the scrollback
 Ctrl\-Shift\-l   clear the screen and the scrollback both
                (also Ctrl\-Alt\-l)
-
 .EE
 
 .PP
@@ -3563,7 +3545,6 @@ F4           cut the output down to the rows that match the mark,
              or the word under the cursor
 F5           turn that filter off, and on again
 F6           clear the screen and the scrollback both
-
 .EE
 
 .PP
@@ -4195,7 +4176,6 @@ Start of string                         ^
 End of string                           $
 A word boundary                         \eb
 Non\-word boundary                       \eB
-
 .EE
 
 .PP
@@ -4210,7 +4190,6 @@ End of string                           \eZ
 Absolute end of string                  \ez
 A word boundary                         \eb
 Non\-word boundary                       \eB
-
 .EE
 
 .PP
@@ -4221,7 +4200,6 @@ Newline                                 \en
 Carriage return                         \er
 Tab                                     \et
 Null character                          \e0
-
 .EE
 
 .PP
@@ -4269,7 +4247,6 @@ Octal character ddd                     \eddd
 Control character Y                     \ecY
 Backspace character                     [\eb]
 Makes any character literal             \e
-
 .EE
 
 .PP
@@ -4285,7 +4262,6 @@ Between 3 and 6 of a                    a{3,6}
 Greedy quantifier                       a*
 Lazy quantifier                         a*?
 Possessive quantifier                   a*+
-
 .EE
 
 .PP
@@ -4313,7 +4289,6 @@ Word characters                         [[:word:]]
 Hexadecimal digits                      [[:xdigit:]]
 Start of word                           [[:<:]]
 End of word                             [[:>:]]
-
 .EE
 
 .PP
@@ -4331,7 +4306,6 @@ Anchor                                  A
 Duplicate group names                   J
 Non\-capturing groups                    n
 Ignore all whitespace / verbose         xx
-
 .EE
 
 .PP
@@ -4376,7 +4350,6 @@ Control verb                        (*COMMIT)
 Control verb                        (*PRUNE)
 Control verb                        (*SKIP)
 Control verb                        (*THEN)
-
 .EE
 
 
@@ -4503,7 +4476,6 @@ panelize     the result of a command as a panel
 mcpeek       a look inside a file
 mcstruct     a binary file as a tree of named fields
 skineditor   the skin of the program
-
 .EE
 
 .PP
@@ -4539,7 +4511,6 @@ For example, to list CD\-Audio tracks on your CD\-ROM drive, type
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -4557,7 +4528,6 @@ For example, to list contents of a zip archive documents.zip type
 
 .EX
   cd documents.zip/uzip://
-
 .EE
 
 .PP
@@ -4646,7 +4616,6 @@ section.  Here is an example entry for Debian packages:
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH Single File fileSystem
@@ -4658,7 +4627,6 @@ of the file system is appended to the name of the file, as with extfs:
 
 .EX
   cd documents.gz/ugz://
-
 .EE
 
 .PP
@@ -4698,7 +4666,6 @@ supports color.  Example:
 [Colors]
 color_terminals=linux,xterm
 color_terminals=terminal\-name1,terminal\-name2...
-
 .EE
 
 .PP
@@ -4730,7 +4697,6 @@ A skin\-file is searched on the following algorithm
 3) parameter skin of the [Midnight\-Commander] section
 4) file {{sysconfdir}}/mcommander/skins/default.ini
 5) file {{pkgdatadir}}/skins/default.ini
-
 .EE
 
 .PP
@@ -4742,7 +4708,6 @@ or without it). Search of skin\-file will occur in (to the first one found):
 1) ~/.local/share/mc6/skins/
 2) {{sysconfdir}}/mcommander/skins/
 3) {{pkgdatadir}}/skins/
-
 .EE
 
 .PP
@@ -4800,7 +4765,6 @@ rule case sensitive (true) or not (false).
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -4906,7 +4870,6 @@ For example:
 
 .EX
 clipboard_store=xclip \-i
-
 .EE
 
 .TP
@@ -4917,7 +4880,6 @@ For example:
 
 .EX
 clipboard_paste=xclip \-o
-
 .EE
 
 .TP
@@ -4941,7 +4903,6 @@ For example:
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -5060,7 +5021,6 @@ For example:
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -5105,7 +5065,6 @@ pgup          page up key
 insert        the insert character
 delete        the delete character
 complete      to do completion
-
 .EE
 
 .PP
@@ -5114,7 +5073,6 @@ set this in the ini file:
 
 .EX
 insert=\ee[Op
-
 .EE
 
 .PP
@@ -5125,7 +5083,6 @@ For example:
 .EX
     ctrl\-alt\-right=\ee[[1;6C
     ctrl\-alt\-left=\ee[[1;6D
-
 .EE
 
 .PP
@@ -5254,7 +5211,6 @@ To keep the log of a failing ftp connection:
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -5359,7 +5315,6 @@ tcsh(1), zsh(1).
 .EX
 M\-Commander's page on the World Wide Web:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 

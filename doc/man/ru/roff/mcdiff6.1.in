@@ -340,7 +340,6 @@ git открывает его сам: с одной стороны файл та
 [mergetool "mcdiff"]
     cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
     trustExitCode = true
-
 .EE
 
 

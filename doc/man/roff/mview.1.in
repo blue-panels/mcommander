@@ -131,7 +131,6 @@ with constants like this:
 
 .EX
 "String" 34 0xBB 012 "more text"
-
 .EE
 
 .PP
@@ -182,7 +181,6 @@ F7, /        search the whole document, including collapsed
 F17, n       continue the search
 F6           filter the tree by a pattern
 ] / [        go to the next / previous match of the filter
-
 .EE
 
 .PP
