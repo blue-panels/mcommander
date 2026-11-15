@@ -89,6 +89,10 @@ absent.
 %autosetup -n %{name}-%{version}
 
 %build
+# /usr/sbin is a link to bin on Fedora and may come first in PATH. meson
+# writes the perl and python3 it finds into the shebangs of the scripts, and rpm
+# then requires /usr/sbin/perl, which no package provides.
+export PATH=/usr/bin:$PATH
 # The archive carries .tarball-version, where the build finds the version.
 %meson \
     -Dscreen=slang \
