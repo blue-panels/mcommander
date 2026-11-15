@@ -69,7 +69,7 @@ take_field (char **field, char *text)
 gboolean
 postgres_settings_dialog_run (postgres_config_t *cfg)
 {
-    char *r_default = NULL, *r_connect = NULL, *r_statement = NULL, *r_coole = NULL;
+    char *r_default = NULL, *r_connect = NULL, *r_statement = NULL, *r_bluerig = NULL;
     char *r_psql = NULL;
     char *r_rows = NULL;
     char buf_connect[16], buf_statement[16], buf_rows[16];
@@ -100,11 +100,11 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
                                  INPUT_COMPLETE_NONE),
             QUICK_CHECKBOX (N_ ("Show &system schemas"), &show_system, NULL),
             QUICK_SEPARATOR (TRUE),
-            QUICK_LABELED_INPUT (N_ ("coole, the query editor (empty: from PATH):"),
-                                 input_label_above, cfg->coole_path != NULL ? cfg->coole_path : "",
-                                 "postgres-coole", &r_coole, NULL, FALSE, FALSE,
+            QUICK_LABELED_INPUT (N_ ("bluerig, the query editor (empty: from PATH):"),
+                                 input_label_above, cfg->bluerig_path != NULL ? cfg->bluerig_path : "",
+                                 "postgres-bluerig", &r_bluerig, NULL, FALSE, FALSE,
                                  INPUT_COMPLETE_FILENAMES),
-            QUICK_LABELED_INPUT (N_ ("psql, without coole (empty: from PATH):"),
+            QUICK_LABELED_INPUT (N_ ("psql, without bluerig (empty: from PATH):"),
                                  input_label_above, cfg->psql_path != NULL ? cfg->psql_path : "",
                                  "postgres-psql", &r_psql, NULL, FALSE, FALSE,
                                  INPUT_COMPLETE_FILENAMES),
@@ -142,9 +142,9 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
         char *err = NULL;
 
         take_field (&cfg->default_connection, r_default);
-        take_field (&cfg->coole_path, r_coole);
+        take_field (&cfg->bluerig_path, r_bluerig);
         take_field (&cfg->psql_path, r_psql);
-        r_default = r_coole = r_psql = NULL;
+        r_default = r_bluerig = r_psql = NULL;
         cfg->connect_timeout = connect_timeout;
         cfg->statement_timeout = statement_timeout;
         cfg->preview_rows = preview_rows;
@@ -160,7 +160,7 @@ postgres_settings_dialog_run (postgres_config_t *cfg)
     g_free (r_connect);
     g_free (r_statement);
     g_free (r_rows);
-    g_free (r_coole);
+    g_free (r_bluerig);
     g_free (r_psql);
     return ok;
 }

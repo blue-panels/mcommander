@@ -28,9 +28,9 @@
       connect_timeout_ms           TCP connect
       socket_timeout_ms            operation socket
       op_max_time_ms               per-query maxTimeMS
-      coole                        the query editor for Alt-F3;
+      bluerig                      the query editor for Alt-F3;
                                    empty: found in PATH
-      mongosh                      the mongosh program coole runs
+      mongosh                      the mongosh program bluerig runs
                                    the queries with; empty: found
                                    in PATH
 
@@ -109,28 +109,28 @@
 
   The query editor
 
-    Alt-F3 runs coole, the editor of queries for mongosh ("coole
+    Alt-F3 runs bluerig, the editor of queries for mongosh ("bluerig
     -Q"), for the cluster and the database under the cursor, or
     the open ones, in a screen of its own beside the panels, the
-    editors and the viewers. coole has the whole screen and every
-    key but Alt-F3, which comes back to the panels. In coole F5
+    editors and the viewers. bluerig has the whole screen and every
+    key but Alt-F3, which comes back to the panels. In bluerig F5
     runs the query under the cursor, Ctrl-F5 the whole file, and
     the result is shown at the bottom; the queries of a database
-    are kept in ~/.local/share/coole/queries/<database>.js.
+    are kept in ~/.local/share/bluerig/queries/<database>.js.
 
     Alt-F3 is the command PluginConsole of the [panel] section of
     the keymap, and can be bound to another key there.
 
-    Without coole, Alt-F3 runs mongosh itself there, connected to
+    Without bluerig, Alt-F3 runs mongosh itself there, connected to
     the database: the shell of MongoDB at its prompt, without the
     editor; .exit closes it. With neither, Alt-F3 says what to
     install.
 
-    One coole runs per cluster and database: Alt-F3 again brings
+    One bluerig runs per cluster and database: Alt-F3 again brings
     back the same one. Its screen stays in the list of screens
-    (Alt-`) until coole is quit.
+    (Alt-`) until bluerig is quit.
 
-    The URI, with its password, goes to coole in its environment
+    The URI, with its password, goes to bluerig in its environment
     (MC_MONGO_URI, MC_MONGO_DB, MC_MONGOSH), never on a command
     line, where ps would show it; so does it to mongosh.
 

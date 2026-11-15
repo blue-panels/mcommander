@@ -1,6 +1,6 @@
 /*
    Panel plugin mongo for the M-Commander
-   the query editor coole in a terminal screen of its own
+   the query editor bluerig in a terminal screen of its own
 
    Copyright (C) 2026
    Ilia Maslakov il.smind@gmail.com
@@ -22,10 +22,10 @@
  */
 
 /** \file mongo_console.c
- *  \brief Source: the query editor coole in a terminal screen of its own
+ *  \brief Source: the query editor bluerig in a terminal screen of its own
  *
- *  Alt-F3 runs "coole -Q", the editor of queries for mongosh, for the cluster and the database
- *  under the cursor, in a screen beside the panels; Alt-F3 there comes back. Without coole,
+ *  Alt-F3 runs "bluerig -Q", the editor of queries for mongosh, for the cluster and the database
+ *  under the cursor, in a screen beside the panels; Alt-F3 there comes back. Without bluerig,
  *  mongosh itself runs there, connected. One of them runs per cluster and database, for as
  *  long as its screen stays. The URI goes to it in its environment, never on its command line,
  *  where ps would show the password.
@@ -42,8 +42,8 @@
 
 /*** file scope macro definitions ****************************************************************/
 
-/* What mongosh runs before it waits for input, when it stands in for coole: the connection,
-   from the same variables coole reads; void 0, so that it prints no value of its own. */
+/* What mongosh runs before it waits for input, when it stands in for bluerig: the connection,
+   from the same variables bluerig reads; void 0, so that it prints no value of its own. */
 #define MONGOSH_CONNECT                                                                            \
     "db = connect(process.env.MC_MONGO_URI); "                                                     \
     "if (process.env.MC_MONGO_DB) db = db.getSiblingDB(process.env.MC_MONGO_DB); void 0;"
@@ -75,7 +75,7 @@ console_free (gpointer p)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The screen has gone, and coole or mongosh with it. */
+/* The screen has gone, and bluerig or mongosh with it. */
 static void
 console_closed (void *data)
 {
@@ -157,10 +157,10 @@ console_start (mongo_data_t *data, const char *key, const mongo_cluster_t *clust
     char *program, *title, *mongosh;
     const char *what;
 
-    program = console_program (data->cfg->coole_path, "coole");
+    program = console_program (data->cfg->bluerig_path, "bluerig");
     if (program != NULL)
     {
-        what = "coole";
+        what = "bluerig";
         argv[0] = program;
         argv[1] = "-Q";
         argv[2] = NULL;
@@ -172,7 +172,7 @@ console_start (mongo_data_t *data, const char *key, const mongo_cluster_t *clust
         if (program == NULL)
         {
             mongo_show_message (host, TRUE,
-                                _ ("Install coole for the query editor, or mongosh. Their paths "
+                                _ ("Install bluerig for the query editor, or mongosh. Their paths "
                                    "can be given in the MongoDB settings."));
             return NULL;
         }
@@ -190,7 +190,7 @@ console_start (mongo_data_t *data, const char *key, const mongo_cluster_t *clust
     g_ptr_array_add (env, g_strconcat ("MC_MONGO_URI=", cluster->uri, (char *) NULL));
     if (db != NULL)
         g_ptr_array_add (env, g_strconcat ("MC_MONGO_DB=", db, (char *) NULL));
-    // the mongosh coole runs, as it is found here
+    // the mongosh bluerig runs, as it is found here
     mongosh = data->cfg->mongosh_path != NULL && data->cfg->mongosh_path[0] != '\0'
         ? console_program (data->cfg->mongosh_path, "mongosh")
         : NULL;
@@ -251,7 +251,7 @@ mongo_console_open (mongo_data_t *data)
        from the server. */
     if (host == NULL || host->terminal_open == NULL)
     {
-        mongo_show_message (host, TRUE, _ ("This build of mc has no terminal for coole."));
+        mongo_show_message (host, TRUE, _ ("This build of mc has no terminal for bluerig."));
         return MC_PPR_SKIPPED;
     }
 

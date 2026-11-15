@@ -32,9 +32,9 @@ typedef struct
     int socket_timeout_ms;
     int op_max_time_ms;
 
-    /* coole, the editor of queries, for Alt-F3; NULL or empty: looked up in PATH */
-    char *coole_path;
-    /* mongosh for coole to run the queries with; NULL or empty: coole looks it up in PATH */
+    /* bluerig, the editor of queries, for Alt-F3; NULL or empty: looked up in PATH */
+    char *bluerig_path;
+    /* mongosh for bluerig to run the queries with; NULL or empty: bluerig looks it up in PATH */
     char *mongosh_path;
 
     /* bucket_leaf_size: max docs shown as a flat list (split if count > 2*leaf).

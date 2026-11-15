@@ -81,12 +81,12 @@ typedef struct
     int key_refresh;
     int key_reset;
     int key_fav_add;
-    int key_coole;
+    int key_bluerig;
     int key_commit;
     int key_amend;
     int key_show;
     int key_reword;
-    char *coole_executable;
+    char *bluerig_executable;
     int view;
     char *selected_commit;
     char *selected_commit_base;  // diff: the files from here to selected_commit
@@ -181,20 +181,23 @@ static const mc_panel_column_t git_columns[] = {
 
 /*** file scope functions ************************************************************************/
 
-#define GIT_PANEL_CONFIG_FILE          "panels.git.ini"
-#define GIT_PANEL_CONFIG_FILE_LEGACY   "git-panel.ini"
-#define GIT_PANEL_CONFIG_GROUP         "git-panel"
-#define GIT_PANEL_FORMAT_KEY           "default_format"
-#define GIT_PANEL_FORMAT_DEFAULT       "type name | status | mtime"
-#define GIT_PANEL_KEY_FAV_ADD          "hotkey_fav_add"
-#define GIT_PANEL_KEY_FAV_ADD_DEFAULT  "ctrl-b"
+#define GIT_PANEL_CONFIG_FILE         "panels.git.ini"
+#define GIT_PANEL_CONFIG_FILE_LEGACY  "git-panel.ini"
+#define GIT_PANEL_CONFIG_GROUP        "git-panel"
+#define GIT_PANEL_FORMAT_KEY          "default_format"
+#define GIT_PANEL_FORMAT_DEFAULT      "type name | status | mtime"
+#define GIT_PANEL_KEY_FAV_ADD         "hotkey_fav_add"
+#define GIT_PANEL_KEY_FAV_ADD_DEFAULT "ctrl-b"
+#define GIT_PANEL_BLUERIG_EXECUTABLE  "bluerig_executable"
+#define GIT_PANEL_KEY_BLUERIG         "hotkey_bluerig"
+#define GIT_PANEL_KEY_COMMIT          "hotkey_commit"
+#define GIT_PANEL_KEY_AMEND           "hotkey_amend"
+#define GIT_PANEL_KEY_SHOW            "hotkey_show"
+#define GIT_PANEL_KEY_REWORD          "hotkey_reword"
+#define GIT_PANEL_KEY_BLUERIG_DEFAULT "alt-g"
+// the keys of the editor when it was called coole, read when the new ones are not there
 #define GIT_PANEL_COOLE_EXECUTABLE     "coole_executable"
 #define GIT_PANEL_KEY_COOLE            "hotkey_coole"
-#define GIT_PANEL_KEY_COMMIT           "hotkey_commit"
-#define GIT_PANEL_KEY_AMEND            "hotkey_amend"
-#define GIT_PANEL_KEY_SHOW             "hotkey_show"
-#define GIT_PANEL_KEY_REWORD           "hotkey_reword"
-#define GIT_PANEL_KEY_COOLE_DEFAULT    "alt-g"
 #define GIT_PANEL_KEY_COMMIT_DEFAULT   "alt-c"
 #define GIT_PANEL_KEY_AMEND_DEFAULT    "alt-a"
 #define GIT_PANEL_KEY_SHOW_DEFAULT     "alt-v"
@@ -396,9 +399,9 @@ git_save_defaults_to_user_file (const char *path)
                           GIT_PANEL_KEY_REFRESH_DEFAULT);
     mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_RESET,
                           GIT_PANEL_KEY_RESET_DEFAULT);
-    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_COOLE_EXECUTABLE, "coole");
-    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_COOLE,
-                          GIT_PANEL_KEY_COOLE_DEFAULT);
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_BLUERIG_EXECUTABLE, "bluerig");
+    mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_BLUERIG,
+                          GIT_PANEL_KEY_BLUERIG_DEFAULT);
     mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_COMMIT,
                           GIT_PANEL_KEY_COMMIT_DEFAULT);
     mc_config_set_string (cfg, GIT_PANEL_CONFIG_GROUP, GIT_PANEL_KEY_AMEND,
@@ -413,41 +416,47 @@ git_save_defaults_to_user_file (const char *path)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The value of @key, or of @old_key (may be NULL) when the file has only that one: a file is
+   asked for both before the next one, so the old key of the user wins over the new key of the
+   system file */
+static char *
+git_load_config_value_or_old (const char *key, const char *old_key, const char *fallback)
+{
+    char *paths[4] = { NULL, NULL, NULL, NULL };
+    char *value = NULL;
+    int i;
+
+    paths[0] = g_build_filename (mc_config_get_path (), GIT_PANEL_CONFIG_FILE, (char *) NULL);
+    paths[1] =
+        g_build_filename (mc_config_get_path (), GIT_PANEL_CONFIG_FILE_LEGACY, (char *) NULL);
+    if (mc_global.sysconfig_dir != NULL)
+    {
+        paths[2] = g_build_filename (mc_global.sysconfig_dir, GIT_PANEL_CONFIG_FILE, (char *) NULL);
+        paths[3] =
+            g_build_filename (mc_global.sysconfig_dir, GIT_PANEL_CONFIG_FILE_LEGACY, (char *) NULL);
+    }
+
+    for (i = 0; i < 4 && value == NULL; i++)
+        if (paths[i] != NULL)
+        {
+            value = git_read_config_string_from_file (paths[i], key);
+            if (value == NULL && old_key != NULL)
+                value = git_read_config_string_from_file (paths[i], old_key);
+        }
+
+    git_save_defaults_to_user_file (paths[0]);
+
+    for (i = 0; i < 4; i++)
+        g_free (paths[i]);
+    return (value != NULL) ? value : g_strdup (fallback);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 static char *
 git_load_config_value (const char *key, const char *fallback)
 {
-    char *value = NULL;
-    char *user_path = NULL;
-    char *user_path_legacy = NULL;
-    char *sys_path = NULL;
-    char *sys_path_legacy = NULL;
-
-    user_path = g_build_filename (mc_config_get_path (), GIT_PANEL_CONFIG_FILE, (char *) NULL);
-    user_path_legacy =
-        g_build_filename (mc_config_get_path (), GIT_PANEL_CONFIG_FILE_LEGACY, (char *) NULL);
-
-    value = git_read_config_string_from_file (user_path, key);
-    if (value == NULL)
-        value = git_read_config_string_from_file (user_path_legacy, key);
-
-    if (value == NULL && mc_global.sysconfig_dir != NULL)
-    {
-        sys_path = g_build_filename (mc_global.sysconfig_dir, GIT_PANEL_CONFIG_FILE, (char *) NULL);
-        sys_path_legacy =
-            g_build_filename (mc_global.sysconfig_dir, GIT_PANEL_CONFIG_FILE_LEGACY, (char *) NULL);
-
-        value = git_read_config_string_from_file (sys_path, key);
-        if (value == NULL)
-            value = git_read_config_string_from_file (sys_path_legacy, key);
-    }
-
-    git_save_defaults_to_user_file (user_path);
-
-    g_free (sys_path_legacy);
-    g_free (sys_path);
-    g_free (user_path_legacy);
-    g_free (user_path);
-    return (value != NULL) ? value : g_strdup (fallback);
+    return git_load_config_value_or_old (key, NULL, fallback);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2187,19 +2196,49 @@ git_show_commit_description_by_sha (git_data_t *data, const char *sha, const cha
 
 typedef enum
 {
-    GIT_COOLE_WINDOW,
-    GIT_COOLE_COMMIT,
-    GIT_COOLE_AMEND,
-    GIT_COOLE_SHOW,
-    GIT_COOLE_REWORD
-} git_coole_action_t;
+    GIT_BLUERIG_WINDOW,
+    GIT_BLUERIG_COMMIT,
+    GIT_BLUERIG_AMEND,
+    GIT_BLUERIG_SHOW,
+    GIT_BLUERIG_REWORD
+} git_bluerig_action_t;
+
+/* coole, by name or by a path to it: the editor before it was renamed, which is bluerig now */
+static gboolean
+git_is_old_editor (const char *path)
+{
+    char *copy, *base;
+    gboolean old;
+
+    if (path == NULL)
+        return FALSE;
+    copy = g_strstrip (g_strdup (path));
+    base = g_path_get_basename (copy);
+    old = strcmp (base, "coole") == 0;
+    g_free (base);
+    g_free (copy);
+    return old;
+}
+
+/* --------------------------------------------------------------------------------------------- */
 
 static void
-git_load_coole_settings (git_data_t *data)
+git_load_bluerig_settings (git_data_t *data)
 {
-    g_free (data->coole_executable);
-    data->coole_executable = git_load_config_value (GIT_PANEL_COOLE_EXECUTABLE, "coole");
-    data->key_coole = git_load_hotkey (GIT_PANEL_KEY_COOLE, GIT_PANEL_KEY_COOLE_DEFAULT, ALT ('g'));
+    char *value;
+
+    g_free (data->bluerig_executable);
+    // the keys of the editor when it was called coole; coole itself is bluerig now
+    data->bluerig_executable = git_load_config_value_or_old (GIT_PANEL_BLUERIG_EXECUTABLE,
+                                                             GIT_PANEL_COOLE_EXECUTABLE, NULL);
+    if (git_is_old_editor (data->bluerig_executable))
+        g_clear_pointer (&data->bluerig_executable, g_free);
+    if (data->bluerig_executable == NULL)
+        data->bluerig_executable = g_strdup ("bluerig");
+    value = git_load_config_value_or_old (GIT_PANEL_KEY_BLUERIG, GIT_PANEL_KEY_COOLE, NULL);
+    data->key_bluerig =
+        mc_plugin_prefs_parse_hotkey (value, GIT_PANEL_KEY_BLUERIG_DEFAULT, ALT ('g'), NULL);
+    g_free (value);
     data->key_commit =
         git_load_hotkey (GIT_PANEL_KEY_COMMIT, GIT_PANEL_KEY_COMMIT_DEFAULT, ALT ('c'));
     data->key_amend = git_load_hotkey (GIT_PANEL_KEY_AMEND, GIT_PANEL_KEY_AMEND_DEFAULT, ALT ('a'));
@@ -2225,10 +2264,10 @@ git_read_head (git_data_t *data)
     return head;
 }
 
-/* coole owns the message editor and the Git operation. Run it in the foreground so the panel
+/* bluerig owns the message editor and the Git operation. Run it in the foreground so the panel
    reloads only after the editor has closed, including when MC has an overlay terminal. */
 static mc_pp_result_t
-git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
+git_launch_bluerig (git_data_t *data, git_bluerig_action_t action, const char *sha)
 {
     char *executable;
     char *quoted_executable;
@@ -2240,7 +2279,7 @@ git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
     if (data->host == NULL || data->host->run_command == NULL || data->repo_root == NULL)
         return MC_PPR_FAILED;
 
-    if (action == GIT_COOLE_SHOW || action == GIT_COOLE_REWORD)
+    if (action == GIT_BLUERIG_SHOW || action == GIT_BLUERIG_REWORD)
     {
         if (sha == NULL || *sha == '\0')
         {
@@ -2248,7 +2287,7 @@ git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
             return MC_PPR_SKIPPED;
         }
 
-        if (action == GIT_COOLE_REWORD)
+        if (action == GIT_BLUERIG_REWORD)
         {
             char *argv[] = { (char *) "git",           (char *) "-C",
                              data->repo_root,          (char *) "merge-base",
@@ -2264,11 +2303,11 @@ git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
         }
     }
 
-    executable = g_find_program_in_path (data->coole_executable);
+    executable = g_find_program_in_path (data->bluerig_executable);
     if (executable == NULL)
     {
         char *msg =
-            g_strdup_printf (_ ("Cannot find coole executable: %s"), data->coole_executable);
+            g_strdup_printf (_ ("Cannot find bluerig executable: %s"), data->bluerig_executable);
 
         git_show_error (data, _ ("Git panel"), msg);
         g_free (msg);
@@ -2277,20 +2316,20 @@ git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
 
     switch (action)
     {
-    case GIT_COOLE_WINDOW:
+    case GIT_BLUERIG_WINDOW:
         if ((git_view_t) data->view == GIT_VIEW_COMMITS)
             option = g_strdup ("--git-log");
         break;
-    case GIT_COOLE_COMMIT:
+    case GIT_BLUERIG_COMMIT:
         /* Keep the full Git workspace open after a commit. Its message window is ready in -G. */
         break;
-    case GIT_COOLE_AMEND:
+    case GIT_BLUERIG_AMEND:
         option = g_strdup ("--git-amend");
         break;
-    case GIT_COOLE_SHOW:
+    case GIT_BLUERIG_SHOW:
         option = g_strdup_printf ("--git-show=%s", sha);
         break;
-    case GIT_COOLE_REWORD:
+    case GIT_BLUERIG_REWORD:
         option = g_strdup_printf ("--git-reword=%s", sha);
         break;
     default:
@@ -2302,7 +2341,7 @@ git_launch_coole (git_data_t *data, git_coole_action_t action, const char *sha)
     quoted_root = g_shell_quote (data->repo_root);
     command = g_strdup_printf ("%s -G %s%s%s", quoted_executable, quoted_root,
                                option != NULL ? " " : "", option != NULL ? option : "");
-    if (action == GIT_COOLE_REWORD)
+    if (action == GIT_BLUERIG_REWORD)
         head_before = git_read_head (data);
     data->host->run_command (data->host, command, EXECUTE_INTERNAL);
 
@@ -2469,7 +2508,7 @@ git_open (mc_panel_host_t *host, const char *open_path)
         git_load_hotkey (GIT_PANEL_KEY_RESET, GIT_PANEL_KEY_RESET_DEFAULT, KEY_F (18));
     data->key_fav_add =
         git_load_hotkey (GIT_PANEL_KEY_FAV_ADD, GIT_PANEL_KEY_FAV_ADD_DEFAULT, XCTRL ('b'));
-    git_load_coole_settings (data);
+    git_load_bluerig_settings (data);
     data->view = GIT_VIEW_STATUS;
     data->selected_commit = NULL;
     data->current_branch = git_detect_current_branch (data);
@@ -2502,7 +2541,7 @@ git_close (void *plugin_data)
     g_free (data->help_filename);
     g_free (data->repo_root);
     g_free (data->default_format);
-    g_free (data->coole_executable);
+    g_free (data->bluerig_executable);
     g_free (data->selected_commit);
     g_free (data->selected_commit_base);
     g_free (data->current_branch);
@@ -2807,7 +2846,7 @@ git_chdir (void *plugin_data, const char *path)
             git_load_hotkey (GIT_PANEL_KEY_DIFF_ALT, GIT_PANEL_KEY_DIFF_ALT_DEFAULT, KEY_F (13));
         data->key_reset =
             git_load_hotkey (GIT_PANEL_KEY_RESET, GIT_PANEL_KEY_RESET_DEFAULT, KEY_F (18));
-        git_load_coole_settings (data);
+        git_load_bluerig_settings (data);
         git_update_title (data);
 
         if (data->host->add_history != NULL)
@@ -3319,14 +3358,14 @@ git_handle_key (void *plugin_data, int key)
     if (key == CK_EditNew && (git_view_t) data->view == GIT_VIEW_FAVORITES)
         return git_create_item (data);
 
-    if (data->repo_root != NULL && data->key_coole != 0 && key == data->key_coole)
-        return git_launch_coole (data, GIT_COOLE_WINDOW, NULL);
+    if (data->repo_root != NULL && data->key_bluerig != 0 && key == data->key_bluerig)
+        return git_launch_bluerig (data, GIT_BLUERIG_WINDOW, NULL);
 
     if (data->repo_root != NULL && data->key_commit != 0 && key == data->key_commit)
-        return git_launch_coole (data, GIT_COOLE_COMMIT, NULL);
+        return git_launch_bluerig (data, GIT_BLUERIG_COMMIT, NULL);
 
     if (data->repo_root != NULL && data->key_amend != 0 && key == data->key_amend)
-        return git_launch_coole (data, GIT_COOLE_AMEND, NULL);
+        return git_launch_bluerig (data, GIT_BLUERIG_AMEND, NULL);
 
     if ((view == GIT_VIEW_COMMITS || view == GIT_VIEW_COMMIT_FILES)
         && ((data->key_show != 0 && key == data->key_show)
@@ -3340,8 +3379,8 @@ git_handle_key (void *plugin_data, int key)
             ? info->commit_sha
             : NULL;
 
-        return git_launch_coole (data, key == data->key_show ? GIT_COOLE_SHOW : GIT_COOLE_REWORD,
-                                 sha);
+        return git_launch_bluerig (
+            data, key == data->key_show ? GIT_BLUERIG_SHOW : GIT_BLUERIG_REWORD, sha);
     }
 
     if ((data->key_diff != 0 && key == data->key_diff)

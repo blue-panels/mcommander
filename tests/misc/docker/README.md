@@ -229,7 +229,7 @@ open it.
 | `02-utf8`   | Alt with Cyrillic letters, as the Esc and the bytes of UTF-8     |
 | `03-koi8r`  | the same names in KOI8-R, run under `-l ru_RU.KOI8-R`            |
 | `04-cp866`  | the same names in CP866, run under `-l ru_RU.CP866`              |
-| `05-plugin` | a plugin panel that turns the key down: the Git panel, its coole hotkey on Alt-q and no coole, so the key goes on to the fast find |
+| `05-plugin` | a plugin panel that turns the key down: the Git panel, its bluerig hotkey on Alt-q and no bluerig, so the key goes on to the fast find |
 | `06-cp1251` | the same names in CP1251, run under `-l ru_RU.CP1251`; the small ya is the byte 0xFF there |
 | `07-iso88595` | the same names in ISO-8859-5, run under `-l ru_RU.ISO-8859-5` |
 | `08-koi8u`  | the same names in KOI8-U, run under `-l ru_RU.KOI8-U`            |

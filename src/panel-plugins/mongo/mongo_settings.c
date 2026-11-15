@@ -171,7 +171,7 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
 {
     static const char *strategy_items[2] = { N_ ("&auto"), N_ ("&none") };
 
-    char *r_default = NULL, *r_coole = NULL, *r_mongosh = NULL;
+    char *r_default = NULL, *r_bluerig = NULL, *r_mongosh = NULL;
     char *r_leaf = NULL, *r_fanout = NULL;
     char *r_srvsel = NULL, *r_connect = NULL, *r_socket = NULL, *r_opmax = NULL;
     int r_strategy;
@@ -216,10 +216,10 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
             QUICK_LABELED_INPUT (N_ ("Op max time (ms):"), input_label_left, buf_opmax,
                                  "mongo-opmax", &r_opmax, NULL, FALSE, FALSE, INPUT_COMPLETE_NONE),
             QUICK_SEPARATOR (TRUE),
-            QUICK_LABELED_INPUT (N_ ("coole, the query editor (empty: from PATH):"),
+            QUICK_LABELED_INPUT (N_ ("bluerig, the query editor (empty: from PATH):"),
                                  input_label_above,
-                                 cfg->coole_path != NULL ? cfg->coole_path : "", "mongo-coole",
-                                 &r_coole, NULL, FALSE, FALSE, INPUT_COMPLETE_FILENAMES),
+                                 cfg->bluerig_path != NULL ? cfg->bluerig_path : "", "mongo-bluerig",
+                                 &r_bluerig, NULL, FALSE, FALSE, INPUT_COMPLETE_FILENAMES),
             QUICK_LABELED_INPUT (N_ ("mongosh (empty: from PATH):"), input_label_above,
                                  cfg->mongosh_path != NULL ? cfg->mongosh_path : "",
                                  "mongo-mongosh", &r_mongosh, NULL, FALSE, FALSE,
@@ -243,7 +243,7 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
 
     if (rc != B_ENTER)
     {
-        g_free (r_coole);
+        g_free (r_bluerig);
         g_free (r_mongosh);
         g_free (r_default);
         g_free (r_leaf);
@@ -268,7 +268,7 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
         {
             message (D_ERROR, _ ("MongoDB settings"), "%s",
                      _ ("Numeric fields must be valid; leaf size > 0, fanout >= 2."));
-            g_free (r_coole);
+            g_free (r_bluerig);
             g_free (r_mongosh);
             g_free (r_default);
             g_free (r_leaf);
@@ -290,13 +290,13 @@ mongo_settings_dialog_run (mongo_config_t *cfg)
         cfg->connect_timeout_ms = connect;
         cfg->socket_timeout_ms = socket_to;
         cfg->op_max_time_ms = opmax;
-        g_free (cfg->coole_path);
-        cfg->coole_path = g_strdup (r_coole != NULL ? g_strstrip (r_coole) : "");
+        g_free (cfg->bluerig_path);
+        cfg->bluerig_path = g_strdup (r_bluerig != NULL ? g_strstrip (r_bluerig) : "");
         g_free (cfg->mongosh_path);
         cfg->mongosh_path = g_strdup (r_mongosh != NULL ? g_strstrip (r_mongosh) : "");
     }
 
-    g_free (r_coole);
+    g_free (r_bluerig);
     g_free (r_mongosh);
     g_free (r_default);
     g_free (r_leaf);

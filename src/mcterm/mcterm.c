@@ -3388,7 +3388,7 @@ mcterm_mouse_button (const mouse_event_t *event)
 /* --------------------------------------------------------------------------------------------- */
 
 /* A program that asked for the mouse, DECSET 1000 and the like, gets it as xterm tells it, and
-   the terminal screen neither marks nor scrolls: coole, mcedit, htop work their own mouse.  TRUE
+   the terminal screen neither marks nor scrolls: bluerig, mcedit, htop work their own mouse.  TRUE
    when the event went to the program, or is none it wants. */
 static gboolean
 mcterm_mouse_to_program (WMcTerm *t, mouse_msg_t msg, const mouse_event_t *event)

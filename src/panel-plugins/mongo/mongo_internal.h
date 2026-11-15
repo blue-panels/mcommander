@@ -130,7 +130,7 @@ gboolean mongo_stack_has_user_pushed (const mongo_data_t *data);
 
 /*** mongo_console.c ****************************************************************************/
 
-/* Show the query editor coole, or mongosh without it, for the cluster and the database under
+/* Show the query editor bluerig, or mongosh without it, for the cluster and the database under
    the cursor, or the open ones; started the first time. */
 mc_pp_result_t mongo_console_open (mongo_data_t *data);
 /* Before the plugin is unloaded: the screens stay, but no longer call back. */

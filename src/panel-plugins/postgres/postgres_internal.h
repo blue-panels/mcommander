@@ -108,7 +108,7 @@ const char *postgres_get_default_format (void *plugin_data);
 
 /* postgres_console.c */
 
-/* Show the query editor coole, or psql without it, for the connection and the database under
+/* Show the query editor bluerig, or psql without it, for the connection and the database under
    the cursor, or the open ones, started the first time; @relation, when not NULL, is the one
    the editor is told of, else the one under the cursor. */
 mc_pp_result_t postgres_console_open (postgres_data_t *data, const char *relation);
