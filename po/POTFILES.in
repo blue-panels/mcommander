@@ -5,6 +5,7 @@ lib/global.c
 lib/keybind.c
 lib/lock.c
 lib/mcconfig/paths.c
+lib/panel-plugin-loader.c
 lib/search/hex.c
 lib/search/lib.c
 lib/search/regex.c
