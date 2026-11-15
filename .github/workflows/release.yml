@@ -558,12 +558,28 @@ jobs:
             -p '@rpath/'
             -i /usr/lib
             -i /System/Library
+            -s "$(brew --prefix)/lib"
             -x "$stage_prefix/bin/mcommander"
           )
           while IFS= read -r -d '' plugin; do
               bundle_args+=(-x "$plugin")
           done < <(find "$stage_prefix/lib/mcommander/panel-plugins" -name '*.so' -type f -print0)
-          if ! dylibbundler "${bundle_args[@]}" > dylibbundler.log 2>&1; then
+          # dylibbundler asks on stdin for a library it cannot find, and with
+          # no answer it asks again forever. Give it no stdin and five minutes,
+          # and show what it asked for.
+          dylibbundler "${bundle_args[@]}" < /dev/null > dylibbundler.log 2>&1 &
+          bundler=$!
+          for _ in $(seq 300); do
+              kill -0 "$bundler" 2>/dev/null || break
+              sleep 1
+          done
+          if kill -0 "$bundler" 2>/dev/null; then
+              kill "$bundler"
+              echo "dylibbundler hung; the start of its log:"
+              head -n 100 dylibbundler.log
+              exit 1
+          fi
+          if ! wait "$bundler"; then
               tail -n 200 dylibbundler.log
               exit 1
           fi
