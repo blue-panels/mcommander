@@ -9,7 +9,7 @@ url='https://blue-panels.github.io/mcommander/'
 license=('GPL-3.0-or-later')
 makedepends=('meson' 'pkgconf' 'gettext'
              'glib2' 'slang' 'gpm' 'e2fsprogs' 'libssh2' 'curl' 'samba' 'acl'
-             'libarchive' 'file' 'mongo-c-driver' 'lua' 'sqlite' 'libx11'
+             'libarchive' 'file' 'mongo-c-driver' 'lua' 'sqlite' 'postgresql-libs' 'libx11'
              'chafa')
 options=('!emptydirs')
 source=("mcommander-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/mcommander-${pkgver}.tar.gz")
@@ -35,6 +35,7 @@ build() {
     -Dpanel_plugin_s3=enabled \
     -Dpanel_plugin_mongo=enabled \
     -Dpanel_plugin_sqlite=enabled \
+    -Dpanel_plugin_postgres=enabled \
     -Dpanel_plugin_sftp=enabled \
     -Dpanel_plugin_shell_link=enabled \
     -Dshell_ssh2=enabled
@@ -84,7 +85,7 @@ package_mcommander() {
 package_mcommander-plugins() {
   pkgdesc='Archive and remote system panels for M-Commander'
   depends=("mcommander=${pkgver}-${pkgrel}" 'glib2' 'libssh2' 'curl' 'samba' 'acl'
-           'libarchive' 'file' 'mongo-c-driver' 'sqlite')
+           'libarchive' 'file' 'mongo-c-driver' 'sqlite' 'postgresql-libs')
   optdepends=('git: the Git panel'
               'docker: the Docker panel'
               'kubectl: the Kubernetes panel'

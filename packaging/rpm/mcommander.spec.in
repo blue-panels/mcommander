@@ -21,6 +21,7 @@ BuildRequires:   file-devel
 BuildRequires:   pkgconf-pkg-config
 BuildRequires:   libsmbclient-devel
 BuildRequires:   libacl-devel
+BuildRequires:   libpq-devel
 BuildRequires:   slang-devel
 BuildRequires:   lua-devel
 BuildRequires:   sqlite-devel
@@ -100,6 +101,7 @@ absent.
     -Dpanel_plugin_s3=enabled \
     -Dpanel_plugin_mongo=enabled \
     -Dpanel_plugin_sqlite=enabled \
+    -Dpanel_plugin_postgres=enabled \
     -Dpanel_plugin_sftp=enabled \
     -Dpanel_plugin_shell_link=enabled \
     -Dshell_ssh2=enabled

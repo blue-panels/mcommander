@@ -7,6 +7,7 @@ usr/bin/mctree
 usr/lib/mcommander/ext.d/
 usr/lib/mcommander/extfs.d/
 usr/lib/mcommander/cons.saver
+usr/lib/mcommander/session_helper
 usr/lib/mcommander/mc6.csh
 usr/lib/mcommander/mc6.fish
 usr/lib/mcommander/mc6.sh

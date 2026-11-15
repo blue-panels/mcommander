@@ -11,6 +11,11 @@
 # resolved symbol table is what keeps the first call out of the resolver.
 export DEB_BUILD_MAINT_OPTIONS = optimize=-lto hardening=+bindnow
 
+# mawk 1.3.4 20240123 (Ubuntu 24.04) misreads markdown_render.awk when
+# MALLOC_PERTURB_ is set, and meson sets it for every test it runs unless the
+# environment already has it.
+export MALLOC_PERTURB_ = 0
+
 %:
 	dh $@
 

@@ -786,6 +786,16 @@ jobs:
               echo "rehearsal: building and signing, not uploading to $PPA"
           fi
 
+          # A PPA takes one orig tarball per version, for good. When it already
+          # holds one, the upload must be built on that file, or Launchpad
+          # rejects it.
+          owner=${PPA#ppa:}; owner=${owner%%/*}; name=${PPA##*/}
+          orig="https://launchpad.net/~$owner/+archive/ubuntu/$name/+files/mcommander_$VERSION.orig.tar.gz"
+          if curl -sfL -o "$RUNNER_TEMP/orig.tar.gz" "$orig"; then
+              echo "using the orig tarball the PPA already holds"
+              cp "$RUNNER_TEMP/orig.tar.gz" "dist/mcommander-$VERSION.tar.gz"
+          fi
+
           UPLOAD="$upload" packaging/ppa-source.sh \
               "$VERSION" "dist/mcommander-$VERSION.tar.gz" $SERIES
 

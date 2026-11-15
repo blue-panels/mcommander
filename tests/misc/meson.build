@@ -4,6 +4,9 @@ test('ext.d/markdown', find_program('ext.d/markdown/test_markdown.sh'),
     '--data-dir', meson.current_source_dir() / 'ext.d' / 'markdown' / 'data',
     '--scripts-dir', meson.project_source_root() / 'misc' / 'ext.d',
   ],
+  # mawk 1.3.4 20240123 (Ubuntu 24.04) misreads markdown_render.awk when
+  # MALLOC_PERTURB_ is set, which meson does for every test
+  env: {'MALLOC_PERTURB_': '0'},
   workdir: meson.current_build_dir(),
   suite: 'misc')
 
