@@ -2,57 +2,156 @@
 
 The releases of this fork, newest first.
 
-## Unreleased
+## 6.2.0 - 2026-11-15
 
-- Far mode, off by default, gives the panels the keys of Far Manager (Alt-F7,
-  Alt-F8, Alt-F11, Alt-F12, Ctrl-F3 to Ctrl-F6, Ctrl-F12, Ctrl-L, Ctrl-Q,
-  Ctrl-T) and, in the editor and the viewer, Ctrl-F7, Alt-F8, Alt-F11, Ctrl-Z and
-  the like; it is a check box in the Configuration dialog and the far_mode
-  setting. The mode also has Ctrl-1 to Ctrl-0 for the listing modes of Far,
-  Ctrl-A, Ctrl-F, and Ctrl-E, Ctrl-X and Ctrl-Y in the command line and the edit
-  lines of the dialogs (the previous and the next command of the history, and
-  deleting the line); the prefix of the extended commands moves to Alt-X while
-  the mode is on. Ctrl with a digit is now the digit with the modifier, where
-  it was the control character of the same code (Ctrl-1 was Ctrl-Q).
-- Far mode goes on to the dialogs and the Windows-minded workflows: Ctrl-Enter
-  does the default action of a dialog and the plus and the minus turn a check
-  box on and off; Ctrl-\\ goes to the root directory (the hotlist moves to
-  Alt-\\), Ctrl-Enter and Ctrl-Shift-Enter go to the next and the previous
-  match of the quick search; Ctrl-F7, Ctrl-F8
-  and Ctrl-F9 sort by nothing, by the time of change and by the time of
-  access; Ctrl-G or Alt-X g applies a command to the files (new action
-  ApplyCommand), and Alt-F6, Alt-F10, Shift-F9 and Shift-F10 create a hard
-  link, show the tree of directories, save the setup and choose the last menu
-  item. The mode stays off by default.
-- Far mode, the next part: Shift-gray plus and Shift-gray minus select and
-  unselect all the files (new actions SelectAll and UnselectAll), and PgDn in a
-  dialog gives the focus to the default button (new action DefaultButton).
-  Shift-Enter and Ctrl-Shift-Enter in the edit line of a dialog insert the name
-  of the file under the cursor of the active and of the passive panel (new
-  actions PutPanelFile and PutOtherPanelFile).
-- The Sessions plugin, off by default, lets the program outlive its terminal,
-  as screen and tmux do: after the terminal is closed or the ssh connection
-  drops, the program started again lists the sessions and takes one over, with
-  the panels, the shell, the editors and the copy jobs as they were. A session
-  in use elsewhere is taken after a question, one whose terminal looks lost
-  without it, and k in the list ends a session the way F10 does. Sessions...
-  in the Command menu of a session switches to another session, starts a new
-  one, ends one or detaches; the agent, DISPLAY and the like of the new
-  terminal go with it. Suggested by unxed (PR #377).
-- Manage plugins lists the runtime plugins too, also the ones that are off
-  until they are switched on there.
-- The commit list of the git panel starts with diff: every file the branch
-  changes from its base, with Shift-F3 for the diff of the whole branch. Quick
-  view shows the description of a commit, as F3 does.
-- Far mode can have the fast find of Far: with the new "Alt-letter fast find"
-  check box (far_fast_find), off by default, Alt or Alt-Shift with a letter or
-  a digit, Cyrillic among them, a dot, an underscore or a hyphen, in a UTF-8
-  locale or an 8-bit one, starts the search in the panel. It finds a name by its beginning whatever its case, does
-  not take a character that matches nothing, goes on without Alt, and ends on
-  Esc or on any other key, which then does what it does. The panels give the
-  Alt keys with a character up to it, unless the keymap of the user binds them
-  to another action; a command line with text keeps its own Alt keys. The sandbox has the cases of it in UTF-8, KOI8-R and CP866: a case
-  directory may name its charset, and the alt step types with Alt.
+New panel plugins for PostgreSQL, GitHub and duplicate files, the full kitty
+keyboard protocol in the panels and in the built-in terminal, three-way merge in
+the compare view, an optional Far mode, and many fixes of the terminal and the
+editor.
+
+### Features
+
+#### Panel plugins
+
+##### duplicates
+
+- duplicates: Duplicate file search; the plugin also finds similar pictures (JPEG and PNG, by a perceptual hash) and texts ([#463](https://github.com/blue-panels/mcommander/pull/463))
+
+##### postgres
+
+- postgres: A new panel plugin for servers, databases, schemas and tables; Alt-F3 opens a query console for the database (bluerig or psql) ([#438](https://github.com/blue-panels/mcommander/pull/438))
+- postgres: F3 on a table shows its SQL and its first rows as a table ([#444](https://github.com/blue-panels/mcommander/pull/444))
+
+##### gh
+
+- gh: Add a panel plugin for GitHub pull requests and issues ([#434](https://github.com/blue-panels/mcommander/pull/434))
+
+##### mongo
+
+- mongo: Alt-F3 opens a query console for the database (bluerig or mongosh) ([#435](https://github.com/blue-panels/mcommander/pull/435))
+- mongo: F3 on a collection shows its documents as a table ([#440](https://github.com/blue-panels/mcommander/pull/440), [#443](https://github.com/blue-panels/mcommander/pull/443))
+
+##### sqlite
+
+- sqlite: Show a table, a view or a page of rows as a table on F3 ([#441](https://github.com/blue-panels/mcommander/pull/441))
+
+##### git
+
+- git: Run the bluerig editor from the Git panel ([#407](https://github.com/blue-panels/mcommander/pull/407))
+- git: Show merge conflicts and merge them on Shift-F3 ([#421](https://github.com/blue-panels/mcommander/pull/421))
+- git: Show all the changes of a branch in the diff folder at the top of the commit list, and the description of a commit in Quick view ([#425](https://github.com/blue-panels/mcommander/pull/425))
+
+##### acl
+
+- acl: Add an access control list editor for POSIX and Windows ACLs ([#409](https://github.com/blue-panels/mcommander/pull/409))
+
+##### sftp, shell-link
+
+- sftp: Support default keys and keyboard-interactive authentication ([#412](https://github.com/blue-panels/mcommander/pull/412))
+- shell-link: Report remote write and unlink errors ([#411](https://github.com/blue-panels/mcommander/pull/411))
+
+##### All panel plugins
+
+- plugins: Panel plugins are loaded the first time they are used, which lowers the use of memory and other resources ([#462](https://github.com/blue-panels/mcommander/pull/462))
+- plugins: The bluerig tool can be run from the panel plugins for git, MongoDB and PostgreSQL ([#467](https://github.com/blue-panels/mcommander/pull/467))
+- filemanager: Recode the names of a plugin panel with Alt-e ([#442](https://github.com/blue-panels/mcommander/pull/442))
+
+#### Built-in terminal (mcterm)
+
+- tty: Support the full kitty keyboard protocol in the panels, and Ctrl with a digit ([#346](https://github.com/blue-panels/mcommander/pull/346), [#383](https://github.com/blue-panels/mcommander/pull/383), [#398](https://github.com/blue-panels/mcommander/pull/398))
+- tty: While Shift, Ctrl or Alt is held, the key bar shows the commands of the F keys with that modifier; needs a terminal with the kitty keyboard protocol and the keybar_modifiers option in the settings file ([#398](https://github.com/blue-panels/mcommander/pull/398))
+- mcterm: Support the full kitty keyboard protocol for programs in mcterm ([#399](https://github.com/blue-panels/mcommander/pull/399))
+- mcterm: Show wide characters and more SGR attributes ([#354](https://github.com/blue-panels/mcommander/pull/354))
+- mcterm: Pass the OSC 52 clipboard text of a program to the clipboard ([#378](https://github.com/blue-panels/mcommander/pull/378))
+- session: mc can survive a closed terminal or a dropped connection: with the session plugin, the next start of mc returns to the same session; the plugin is turned on in Manage plugins ([#423](https://github.com/blue-panels/mcommander/pull/423))
+
+#### Editor
+
+- editor: Take a bracketed paste as one block ([#397](https://github.com/blue-panels/mcommander/pull/397))
+- editor: Ctrl-A now selects all the text in the editor ([#416](https://github.com/blue-panels/mcommander/pull/416))
+- widget: A new file chooser dialog ([#419](https://github.com/blue-panels/mcommander/pull/419))
+
+#### Syntax highlighting
+
+- syntax: One syntax can be embedded in another: scripts and style sheets in HTML are highlighted as JavaScript and CSS, and code blocks in markdown by the language they name; rule sets can be layered, as in Smarty or Jinja2 templates ([#404](https://github.com/blue-panels/mcommander/pull/404))
+- syntax: Add highlighting for Jinja2, Mermaid, Smarty and git commit messages, and for awk, python and SQL code in shell scripts ([#405](https://github.com/blue-panels/mcommander/pull/405))
+
+#### Viewer
+
+- viewer: Searching for plain text or hex in large files is many times faster ([#458](https://github.com/blue-panels/mcommander/pull/458))
+
+#### Compare view
+
+- diffviewer: Compare files with git's xdiff instead of running diff ([#413](https://github.com/blue-panels/mcommander/pull/413))
+- diffviewer: Merge three files in the compare view ([#415](https://github.com/blue-panels/mcommander/pull/415))
+- diffviewer: Pick the base of a merge, show the active file and the copy direction ([#422](https://github.com/blue-panels/mcommander/pull/422))
+- packaging: The compare program is renamed to mcdiff6 because of a name clash ([#343](https://github.com/blue-panels/mcommander/pull/343))
+- keymap: Compare files is now on Ctrl-X f; it used to be Ctrl-X Ctrl-d ([#416](https://github.com/blue-panels/mcommander/pull/416))
+
+#### Interface and core
+
+- filemanager: An optional Far mode with the keys of Far Manager and its fast find on Alt with a character, turned on by separate options ([#403](https://github.com/blue-panels/mcommander/pull/403), [#437](https://github.com/blue-panels/mcommander/pull/437))
+- tty: Take the keys of the Win32 input mode of Windows Terminal ([#401](https://github.com/blue-panels/mcommander/pull/401))
+- widget: Draw the scrollbars of lists and tables as the skin sets them ([#432](https://github.com/blue-panels/mcommander/pull/432))
+- widget: Scroll a drop-down menu taller than the screen ([#436](https://github.com/blue-panels/mcommander/pull/436))
+- widget: Add a cursor on the check boxes of a table row ([#408](https://github.com/blue-panels/mcommander/pull/408))
+- clipboard: Copy to the clipboard of the terminal by OSC 52 ([#430](https://github.com/blue-panels/mcommander/pull/430))
+- tty: Repaint sixel pictures after screen refreshes ([#384](https://github.com/blue-panels/mcommander/pull/384))
+- usermenu: Add conditions and a menu file to edit by hand ([#388](https://github.com/blue-panels/mcommander/pull/388))
+
+### Fixes
+
+#### Editor
+
+- editor: Fix a crash after a ctags jump: the highlighting read the freed window ([#466](https://github.com/blue-panels/mcommander/pull/466))
+- editor: Fix the memory errors valgrind found: a character read past the end of a buffer chunk, and three more ([#469](https://github.com/blue-panels/mcommander/pull/469))
+- editor: Undo and redo a UTF-8 character as a whole ([#406](https://github.com/blue-panels/mcommander/pull/406))
+- editor: The editor shows its text at start, not just the title and the buttons until the first key press ([#445](https://github.com/blue-panels/mcommander/pull/445))
+- tty, editor: An editor window moved off the screen no longer loads the CPU, and "Press any key to continue" waits for a real key press ([#447](https://github.com/blue-panels/mcommander/pull/447))
+- ctags: Fix the leak of pointer buffers in tag lookups ([#459](https://github.com/blue-panels/mcommander/pull/459))
+
+#### Viewer and quick view
+
+- filemanager: Quick view shows the file as soon as the panel switches to it, not after the cursor moves ([#464](https://github.com/blue-panels/mcommander/pull/464))
+- filemanager: F3 and Quick view show pictures not only for local files but in plugin panels too ([#465](https://github.com/blue-panels/mcommander/pull/465))
+- filemanager: A file is no longer downloaded twice when viewed (F3 and Quick view) in panel plugins ([#439](https://github.com/blue-panels/mcommander/pull/439))
+- viewer: Give a source its own display mode back when the view is done ([#424](https://github.com/blue-panels/mcommander/pull/424))
+- viewer: Show the bytes in hex on a line of their own ([#400](https://github.com/blue-panels/mcommander/pull/400))
+- lua-markdown: Keep table rows whole when a cell holds a line break tag ([#380](https://github.com/blue-panels/mcommander/pull/380))
+- lua-markdown: Keep long lines of a code block inside its frame ([#381](https://github.com/blue-panels/mcommander/pull/381))
+- lua-markdown: Show plain text as text, not as code blocks ([#446](https://github.com/blue-panels/mcommander/pull/446))
+
+#### Built-in terminal (mcterm)
+
+- mcterm: Answer DSR, the cursor position and the status report ([#342](https://github.com/blue-panels/mcommander/pull/342))
+- mcterm: Start bash with its own startup file and keep terminal answers out of the keyboard ([#356](https://github.com/blue-panels/mcommander/pull/356))
+- mcterm: Pass a terminal paste to the shell as one block ([#379](https://github.com/blue-panels/mcommander/pull/379))
+- mcterm: Wait for the shell echo only after a whole UTF-8 character ([#382](https://github.com/blue-panels/mcommander/pull/382))
+- mcterm: Do not show a line break right after Enter ([#387](https://github.com/blue-panels/mcommander/pull/387))
+- mcterm: Send Home and End to the shell the way xterm does ([#390](https://github.com/blue-panels/mcommander/pull/390))
+- mcterm: Make the scroll and tag keys work with the embedded terminal ([#391](https://github.com/blue-panels/mcommander/pull/391))
+- mcterm: Send Shift-Tab to the program in the terminal ([#393](https://github.com/blue-panels/mcommander/pull/393))
+- mcterm: Quit when the shell behind the panels ends ([#394](https://github.com/blue-panels/mcommander/pull/394))
+- mcterm: Skip APC, PM and SOS strings instead of drawing them ([#431](https://github.com/blue-panels/mcommander/pull/431))
+- mcterm: Do not read the right prompt as typed text ([#456](https://github.com/blue-panels/mcommander/pull/456))
+
+#### Panel plugins
+
+- mongo: The last bucket keeps the last document of its range ([#448](https://github.com/blue-panels/mcommander/pull/448), [#450](https://github.com/blue-panels/mcommander/pull/450))
+- arcmc: Archives with hundreds of thousands of files open many times faster ([#451](https://github.com/blue-panels/mcommander/pull/451))
+- ftp, sftp: Make a directory with F7 inside a connection ([#452](https://github.com/blue-panels/mcommander/pull/452))
+- shell-link: Make the missing parent directories on F7 ([#453](https://github.com/blue-panels/mcommander/pull/453))
+- git: Fixed a crash on Enter on a file in the git panel with Quick view in the other panel ([#427](https://github.com/blue-panels/mcommander/pull/427))
+
+#### Interface and core
+
+- mouse: Stop taking a turn of the wheel for a press of a button ([#433](https://github.com/blue-panels/mcommander/pull/433))
+- execute: Keep the alternate screen for an external editor or viewer ([#428](https://github.com/blue-panels/mcommander/pull/428))
+- tty: Prefer the Win32 input mode to the kitty protocol ([#402](https://github.com/blue-panels/mcommander/pull/402))
+- tty: Read a paste that comes as keys of the Win32 input mode ([#426](https://github.com/blue-panels/mcommander/pull/426))
+- diffviewer: Comparing with case ignored works for Cyrillic even when the file has an invalid UTF-8 byte ([#420](https://github.com/blue-panels/mcommander/pull/420))
+- usermenu: A program run from the user menu without the panel shell gets the keyboard, and the panels come back in the right mode after it ends ([#410](https://github.com/blue-panels/mcommander/pull/410))
+- filemanager: The title of the terminal window shows which command runs in the built-in terminal ([#396](https://github.com/blue-panels/mcommander/pull/396))
 
 ## 6.1.0 - 2026-09-26
 
