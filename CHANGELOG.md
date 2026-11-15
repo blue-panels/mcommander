@@ -6,7 +6,7 @@ The releases of this fork, newest first.
 
 New panel plugins for PostgreSQL, GitHub and duplicate files, the full kitty
 keyboard protocol in the panels and in the built-in terminal, three-way merge in
-the compare view, an optional Far mode, and many fixes of the terminal and the
+the compare view, an optional Far mode, and many fixes for the terminal and the
 editor.
 
 ### Features
@@ -15,7 +15,7 @@ editor.
 
 ##### duplicates
 
-- duplicates: Duplicate file search; the plugin also finds similar pictures (JPEG and PNG, by a perceptual hash) and texts ([#463](https://github.com/blue-panels/mcommander/pull/463))
+- duplicates: Duplicate file search; the plugin also finds similar pictures (JPEG and PNG, using a perceptual hash) and texts ([#463](https://github.com/blue-panels/mcommander/pull/463))
 
 ##### postgres
 
@@ -54,7 +54,7 @@ editor.
 
 - plugins: Panel plugins are loaded the first time they are used, which lowers the use of memory and other resources ([#462](https://github.com/blue-panels/mcommander/pull/462))
 - plugins: The bluerig tool can be run from the panel plugins for git, MongoDB and PostgreSQL ([#467](https://github.com/blue-panels/mcommander/pull/467))
-- filemanager: Recode the names of a plugin panel with Alt-e ([#442](https://github.com/blue-panels/mcommander/pull/442))
+- filemanager: Recode filenames in a plugin panel with Alt-e ([#442](https://github.com/blue-panels/mcommander/pull/442))
 
 #### Built-in terminal (mcterm)
 
@@ -67,7 +67,7 @@ editor.
 
 #### Editor
 
-- editor: Take a bracketed paste as one block ([#397](https://github.com/blue-panels/mcommander/pull/397))
+- editor: Handle bracketed paste as a single block ([#397](https://github.com/blue-panels/mcommander/pull/397))
 - editor: Ctrl-A now selects all the text in the editor ([#416](https://github.com/blue-panels/mcommander/pull/416))
 - widget: A new file chooser dialog ([#419](https://github.com/blue-panels/mcommander/pull/419))
 
@@ -91,11 +91,11 @@ editor.
 #### Interface and core
 
 - filemanager: An optional Far mode with the keys of Far Manager and its fast find on Alt with a character, turned on by separate options ([#403](https://github.com/blue-panels/mcommander/pull/403), [#437](https://github.com/blue-panels/mcommander/pull/437))
-- tty: Take the keys of the Win32 input mode of Windows Terminal ([#401](https://github.com/blue-panels/mcommander/pull/401))
+- tty: Support Windows Terminal's Win32 input mode ([#401](https://github.com/blue-panels/mcommander/pull/401))
 - widget: Draw the scrollbars of lists and tables as the skin sets them ([#432](https://github.com/blue-panels/mcommander/pull/432))
 - widget: Scroll a drop-down menu taller than the screen ([#436](https://github.com/blue-panels/mcommander/pull/436))
 - widget: Add a cursor on the check boxes of a table row ([#408](https://github.com/blue-panels/mcommander/pull/408))
-- clipboard: Copy to the clipboard of the terminal by OSC 52 ([#430](https://github.com/blue-panels/mcommander/pull/430))
+- clipboard: Copy to the clipboard of the terminal via OSC 52 ([#430](https://github.com/blue-panels/mcommander/pull/430))
 - tty: Repaint sixel pictures after screen refreshes ([#384](https://github.com/blue-panels/mcommander/pull/384))
 - usermenu: Add conditions and a menu file to edit by hand ([#388](https://github.com/blue-panels/mcommander/pull/388))
 
@@ -131,7 +131,7 @@ editor.
 - mcterm: Send Home and End to the shell the way xterm does ([#390](https://github.com/blue-panels/mcommander/pull/390))
 - mcterm: Make the scroll and tag keys work with the embedded terminal ([#391](https://github.com/blue-panels/mcommander/pull/391))
 - mcterm: Send Shift-Tab to the program in the terminal ([#393](https://github.com/blue-panels/mcommander/pull/393))
-- mcterm: Quit when the shell behind the panels ends ([#394](https://github.com/blue-panels/mcommander/pull/394))
+- mcterm: Quit when the shell behind the panels exits ([#394](https://github.com/blue-panels/mcommander/pull/394))
 - mcterm: Skip APC, PM and SOS strings instead of drawing them ([#431](https://github.com/blue-panels/mcommander/pull/431))
 - mcterm: Do not read the right prompt as typed text ([#456](https://github.com/blue-panels/mcommander/pull/456))
 
@@ -141,16 +141,16 @@ editor.
 - arcmc: Archives with hundreds of thousands of files open many times faster ([#451](https://github.com/blue-panels/mcommander/pull/451))
 - ftp, sftp: Make a directory with F7 inside a connection ([#452](https://github.com/blue-panels/mcommander/pull/452))
 - shell-link: Make the missing parent directories on F7 ([#453](https://github.com/blue-panels/mcommander/pull/453))
-- git: Fixed a crash on Enter on a file in the git panel with Quick view in the other panel ([#427](https://github.com/blue-panels/mcommander/pull/427))
+- git: Fix a crash on Enter on a file in the git panel with Quick view in the other panel ([#427](https://github.com/blue-panels/mcommander/pull/427))
 
 #### Interface and core
 
-- mouse: Stop taking a turn of the wheel for a press of a button ([#433](https://github.com/blue-panels/mcommander/pull/433))
+- mouse: Stop treating a mouse wheel scroll as a button press ([#433](https://github.com/blue-panels/mcommander/pull/433))
 - execute: Keep the alternate screen for an external editor or viewer ([#428](https://github.com/blue-panels/mcommander/pull/428))
 - tty: Prefer the Win32 input mode to the kitty protocol ([#402](https://github.com/blue-panels/mcommander/pull/402))
 - tty: Read a paste that comes as keys of the Win32 input mode ([#426](https://github.com/blue-panels/mcommander/pull/426))
 - diffviewer: Comparing with case ignored works for Cyrillic even when the file has an invalid UTF-8 byte ([#420](https://github.com/blue-panels/mcommander/pull/420))
-- usermenu: A program run from the user menu without the panel shell gets the keyboard, and the panels come back in the right mode after it ends ([#410](https://github.com/blue-panels/mcommander/pull/410))
+- usermenu: A program run from the user menu without the panel shell gets the keyboard, and the panels come back in the right mode after it exits ([#410](https://github.com/blue-panels/mcommander/pull/410))
 - filemanager: The title of the terminal window shows which command runs in the built-in terminal ([#396](https://github.com/blue-panels/mcommander/pull/396))
 
 ## 6.1.0 - 2026-09-26
