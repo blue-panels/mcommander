@@ -79,7 +79,6 @@ Cada número corresponde a un byte. Unos y otros se pueden entremezclar así:
 
 .EX
 "Cadena" 34 0xBB 012 "otro texto"
-
 .EE
 
 .PP
@@ -129,7 +128,6 @@ F7, /        buscar en todo el documento, incluidos los nodos
 F17, n       continuar la búsqueda
 F6           filtrar el árbol por un patrón
 ] / [        ir a la coincidencia siguiente / anterior
-
 .EE
 
 .PP

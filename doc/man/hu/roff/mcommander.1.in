@@ -327,7 +327,6 @@ A felhasználó saját kiosztásfájlját a program a következő sorrendben ker
 2) MC_KEYMAP környezeti változó
 3) a [Midnight\-Commander] szakasz keymap paramétere
 4) a ~/.config/mc6/keymap.ini fájl
-
 .EE
 
 .PP
@@ -339,7 +338,6 @@ elsőig, amelyet megtalál):
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -352,7 +350,6 @@ fájlba, amely utoljára olvasódik be, és nem kell hozzá kapcsoló:
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Far mód
@@ -1863,7 +1860,6 @@ kettősponttal kell elválasztani:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -1872,7 +1868,6 @@ is kihagyja:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -1897,7 +1892,6 @@ használhatod a parancskimenet panelben:
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -1912,7 +1906,6 @@ fájlok neveit tartalmazó log fájl tartalmának megjelenítésére:
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -1959,7 +1952,6 @@ F9           az aktuális csoport rendezése név szerint, elöl a
              csoportokkal
 Ctrl\-s       keresés a listában gépelés közben, Ctrl\-s tovább
 Right, Left  belépés a csoportba és kilépés belőle
-
 .EE
 
 .PP
@@ -2005,7 +1997,6 @@ Del          a tétel törlése
 Ctrl\-Up      a tétel feljebb vitele
 Ctrl\-Down    a tétel lejjebb vitele
 Alt\-A        az itt elrejtett tételek is látszanak
-
 .EE
 
 .PP
@@ -2095,7 +2086,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2171,7 +2161,6 @@ A path= maszkját a program annak az útvonalával veti össze, amin a kurzor
 **/src/*          bármi közvetlenül egy src könyvtárban
 build/            build nevű könyvtár
 *.c;!test_*.c     a C források, a tesztek nélkül
-
 .EE
 
 .PP
@@ -2285,7 +2274,6 @@ K       Az aktuális könyvtárról archiválása
 = f *.tar.gz | f *.tgz & t n
 X       A kijelölt tömörített tar fájl kicsomagolása
         tar xzvf %f
-
 .EE
 
 .PP
@@ -2314,7 +2302,6 @@ A belső feltétel az alábbiak közül valamelyik:
   T <type>              más fájltípus?
   x <fájlnév>           ez futtatható fájlnév?
   ! <belső\-felt.>       a belső feltételek ellentéte
-
 .EE
 
 .PP
@@ -2337,7 +2324,6 @@ A következő karakterek közül egyet, vagy többet is begépelhetsz:
   s	socket
   x	futtatható fájl
   t	fájl kijelölve
-
 .EE
 
 .PP
@@ -2356,7 +2342,6 @@ A feltételek kiértékelése balról\-jobbra történik. Ennek megfelelően:
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2364,7 +2349,6 @@ kibontva:
 
 .EX
  	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2374,7 +2358,6 @@ Egy példa a feltételek használatára:
 = f *.tar.gz | f *.tgz & t n
 L	Listázza az aktuális tar archívumot
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3330,7 +3313,6 @@ Alt\-Shift\-s    csak az illeszkedő sorok mutatása
 Ctrl\-l         a képernyő törlése, a kimenet megtartásával
 Ctrl\-Shift\-l   a képernyő és az egész kimenet törlése
                (Ctrl\-Alt\-l is)
-
 .EE
 
 .PP
@@ -3374,7 +3356,6 @@ F4           csak a kijelölésre vagy a kurzor alatti szóra
              illeszkedő sorok meghagyása
 F5           ennek a szűrőnek a levétele és visszatétele
 F6           a képernyő és az egész kimenet törlése
-
 .EE
 
 .PP
@@ -3822,7 +3803,6 @@ panelize     egy parancs eredménye panelként
 mcpeek       bepillantás egy fájlba
 mcstruct     bináris fájl megnevezett mezők fájaként
 skineditor   a program kinézete
-
 .EE
 
 .PP
@@ -3858,7 +3838,6 @@ For example, to list CD\-Audio tracks on your CD\-ROM drive, type
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -3876,7 +3855,6 @@ For example, to list contents of a zip archive documents.zip type
 
 .EX
   cd documents.zip/uzip://
-
 .EE
 
 .PP
@@ -3965,7 +3943,6 @@ section.  Here is an example entry for Debian packages:
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH Egyetlen fájl fájlrendszere
@@ -3978,7 +3955,6 @@ fájlrendszer neve a fájl neve után kerül, akárcsak az extfs esetében:
 
 .EX
   cd documents.gz/ugz://
-
 .EE
 
 .PP
@@ -4186,7 +4162,6 @@ A szöveg eleje                          ^
 A szöveg vége                           $
 Szóhatár                                \eb
 Nem szóhatár                            \eB
-
 .EE
 
 .PP
@@ -4201,7 +4176,6 @@ A szöveg vége                           \eZ
 A szöveg abszolút vége                  \ez
 Szóhatár                                \eb
 Nem szóhatár                            \eB
-
 .EE
 
 .PP
@@ -4212,7 +4186,6 @@ Soremelés                               \en
 Kocsivissza                             \er
 Tabulátor                               \et
 Nulla karakter                          \e0
-
 .EE
 
 .PP
@@ -4260,7 +4233,6 @@ ddd oktális karakter                    \eddd
 Y vezérlőkarakter                       \ecY
 Backspace karakter                      [\eb]
 Bármely karaktert betű szerintivé tesz  \e
-
 .EE
 
 .PP
@@ -4276,7 +4248,6 @@ Pontosan 3 a                            a{3}
 Mohó ismétlésjel                        a*
 Lusta ismétlésjel                       a*?
 Birtokos ismétlésjel                    a*+
-
 .EE
 
 .PP
@@ -4304,7 +4275,6 @@ Szókarakterek                           [[:word:]]
 Hexadecimális számjegyek                [[:xdigit:]]
 Szó eleje                               [[:<:]]
 Szó vége                                [[:>:]]
-
 .EE
 
 .PP
@@ -4322,7 +4292,6 @@ Horgony                                 A
 Ismétlődő csoportnevek                  J
 Nem rögzítő csoportok                   n
 Minden üres mellőzése / bőbeszédű       xx
-
 .EE
 
 .PP
@@ -4367,7 +4336,6 @@ Vezérlőszó                              (*COMMIT)
 Vezérlőszó                              (*PRUNE)
 Vezérlőszó                              (*SKIP)
 Vezérlőszó                              (*THEN)
-
 .EE
 
 
@@ -4397,7 +4365,6 @@ a M\-Commander nem végzi el. Például:
 [Colors]
 color_terminals=linux,xterm
 color_terminals=terminal\-name1,terminal\-name2...
-
 .EE
 
 .PP
@@ -4428,7 +4395,6 @@ megtalál):
 3) a [Midnight\-Commander] szakasz skin paramétere
 4) a {{sysconfdir}}/mcommander/skins/default.ini fájl
 5) a {{pkgdatadir}}/skins/default.ini fájl
-
 .EE
 
 .PP
@@ -4441,7 +4407,6 @@ megtalál):
 1) ~/.local/share/mc6/skins/
 2) {{sysconfdir}}/mcommander/skins/
 3) {{pkgdatadir}}/skins/
-
 .EE
 
 .PP
@@ -4501,7 +4466,6 @@ A 'type' kulcs értékei a következők lehetnek:
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -4530,7 +4494,6 @@ Például:
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -4637,7 +4600,6 @@ amely fájlból olvas szöveget az X kijelölésébe. Például:
 
 .EX
 clipboard_store=xclip \-i
-
 .EE
 
 .TP
@@ -4647,7 +4609,6 @@ amely a kijelölést a szabványos kimenetre írja. Például:
 
 .EX
 clipboard_paste=xclip \-o
-
 .EE
 
 .TP
@@ -4672,7 +4633,6 @@ Például:
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -4799,7 +4759,6 @@ pgup          page up gomb
 insert        az insert karakter
 delete        a delete karakter
 complete      a lezáró
-
 .EE
 
 .PP
@@ -4808,7 +4767,6 @@ azonos, az alábbiakat állítsd be az ini fájlban:
 
 .EX
 insert=\ee[Op
-
 .EE
 
 .PP
@@ -4926,7 +4884,6 @@ Egy sikertelen ftp kapcsolat naplójának megőrzéséhez:
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -4992,7 +4949,6 @@ a fájlt el akarod készíteni a következő parancsot használd:
 
 .EX
 find / \-type d \-print | sort > ~/.cache/mc6/Tree"
-
 .EE
 
 .PP
@@ -5029,7 +4985,6 @@ zsh(1).
 A M\-Commander World Wide Web oldalának címe a
 következő:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 

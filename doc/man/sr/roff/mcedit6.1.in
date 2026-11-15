@@ -151,7 +151,6 @@ tab\-а; истицање синтаксе за разне врсте датот
 .EX
 [editor]
 ctrl\-W=ExecuteScript:25;
-
 .EE
 
 .PP
@@ -252,7 +251,6 @@ l	избор коментара
 	echo #endif >> $TMPFILE
 	cat $TMPFILE > %b
 	rm \-f $TMPFILE
-
 .EE
 
 .PP
@@ -378,7 +376,6 @@ context " " green
   keyword  %s    brightgreen
   keyword  %c    brightgreen
   keyword  \e\e"   brightgreen
-
 .EE
 
 .PP
@@ -473,7 +470,6 @@ context " " green
 .EX
   context <SCRIPT*> </SCRIPT> brightcyan
       embed JavaScript\esProgram
-
 .EE
 
 .PP
@@ -510,7 +506,6 @@ context " " green
   context {\e* \e*} brown
   context { } brightcyan
       embed soft Smarty\esTag
-
 .EE
 
 .PP
@@ -534,7 +529,6 @@ tab\-ове и размаке преко секвенци \et и \es. Знако
 
 .EX
   keyword         '*'      green
-
 .EE
 
 .PP
@@ -542,7 +536,6 @@ tab\-ове и размаке преко секвенци \et и \es. Знако
 
 .EX
   keyword         "*"      green
-
 .EE
 
 .PP
@@ -556,7 +549,6 @@ tab\-ове и размаке преко секвенци \et и \es. Знако
 
 .EX
   keyword  \e\e\en  brightgreen
-
 .EE
 
 .PP
@@ -586,7 +578,6 @@ gray0 до gray23.
 
 .EX
 keyword  #include  red/Orange
-
 .EE
 
 .PP

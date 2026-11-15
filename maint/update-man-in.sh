@@ -82,6 +82,10 @@ for md in "$top"/doc/man/*.md "$top"/doc/man/*/*.md; do
         # 8. a backslash of its own is \e in these pages; \\ is what mandoc
         #    tells man pages not to write
         s/\\\\/\\e/g;
+
+        # 9. a code block that ends with an empty line: go-md2man 2.0.3 keeps
+        #    the line before .EE, 2.0.4 does not; neither does this page
+        s/\n\n+(?=\.EE\n)/\n/g;
     ' >> "$out.tmp"
     mv -f "$out.tmp" "$out"
     echo "$out"

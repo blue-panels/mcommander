@@ -266,7 +266,6 @@ de git:
 [mergetool "mcdiff"]
     cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
     trustExitCode = true
-
 .EE
 
 .PP

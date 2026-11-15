@@ -345,7 +345,6 @@ conflict left, and 1 otherwise, so it can serve as the merge tool of git:
 [mergetool "mcdiff"]
     cmd = mcdiff6 "$LOCAL" "$BASE" "$REMOTE" \-o "$MERGED"
     trustExitCode = true
-
 .EE
 
 

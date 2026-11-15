@@ -193,7 +193,6 @@ like following:
 .EX
 [editor]
 ctrl\-W=ExecuteScript:25;
-
 .EE
 
 .PP
@@ -305,7 +304,6 @@ l       comment selection
 	echo #endif >> $TMPFILE
 	cat $TMPFILE > %b
 	rm \-f $TMPFILE
-
 .EE
 
 .PP
@@ -437,7 +435,6 @@ context " " green
   keyword  %s    brightgreen
   keyword  %c    brightgreen
   keyword  \e\e"   brightgreen
-
 .EE
 
 .PP
@@ -534,7 +531,6 @@ JavaScript:
 .EX
   context <SCRIPT*> </SCRIPT> brightcyan
       embed JavaScript\esProgram
-
 .EE
 
 .PP
@@ -570,7 +566,6 @@ layer over plain text.  For example, Smarty over HTML:
   context {\e* \e*} brown
   context { } brightcyan
       embed soft Smarty\esTag
-
 .EE
 
 .PP
@@ -594,7 +589,6 @@ characters.  For example,
 
 .EX
   keyword         '*'      green
-
 .EE
 
 .PP
@@ -602,7 +596,6 @@ colors all C single character constants green.  You also could use
 
 .EX
   keyword         "*"      green
-
 .EE
 
 .PP
@@ -616,7 +609,6 @@ Important to note is the line
 
 .EX
   keyword  \e\e\en  brightgreen
-
 .EE
 
 .PP
@@ -647,7 +639,6 @@ by separating them with a slash, e.g.
 
 .EX
 keyword  #include  red/Orange
-
 .EE
 
 .PP

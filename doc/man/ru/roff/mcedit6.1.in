@@ -180,7 +180,6 @@ Shift. Учтите, что буфер обмена терминала не об
 .EX
 [editor]
 ctrl\-W=ExecuteScript:25;
-
 .EE
 
 .PP
@@ -288,7 +287,6 @@ l       comment selection
 	echo #endif >> $TMPFILE
 	cat $TMPFILE > %b
 	rm \-f $TMPFILE
-
 .EE
 
 .PP
@@ -416,7 +414,6 @@ context " " green
   keyword  %s    brightgreen
   keyword  %c    brightgreen
   keyword  \e\e"   brightgreen
-
 .EE
 
 .PP
@@ -511,7 +508,6 @@ context " " green
 .EX
   context <SCRIPT*> </SCRIPT> brightcyan
       embed JavaScript\esProgram
-
 .EE
 
 .PP
@@ -548,7 +544,6 @@ Jinja2 первые }} остаются частью строки, а в ${x/\e}
   context {\e* \e*} brown
   context { } brightcyan
       embed soft Smarty\esTag
-
 .EE
 
 .PP
@@ -571,7 +566,6 @@ Jinja2 первые }} остаются частью строки, а в ${x/\e}
 
 .EX
   keyword         '*'      green
-
 .EE
 
 .PP
@@ -579,7 +573,6 @@ Jinja2 первые }} остаются частью строки, а в ${x/\e}
 
 .EX
   keyword         "*"      green
-
 .EE
 
 .PP
@@ -592,7 +585,6 @@ Jinja2 первые }} остаются частью строки, а в ${x/\e}
 
 .EX
   keyword  \e\e\en  brightgreen
-
 .EE
 
 .PP
@@ -622,7 +614,6 @@ rgb000 \- rgb555 или как gray0 \- gray23.
 
 .EX
 keyword  #include  red/Orange
-
 .EE
 
 .PP

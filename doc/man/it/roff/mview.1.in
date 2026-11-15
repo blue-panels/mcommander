@@ -80,7 +80,6 @@ testo tra virgolette e costanti come nell'esempio:
 
 .EX
 "Stringa" 34 0xBB 012 "ancora testo"
-
 .EE
 
 .PP
@@ -130,7 +129,6 @@ F7, /        cerca in tutto il documento, anche nei nodi
 F17, n       continua la ricerca
 F6           filtra l'albero con un modello
 ] / [        va all'occorrenza successiva / precedente
-
 .EE
 
 .PP

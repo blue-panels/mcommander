@@ -337,7 +337,6 @@ Shift.
 2) променљива окружења MC_KEYMAP
 3) параметар keymap одељка [Midnight\-Commander]
 4) датотека ~/.config/mc6/keymap.ini
-
 .EE
 
 .PP
@@ -348,7 +347,6 @@ Shift.
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -361,7 +359,6 @@ Shift.
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Режим Far
@@ -1896,7 +1893,6 @@ NFS директоријуму који је монтиран преко спо�
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -1905,7 +1901,6 @@ NFS директоријуму који је монтиран преко спо�
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -1931,7 +1926,6 @@ NFS директоријуму који је монтиран преко спо�
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -1947,7 +1941,6 @@ find . \-type l \-print
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -1990,7 +1983,6 @@ F6           премести ставку у другу групу: дијал�
 F9           уреди текућу групу по натпису, прво групе
 Ctrl\-s       претражуј списак док куцаш, Ctrl\-s тражи даље
 Right, Left  уђи у групу и изађи из ње
-
 .EE
 
 .PP
@@ -2034,7 +2026,6 @@ Del          обриши ставку
 Ctrl\-Up      помери ставку нагоре
 Ctrl\-Down    помери ставку надоле
 Alt\-A        прикажи и ставке скривене овде
-
 .EE
 
 .PP
@@ -2120,7 +2111,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2195,7 +2185,6 @@ socket, одвојени са ';'; довољан је било који од њ
 **/src/*          било шта непосредно у директоријуму src
 build/            директоријум назван build
 *.c;!test_*.c     C изворни кодови осим тестова
-
 .EE
 
 .PP
@@ -2303,7 +2292,6 @@ K	Прави издање текућег поддиректоријума
 = f *.tar.gz | f *.tgz & t n
 X       Распакује садржај компримоване датотеке врсте tar
 	tar xzvf %f
-
 .EE
 
 .PP
@@ -2330,7 +2318,6 @@ X       Распакује садржај компримоване датоте�
   T <врста>		врста друге датотеке је <врста>?
   x <датотека>		да ли је датотека извршна?
   ! <подуслов>		негира резултат подуслова
-
 .EE
 
 .PP
@@ -2353,7 +2340,6 @@ X       Распакује садржај компримоване датоте�
   s	сокет
   x	извршна датотека
   t	означено
-
 .EE
 
 .PP
@@ -2370,7 +2356,6 @@ X       Распакује садржај компримоване датоте�
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2378,7 +2363,6 @@ X       Распакује садржај компримоване датоте�
 
 .EX
 	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2388,7 +2372,6 @@ X       Распакује садржај компримоване датоте�
 = f *.tar.gz | f *.tgz & t n
 L	Листа садржај компримоване архиве врсте tar
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3289,7 +3272,6 @@ Alt\-Shift\-s    прикажи само редове који одговара�
 Ctrl\-l         очисти екран, задржавајући испис
 Ctrl\-Shift\-l   очисти и екран и цео испис
                (исто и Ctrl\-Alt\-l)
-
 .EE
 
 .PP
@@ -3328,7 +3310,6 @@ F4           остави само редове који одговарају о
              или речи под курсором
 F5           скини тај филтер и врати га
 F6           очисти и екран и цео испис
-
 .EE
 
 .PP
@@ -3948,7 +3929,6 @@ panelize     исход наредбе као панел
 mcpeek       поглед у датотеку
 mcstruct     бинарна датотека као стабло именованих поља
 skineditor   изглед програма
-
 .EE
 
 .PP
@@ -3985,7 +3965,6 @@ skineditor   изглед програма
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -4003,7 +3982,6 @@ dokumenti.zip, откуцајте
 
 .EX
   cd dokumenti.zip/uzip://
-
 .EE
 
 .PP
@@ -4096,7 +4074,6 @@ diff
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH Систем датотека једне датотеке
@@ -4108,7 +4085,6 @@ diff
 
 .EX
   cd documents.gz/ugz://
-
 .EE
 
 .PP
@@ -4153,7 +4129,6 @@ diff
 Крај ниске                            $
 Граница речи                          \eb
 Ван границе речи                      \eB
-
 .EE
 
 .PP
@@ -4168,7 +4143,6 @@ diff
 Апсолутни крај ниске                  \ez
 Граница речи                          \eb
 Ван границе речи                      \eB
-
 .EE
 
 .PP
@@ -4179,7 +4153,6 @@ diff
 Повратак кола                         \er
 Табулатор                             \et
 Нулти знак                            \e0
-
 .EE
 
 .PP
@@ -4227,7 +4200,6 @@ n\-ти претходни релативни подобразац   \eg{\-n}
 Управљачки знак Y                     \ecY
 Знак повратнице                       [\eb]
 Чини било који знак дословним         \e
-
 .EE
 
 .PP
@@ -4243,7 +4215,6 @@ n\-ти претходни релативни подобразац   \eg{\-n}
 Похлепни квантификатор                a*
 Лењи квантификатор                    a*?
 Присвојни квантификатор               a*+
-
 .EE
 
 .PP
@@ -4271,7 +4242,6 @@ ASCII кодови 0\-127                    [[:ascii:]]
 Хексадекадне цифре                    [[:xdigit:]]
 Почетак речи                          [[:<:]]
 Крај речи                             [[:>:]]
-
 .EE
 
 .PP
@@ -4289,7 +4259,6 @@ eXtra                                 X
 Поновљени називи група                J
 Групе без хватања                     n
 Занемари све размаке / опширно        xx
-
 .EE
 
 .PP
@@ -4334,7 +4303,6 @@ eXtra                                 X
 Управљачка реч                        (*PRUNE)
 Управљачка реч                        (*SKIP)
 Управљачка реч                        (*THEN)
-
 .EE
 
 
@@ -4427,7 +4395,6 @@ Esc оставља панел какав је био.
 [Colors]
 color_terminals=linux,xterm
 color_terminals=terminal\-name1,terminal\-name2...
-
 .EE
 
 .PP
@@ -4722,7 +4689,6 @@ color_terminals=terminal\-name1,terminal\-name2...
     # жуто на црном (подразумевано)
     # подвучено жуто на црном (подразумевано)
     marked=yellow;;underline
-
 .EE
 
 .PP
@@ -4745,7 +4711,6 @@ color_terminals=terminal\-name1,terminal\-name2...
     mojattr=bold+italic
 [core]
     _default_=mojafg;mojabg;mojattr
-
 .EE
 
 .SH Линије за исцртавање
@@ -4873,7 +4838,6 @@ color_terminals=terminal\-name1,terminal\-name2...
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -4967,7 +4931,6 @@ color_terminals=terminal\-name1,terminal\-name2...
 
 .EX
 clipboard_store=xclip \-i
-
 .EE
 
 .TP
@@ -4977,7 +4940,6 @@ clipboard_store=xclip \-i
 
 .EX
 clipboard_paste=xclip \-o
-
 .EE
 
 .TP
@@ -5001,7 +4963,6 @@ ssh\-а, без наредбе у
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -5121,7 +5082,6 @@ or viewer parameters]“ у системској иницијализацион�
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -5165,7 +5125,6 @@ pgup          тастер page up
 insert        знак insert
 delete        знак delete
 complete      за довршавање
-
 .EE
 
 .PP
@@ -5174,7 +5133,6 @@ complete      за довршавање
 
 .EX
 insert=\ee[Op
-
 .EE
 
 .PP
@@ -5185,7 +5143,6 @@ insert=\ee[Op
 .EX
     ctrl\-alt\-right=\ee[[1;6C
     ctrl\-alt\-left=\ee[[1;6D
-
 .EE
 
 .PP
@@ -5306,7 +5263,6 @@ insert=\ee[Op
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -5402,7 +5358,6 @@ tcsh(1), zsh(1).
 .EX
 Страница Поноћног наредника на Међународној мрежи:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 

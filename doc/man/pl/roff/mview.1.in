@@ -76,7 +76,6 @@ liczba odpowiada jednemu bajtowi. Jedno z drugim można mieszać:
 
 .EX
 "Ciąg" 34 0xBB 012 "więcej tekstu"
-
 .EE
 
 .PP
@@ -125,7 +124,6 @@ F7, /        szuka w całym dokumencie, także w zwiniętych
 F17, n       szuka dalej
 F6           filtruje drzewo wzorcem
 ] / [        idzie do następnego / poprzedniego trafienia
-
 .EE
 
 .PP

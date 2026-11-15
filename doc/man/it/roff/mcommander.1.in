@@ -320,7 +320,6 @@ Il file dell'utente viene cercato con questo ordine (fino al primo trovato):
 2) variabile d'ambiente MC_KEYMAP
 3) parametro keymap della sezione [Midnight\-Commander]
 4) file ~/.config/mc6/keymap.ini
-
 .EE
 
 .PP
@@ -333,7 +332,6 @@ trovato):
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -346,7 +344,6 @@ che viene letto per ultimo e non richiede alcuna opzione:
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Modalità Far
@@ -1841,7 +1838,6 @@ separano con i due punti:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -1850,7 +1846,6 @@ directory dei sistemi di controllo di versione:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -1875,7 +1870,6 @@ eseguire il seguente:
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -1890,7 +1884,6 @@ estrarre il nome del file dal file di log del traferimento:
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -1937,7 +1930,6 @@ F9           ordina il gruppo corrente per etichetta, prima i
              gruppi
 Ctrl\-s       cerca nell'elenco mentre si scrive, Ctrl\-s ripete
 Destra, Sin  entra in un gruppo ed esce da esso
-
 .EE
 
 .PP
@@ -1982,7 +1974,6 @@ Canc         elimina la voce
 Ctrl\-Su      sposta la voce in su
 Ctrl\-Giù     sposta la voce in giù
 Alt\-A        mostra anche le voci nascoste qui
-
 .EE
 
 .PP
@@ -2072,7 +2063,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2148,7 +2138,6 @@ il cursore, nel modo in cui .gitignore confronta i suoi modelli:
 **/src/*          qualsiasi cosa direttamente in una src
 build/            una directory di nome build
 *.c;!test_*.c     i sorgenti C tranne i test
-
 .EE
 
 .PP
@@ -2261,7 +2250,6 @@ K	Crea un rilascio della directory corrente
 = f *.tar.gz | f *.tgz & t n
 X       Estrae il contenuto di un file tar compresso
 	tar xzvf %f
-
 .EE
 
 .PP
@@ -2289,7 +2277,6 @@ Sotto\-condizione è una delle seguenti:
   T <tipo>		altro file di tipo?
   x <nomefile>		nomefile è eseguibile?
   ! <sotto\-cond>	nega il risultato di una sotto\-condizione
-
 .EE
 
 .PP
@@ -2311,7 +2298,6 @@ Tipo è uno o più dei seguenti caratteri:
   s	socket
   x	eseguibile
   t	marcato
-
 .EE
 
 .PP
@@ -2329,7 +2315,6 @@ Le condizioni sono calcolate da sinistra a destra. Ciò significa che
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2337,7 +2322,6 @@ viene calcolata come
 
 .EX
 	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2347,7 +2331,6 @@ Ecco un esempio dell'uso delle condizioni:
 = f *.tar.gz | f *.tgz & t n
 L	Elenca i contenuti di un archivio compresso tar
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3292,7 +3275,6 @@ Alt\-Maiusc\-s   mostra solo le righe che corrispondono
 Ctrl\-l         pulisce lo schermo, tenendo l'uscita
 Ctrl\-Maiusc\-l  pulisce lo schermo e tutta l'uscita
                (anche Ctrl\-Alt\-l)
-
 .EE
 
 .PP
@@ -3334,7 +3316,6 @@ F4           lascia solo le righe che corrispondono alla
              selezione o alla parola sotto il cursore
 F5           toglie quel filtro e lo rimette
 F6           pulisce lo schermo e tutta l'uscita
-
 .EE
 
 .PP
@@ -3796,7 +3777,6 @@ panelize     il risultato di un comando come pannello
 mcpeek       uno sguardo dentro un file
 mcstruct     un file binario come albero di campi con nome
 skineditor   l'aspetto del programma
-
 .EE
 
 .PP
@@ -3833,7 +3813,6 @@ For example, to list CD\-Audio tracks on your CD\-ROM drive, type
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -3851,7 +3830,6 @@ For example, to list contents of a zip archive documents.zip type
 
 .EX
   cd documents.zip/uzip://
-
 .EE
 
 .PP
@@ -3940,7 +3918,6 @@ section.  Here is an example entry for Debian packages:
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH File system di un solo file
@@ -3952,7 +3929,6 @@ nome del file system si aggiunge a quello del file, come in extfs:
 
 .EX
   cd documenti.gz/ugz://
-
 .EE
 
 .PP
@@ -4158,7 +4134,6 @@ Inizio della stringa                    ^
 Fine della stringa                      $
 Confine di parola                       \eb
 Fuori da un confine di parola           \eB
-
 .EE
 
 .PP
@@ -4173,7 +4148,6 @@ Fine della stringa                      \eZ
 Fine assoluta della stringa             \ez
 Confine di parola                       \eb
 Fuori da un confine di parola           \eB
-
 .EE
 
 .PP
@@ -4184,7 +4158,6 @@ A capo                                  \en
 Ritorno carrello                        \er
 Tabulazione                             \et
 Carattere nullo                         \e0
-
 .EE
 
 .PP
@@ -4232,7 +4205,6 @@ Carattere ottale ddd                    \eddd
 Carattere di controllo Y                \ecY
 Carattere backspace                     [\eb]
 Rende letterale ogni carattere          \e
-
 .EE
 
 .PP
@@ -4248,7 +4220,6 @@ Tra 3 e 6 a                             a{3,6}
 Quantificatore avido                    a*
 Quantificatore pigro                    a*?
 Quantificatore possessivo               a*+
-
 .EE
 
 .PP
@@ -4276,7 +4247,6 @@ Caratteri di parola                     [[:word:]]
 Cifre esadecimali                       [[:xdigit:]]
 Inizio di parola                        [[:<:]]
 Fine di parola                          [[:>:]]
-
 .EE
 
 .PP
@@ -4294,7 +4264,6 @@ Ancorato                                A
 Nomi di gruppo ripetuti                 J
 Gruppi senza cattura                    n
 Ignora tutti gli spazi / prolisso       xx
-
 .EE
 
 .PP
@@ -4339,7 +4308,6 @@ Verbo di controllo                      (*COMMIT)
 Verbo di controllo                      (*PRUNE)
 Verbo di controllo                      (*SKIP)
 Verbo di controllo                      (*THEN)
-
 .EE
 
 
@@ -4368,12 +4336,10 @@ il terminale supporta i colori. Per esempio:
 .EX
 [Colors]
 color_terminals=linux,xterm
-
 .EE
 
 .EX
 color_terminals=nome_terminale\-1,nome\-terminale\-2...
-
 .EE
 
 .PP
@@ -4404,7 +4370,6 @@ Il file dello skin viene cercato con questo ordine (fino al primo trovato):
 3) parametro skin della sezione [Midnight\-Commander]
 4) file {{sysconfdir}}/mcommander/skins/default.ini
 5) file {{pkgdatadir}}/skins/default.ini
-
 .EE
 
 .PP
@@ -4417,7 +4382,6 @@ trovato):
 1) ~/.local/share/mc6/skins/
 2) {{sysconfdir}}/mcommander/skins/
 3) {{pkgdatadir}}/skins/
-
 .EE
 
 .PP
@@ -4476,7 +4440,6 @@ La chiave 'type' può avere questi valori:
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -4505,7 +4468,6 @@ Per esempio:
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -4612,7 +4574,6 @@ Il percorso (con le opzioni) di un programma esterno per gli appunti, come
 
 .EX
 clipboard_store=xclip \-i
-
 .EE
 
 .TP
@@ -4622,7 +4583,6 @@ Il percorso (con le opzioni) di un programma esterno per gli appunti, come
 
 .EX
 clipboard_paste=xclip \-o
-
 .EE
 
 .TP
@@ -4648,7 +4608,6 @@ Per esempio:
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -4777,7 +4736,6 @@ pgup          tasto pagina in su
 insert        tasto inserimento
 delete        tasto cancellazione
 complete      per fare il completamento
-
 .EE
 
 .PP
@@ -4786,7 +4744,6 @@ impostare il seguente nel file ini:
 
 .EX
 insert=\ee[Op
-
 .EE
 
 .PP
@@ -4908,7 +4865,6 @@ Per conservare il registro di una connessione ftp che non riesce:
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -5003,7 +4959,6 @@ tcsh(1), zsh(1).
 .EX
 La pagina Web di M\-Commander:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 

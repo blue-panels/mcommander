@@ -80,7 +80,6 @@ mcommander ()
 
 użytkownicy tcsh:
 alias mcommander 'setenv MC `{{bindir}}/mcommander \-P !*`; cd $MC; unsetenv MC'
-
 .EE
 
 .PP
@@ -312,7 +311,6 @@ znalezionego):
 2) zmienna środowiskowa MC_KEYMAP
 3) parametr keymap sekcji [Midnight\-Commander]
 4) plik ~/.config/mc6/keymap.ini
-
 .EE
 
 .PP
@@ -325,7 +323,6 @@ znalezionego):
 .EX
 1) ~/.config/mc6/
 2) {{pkgdatadir}}/
-
 .EE
 
 .PP
@@ -338,7 +335,6 @@ który czytany jest jako ostatni i nie wymaga żadnej opcji:
 
 .EX
 ln \-s {{sysconfdir}}/mcommander/keymap.vim.ini ~/.config/mc6/keymap.ini
-
 .EE
 
 .SH Tryb Far
@@ -1769,7 +1765,6 @@ Elementy listy rozdziela się dwukropkiem:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs
-
 .EE
 
 .PP
@@ -1778,7 +1773,6 @@ katalogi systemów kontroli wersji:
 
 .EX
 /cdrom:/nfs/wuarchive:/afs:.svn:.git:CVS
-
 .EE
 
 .PP
@@ -1803,7 +1797,6 @@ i następującej komendy:
 
 .EX
 find . \-type l \-print
-
 .EE
 
 .PP
@@ -1818,7 +1811,6 @@ logów transferu:
 
 .EX
 awk '$9 ~! /incoming/ { print $9 }' < /var/log/xferlog
-
 .EE
 
 .PP
@@ -1861,7 +1853,6 @@ F6           przenosi pozycję do innej grupy: okno wypisuje
 F9           porządkuje bieżącą grupę po nazwie, grupy pierwsze
 Ctrl\-s       szuka na liście w trakcie pisania, Ctrl\-s dalej
 Right, Left  wchodzi do grupy i z niej wychodzi
-
 .EE
 
 .PP
@@ -1907,7 +1898,6 @@ Del          kasuje pozycję
 Ctrl\-Up      przesuwa pozycję wyżej
 Ctrl\-Down    przesuwa pozycję niżej
 Alt\-A        pokazuje też pozycje ukryte w tym miejscu
-
 .EE
 
 .PP
@@ -1995,7 +1985,6 @@ read name
 name=${name:\-%f}
 tar czf "$name.tar.gz" %f
 ```
-
 .EE
 
 .PP
@@ -2069,7 +2058,6 @@ jak .gitignore porównuje swoje wzorce:
 **/src/*          cokolwiek wprost w katalogu src
 build/            katalog o nazwie build
 *.c;!test_*.c     źródła C oprócz testów
-
 .EE
 
 .PP
@@ -2169,7 +2157,6 @@ J	Skopiuj rekursywnie cały aktualny katalog.
 = f *.tar.gz | f *.tgz & t n
 X       Zdekompresuj skompresowany plik tar.
 	tar xzvf %f
-
 .EE
 
 .PP
@@ -2194,7 +2181,6 @@ Warunek jest jednym z następujących:
   t <typ>               aktualny pliku typu typ?
   T <typ>               plik w drugim panelu typu typ?
   ! <warunek>           zaprzeczenie warunku
-
 .EE
 
 .PP
@@ -2216,7 +2202,6 @@ Typ jest jednym lub więcej z podanych znaków:
   s	gniazdo
   x	wykonywalny
   t	zaznaczony
-
 .EE
 
 .PP
@@ -2236,7 +2221,6 @@ Warunki są obliczane od lewej do prawej. Oznacza to, że
 
 .EX
 	= f *.tar.gz | f *.tgz & t n
-
 .EE
 
 .PP
@@ -2244,7 +2228,6 @@ jest liczone tak samo jak
 
 .EX
 	( (f *.tar.gz) | (f *.tgz) ) & (t n)
-
 .EE
 
 .PP
@@ -2254,7 +2237,6 @@ To jest prosty przykład zastosowania tych warunków:
 = f *.tar.gz | f *.tgz & t n
 L	Listuje zawartość skompresowanego archiwum tar
 	gzip \-cd %f | tar xvf \-
-
 .EE
 
 .PP
@@ -3151,7 +3133,6 @@ Alt\-Shift\-s    pokazuje tylko pasujące wiersze
 Ctrl\-l         czyści ekran, zachowując wyjście
 Ctrl\-Shift\-l   czyści ekran i całe wyjście
                (również Ctrl\-Alt\-l)
-
 .EE
 
 .PP
@@ -3191,7 +3172,6 @@ F4           zostawia tylko wiersze pasujące do zaznaczenia
              albo do słowa pod kursorem
 F5           zdejmuje ten filtr i zakłada go z powrotem
 F6           czyści ekran i całe wyjście
-
 .EE
 
 .PP
@@ -3636,7 +3616,6 @@ panelize     wynik polecenia jako panel
 mcpeek       zajrzenie do wnętrza pliku
 mcstruct     plik binarny jako drzewo nazwanych pól
 skineditor   wygląd programu
-
 .EE
 
 .PP
@@ -3672,7 +3651,6 @@ For example, to list CD\-Audio tracks on your CD\-ROM drive, type
 
 .EX
   cd audio://
-
 .EE
 
 .PP
@@ -3690,7 +3668,6 @@ For example, to list contents of a zip archive documents.zip type
 
 .EX
   cd documents.zip/uzip://
-
 .EE
 
 .PP
@@ -3779,7 +3756,6 @@ section.  Here is an example entry for Debian packages:
 .EX
   regex/\e.deb$
           Open=%cd %p/deb://
-
 .EE
 
 .SH System plików jednego pliku
@@ -3791,7 +3767,6 @@ systemu plików dopisywana jest do nazwy pliku, tak jak w extfs:
 
 .EX
   cd dokumenty.gz/ugz://
-
 .EE
 
 .PP
@@ -3818,7 +3793,6 @@ następujące wartości:
 set meta\-flag on
 set convert\-meta off
 set output\-meta on
-
 .EE
 
 .PP
@@ -3827,7 +3801,6 @@ w pliku /etc/sysconfig/i18n:
 .EX
 SYSFONT=lat2u\-16
 SYSFONTACM=iso02
-
 .EE
 
 .PP
@@ -3835,7 +3808,6 @@ natomiast w pliku /etc/sysconfig keyboard:
 
 .EX
 KEYTABLE=pl
-
 .EE
 
 .PP
@@ -4039,7 +4011,6 @@ Początek napisu                         ^
 Koniec napisu                           $
 Granica słowa                           \eb
 Poza granicą słowa                      \eB
-
 .EE
 
 .PP
@@ -4054,7 +4025,6 @@ Koniec napisu                           \eZ
 Bezwzględny koniec napisu               \ez
 Granica słowa                           \eb
 Poza granicą słowa                      \eB
-
 .EE
 
 .PP
@@ -4065,7 +4035,6 @@ Koniec wiersza                          \en
 Powrót karetki                          \er
 Tabulacja                               \et
 Znak zerowy                             \e0
-
 .EE
 
 .PP
@@ -4113,7 +4082,6 @@ Znak ósemkowy ddd                       \eddd
 Znak sterujący Y                        \ecY
 Znak backspace                          [\eb]
 Czyni każdy znak dosłownym              \e
-
 .EE
 
 .PP
@@ -4129,7 +4097,6 @@ Od 3 do 6 a                             a{3,6}
 Kwantyfikator zachłanny                 a*
 Kwantyfikator leniwy                    a*?
 Kwantyfikator zaborczy                  a*+
-
 .EE
 
 .PP
@@ -4157,7 +4124,6 @@ Znaki słowa                             [[:word:]]
 Cyfry szesnastkowe                      [[:xdigit:]]
 Początek słowa                          [[:<:]]
 Koniec słowa                            [[:>:]]
-
 .EE
 
 .PP
@@ -4175,7 +4141,6 @@ Zakotwiczenie                           A
 Powtórzone nazwy grup                   J
 Grupy bez przechwytywania               n
 Pomijaj wszystkie białe / rozwlekle     xx
-
 .EE
 
 .PP
@@ -4220,7 +4185,6 @@ Czasownik sterujący                     (*COMMIT)
 Czasownik sterujący                     (*PRUNE)
 Czasownik sterujący                     (*SKIP)
 Czasownik sterujący                     (*THEN)
-
 .EE
 
 
@@ -4247,12 +4211,10 @@ odkrycia typu twojego terminala. Na przykład
 .EX
 [Colors]
 color_terminals=linux,xterm
-
 .EE
 
 .EX
 color_terminals=terminal\-name1,terminal\-name2...
-
 .EE
 
 .PP
@@ -4283,7 +4245,6 @@ znalezionego):
 3) parametr skin sekcji [Midnight\-Commander]
 4) plik {{sysconfdir}}/mcommander/skins/default.ini
 5) plik {{pkgdatadir}}/skins/default.ini
-
 .EE
 
 .PP
@@ -4295,7 +4256,6 @@ bez). Szukanie odbywa się w (do pierwszego znalezionego):
 1) ~/.local/share/mc6/skins/
 2) {{sysconfdir}}/mcommander/skins/
 3) {{pkgdatadir}}/skins/
-
 .EE
 
 .PP
@@ -4353,7 +4313,6 @@ Klucz 'type' może mieć wartości:
   \- SPECIAL_SOCKET
   \- SPECIAL_FIFO
   \- SPECIAL_DOOR
-
 .EE
 
 
@@ -4381,7 +4340,6 @@ Na przykład:
     vi=%filename +%lineno
     joe=%filename +%lineno
     more=%filename +%lineno
-
 .EE
 
 .PP
@@ -4483,7 +4441,6 @@ jak 'xclip', który czyta tekst z pliku do zaznaczenia X. Na przykład:
 
 .EX
 clipboard_store=xclip \-i
-
 .EE
 
 .TP
@@ -4493,7 +4450,6 @@ jak 'xclip', który wypisuje zaznaczenie na standardowe wyjście. Na przykład:
 
 .EX
 clipboard_paste=xclip \-o
-
 .EE
 
 .TP
@@ -4518,7 +4474,6 @@ Na przykład:
 
 .EX
 autodetect_codeset=russian
-
 .EE
 
 .PP
@@ -4640,7 +4595,6 @@ pgup          klawisz page up
 insert        znak insert
 delete        znak delete
 complete      do dokańczania
-
 .EE
 
 .PP
@@ -4649,7 +4603,6 @@ ustawić to pliku ini:
 
 .EX
 insert=\eE[Op
-
 .EE
 
 .PP
@@ -4767,7 +4720,6 @@ Aby zachować dziennik nieudanego połączenia ftp:
 
 .EX
 MC_FTP_LOG_ENABLE=1 MC_FTP_LOG_FILE=/tmp/ftp.log mcommander
-
 .EE
 
 
@@ -4863,7 +4815,6 @@ tcsh(1), zsh(1).
 .EX
 Strona M\-Commander w sieci World Wide Web:
 	https://github.com/blue\-panels/mcommander
-
 .EE
 
 
