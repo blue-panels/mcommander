@@ -310,7 +310,8 @@ syntax_keyword_free (gpointer keyword)
 {
     syntax_keyword_t *k = SYNTAX_KEYWORD (keyword);
 
-    g_string_free (k->keyword, TRUE);
+    if (k->keyword != NULL)
+        g_string_free (k->keyword, TRUE);
     g_free (k);
 }
 
@@ -765,7 +766,7 @@ match_bracket (const syntax_scanner_t *sc, const unsigned char **pp, const unsig
     }
     i--;
 
-    while (*p != SYNTAX_TOKEN_BRACKET && p <= q)
+    while (p <= q && *p != SYNTAX_TOKEN_BRACKET)
         p++;
     if (p > q)
         return FALSE;
