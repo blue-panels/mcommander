@@ -15,11 +15,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
-"Language-Team: Hungarian <https://translate.codeberg.org/projects/mc6/mc6/"
-"hu/>\n"
+"Language-Team: Hungarian <https://translate.codeberg.org/projects/mc6/mc6/hu/"
+">\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -601,6 +601,16 @@ msgid "Toggle right panel in terminal mode"
 msgstr ""
 
 #, fuzzy
+#| msgid "Cannot insert file"
+msgid "Apply command to the files"
+msgstr "Fájl beszúrása sikertelen"
+
+#, fuzzy
+#| msgid "Great than"
+msgid "Clear the command line"
+msgstr "Nagyobb"
+
+#, fuzzy
 #| msgid "S&hell patterns"
 msgid "Select files by pattern"
 msgstr "S&hell-minták"
@@ -612,6 +622,11 @@ msgstr "&Shell-minta"
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Unselect by extension"
+msgstr "Szóköz/&TAB mindegy"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -667,6 +682,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -710,7 +728,94 @@ msgstr "Az adatkönyvtár megjelenítése"
 msgid "Cycle listing format"
 msgstr "Listá&zási formátum szerkesztése"
 
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 1"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 2"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 3"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 4"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 5"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 6"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 7"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 8"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 9"
+msgstr "Panel rendezési mó&d használata"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 10"
+msgstr "Panel rendezési mó&d használata"
+
+msgid "Keep files unsorted"
+msgstr ""
+
+#, fuzzy
+#| msgid "C&hange time"
+msgid "Sort by change time"
+msgstr "Meta&adat változás ideje"
+
+#, fuzzy
+#| msgid "&Access time"
+msgid "Sort by access time"
+msgstr "&Elérés ideje"
+
+#, fuzzy
+#| msgid "Compare directories"
+msgid "Go to the root directory"
+msgstr "Könyvtárak összehasonlítása"
+
+#, fuzzy
+#| msgid "Select"
+msgid "Select all files"
+msgstr "Kiválaszt"
+
+#, fuzzy
+#| msgid "Unselect"
+msgid "Unselect all files"
+msgstr "Kijelölések megszüntetése"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -1191,6 +1296,25 @@ msgstr ""
 msgid "Merge from other file"
 msgstr ""
 
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Next conflict"
+msgstr "Rákérdezés"
+
+#, fuzzy
+#| msgid "&Previous"
+msgid "Previous conflict"
+msgstr "&Előző"
+
 #, c-format
 msgid ""
 "File \"%s\" is already being edited.\n"
@@ -1620,6 +1744,9 @@ msgstr ""
 msgid "Shift"
 msgstr "Shift"
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1749,6 +1876,71 @@ msgstr "Jelszó:"
 msgid "Screens"
 msgstr "Képernyők"
 
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "Könyvtár tartalma nem olvasható"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Save"
+msgid "Save"
+msgstr "M&entés"
+
+#, fuzzy
+#| msgid "A file already exists with this name"
+msgid "The file exists. Overwrite it?"
+msgstr "Már létezik ilyen nevű fájl."
+
+msgid "&Yes"
+msgstr "&Igen"
+
+msgid "&No"
+msgstr "&Nem"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Source \"%s\" is not a directory\n"
+#| "%s"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr ""
+"A(z) \"%s\" forrásobjektum nem könyvtár. \n"
+"%s"
+
+msgid "UP--DIR"
+msgstr "SZ-KVTR"
+
+#, fuzzy
+#| msgid "SUB-DIR"
+msgid "DIR"
+msgstr "AL-KVTR"
+
+msgid "Name"
+msgstr "Fájlnév"
+
+msgid "Size"
+msgstr "Méret"
+
+#, fuzzy
+#| msgid "Modified:   %s"
+msgid "Modified"
+msgstr "Módosítás: %s"
+
+msgid "&OK"
+msgstr "&OK"
+
+msgid "&Cancel"
+msgstr "&Mégsem"
+
 msgid "History"
 msgstr "Előzmények"
 
@@ -1760,12 +1952,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "&Igen"
-
-msgid "&No"
-msgstr "&Nem"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr "DialogTitle|Előzmények törlése"
@@ -1773,11 +1959,10 @@ msgstr "DialogTitle|Előzmények törlése"
 msgid "Do you want clean this history?"
 msgstr "Előzmények törlése?"
 
-msgid "&OK"
-msgstr "&OK"
-
-msgid "&Cancel"
-msgstr "&Mégsem"
+#, fuzzy
+#| msgid "Filter"
+msgid "Filter:"
+msgstr "Szűrő"
 
 msgid "Background process:"
 msgstr "Háttérfolyamat:"
@@ -1822,6 +2007,12 @@ msgid "Edit files"
 msgstr "Fájlok szerkesztése"
 
 msgid "<file> ..."
+msgstr ""
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
 msgstr ""
 
 msgid "Forces xterm features"
@@ -1874,6 +2065,12 @@ msgstr "fájl"
 msgid "file1 file2"
 msgstr ""
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[aktuális_könyvtár] [másik_könyvtár]"
 
@@ -1913,6 +2110,12 @@ msgid "No arguments given to the viewer."
 msgstr "Hiányzó paraméterek a nézethez."
 
 msgid "Two files are required to invoke the diffviewer."
+msgstr ""
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
 msgstr ""
 
 msgid "Background protocol error"
@@ -1964,6 +2167,14 @@ msgstr "Keresés letiltva"
 msgid "Cannot create temporary diff file"
 msgstr ""
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -1972,6 +2183,41 @@ msgstr ""
 
 msgid "Cannot create temporary merge file"
 msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"Nem sikerült írni a(z) \"%s\" fájlba:\n"
+"%s\n"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid ""
+"Cannot save the merge result\n"
+"%s"
+msgstr ""
+"Az %s fájl nem menthető:\n"
+"%s"
 
 msgid "&Fastest (Assume large files)"
 msgstr "&Gyors (nagy fájlokhoz)"
@@ -2003,6 +2249,12 @@ msgstr "Sorvégi &CR eldobása"
 msgid "Diff Options"
 msgstr "Diff beállítások"
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr "Szerkeszt"
 
@@ -2015,8 +2267,46 @@ msgstr "Ugrás adott sorra (bal)"
 msgid "Goto line (right)"
 msgstr "Ugrás adott sorra (jobb)"
 
+#, fuzzy
+#| msgid "Goto line (right)"
+msgid "Goto line (merged)"
+msgstr "Ugrás adott sorra (jobb)"
+
 msgid "Enter line:"
 msgstr "Sor száma:"
+
+msgid "ButtonBar|Edit"
+msgstr "Szerk"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|<-Copy"
+msgstr "Másol"
+
+#, fuzzy
+#| msgid "ButtonBar|Parse"
+msgid "ButtonBar|Base"
+msgstr "Értelm"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Next"
+msgstr "Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Copy->"
+msgstr "Másol"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|-Left"
+msgstr "Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|-Right"
+msgstr "Szerk"
 
 msgid "ButtonBar|Help"
 msgstr "Súgó"
@@ -2024,11 +2314,15 @@ msgstr "Súgó"
 msgid "ButtonBar|Save"
 msgstr "Ment"
 
-msgid "ButtonBar|Edit"
-msgstr "Szerk"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|+Left"
+msgstr "Hex"
 
-msgid "ButtonBar|Merge"
-msgstr "Egyesít"
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|+Right"
+msgstr "Szerk"
 
 msgid "ButtonBar|Search"
 msgstr "Keres"
@@ -2039,6 +2333,12 @@ msgstr "Opciók"
 msgid "ButtonBar|Quit"
 msgstr "Kilép"
 
+msgid "Quit"
+msgstr "Kilép"
+
+msgid "The merge result is not saved. Save it?"
+msgstr ""
+
 msgid "File(s) was modified. Save with exit?"
 msgstr "Egy vagy több fájl megváltozott. Menti kilépéskor?"
 
@@ -2048,11 +2348,46 @@ msgid ""
 "Save modified file(s)?"
 msgstr ""
 
-msgid "Quit"
-msgstr "Kilép"
+#, fuzzy
+#| msgid "You have to chdir to extract files first"
+msgid "Save the changes of the two files first."
+msgstr "A fájlok kigyűjtéséhez előbb könyvtárt kell váltani"
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr "Könyvtár tartalma nem olvasható"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"Nem sikerült megnyitni a(z) \"%s\" fájlt írásra:\n"
+"%s\n"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr "Diff:"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"Az fájl nem menthető:\n"
+"%s"
 
 msgid "File name is empty!"
 msgstr ""
@@ -2061,12 +2396,6 @@ msgstr ""
 msgid ""
 "%s\n"
 "is a directory"
-msgstr ""
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
 msgstr ""
 
 msgid "Diff viewer: invalid mode"
@@ -2665,6 +2994,13 @@ msgstr "M&entés"
 msgid "Load"
 msgstr "Betöltés"
 
+#, fuzzy, c-format
+#| msgid "Cannot create %s directory"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr "A(z) %s könyvtár nem létrehozható"
+
 msgid "Syntax file edit"
 msgstr "Szintaxisfájl szerkesztése"
 
@@ -3172,11 +3508,29 @@ msgstr "Nyitott fájlok"
 msgid "Edit: "
 msgstr "Szerkeszt:"
 
-msgid "ButtonBar|Mark"
-msgstr "Jelöl"
+msgid "ButtonBar|Menu"
+msgstr "Menü"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|SaveAs"
+msgstr "Ment"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Column"
+msgstr "Másol"
 
 msgid "ButtonBar|Replac"
 msgstr "Csere"
+
+#, fuzzy
+#| msgid "ButtonBar|Index"
+msgid "ButtonBar|Insert"
+msgstr "Tartalom"
+
+msgid "ButtonBar|Mark"
+msgstr "Jelöl"
 
 msgid "ButtonBar|Copy"
 msgstr "Másol"
@@ -3382,6 +3736,12 @@ msgstr "Biztonságos felülírás"
 
 msgid "A&uto save setup"
 msgstr "Auto &Beállításmentés"
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
+msgstr ""
 
 msgid "Configure options"
 msgstr "Alapbeállítások"
@@ -3757,17 +4117,11 @@ msgstr "&Csoportot"
 msgid "Set &users"
 msgstr "&Tulajdonost"
 
-msgid "Name"
-msgstr "Fájlnév"
-
 msgid "Owner name"
 msgstr "Tulajdonos:"
 
 msgid "Group name"
 msgstr "Csoport:"
-
-msgid "Size"
-msgstr "Méret"
 
 msgid "Chown command"
 msgstr "Chown parancs (Tulaj)"
@@ -3835,6 +4189,22 @@ msgstr "Szűrt nézet"
 
 msgid "Filter command and arguments:"
 msgstr "Szűrőprogram és paraméterei:"
+
+#, fuzzy
+#| msgid "Chmod command"
+msgid "Apply command"
+msgstr "Jogosultságok beállítása (Chmod)"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4685,14 +5055,66 @@ msgstr "&Lent"
 msgid "&Right"
 msgstr "&Jobb"
 
-msgid "ButtonBar|Menu"
-msgstr "Menü"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Left"
+msgstr "Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Right"
+msgstr "Szerk"
+
+#, fuzzy
+#| msgid "ButtonBar|Search"
+msgid "ButtonBar|Console"
+msgstr "Keres"
 
 msgid "ButtonBar|View"
 msgstr "Megnéz"
 
 msgid "ButtonBar|RenMov"
 msgstr "Áthelyez"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Name"
+msgstr "Ment"
+
+#, fuzzy
+#| msgid "ButtonBar|Rescan"
+msgid "ButtonBar|Version"
+msgstr "Frissít"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Ext"
+msgstr "Szerk"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Size"
+msgstr "Ment"
+
+#, fuzzy
+#| msgid "ButtonBar|Move"
+msgid "ButtonBar|MTime"
+msgstr "Áthelyez"
+
+#, fuzzy
+#| msgid "ButtonBar|Unform"
+msgid "ButtonBar|Unsort"
+msgstr "NemForm"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|CTime"
+msgstr "Megnéz"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|ATime"
+msgstr "Megnéz"
 
 msgid "ButtonBar|Mkdir"
 msgstr "ÚjKvt"
@@ -5158,9 +5580,6 @@ msgstr "Tulaj"
 msgid "[dev]"
 msgstr "[eszk]"
 
-msgid "UP--DIR"
-msgstr "SZ-KVTR"
-
 #, fuzzy
 #| msgid "Filter"
 msgid "Filter: "
@@ -5405,6 +5824,13 @@ msgid "Cannot delete local file %s"
 msgstr "A(z) %s fájl nem megnyitható"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5424,6 +5850,11 @@ msgstr "Meta&adat változás ideje"
 
 msgid "No plugins with drive menu support are loaded."
 msgstr ""
+
+#, fuzzy
+#| msgid "Tabulation"
+msgid "Plugin action"
+msgstr "Tabulálás"
 
 #, c-format
 msgid ""
@@ -5566,6 +5997,15 @@ msgstr "Shift"
 msgid "Edit &term file"
 msgstr "Me&nüfájl szerkesztése"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5588,6 +6028,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -5788,6 +6231,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "Nyomjon meg egy billentyűt..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -5933,6 +6385,508 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose group"
+msgstr "Válasszon kódlapot"
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose user"
+msgstr "Válasszon kódlapot"
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Overwrite"
+msgid "&Write"
+msgstr "&Felülírás"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecute"
+msgstr "Futtatható fent"
+
+#, fuzzy
+#| msgid "Group"
+msgid "&Group"
+msgstr "Csoport"
+
+#, fuzzy
+#| msgid "Name:"
+msgid "Names:"
+msgstr "Név:"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "Add entry"
+msgstr "Ú&j"
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "other"
+msgid "Other"
+msgstr "Mások"
+
+#, fuzzy
+#| msgid "New hotlist entry"
+msgid "Edit entry"
+msgstr "Új gyorslista-bejegyzés"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+#, fuzzy
+#| msgid "< Default >"
+msgid "Default ACL"
+msgstr "< Alapértelmezett >"
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+#, fuzzy
+#| msgid "A&sk new file name"
+msgid "&New files inside"
+msgstr "Kérj új fájlnevet"
+
+#, fuzzy
+#| msgid "&List..."
+msgid "List"
+msgstr "&Lista"
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write"
+msgstr "mások írhatják"
+
+msgid "Exec"
+msgstr ""
+
+#, fuzzy
+#| msgid "directories"
+msgid "Effective"
+msgstr "könyvtár"
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "&Add"
+msgstr "Ú&j"
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "Delete"
+msgid "De&lete"
+msgstr "Delete"
+
+#, fuzzy
+#| msgid "Set &all"
+msgid "Set a&ll"
+msgstr "Min&det"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "A fájl módosításai elvesztek"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+#, fuzzy
+#| msgid "Show &hidden files"
+msgid "This folder and files"
+msgstr "&Rejtett fájlok mutatása"
+
+#, fuzzy
+#| msgid "Re&verse files only"
+msgid "Subfolders and files only"
+msgstr "Csak &fájlok fordítva"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Subfolders only"
+msgstr "Csak &fájlokat"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Files only"
+msgstr "Csak &fájlokat"
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "allow"
+msgstr "&Linkek követése"
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "Allow"
+msgstr "&Linkek követése"
+
+msgid "Deny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Copies to"
+msgid "Applies to:"
+msgstr "Másolat"
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Advanced rights"
+msgstr "Chmod-Chown (tul&aj)"
+
+#, fuzzy
+#| msgid "A&ll"
+msgid "A&llow"
+msgstr "Min&det"
+
+msgid "De&ny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Save file"
+msgid "&Special"
+msgstr "Fájl mentése"
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Ad&vanced..."
+msgstr "Chmod-Chown (tul&aj)"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+#, fuzzy
+#| msgid "File"
+msgid "File:"
+msgstr "Fájl"
+
+#, fuzzy
+#| msgid "Owner"
+msgid "Owner:"
+msgstr "Tulaj"
+
+#, fuzzy
+#| msgid "Group"
+msgid "Group:"
+msgstr "Csoport"
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Right"
+msgid "Rights"
+msgstr "&Jobb"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modify"
+msgstr "&Módosítás ideje"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "&Modify"
+msgstr "&Módosítás ideje"
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "Execute file"
+msgstr "Futtatható fent"
+
+#, fuzzy
+#| msgid "Sort order"
+msgid "Traverse folder"
+msgstr "Rendezési mód"
+
+#, fuzzy
+#| msgid "User data"
+msgid "Read data"
+msgstr "Felhasználói adatok"
+
+msgid "List folder"
+msgstr ""
+
+#, fuzzy
+#| msgid "read &by others"
+msgid "Read attributes"
+msgstr "mások olvashatják"
+
+#, fuzzy
+#| msgid "Preserve &attributes"
+msgid "Read extended attributes"
+msgstr "&Attribútumok megőrzése"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write data"
+msgstr "mások írhatják"
+
+#, fuzzy
+#| msgid "Open files"
+msgid "Create files"
+msgstr "Nyitott fájlok"
+
+#, fuzzy
+#| msgid "&Append"
+msgid "Append data"
+msgstr "Ho&zzáadás"
+
+#, fuzzy
+#| msgid "Cache directory:"
+msgid "Create folders"
+msgstr "Gyorsítótár könyvtára:"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write attributes"
+msgstr "mások írhatják"
+
+#, fuzzy
+#| msgid "Preserve &attributes"
+msgid "Write extended attributes"
+msgstr "&Attribútumok megőrzése"
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "Fájlletöltés"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Read permissions"
+msgstr "&Jogok"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Change permissions"
+msgstr "&Jogok"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot stat"
+msgstr ""
+"Az fájl nem menthető:\n"
+"%s"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the access control list of"
+msgstr "Könyvtár tartalma nem olvasható"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the default access control list of"
+msgstr "Könyvtár tartalma nem olvasható"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid "Reading failed"
+msgid "Reading archive"
+msgstr "Sikertelen olvasás"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -6188,9 +7142,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6614,8 +7565,110 @@ msgstr "A(z) %s fájl nem megnyitható"
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create a directory"
+msgstr "Új könyvtár létrehozása"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot fetch a local copy of %s"
+msgid "Cannot fetch %s at %.10s."
+msgstr "Nem sikerült behozni \"%s\" helyi másolatát"
+
+#, fuzzy
+#| msgid "Cannot open file %s"
+msgid "Cannot open the diff viewer."
+msgstr "A(z) %s fájl nem megnyitható"
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot run %s: %s"
+msgstr "A(z) %s fájl nem megnyitható"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open tar archive\n"
+#| "%s"
+msgid "Cannot open the browser"
+msgstr ""
+"A tar-archívum nem nyitható meg\n"
+"%s"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Added to favorites."
+msgstr "Felvétel a gyorslistára"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Already in favorites."
+msgstr "Felvétel a gyorslistára"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Add to favorites"
+msgstr "Felvétel a gyorslistára"
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Preserve &attributes"
+msgid "Change the favorite"
+msgstr "&Attribútumok megőrzése"
+
+#, fuzzy, c-format
+#| msgid "Cannot fetch a local copy of %s"
+msgid "The local clone of %s/%s:"
+msgstr "Nem sikerült behozni \"%s\" helyi másolatát"
+
+#, fuzzy
+#| msgid "Extension file edit"
+msgid "Open in Git"
+msgstr "Kiterjesztésfájl szerkesztése"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Time: %s"
+msgid "Showing: %s"
+msgstr "Idő: %s"
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6635,9 +7688,17 @@ msgid "&Reset"
 msgstr "Átmé&retezés"
 
 #, fuzzy
-#| msgid "Add to hotlist"
-msgid "Add to favorites"
-msgstr "Felvétel a gyorslistára"
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "A fájl módosításai elvesztek"
+
+msgid "Reword is available only for commits on the current branch."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot find coole executable: %s"
+msgstr "A(z) %s fájl nem megnyitható"
 
 #, fuzzy
 #| msgid "Directory path:"
@@ -7058,11 +8119,6 @@ msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
 #, fuzzy
-#| msgid "&Save"
-msgid "Save"
-msgstr "M&entés"
-
-#, fuzzy
 #| msgid "File was modified. Save with exit?"
 msgid "File was modified. Save changes?"
 msgstr "A fájl módosult. Menti kilépéskor?"
@@ -7132,6 +8188,23 @@ msgstr ""
 "Az fájl nem menthető:\n"
 "%s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot start %s."
+msgstr ""
+"Az fájl nem menthető:\n"
+"%s"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, fuzzy, c-format
 #| msgid "Cannot fetch a local copy of %s"
 msgid "Cannot fetch document: %s"
@@ -7149,6 +8222,20 @@ msgstr "A(z) %s fájl nem megnyitható"
 #| msgid "Unable to save to file"
 msgid "Failed to write temp file."
 msgstr "Fájl mentése sikertelen"
+
+#, fuzzy, c-format
+#| msgid "Loading..."
+msgid "Loading %s..."
+msgstr "Betöltés..."
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid "Cannot list documents in '%s': %s"
+msgstr ""
+"Az %s fájl nem menthető:\n"
+"%s"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -7264,15 +8351,6 @@ msgstr ""
 msgid "Loading %s (%"
 msgstr "Betöltés: %3d%%"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-"Az %s fájl nem menthető:\n"
-"%s"
-
 #, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
@@ -7347,6 +8425,12 @@ msgstr ""
 #| msgid "Repeat times:"
 msgid "Op max time (ms):"
 msgstr "Ismétlések száma:"
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
+msgstr ""
 
 msgid "MongoDB settings"
 msgstr ""
@@ -7450,9 +8534,6 @@ msgstr "Eszperantó"
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -7534,6 +8615,243 @@ msgstr "&Törlés"
 
 msgid "Command"
 msgstr "Parancs:"
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Aborting transfer..."
+msgid "%s: databases"
+msgstr "Átvitel megszakítása..."
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connections"
+msgstr "SFTP célgép"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot open %s for writing"
+msgstr ""
+"Nem sikerült megnyitni a(z) \"%s\" fájlt írásra:\n"
+"%s\n"
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot write %s: %s"
+msgstr "A(z) %s fájl nem megnyitható"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot write postgres.ini"
+msgstr ""
+"Nem sikerült írni a(z) \"%s\" fájlba:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid "Invalid token number %d"
+msgid "Invalid connection name"
+msgstr "Hibás elem szám %d"
+
+#, fuzzy
+#| msgid "not enough memory"
+msgid "Out of memory"
+msgstr "nincs elég memória"
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter password for %s "
+msgid "Password for \"%s\":"
+msgstr "sftp: Adja meg %s jelszavát"
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled."
+msgstr "Mégsem"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connection"
+msgstr "SFTP célgép"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Confirmation"
+msgid "Connected: %s"
+msgstr "Rákérdezés"
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "&Service"
+msgstr "Eszköz: %s"
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Connect by:"
+msgstr "Rákérdezés"
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "Service:"
+msgstr "Eszköz: %s"
+
+#, fuzzy
+#| msgid "Save file"
+msgid "Database:"
+msgstr "Fájl mentése"
+
+msgid "SSL mode:"
+msgstr ""
+
+#, fuzzy
+#| msgid "User name"
+msgid "Username:"
+msgstr "Tulajdonos"
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "Jelszó:"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "New PostgreSQL connection"
+msgstr "SFTP célgép"
+
+#, fuzzy
+#| msgid "Editor options"
+msgid "Edit PostgreSQL connection"
+msgstr "A szövegszerkesztő beállításai"
+
+msgid " Authentication "
+msgstr ""
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "&Test connection"
+msgstr "SFTP célgép"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot save the connection: %s"
+msgstr ""
+"Az fájl nem menthető:\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot delete the connection: %s"
+msgstr ""
+"Az fájl nem menthető:\n"
+"%s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr "A(z) %s fájl nem megnyitható"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "Default connection:"
+msgstr "SFTP célgép"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr ""
 
 msgid "S3"
 msgstr ""
@@ -7642,6 +8960,19 @@ msgstr "A(z) %s fájl nem megnyitható"
 
 #, fuzzy
 #| msgid "SFTP to machine"
+msgid "SFTP authentication"
+msgstr "SFTP célgép"
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter passphrase for %s "
+msgid "Enter passphrase for key %s"
+msgstr "sftp: Adja meg %s jelmondatát"
+
+msgid "SFTP key passphrase"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
 msgid "SFTP connection"
 msgstr "SFTP célgép"
 
@@ -7662,12 +8993,10 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "sftp: Enter passphrase for %s "
-msgid "Enter passphrase for key %s"
-msgstr "sftp: Adja meg %s jelmondatát"
+msgid "Authenticating with a default key..."
+msgstr ""
 
-msgid "SFTP key passphrase"
+msgid "Authenticating with keyboard-interactive..."
 msgstr ""
 
 msgid "Authenticating with password..."
@@ -7968,11 +9297,6 @@ msgstr "\"%s\" címkéje:"
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Create a new Directory"
-msgid "Create a directory"
-msgstr "Új könyvtár létrehozása"
 
 #, fuzzy
 #| msgid "Cannot create %s directory"
@@ -8447,6 +9771,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -8634,6 +9964,25 @@ msgid "Changed line, filler"
 msgstr "Fájl beszúrása sikertelen"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Line number"
+msgid "Line mark"
+msgstr "&Sorszám"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+#, fuzzy
+#| msgid "Panelize"
+msgid "Inactive frame"
+msgstr "Panelra helyezés"
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -8869,33 +10218,53 @@ msgstr "A szövegszerkesztő beállításai"
 msgid "Editor: fold closed"
 msgstr "A szövegszerkesztő beállításai"
 
-#, fuzzy
-#| msgid "&Up"
-msgid "Up"
-msgstr "&Fel"
+msgid "Vertical: top arrow"
+msgstr ""
 
-msgid "Not read by mc today"
+msgid "Vertical: bottom arrow"
 msgstr ""
 
 #, fuzzy
-#| msgid "Page Down"
-msgid "Down"
-msgstr "Page Down"
+#| msgid "&Vertical"
+msgid "Vertical: track"
+msgstr "&Függőleges"
 
-#, fuzzy
-#| msgid "&Left"
-msgid "Left"
-msgstr "&Bal"
-
-#, fuzzy
-#| msgid "&Right"
-msgid "Right"
-msgstr "&Jobb"
-
-msgid "Thumb"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Track"
+#, fuzzy
+#| msgid "&Vertical"
+msgid "Vertical: thumb"
+msgstr "&Függőleges"
+
+msgid "Vertical: thumb length"
+msgstr ""
+
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: left arrow"
+msgstr "&Vízszintes"
+
+msgid "Horizontal: right arrow"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: track"
+msgstr "&Vízszintes"
+
+msgid "Default: horiz of the lines"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: thumb"
+msgstr "&Vízszintes"
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -8978,7 +10347,7 @@ msgstr "Panelek:"
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -9123,9 +10492,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 #, fuzzy
 #| msgid "Save As"
 msgid "Save skin as"
@@ -9247,6 +10613,130 @@ msgstr "Válasszon kódlapot"
 
 msgid "-  < No translation >"
 msgstr "-  < Nincs konverzió >"
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions"
+msgstr "&Jogok"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "State        Start  Directory"
+msgstr "Új könyvtár létrehozása"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions..."
+msgstr "&Jogok"
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Configure options"
+msgid "M-Commander sessions"
+msgstr "Alapbeállítások"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Refresh"
+msgid "refresh"
+msgstr "F&rissítés"
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
+msgstr ""
 
 msgid "%b %e  %Y"
 msgstr "%b %e  %Y"
@@ -9387,9 +10877,6 @@ msgstr "Igaz:"
 msgid "False:"
 msgstr "Hamis:"
 
-msgid "Error calling program"
-msgstr "Programhívási hiba"
-
 msgid "Warning -- ignoring file"
 msgstr "Figyelem: a fájl figyelmen kívül hagyva"
 
@@ -9420,6 +10907,93 @@ msgid "User menu"
 msgstr "Felhasználói menü"
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "&Convert"
+msgstr "Rákérdezés"
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr "A(z) %s fájl nem megnyitható"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit file"
+msgid "&Edit the file"
+msgstr "Fájl szerkesztése"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -9434,10 +11008,97 @@ msgstr ""
 #| "%s"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
 "Az fájl nem menthető:\n"
 "%s"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Conditions"
+msgstr "Rákérdezés"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "Other options"
+msgid "Ot&her panel"
+msgstr "További opciók"
+
+#, fuzzy
+#| msgid "&Never"
+msgid "N&ever"
+msgstr "So&ha"
+
+#, fuzzy
+#| msgid "Alwa&ys"
+msgid "&Always"
+msgstr "Min&dig"
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+#, fuzzy
+#| msgid "Block Size"
+msgid "Block device"
+msgstr "Blokkméret"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecutable only"
+msgstr "Futtatható fent"
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Con&tinue"
+msgid "Con&ditions"
+msgstr "&Folytatás"
 
 msgid "Add a submenu"
 msgstr ""
@@ -9465,6 +11126,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -9482,8 +11146,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 #, fuzzy
@@ -9518,6 +11190,18 @@ msgstr ""
 #| msgid "&Add new"
 msgid "&Add an entry"
 msgstr "Ú&j"
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr ""
@@ -9637,6 +11321,16 @@ msgstr "&Decimális offszet"
 
 msgid "He&xadecimal offset"
 msgstr "He&xadecimális offszet"
+
+#, fuzzy
+#| msgid "ButtonBar|Static"
+msgid "ButtonBar|Syntax"
+msgstr "Statikus"
+
+#, fuzzy
+#| msgid "ButtonBar|Ascii"
+msgid "ButtonBar|Ansi"
+msgstr "ASCII"
 
 #, fuzzy
 #| msgid "ButtonBar|Hex"
@@ -9884,6 +11578,27 @@ msgstr "Fájl beszúrása sikertelen"
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr "Nem sikerült behozni /ftp://some.host/editme.txt helyi másolatát"
 
+#~ msgid "ButtonBar|Merge"
+#~ msgstr "Egyesít"
+
+#, fuzzy
+#~| msgid "&Up"
+#~ msgid "Up"
+#~ msgstr "&Fel"
+
+#, fuzzy
+#~| msgid "Page Down"
+#~ msgid "Down"
+#~ msgstr "Page Down"
+
+#, fuzzy
+#~| msgid "&Left"
+#~ msgid "Left"
+#~ msgstr "&Bal"
+
+#~ msgid "Error calling program"
+#~ msgstr "Programhívási hiba"
+
 #~ msgid "Timeout for freeing VFSs (sec):"
 #~ msgstr "VFS-felszabadítási idő (mp):"
 
@@ -9895,11 +11610,6 @@ msgstr "Nem sikerült behozni /ftp://some.host/editme.txt helyi másolatát"
 
 #~ msgid "&Virtual FS..."
 #~ msgstr "&Virtuális fájlrendszer..."
-
-#, fuzzy
-#~| msgid "ButtonBar|Search"
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "Keres"
 
 #, fuzzy, c-format
 #~| msgid "Reading failed"
@@ -10105,9 +11815,6 @@ msgstr "Nem sikerült behozni /ftp://some.host/editme.txt helyi másolatát"
 
 #~ msgid "&Free VFSs now"
 #~ msgstr "V&FS felszabadítása"
-
-#~ msgid "&Refresh"
-#~ msgstr "F&rissítés"
 
 #~ msgid "&Add current"
 #~ msgstr "Az &aktuális hozzáadása"
@@ -10389,9 +12096,6 @@ msgstr "Nem sikerült behozni /ftp://some.host/editme.txt helyi másolatát"
 #~ msgid "&Undelete files (ext2fs only)"
 #~ msgstr "&Törölt fájlok visszaállítása"
 
-#~ msgid "not enough memory"
-#~ msgstr "nincs elég memória"
-
 #~ msgid "while allocating block buffer"
 #~ msgstr "a blokk-puffer allokálásakor"
 
@@ -10442,9 +12146,6 @@ msgstr "Nem sikerült behozni /ftp://some.host/editme.txt helyi másolatát"
 
 #~ msgid "vfs_info is not fs!"
 #~ msgstr "A vfs_info nem fs!"
-
-#~ msgid "You have to chdir to extract files first"
-#~ msgstr "A fájlok kigyűjtéséhez előbb könyvtárt kell váltani"
 
 #~ msgid "while iterating over blocks"
 #~ msgstr "a blokkokon való végighaladás közben"

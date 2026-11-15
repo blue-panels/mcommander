@@ -24,9 +24,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
-"PO-Revision-Date: 2026-09-25 22:53+0000\n"
-"Last-Translator: yeager <user-6596@noreply.codeberg.org>\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
+"PO-Revision-Date: 2026-11-09 11:01+0000\n"
+"Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
 "Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
 "\n"
 "Language: sv\n"
@@ -34,7 +34,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.9.1\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 # "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 msgid "No translation"
@@ -186,7 +186,7 @@ msgid "Auto-complete"
 msgstr "Komplettera automatiskt"
 
 msgid "Save as..."
-msgstr "Spara som..."
+msgstr "Spara som…"
 
 msgid "Go to line"
 msgstr "Gå till rad"
@@ -276,7 +276,7 @@ msgid "Toggle navigate/browse mode"
 msgstr "Växla navigerings-/bläddringsläge"
 
 msgid "Sort order..."
-msgstr "Sorteringsordning..."
+msgstr "Sorteringsordning…"
 
 msgid "General options"
 msgstr "Allmänna inställningar"
@@ -461,6 +461,12 @@ msgstr "Växla vänster panel i terminalläge"
 msgid "Toggle right panel in terminal mode"
 msgstr "Växla höger panel i terminalläge"
 
+msgid "Apply command to the files"
+msgstr "Använd kommando på filerna"
+
+msgid "Clear the command line"
+msgstr "Rensa kommandoraden"
+
 msgid "Select files by pattern"
 msgstr "Markera filer efter mönster"
 
@@ -469,6 +475,9 @@ msgstr "Avmarkera filer efter mönster"
 
 msgid "Select by extension"
 msgstr "Markera efter filändelse"
+
+msgid "Unselect by extension"
+msgstr "Avmarkera efter filändelse"
 
 msgid "Scroll panel left"
 msgstr "Rulla panelen åt vänster"
@@ -512,6 +521,9 @@ msgstr "Enhetsmeny (vänster panel)"
 msgid "Drive menu (right panel)"
 msgstr "Enhetsmeny (höger panel)"
 
+msgid "Console of the panel plugin"
+msgstr "Konsol för panelinsticksprogrammet"
+
 msgid "Sync other panel"
 msgstr "Synkronisera andra panelen"
 
@@ -545,8 +557,65 @@ msgstr "Smart överordnad katalog"
 msgid "Cycle listing format"
 msgstr "Växla listformat"
 
+msgid "Far listing mode 1"
+msgstr "Far-listningsläge 1"
+
+msgid "Far listing mode 2"
+msgstr "Far-listningsläge 2"
+
+msgid "Far listing mode 3"
+msgstr "Far-listningsläge 3"
+
+msgid "Far listing mode 4"
+msgstr "Far-listningsläge 4"
+
+msgid "Far listing mode 5"
+msgstr "Far-listningsläge 5"
+
+msgid "Far listing mode 6"
+msgstr "Far-listningsläge 6"
+
+msgid "Far listing mode 7"
+msgstr "Far-listningsläge 7"
+
+msgid "Far listing mode 8"
+msgstr "Far-listningsläge 8"
+
+msgid "Far listing mode 9"
+msgstr "Far-listningsläge 9"
+
+msgid "Far listing mode 10"
+msgstr "Far-listningsläge 10"
+
+msgid "Keep files unsorted"
+msgstr "Behåll filer osorterade"
+
+msgid "Sort by change time"
+msgstr "Sortera efter ändringstid"
+
+msgid "Sort by access time"
+msgstr "Sortera efter åtkomsttid"
+
+msgid "Go to the root directory"
+msgstr "Gå till rotkatalogen"
+
+msgid "Select all files"
+msgstr "Markera alla filer"
+
+msgid "Unselect all files"
+msgstr "Avmarkera alla filer"
+
+msgid "Focus the default button"
+msgstr "Flytta fokus till standardknappen"
+
 msgid "Yank (paste kill buffer)"
 msgstr "Klistra in raderad text"
+
+msgid "Insert the file name from the active panel"
+msgstr "Infoga filnamnet från den aktiva panelen"
+
+msgid "Insert the file name from the passive panel"
+msgstr "Infoga filnamnet från den passiva panelen"
 
 msgid "Help index"
 msgstr "Hjälpindex"
@@ -902,6 +971,21 @@ msgstr "Sammanfoga aktuellt ändringsblock"
 msgid "Merge from other file"
 msgstr "Sammanfoga från andra filen"
 
+msgid "Add the right file to the merge"
+msgstr "Lägg till den högra filen i sammanslagningen"
+
+msgid "Take the right file out of the merge"
+msgstr "Ta bort den högra filen från sammanslagningen"
+
+msgid "Merge the two files against a base file"
+msgstr "Sammanfoga de två filerna med en basfil"
+
+msgid "Next conflict"
+msgstr "Nästa konflikt"
+
+msgid "Previous conflict"
+msgstr "Föregående konflikt"
+
 #, c-format
 msgid ""
 "File \"%s\" is already being edited.\n"
@@ -916,7 +1000,7 @@ msgid "File locked"
 msgstr "Fil låst"
 
 msgid "&Grab lock"
-msgstr "&Överta lås"
+msgstr "Ö&verta lås"
 
 msgid "&Ignore lock"
 msgstr "&Ignorera lås"
@@ -1357,6 +1441,9 @@ msgstr "Höger Alt"
 msgid "Shift"
 msgstr "Skift"
 
+msgid "Super"
+msgstr "Super"
+
 #, c-format
 msgid ""
 "\n"
@@ -1454,7 +1541,7 @@ msgid "%s: %s: %s %lld bytes transferred"
 msgstr "%s: %s: %s %lld byte överförda"
 
 msgid "Starting linear transfer..."
-msgstr "Startar linjär överföring..."
+msgstr "Startar linjär överföring…"
 
 msgid "Getting file"
 msgstr "Hämtar fil"
@@ -1471,7 +1558,7 @@ msgstr ""
 "Temporära filer kommer inte att skapas\n"
 
 msgid "Press any key to continue..."
-msgstr "Tryck valfri tangent för att fortsätta..."
+msgstr "Tryck valfri tangent för att fortsätta…"
 
 msgid "Cannot parse:"
 msgstr "Kunde inte tolka:"
@@ -1504,6 +1591,63 @@ msgstr "Lösenord:"
 msgid "Screens"
 msgstr "Skärmar"
 
+#, c-format
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr ""
+"Kan inte läsa kataloginnehållet\n"
+"%s"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+"Kan inte läsa filstatus för\n"
+"%s"
+
+msgid "Save"
+msgstr "Spara"
+
+msgid "The file exists. Overwrite it?"
+msgstr "Filen finns. Vill du skriva över den?"
+
+msgid "&Yes"
+msgstr "&Ja"
+
+msgid "&No"
+msgstr "&Nej"
+
+#, c-format
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr ""
+"%s\n"
+"är ingen katalog"
+
+msgid "UP--DIR"
+msgstr "UPPKAT"
+
+msgid "DIR"
+msgstr "KAT"
+
+msgid "Name"
+msgstr "Namn"
+
+msgid "Size"
+msgstr "Storlek"
+
+msgid "Modified"
+msgstr "Ändrad"
+
+msgid "&OK"
+msgstr "&OK"
+
+msgid "&Cancel"
+msgstr "&Avbryt"
+
 msgid "History"
 msgstr "Historik"
 
@@ -1517,24 +1661,15 @@ msgstr ""
 "Urklipp innehåller mer än 2 kB text.\n"
 "Klistra in den?"
 
-msgid "&Yes"
-msgstr "&Ja"
-
-msgid "&No"
-msgstr "&Nej"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
-msgstr "DialogTitle|Rensa historik"
+msgstr "Rensa historik"
 
 msgid "Do you want clean this history?"
 msgstr "Vill du rensa denna historik?"
 
-msgid "&OK"
-msgstr "&OK"
-
-msgid "&Cancel"
-msgstr "&Avbryt"
+msgid "Filter:"
+msgstr "Filter:"
 
 msgid "Background process:"
 msgstr "Bakgrundsprocess:"
@@ -1577,7 +1712,13 @@ msgid "Edit files"
 msgstr "Redigera filer"
 
 msgid "<file> ..."
-msgstr "<fil> ..."
+msgstr "<fil> …"
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr "Diffvisare: spara sammanslagningen av tre filer i den här filen"
+
+msgid "Diff viewer: merge the two files against this common base"
+msgstr "Diffvisare: sammanfoga de två filerna med denna gemensamma bas"
 
 msgid "Forces xterm features"
 msgstr "Tvinga fram xtermfinesser"
@@ -1627,6 +1768,12 @@ msgstr "fil"
 msgid "file1 file2"
 msgstr "fil1 fil2"
 
+msgid "local base remote [-o output]"
+msgstr "local base remote [-o output]"
+
+msgid "local remote -B base [-o output]"
+msgstr "local remote -B base [-o output]"
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[denna_katalog] [andra_panelens_katalog]"
 
@@ -1666,6 +1813,12 @@ msgstr "Inga argument angavs till filvisaren."
 
 msgid "Two files are required to invoke the diffviewer."
 msgstr "Två filer krävs för att starta diffvisaren."
+
+msgid "The -B option needs two files: local remote."
+msgstr "Alternativet -B kräver två filer: local remote."
+
+msgid "The -o option needs three files: local base remote."
+msgstr "Alternativet -o kräver tre filer: local base remote."
 
 msgid "Background protocol error"
 msgstr "Fel i bakgrundsprotokollet"
@@ -1716,6 +1869,16 @@ msgstr "Sök är inaktiverat"
 msgid "Cannot create temporary diff file"
 msgstr "Det går inte att skapa en tillfällig diff-fil"
 
+msgid "Merge"
+msgstr "Sammanfoga"
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+"Den här sidan är en kopia som bara visas:\n"
+"ändringar i den skulle gå förlorade."
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -1726,6 +1889,39 @@ msgstr ""
 
 msgid "Cannot create temporary merge file"
 msgstr "Det går inte att skapa en tillfällig sammanslagningsfil"
+
+#, c-format
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"Kan inte skriva sammanslagningsresultatet\n"
+"%s"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+"%d konflikt återstår.\n"
+"Spara sammanslagningen ändå?"
+msgstr[1] ""
+"%d konflikter återstår.\n"
+"Spara sammanslagningen ändå?"
+
+msgid "Save the merge into:"
+msgstr "Spara sammanslagningen i:"
+
+#, c-format
+msgid ""
+"Cannot save the merge result\n"
+"%s"
+msgstr ""
+"Kan inte spara sammanslagningsresultatet\n"
+"%s"
 
 msgid "&Fastest (Assume large files)"
 msgstr "&Snabbast (anta stora filer)"
@@ -1757,6 +1953,12 @@ msgstr "Ta bort avslutande &vagnretur"
 msgid "Diff Options"
 msgstr "Diff-alternativ"
 
+msgid "Result:"
+msgstr "Resultat:"
+
+msgid "Base:"
+msgstr "Bas:"
+
 msgid "Edit"
 msgstr "Redigera"
 
@@ -1769,29 +1971,59 @@ msgstr "Gå till rad (vänster)"
 msgid "Goto line (right)"
 msgstr "Gå till rad (höger)"
 
+msgid "Goto line (merged)"
+msgstr "Gå till rad (sammanfogad)"
+
 msgid "Enter line:"
 msgstr "Ange rad:"
 
+msgid "ButtonBar|Edit"
+msgstr "Redig"
+
+msgid "ButtonBar|<-Copy"
+msgstr "←Kopiera"
+
+msgid "ButtonBar|Base"
+msgstr "Bas"
+
+msgid "ButtonBar|Next"
+msgstr "Nästa"
+
+msgid "ButtonBar|Copy->"
+msgstr "Kopiera→"
+
+msgid "ButtonBar|-Left"
+msgstr "-Vänster"
+
+msgid "ButtonBar|-Right"
+msgstr "-Höger"
+
 msgid "ButtonBar|Help"
-msgstr "ButtonBar|Hjälp"
+msgstr "Hjälp"
 
 msgid "ButtonBar|Save"
-msgstr "ButtonBar|Spara"
+msgstr "Spara"
 
-msgid "ButtonBar|Edit"
-msgstr "ButtonBar|Redig"
+msgid "ButtonBar|+Left"
+msgstr "+Vänster"
 
-msgid "ButtonBar|Merge"
-msgstr "ButtonBar|Fläta"
+msgid "ButtonBar|+Right"
+msgstr "+Höger"
 
 msgid "ButtonBar|Search"
-msgstr "ButtonBar|Sök"
+msgstr "Sök"
 
 msgid "ButtonBar|Options"
-msgstr "ButtonBar|Inst"
+msgstr "Inst"
 
 msgid "ButtonBar|Quit"
-msgstr "ButtonBar|Avslut"
+msgstr "Avslut"
+
+msgid "Quit"
+msgstr "Avsluta"
+
+msgid "The merge result is not saved. Save it?"
+msgstr "Sammanslagningsresultatet är inte sparat. Vill du spara det?"
 
 msgid "File(s) was modified. Save with exit?"
 msgstr "Filer har ändrats. Spara vid nedstängning?"
@@ -1804,11 +2036,36 @@ msgstr ""
 "%s håller på att stängas ner.\n"
 "Spara modifierade filer?"
 
-msgid "Quit"
-msgstr "Avsluta"
+msgid "Save the changes of the two files first."
+msgstr "Spara ändringarna i de två filerna först."
+
+msgid "The common base of the two files"
+msgstr "De två filernas gemensamma bas"
+
+#, c-format
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr ""
+"Kan inte läsa basfilen\n"
+"%s"
+
+msgid "Cannot compare the files to merge"
+msgstr "Kan inte jämföra filerna som ska sammanfogas"
+
+msgid "Merge:"
+msgstr "Sammanfoga:"
 
 msgid "Diff:"
 msgstr "Diff:"
+
+#, c-format
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"Kan inte sammanfoga filerna till\n"
+"%s"
 
 msgid "File name is empty!"
 msgstr "Filnamnet är tomt!"
@@ -1820,14 +2077,6 @@ msgid ""
 msgstr ""
 "%s\n"
 "är en katalog"
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
-msgstr ""
-"Kan inte läsa filstatus för\n"
-"%s"
 
 msgid "Diff viewer: invalid mode"
 msgstr "Diff-visare: otillåtet läge"
@@ -2183,7 +2432,7 @@ msgid "Language:"
 msgstr "Språk:"
 
 msgid "&Select..."
-msgstr "&Välj..."
+msgstr "&Välj…"
 
 msgid "Spell plugin settings"
 msgstr "Stavningsmodulens inställningar"
@@ -2196,7 +2445,7 @@ msgid "Loading: %3d%%"
 msgstr "Läser in: %3d%%"
 
 msgid "Loading..."
-msgstr "Laddar..."
+msgstr "Laddar…"
 
 #, c-format
 msgid ""
@@ -2295,7 +2544,7 @@ msgid "The file you are saving does not end with a newline."
 msgstr "Filen som du sparar slutar inte med en radmatning."
 
 msgid "&Do not change"
-msgstr "&Ändra inte"
+msgstr "Ä&ndra inte"
 
 msgid "&Unix format (LF)"
 msgstr "&Unix-format (LF)"
@@ -2369,6 +2618,14 @@ msgstr "&Spara"
 
 msgid "Load"
 msgstr "Ladda"
+
+#, c-format
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr ""
+"Kan inte skapa %s:\n"
+"%s"
 
 msgid "Syntax file edit"
 msgstr "Redigera syntaxfil"
@@ -2504,7 +2761,7 @@ msgid "Close"
 msgstr "Stäng"
 
 msgid "&Open file..."
-msgstr "&Öppna fil..."
+msgstr "Ö&ppna fil…"
 
 msgid "&New"
 msgstr "&Ny"
@@ -2513,31 +2770,31 @@ msgid "&History..."
 msgstr "&Historik…"
 
 msgid "Save &as..."
-msgstr "Spa&ra som..."
+msgstr "Spa&ra som…"
 
 msgid "&Insert file..."
-msgstr "&Infoga fil..."
+msgstr "&Infoga fil…"
 
 msgid "Cop&y to file..."
-msgstr "&Kopiera till fil..."
+msgstr "&Kopiera till fil…"
 
 msgid "&User menu..."
-msgstr "Användar&meny..."
+msgstr "Användar&meny…"
 
 msgid "A&bout..."
-msgstr "&Om..."
+msgstr "&Om…"
 
 msgid "&Quit"
 msgstr "&Avsluta"
 
 msgid "&Undo"
-msgstr "&Ångra"
+msgstr "Å&ngra"
 
 msgid "&Redo"
 msgstr "&Gör om"
 
 msgid "Undo &History..."
-msgstr "Ångrings&historik..."
+msgstr "Ångrings&historik…"
 
 msgid "&Toggle ins/overw"
 msgstr "&Växla infoga/överskr"
@@ -2579,13 +2836,13 @@ msgid "&End"
 msgstr "&Slutet"
 
 msgid "&Search..."
-msgstr "&Sök..."
+msgstr "&Sök…"
 
 msgid "Search &again"
 msgstr "Sök &igen"
 
 msgid "&Replace..."
-msgstr "&Ersätt..."
+msgstr "&Ersätt…"
 
 msgid "Toggle &line filter"
 msgstr "Växla &radfilter"
@@ -2606,7 +2863,7 @@ msgid "&Flush bookmarks"
 msgstr "&Rensa bokmärken"
 
 msgid "&Go to line..."
-msgstr "&Gå till rad..."
+msgstr "&Gå till rad…"
 
 msgid "&Toggle line state"
 msgstr "Växla &radnummer"
@@ -2624,7 +2881,7 @@ msgid "Toggle &control characters"
 msgstr "Växla &styrtecken"
 
 msgid "Encod&ing..."
-msgstr "&Teckenkodning..."
+msgstr "&Teckenkodning…"
 
 msgid "&Fold / Unfold block"
 msgstr "&Vik in/ut block"
@@ -2639,16 +2896,16 @@ msgid "&Start/Stop record macro"
 msgstr "&Börja/sluta spela in makro"
 
 msgid "Macro e&xplorer..."
-msgstr "Makro&hanterare..."
+msgstr "Makro&hanterare…"
 
 msgid "Record/Repeat &actions"
-msgstr "Spela in/repetera &ändringar"
+msgstr "Spela in/repetera änd&ringar"
 
 msgid "&Move"
 msgstr "Fl&ytta"
 
 msgid "&Resize"
-msgstr "&Ändra storlek"
+msgstr "Ä&ndra storlek"
 
 msgid "&Toggle fullscreen"
 msgstr "&Växla fullskärm"
@@ -2660,25 +2917,25 @@ msgid "&Previous"
 msgstr "&Föregående"
 
 msgid "&List..."
-msgstr "&Lista..."
+msgstr "&Lista…"
 
 msgid "&General..."
-msgstr "&Allmänt..."
+msgstr "&Allmänt…"
 
 msgid "Save &mode..."
-msgstr "S&ätt att spara..."
+msgstr "Sät&t att spara…"
 
 msgid "Learn &keys..."
-msgstr "Lär in &tangenter..."
+msgstr "Lär in &tangenter…"
 
 msgid "Syntax &highlighting..."
-msgstr "Sy&ntaxmarkering..."
+msgstr "Sy&ntaxmarkering…"
 
 msgid "Pl&ugin info..."
-msgstr "In&sticksmodulinfo..."
+msgstr "In&sticksmodulinfo…"
 
 msgid "&Lua scripts..."
-msgstr "&Lua-skript..."
+msgstr "&Lua-skript…"
 
 msgid "S&yntax file"
 msgstr "S&yntaxfil"
@@ -2708,7 +2965,7 @@ msgid "&Navigate"
 msgstr "&Navigera"
 
 msgid "&Window"
-msgstr "F&önster"
+msgstr "Fö&nster"
 
 msgid "Pl&ugins"
 msgstr "In&sticksmoduler"
@@ -2756,7 +3013,7 @@ msgid "&Return does autoindent"
 msgstr "Retur gör automatiska &indrag"
 
 msgid "Confir&m before saving"
-msgstr "Fr&åga innan sparande"
+msgstr "Frå&ga innan sparande"
 
 msgid "Save file &position"
 msgstr "Spara fil&position"
@@ -2856,23 +3113,35 @@ msgstr "Öppna filer"
 msgid "Edit: "
 msgstr "Redigera: "
 
-msgid "ButtonBar|Mark"
-msgstr "ButtonBar|Marker"
+msgid "ButtonBar|Menu"
+msgstr "Meny"
+
+msgid "ButtonBar|SaveAs"
+msgstr "Spara som"
+
+msgid "ButtonBar|Column"
+msgstr "Kolumn"
 
 msgid "ButtonBar|Replac"
-msgstr "ButtonBar|Ersätt"
+msgstr "Ersätt"
+
+msgid "ButtonBar|Insert"
+msgstr "Infoga"
+
+msgid "ButtonBar|Mark"
+msgstr "Marker"
 
 msgid "ButtonBar|Copy"
-msgstr "ButtonBar|Kopier"
+msgstr "Kopier"
 
 msgid "ButtonBar|Move"
-msgstr "ButtonBar|Flytta"
+msgstr "Flytta"
 
 msgid "ButtonBar|Delete"
-msgstr "ButtonBar|TaBort"
+msgstr "TaBort"
 
 msgid "ButtonBar|PullDn"
-msgstr "ButtonBar|DraNer"
+msgstr "DraNer"
 
 #, c-format
 msgid "Filtering %s: %3d%%"
@@ -2921,7 +3190,7 @@ msgid "Type 'exit' to return to the %s"
 msgstr "Skriv \"exit\" för att återgå till %s"
 
 msgid "Set &all"
-msgstr "S&ätt alla"
+msgstr "Sät&t alla"
 
 msgid "S&kip"
 msgstr "Ho&ppa över"
@@ -3028,7 +3297,7 @@ msgid "Mkdi&r autoname"
 msgstr "Automatiskt namn vid &katalogskapande"
 
 msgid "&Preallocate space"
-msgstr "F&örallokera utrymme"
+msgstr "Fö&rallokera utrymme"
 
 msgid "Esc key mode"
 msgstr "Esc-tangentläge"
@@ -3070,13 +3339,19 @@ msgid "Cd follows lin&ks"
 msgstr "&Cd följer länkar"
 
 msgid "Sa&fe delete"
-msgstr "S&äker borttagning"
+msgstr "Sä&ker borttagning"
 
 msgid "Safe overwrite"
 msgstr "Säker överskrivning"
 
 msgid "A&uto save setup"
 msgstr "A&utospara inställningar"
+
+msgid "Far Manager keys"
+msgstr "Far Manager-tangenter"
+
+msgid "Alt-letter fast find"
+msgstr "Snabbsökning med Alt-bokstav"
 
 msgid "Configure options"
 msgstr "Inställningar"
@@ -3151,10 +3426,10 @@ msgid "File &types"
 msgstr "Fil&typer"
 
 msgid "&Permissions"
-msgstr "R&ättigheter"
+msgstr "Rä&ttigheter"
 
 msgid "Permission c&olors"
-msgstr "Rättighetsf&ärger"
+msgstr "Rättighetsfär&ger"
 
 msgid "Quick search"
 msgstr "Snabbsök"
@@ -3185,21 +3460,17 @@ msgstr "Kom ihåg fil&position"
 msgid "&Tree view of JSON, YAML and XML"
 msgstr "&Trädvy för JSON, YAML och XML"
 
-#, fuzzy
-#| msgid "Enter file name:"
 msgid "End of file marker:"
-msgstr "Ange filnamn:"
+msgstr "Filslutsmarkör:"
 
 msgid "Redraws to skip at most:"
-msgstr ""
+msgstr "Högsta antal överhoppade omritningar:"
 
-#, fuzzy
-#| msgid "&Brief file list:"
 msgid "Tree view file limit, MB:"
-msgstr "&Kortfattad fillista:"
+msgstr "Filgräns för trädvy, MB:"
 
 msgid "Tree view node limit:"
-msgstr ""
+msgstr "Nodgräns för trädvy:"
 
 msgid "&Full file list"
 msgstr "&Fullständig fillista"
@@ -3233,22 +3504,22 @@ msgstr "Sorteringsordning"
 
 #. TRANSLATORS: no need to translate 'Confirmation', it's just a context prefix
 msgid "Confirmation|&Delete"
-msgstr "Confirmation|&Ta bort"
+msgstr "&Ta bort"
 
 msgid "Confirmation|O&verwrite"
-msgstr "Confirmation|&Skriv över"
+msgstr "&Skriv över"
 
 msgid "Confirmation|&Execute"
-msgstr "Confirmation|&Exekvera"
+msgstr "&Exekvera"
 
 msgid "Confirmation|E&xit"
-msgstr "Confirmation|A&vsluta"
+msgstr "A&vsluta"
 
 msgid "Confirmation|Di&rectory hotlist delete"
-msgstr "Confirmation|Ta bort &katalogfavoriter"
+msgstr "Ta bort &katalogfavoriter"
 
 msgid "Confirmation|&History cleanup"
-msgstr "Confirmation|&Historikrensning"
+msgstr "&Historikrensning"
 
 msgid "Confirmation"
 msgstr "Bekräftelse"
@@ -3266,7 +3537,7 @@ msgid "&Stop"
 msgstr "&Stoppa"
 
 msgid "&Resume"
-msgstr "&Återuppta"
+msgstr "Å&teruppta"
 
 msgid "&Kill"
 msgstr "&Döda"
@@ -3453,17 +3724,11 @@ msgstr "Sätt &grupper"
 msgid "Set &users"
 msgstr "Sätt a&nvändare"
 
-msgid "Name"
-msgstr "Namn"
-
 msgid "Owner name"
 msgstr "Ägarnamn"
 
 msgid "Group name"
 msgstr "Gruppnamn"
-
-msgid "Size"
-msgstr "Storlek"
 
 msgid "Chown command"
 msgstr "Chown-kommando"
@@ -3532,6 +3797,21 @@ msgstr "Filtrerad vy"
 
 msgid "Filter command and arguments:"
 msgstr "Filterkommando och argument:"
+
+msgid "Apply command"
+msgstr "Använd kommando"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+"Kommando för filerna (%f filnamn, %n namn utan filändelse, %x filändelse):"
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] "%d fil hoppas över: namnet innehåller en radbrytning"
+msgstr[1] "%d filer hoppas över: namnen innehåller en radbrytning"
 
 msgid "This plugin does not support file editing"
 msgstr "Denna insticksmodul stöder inte filredigering"
@@ -3674,22 +3954,22 @@ msgstr ""
 "eller använda den filen som ett exempel på hur den ska skrivas."
 
 msgid "DialogTitle|Copy"
-msgstr "DialogTitle|Kopiera"
+msgstr "Kopiera"
 
 msgid "DialogTitle|Move"
-msgstr "DialogTitle|Flytta"
+msgstr "Flytta"
 
 msgid "DialogTitle|Delete"
-msgstr "DialogTitle|Ta bort"
+msgstr "Ta bort"
 
 msgid "FileOperation|Copy"
-msgstr "FileOperation|Kopiera"
+msgstr "Kopiera"
 
 msgid "FileOperation|Move"
-msgstr "FileOperation|Flytta"
+msgstr "Flytta"
 
 msgid "FileOperation|Delete"
-msgstr "FileOperation|Ta bort"
+msgstr "Ta bort"
 
 #, no-c-format
 msgid "%o %f%n\"%s\"%m"
@@ -4152,7 +4432,7 @@ msgid "Don't overwrite with &zero length file"
 msgstr "Skriv inte över med &tom fil"
 
 msgid "&Older"
-msgstr "&Äldre"
+msgstr "Ä&ldre"
 
 msgid "S&maller"
 msgstr "M&indre"
@@ -4248,19 +4528,19 @@ msgid "&Tree"
 msgstr "&Träd"
 
 msgid "Panel &modes..."
-msgstr "Panel&lägen..."
+msgstr "Panel&lägen…"
 
 msgid "&Listing format..."
-msgstr "&Listformat..."
+msgstr "&Listformat…"
 
 msgid "&Sort order..."
-msgstr "&Sorteringsordning..."
+msgstr "&Sorteringsordning…"
 
 msgid "&Filter..."
-msgstr "&Filter..."
+msgstr "&Filter…"
 
 msgid "&Encoding..."
-msgstr "&Teckenkodning..."
+msgstr "&Teckenkodning…"
 
 msgid "&Rescan"
 msgstr "Läs in i&gen"
@@ -4272,7 +4552,7 @@ msgid "&View"
 msgstr "&Visa"
 
 msgid "Vie&w file..."
-msgstr "Visa &fil..."
+msgstr "Visa &fil…"
 
 msgid "&Filtered view"
 msgstr "Filtrerad v&y"
@@ -4313,31 +4593,23 @@ msgstr "&Invertera markering"
 msgid "E&xit"
 msgstr "&Avsluta"
 
-#, fuzzy
-#| msgid "C&hmod"
 msgid "C&hmod..."
-msgstr "C&hmod"
+msgstr "C&hmod…"
 
-#, fuzzy
-#| msgid "Ch&own"
 msgid "Ch&own..."
-msgstr "Ch&own"
+msgstr "Ch&own…"
 
-#, fuzzy
-#| msgid "&Advanced chown"
 msgid "&Advanced chown..."
-msgstr "Ava&ncerad chown"
+msgstr "&Avancerat ägarbyte…"
 
-#, fuzzy
-#| msgid "Cha&ttr"
 msgid "Cha&ttr flags..."
-msgstr "Cha&ttr"
+msgstr "Cha&ttr-flaggor…"
 
 msgid "&User menu"
 msgstr "&Användarmeny"
 
 msgid "&Directory tree"
-msgstr "Katalogtr&äd"
+msgstr "Katalogt&räd"
 
 msgid "&Find file"
 msgstr "&Sök fil"
@@ -4376,60 +4648,52 @@ msgid "Screen lis&t"
 msgstr "Skä&rmlista"
 
 msgid "Pl&ugin panel..."
-msgstr "In&sticksmodulpanel..."
+msgstr "In&sticksmodulpanel…"
 
 msgid "&Configuration..."
-msgstr "K&onfiguration..."
+msgstr "K&onfiguration…"
 
 msgid "&Layout..."
-msgstr "&Layout..."
+msgstr "&Layout…"
 
 msgid "&Panel options..."
-msgstr "&Panelalternativ..."
+msgstr "&Panelalternativ…"
 
 msgid "File panel m&odes..."
-msgstr "Filpanel&lägen..."
+msgstr "Filpanel&lägen…"
 
 msgid "C&onfirmation..."
-msgstr "&Bekräftelse..."
+msgstr "&Bekräftelse…"
 
 msgid "&Appearance..."
-msgstr "&Utseende..."
+msgstr "&Utseende…"
 
 msgid "Key &bindings..."
-msgstr "Tangent&bindningar..."
+msgstr "Tangent&bindningar…"
 
 msgid "Key &sniffer..."
-msgstr "Tangent&avläsare..."
+msgstr "Tangent&avläsare…"
 
-#, fuzzy
-#| msgid "Diff extra options"
 msgid "&Diff viewer options..."
-msgstr "Extraalternativ till diff"
+msgstr "&Alternativ för diffvisare…"
 
-#, fuzzy
-#| msgid "&Panel options..."
 msgid "Vie&wer options..."
-msgstr "&Panelalternativ..."
+msgstr "Visnings&alternativ…"
 
 msgid "&Editor options..."
-msgstr "&Redigerarinställningar..."
+msgstr "&Redigerarinställningar…"
 
 msgid "&Manage plugins..."
-msgstr "&Hantera insticksmoduler..."
+msgstr "&Hantera insticksmoduler…"
 
-#, fuzzy
-#| msgid "Edit &extension file"
 msgid "Edit e&xtension file"
-msgstr "Redigera &filändelsefil"
+msgstr "Redigera filä&ndelsefil"
 
 msgid "Edit hi&ghlighting group file"
 msgstr "Redigera &gruppmarkeringsfil"
 
-#, fuzzy
-#| msgid "Attributes:"
 msgid "&Attributes"
-msgstr "Attribut:"
+msgstr "&Attribut"
 
 msgid "Panels:"
 msgstr "Paneler:"
@@ -4458,7 +4722,7 @@ msgid "Plugin %s has no show operation"
 msgstr "Insticksmodulen %s saknar visningsåtgärd"
 
 msgid "&Above"
-msgstr "&Över"
+msgstr "Ö&ver"
 
 msgid "&Left"
 msgstr "&Vänster"
@@ -4469,17 +4733,47 @@ msgstr "&Under"
 msgid "&Right"
 msgstr "&Höger"
 
-msgid "ButtonBar|Menu"
-msgstr "ButtonBar|Meny"
+msgid "ButtonBar|Left"
+msgstr "Vänster"
+
+msgid "ButtonBar|Right"
+msgstr "Höger"
+
+msgid "ButtonBar|Console"
+msgstr "Konsol"
 
 msgid "ButtonBar|View"
-msgstr "ButtonBar|Visa"
+msgstr "Visa"
 
 msgid "ButtonBar|RenMov"
-msgstr "ButtonBar|DöpFly"
+msgstr "DöpFly"
+
+msgid "ButtonBar|Name"
+msgstr "Namn"
+
+msgid "ButtonBar|Version"
+msgstr "Version"
+
+msgid "ButtonBar|Ext"
+msgstr "Filänd"
+
+msgid "ButtonBar|Size"
+msgstr "Storlek"
+
+msgid "ButtonBar|MTime"
+msgstr "Ändring"
+
+msgid "ButtonBar|Unsort"
+msgstr "Osort"
+
+msgid "ButtonBar|CTime"
+msgstr "C-tid"
+
+msgid "ButtonBar|ATime"
+msgstr "Åtkomst"
 
 msgid "ButtonBar|Mkdir"
-msgstr "ButtonBar|NyKat"
+msgstr "NyKat"
 
 msgid "&Chdir"
 msgstr "&Byt katalog"
@@ -4548,7 +4842,7 @@ msgid "A&ll charsets"
 msgstr "A&lla teckenkodningar"
 
 msgid "Fir&st hit"
-msgstr "F&örsta träff"
+msgstr "Fö&rsta träff"
 
 msgid "Find File"
 msgstr "Sök fil"
@@ -4828,7 +5122,7 @@ msgstr "Minnet är fullt!"
 #. TRANSLATORS: one single character to represent 'unsorted' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|u"
-msgstr "sort|o"
+msgstr "o"
 
 msgid "&Unsorted"
 msgstr "Oso&rterad"
@@ -4836,7 +5130,7 @@ msgstr "Oso&rterad"
 #. TRANSLATORS: one single character to represent 'name' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|n"
-msgstr "sort|n"
+msgstr "n"
 
 msgid "&Name"
 msgstr "&Namn"
@@ -4844,7 +5138,7 @@ msgstr "&Namn"
 #. TRANSLATORS: one single character to represent 'version' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|v"
-msgstr "sort|v"
+msgstr "v"
 
 msgid "&Version"
 msgstr "&Version"
@@ -4852,7 +5146,7 @@ msgstr "&Version"
 #. TRANSLATORS: one single character to represent 'extension' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|e"
-msgstr "sort|e"
+msgstr "e"
 
 msgid "E&xtension"
 msgstr "&Filändelse"
@@ -4860,7 +5154,7 @@ msgstr "&Filändelse"
 #. TRANSLATORS: one single character to represent 'size' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|s"
-msgstr "sort|s"
+msgstr "s"
 
 msgid "&Size"
 msgstr "&Storlek"
@@ -4871,7 +5165,7 @@ msgstr "Blockstorlek"
 #. TRANSLATORS: one single character to represent 'Modify time' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|m"
-msgstr "sort|m"
+msgstr "m"
 
 msgid "&Modify time"
 msgstr "Tid &innehållsändr"
@@ -4879,7 +5173,7 @@ msgstr "Tid &innehållsändr"
 #. TRANSLATORS: one single character to represent 'Access time' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|a"
-msgstr "sort|a"
+msgstr "a"
 
 msgid "&Access time"
 msgstr "Använ&d senast"
@@ -4887,10 +5181,10 @@ msgstr "Använ&d senast"
 #. TRANSLATORS: one single character to represent 'Change time' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|h"
-msgstr "sort|ä"
+msgstr "ä"
 
 msgid "C&hange time"
-msgstr "&Ändrad senast"
+msgstr "Ä&ndrad senast"
 
 msgid "Perm"
 msgstr "Perm"
@@ -4901,7 +5195,7 @@ msgstr "NI"
 #. TRANSLATORS: one single character to represent 'inode' sort mode
 #. TRANSLATORS: no need to translate 'sort', it's just a context prefix
 msgid "sort|i"
-msgstr "sort|i"
+msgstr "i"
 
 msgid "&Inode"
 msgstr "&Inod"
@@ -4917,9 +5211,6 @@ msgstr "Ägare"
 
 msgid "[dev]"
 msgstr "[enh]"
-
-msgid "UP--DIR"
-msgstr "UPPKAT"
 
 msgid "Filter: "
 msgstr "Filter: "
@@ -5107,6 +5398,9 @@ msgid ""
 "This panel is not a local filesystem.\n"
 "Every file is deleted here as soon as the plugin says it has it."
 msgstr ""
+"Den här panelen är inte ett lokalt filsystem.\n"
+"Varje fil tas bort här så snart insticksmodulen säger att den har tagit hand "
+"om den."
 
 msgid "This plugin does not support moving files"
 msgstr "Denna insticksmodul stöder inte flyttning av filer"
@@ -5136,6 +5430,13 @@ msgid "Cannot delete local file %s"
 msgstr "Kan inte ta bort lokal fil %s"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr "Ingen insticksmodul öppnar %s."
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr "Den andra halvan av skärmen visar ingen panel som går att öppna i."
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr "%s gav inget att visa för %s"
 
@@ -5153,6 +5454,9 @@ msgstr "Byt enhet"
 
 msgid "No plugins with drive menu support are loaded."
 msgstr "Inga insticksmoduler med stöd för enhetsmenyn är inlästa."
+
+msgid "Plugin action"
+msgstr "Insticksmodulåtgärd"
 
 #, c-format
 msgid ""
@@ -5193,19 +5497,19 @@ msgid "Delete %s?"
 msgstr "Ta bort %s?"
 
 msgid "ButtonBar|Static"
-msgstr "ButtonBar|Statis"
+msgstr "Statis"
 
 msgid "ButtonBar|Dynamc"
-msgstr "ButtonBar|Dynami"
+msgstr "Dynami"
 
 msgid "ButtonBar|Rescan"
-msgstr "ButtonBar|Läs om"
+msgstr "Läs om"
 
 msgid "ButtonBar|Forget"
-msgstr "ButtonBar|Glöm"
+msgstr "Glöm"
 
 msgid "ButtonBar|Rmdir"
-msgstr "ButtonBar|TaBKat"
+msgstr "TaBKat"
 
 #, c-format
 msgid ""
@@ -5232,10 +5536,10 @@ msgid "Help"
 msgstr "Hjälp"
 
 msgid "ButtonBar|Index"
-msgstr "ButtonBar|Index"
+msgstr "Index"
 
 msgid "ButtonBar|Prev"
-msgstr "ButtonBar|Föreg"
+msgstr "Föreg"
 
 msgid "Function keys"
 msgstr "Funktionstangenter"
@@ -5251,7 +5555,7 @@ msgstr "Lär in tangent"
 
 #, c-format
 msgid "Press %s and wait..."
-msgstr "Tryck på %s och vänta..."
+msgstr "Tryck på %s och vänta…"
 
 #, c-format
 msgid ""
@@ -5288,6 +5592,15 @@ msgstr "&Skift"
 msgid "Edit &term file"
 msgstr "Redigera &term-fil"
 
+msgid "Release:"
+msgstr "Släpp:"
+
+msgid "Then:"
+msgstr "Sedan:"
+
+msgid "(modifier key)"
+msgstr "(modifierartangent)"
+
 msgid "(not recognized)"
 msgstr "(okänd)"
 
@@ -5299,7 +5612,7 @@ msgid ""
 "\n"
 "Wait until this message disappears."
 msgstr ""
-"Tryck på valfri tangent...\n"
+"Tryck på valfri tangent…\n"
 "\n"
 "Vänta tills detta meddelande försvinner."
 
@@ -5315,6 +5628,9 @@ msgstr "Rådata:"
 msgid "Keycode:"
 msgstr "Tangentkod:"
 
+msgid "Kitty:"
+msgstr "Kitty:"
+
 msgid "&Capture key"
 msgstr "&Läs av tangent"
 
@@ -5322,7 +5638,7 @@ msgid "&Main"
 msgstr "&Huvudläge"
 
 msgid "&Ctrl-X + ..."
-msgstr "&Ctrl-X + ..."
+msgstr "&Ctrl-X + …"
 
 msgid "&Panel"
 msgstr "&Panel"
@@ -5392,7 +5708,7 @@ msgid "Set shortcut"
 msgstr "Ange kortkommando"
 
 msgid "Press new shortcut..."
-msgstr "Tryck på nytt kortkommando..."
+msgstr "Tryck på nytt kortkommando…"
 
 #, c-format
 msgid ""
@@ -5432,15 +5748,11 @@ msgstr ""
 msgid "unspecified"
 msgstr "ospecificerad"
 
-#, fuzzy
-#| msgid "Lua scripts:"
 msgid "Lua scripts"
-msgstr "Lua-skript:"
+msgstr "Lua-skript"
 
-#, fuzzy
-#| msgid "This plugin has no settings."
 msgid "This script has no entry file."
-msgstr "Denna insticksmodul saknar inställningar."
+msgstr "Det här skriptet har ingen startfil."
 
 msgid "Lua"
 msgstr "Lua"
@@ -5448,24 +5760,17 @@ msgstr "Lua"
 msgid "Unknown error"
 msgstr "Okänt fel"
 
-#, fuzzy
-#| msgid "This plugin has no settings."
 msgid "This script has no settings."
-msgstr "Denna insticksmodul saknar inställningar."
+msgstr "Det här skriptet har inga inställningar."
 
-#, fuzzy
-#| msgid "No global or user Lua editor scripts were found."
 msgid "No global or user Lua scripts were found."
-msgstr ""
-"Inga globala eller användarspecifika Lua-skript för redigeraren hittades."
+msgstr "Inga globala eller användarspecifika Lua-skript hittades."
 
 msgid "Lua runtime is disabled. Enable Lua engine and restart MC."
 msgstr "Lua-körmiljön är inaktiverad. Aktivera Lua-motorn och starta om MC."
 
-#, fuzzy
-#| msgid "VFS settings"
 msgid "&Settings"
-msgstr "VFS-inställningar"
+msgstr "&Inställningar"
 
 msgid "Lua action failed"
 msgstr "Lua-åtgärden misslyckades"
@@ -5487,6 +5792,14 @@ msgstr "Denna insticksmodul saknar inställningar."
 
 msgid "No plugins loaded."
 msgstr "Inga insticksmoduler inlästa."
+
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr "%s avslutades med koden %d. Tryck på valfri tangent för att stänga"
+
+#, c-format
+msgid "%s has exited. Press any key to close"
+msgstr "%s har avslutats. Tryck på valfri tangent för att stänga"
 
 msgid "JSON parse error at byte %"
 msgstr "JSON-tolkningsfel vid byte %"
@@ -5624,6 +5937,413 @@ msgstr "förväntade nyckel: värde"
 msgid "unexpected indentation"
 msgstr "oväntat indrag"
 
+msgid "user"
+msgstr "användare"
+
+msgid "mask"
+msgstr "mask"
+
+msgid "Choose group"
+msgstr "Välj grupp"
+
+msgid "Choose user"
+msgstr "Välj användare"
+
+msgid "Show &system accounts"
+msgstr "Visa &systemkonton"
+
+msgid "&Read"
+msgstr "&Läs"
+
+msgid "&Write"
+msgstr "&Skriv"
+
+msgid "E&xecute"
+msgstr "&Kör"
+
+msgid "&Group"
+msgstr "&Grupp"
+
+msgid "Names:"
+msgstr "Namn:"
+
+msgid "C&hoose..."
+msgstr "&Välj..."
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr "Det finns ingen grupp med namnet \"%s\""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr "Det finns ingen användare med namnet \"%s\""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr "En post ändras i taget: ange ett namn."
+
+msgid "  masked"
+msgstr "  maskerad"
+
+msgid "Read only: you are not the owner."
+msgstr "Skrivskyddad: du är inte ägaren."
+
+msgid "None: new files get the mode from umask."
+msgstr "Ingen: nya filer får läget från umask."
+
+msgid "Mas&k"
+msgstr "Mas&k"
+
+msgid "Add entry"
+msgstr "Lägg till post"
+
+msgid "Mask"
+msgstr "Mask"
+
+msgid "Other"
+msgstr "Övriga"
+
+msgid "Edit entry"
+msgstr "Redigera post"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr "Ägaren, filens grupp och övriga kan inte tas bort."
+
+msgid "Remove the marked users and groups?"
+msgstr "Ta bort de markerade användarna och grupperna?"
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr "Ta bort posterna för användare och grupp innan du tar bort masken."
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr "Ta först bort posterna för användare och grupp i standard-ACL:en."
+
+msgid "Default ACL"
+msgstr "Standard-ACL"
+
+msgid "Remove the whole default ACL?"
+msgstr "Ta bort hela standard-ACL:en?"
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+"Det finns ännu ingen mask: den skapas med den första posten för en användare "
+"eller grupp."
+
+msgid "The most that users and groups get:"
+msgstr "Det högsta som användare och grupper får:"
+
+msgid "&Set it from the entries"
+msgstr "&Ange den från posterna"
+
+msgid "Access control list (read only)"
+msgstr "Åtkomstkontrollista (skrivskyddad)"
+
+msgid "Access control list"
+msgstr "Åtkomstkontrollista"
+
+msgid "Mode"
+msgstr "Läge"
+
+msgid "This fol&der"
+msgstr "Den här &katalogen"
+
+msgid "&New files inside"
+msgstr "&Nya filer inuti"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Read"
+msgstr "Läs"
+
+msgid "Write"
+msgstr "Skriv"
+
+msgid "Exec"
+msgstr "Kör"
+
+msgid "Effective"
+msgstr "Effektiv"
+
+msgid "&Add"
+msgstr "&Lägg till"
+
+msgid "Ed&it"
+msgstr "&Redigera"
+
+msgid "De&lete"
+msgstr "Ta &bort"
+
+msgid "Set a&ll"
+msgstr "Ange a&lla"
+
+msgid "C&hanges to all"
+msgstr "Ä&ndringar för alla"
+
+msgid "This folder only"
+msgstr "Endast den här katalogen"
+
+msgid "This folder, subfolders and files"
+msgstr "Den här katalogen, underkataloger och filer"
+
+msgid "This folder and subfolders"
+msgstr "Den här katalogen och underkataloger"
+
+msgid "This folder and files"
+msgstr "Den här katalogen och filer"
+
+msgid "Subfolders and files only"
+msgstr "Endast underkataloger och filer"
+
+msgid "Subfolders only"
+msgstr "Endast underkataloger"
+
+msgid "Files only"
+msgstr "Endast filer"
+
+msgid "allow"
+msgstr "tillåt"
+
+msgid "deny"
+msgstr "neka"
+
+msgid "  (inside only)"
+msgstr "  (endast inuti)"
+
+msgid "  (inherited)"
+msgstr "  (ärvd)"
+
+msgid "Who:"
+msgstr "Vem:"
+
+msgid "SID:"
+msgstr "SID:"
+
+msgid "Type:"
+msgstr "Typ:"
+
+msgid "Allow"
+msgstr "Tillåt"
+
+msgid "Deny"
+msgstr "Neka"
+
+msgid "Applies to:"
+msgstr "Gäller för:"
+
+msgid "Inherited:"
+msgstr "Ärvd:"
+
+msgid "yes"
+msgstr "ja"
+
+msgid "no"
+msgstr "nej"
+
+msgid "Mask:"
+msgstr "Mask:"
+
+msgid "no rights"
+msgstr "inga rättigheter"
+
+msgid "Entry"
+msgstr "Post"
+
+msgid "Advanced rights"
+msgstr "Avancerade rättigheter"
+
+msgid "A&llow"
+msgstr "T&illåt"
+
+msgid "De&ny"
+msgstr "&Neka"
+
+msgid "&Special"
+msgstr "&Särskilda"
+
+msgid "Ad&vanced..."
+msgstr "A&vancerade..."
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr "Det finns ingen användare eller grupp med namnet \"%s\""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+"Den här posten ärvs från katalogen ovanför.\n"
+"Ändra den där."
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+"Den här typen av post kan inte redigeras här.\n"
+"Dess data behålls när andra poster ändras."
+
+msgid "Access control list (Windows)"
+msgstr "Åtkomstkontrollista (Windows)"
+
+msgid "File:"
+msgstr "Fil:"
+
+msgid "Owner:"
+msgstr "Ägare:"
+
+msgid "Group:"
+msgstr "Grupp:"
+
+msgid "From:"
+msgstr "Från:"
+
+msgid "Who"
+msgstr "Vem"
+
+msgid "Rights"
+msgstr "Rättigheter"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr "F3 visar rättigheterna för en post en i taget."
+
+msgid "Full control"
+msgstr "Fullständig behörighet"
+
+msgid "&Full control"
+msgstr "&Fullständig behörighet"
+
+msgid "Modify"
+msgstr "Ändra"
+
+msgid "&Modify"
+msgstr "Ä&ndra"
+
+msgid "Read & execute"
+msgstr "Läs och &kör"
+
+msgid "Read and e&xecute"
+msgstr "Läs oc&h kör"
+
+msgid "Execute file"
+msgstr "Kör fil"
+
+msgid "Traverse folder"
+msgstr "Genomkorsa katalog"
+
+msgid "Read data"
+msgstr "Läs data"
+
+msgid "List folder"
+msgstr "Lista katalog"
+
+msgid "Read attributes"
+msgstr "Läs attribut"
+
+msgid "Read extended attributes"
+msgstr "Läs utökade attribut"
+
+msgid "Write data"
+msgstr "Skriv data"
+
+msgid "Create files"
+msgstr "Skapa filer"
+
+msgid "Append data"
+msgstr "Lägg till data"
+
+msgid "Create folders"
+msgstr "Skapa kataloger"
+
+msgid "Write attributes"
+msgstr "Skriv attribut"
+
+msgid "Write extended attributes"
+msgstr "Skriv utökade attribut"
+
+msgid "Delete subfolders and files"
+msgstr "Ta bort underkataloger och filer"
+
+msgid "Read permissions"
+msgstr "Läs behörigheter"
+
+msgid "Change permissions"
+msgstr "Ändra behörigheter"
+
+msgid "Take ownership"
+msgstr "Ta ägarskap"
+
+msgid "Nothing"
+msgstr "Ingenting"
+
+msgid "The list is not valid"
+msgstr "Listan är inte giltig"
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+"%s\n"
+"Åtkomstkontrollistan ändrades medan dialogrutan var öppen.\n"
+"Öppna den igen innan du sparar."
+
+msgid "Cannot stat"
+msgstr "Kan inte läsa filstatus"
+
+msgid "Cannot read the access control list of"
+msgstr "Kan inte läsa åtkomstkontrollistan för"
+
+msgid "Cannot read the default access control list of"
+msgstr "Kan inte läsa standardåtkomstkontrollistan för"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+"%s\n"
+"Servern lagrade listan i ett eget format.\n"
+"Öppna dialogrutan igen för att se den."
+
+msgid "Cannot set the access control list of"
+msgstr "Kan inte ange åtkomstkontrollistan för"
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+"%s\n"
+"har en NFSv4-åtkomstkontrollista (%s).\n"
+"M-Commander visar inte dessa ännu; nfs4_getfacl gör det."
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr "Åtkomstkontrollistor stöds inte på det här filsystemet (%s)"
+
+msgid "Cannot set the default access control list of"
+msgstr "Kan inte ange standardåtkomstkontrollistan för"
+
+msgid "Cannot set a POSIX access control list on"
+msgstr "Kan inte ange en POSIX-åtkomstkontrollista för"
+
+msgid "Access control lists work only on local files"
+msgstr "Åtkomstkontrollistor fungerar endast för lokala filer"
+
+msgid "There is no file under the cursor"
+msgstr "Det finns ingen fil under markören"
+
+msgid "Access control &list..."
+msgstr "Å&tkomstkontrollista..."
+
+msgid "Reading archive"
+msgstr "Läser arkiv"
+
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
 msgstr ""
@@ -5643,7 +6363,7 @@ msgid "Wrong password"
 msgstr "Fel lösenord"
 
 msgid "Creating archive..."
-msgstr "Skapar arkiv..."
+msgstr "Skapar arkiv…"
 
 msgid ""
 "7z encryption needs the external tool, it is off in the archiver settings"
@@ -5652,13 +6372,13 @@ msgstr ""
 "arkiveringsinställningarna"
 
 msgid "Extracting..."
-msgstr "Packar upp..."
+msgstr "Packar upp…"
 
 msgid "Please wait..."
-msgstr "Vänta..."
+msgstr "Vänta…"
 
 msgid "Running external archiver, please wait..."
-msgstr "Kör externt arkiveringsprogram, vänta..."
+msgstr "Kör externt arkiveringsprogram, vänta…"
 
 msgid "Operation cancelled"
 msgstr "Åtgärden avbröts"
@@ -5738,13 +6458,13 @@ msgid "extfs helper does not support adding files"
 msgstr "extfs-hjälpprogrammet stöder inte tillägg av filer"
 
 msgid "Adding to archive..."
-msgstr "Lägger till i arkiv..."
+msgstr "Lägger till i arkiv…"
 
 msgid "extfs helper does not support deleting files"
 msgstr "extfs-hjälpprogrammet stöder inte borttagning av filer"
 
 msgid "Deleting from archive..."
-msgstr "Tar bort från arkiv..."
+msgstr "Tar bort från arkiv…"
 
 msgid "Other formats"
 msgstr "Andra format"
@@ -5834,9 +6554,6 @@ msgstr "&av"
 msgid "Found in PATH: %s"
 msgstr "Hittades i PATH: %s"
 
-msgid "no"
-msgstr "nej"
-
 msgid "Pack"
 msgstr "Packa"
 
@@ -5916,7 +6633,7 @@ msgid "Abort current operation?"
 msgstr "Avbryt aktuell åtgärd?"
 
 msgid "Reading directory listing..."
-msgstr "Läser kataloglista..."
+msgstr "Läser kataloglista…"
 
 msgid "Unexpected end of TAR stream"
 msgstr "Oväntat slut på TAR-ström"
@@ -6051,7 +6768,7 @@ msgid "FTP"
 msgstr "FTP"
 
 msgid "Reading remote directory..."
-msgstr "Läser fjärrkatalog..."
+msgstr "Läser fjärrkatalog…"
 
 msgid "&Basic"
 msgstr "&Grundläggande"
@@ -6142,14 +6859,14 @@ msgstr "Ansluten"
 
 #, c-format
 msgid "Logging in as %s..."
-msgstr "Loggar in som %s..."
+msgstr "Loggar in som %s…"
 
 msgid "Asking for TLS..."
-msgstr "Frågar efter TLS..."
+msgstr "Frågar efter TLS…"
 
 #, c-format
 msgid "Opening %s..."
-msgstr "Öppnar %s..."
+msgstr "Öppnar %s…"
 
 #, c-format
 msgid "Server: %s"
@@ -6166,7 +6883,7 @@ msgstr "FTP-anslutning"
 
 #, c-format
 msgid "Connecting to %s:%d..."
-msgstr "Ansluter till %s:%d..."
+msgstr "Ansluter till %s:%d…"
 
 #, c-format
 msgid "Enter password for %s@%s"
@@ -6176,7 +6893,7 @@ msgid "FTP password"
 msgstr "FTP-lösenord"
 
 msgid "Retrying with password..."
-msgstr "Försöker igen med lösenord..."
+msgstr "Försöker igen med lösenord…"
 
 #, c-format
 msgid "Authentication with %s:%d failed"
@@ -6187,11 +6904,93 @@ msgid "Cannot connect to %s:%d"
 msgstr "Kan inte ansluta till %s:%d"
 
 msgid "Connection successful, loading entries..."
-msgstr "Anslutningen lyckades, läser in poster..."
+msgstr "Anslutningen lyckades, läser in poster…"
+
+msgid "Create a directory"
+msgstr "Skapa en katalog"
 
 #, c-format
 msgid "Copy of %s"
 msgstr "Kopia av %s"
+
+#, c-format
+msgid "Cannot fetch %s at %.10s."
+msgstr "Kan inte hämta %s vid %.10s."
+
+msgid "Cannot open the diff viewer."
+msgstr "Kan inte öppna diffvisaren."
+
+#, c-format
+msgid "Cannot run %s: %s"
+msgstr "Kan inte köra %s: %s"
+
+msgid "Cannot open the browser"
+msgstr "Kan inte öppna bläddraren"
+
+msgid "GitHub"
+msgstr "GitHub"
+
+msgid "gh failed with no message"
+msgstr "gh misslyckades utan meddelande"
+
+msgid "Owner, or a path below it:"
+msgstr "Ägare eller en sökväg under den:"
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+"Varken en ägare, en sökväg under en ägare\n"
+"eller en GitHub-adress:\n"
+"%s"
+
+msgid "Added to favorites."
+msgstr "Lades till i favoriter."
+
+msgid "Already in favorites."
+msgstr "Finns redan i favoriter."
+
+msgid "Add to favorites"
+msgstr "Lägg till i favoriter"
+
+msgid "Only a favorite can be changed."
+msgstr "Endast en favorit kan ändras."
+
+msgid "Change the favorite"
+msgstr "Ändra favoriten"
+
+#, c-format
+msgid "The local clone of %s/%s:"
+msgstr "Den lokala klonen av %s/%s:"
+
+msgid "Open in Git"
+msgstr "Öppna i Git"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr "%s är en klon av %s/%s, inte av %s/%s."
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr "%s är ingen klon av ett GitHub-förråd."
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+"Den här mc-instansen kan inte öppna ett annat insticksprogram från en panel."
+
+#, c-format
+msgid "Showing: %s"
+msgstr "Visar: %s"
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr "de första %u filerna, bas %.7s"
+
+#, c-format
+msgid "%u files, base %.7s"
+msgstr "%u filer, bas %.7s"
 
 msgid "Git panel"
 msgstr "Git-panel"
@@ -6210,10 +7009,18 @@ msgstr ""
 "Vill du fortsätta?"
 
 msgid "&Reset"
-msgstr "&Återställ"
+msgstr "Å&terställ"
 
-msgid "Add to favorites"
-msgstr "Lägg till i favoriter"
+msgid "Select a commit first."
+msgstr "Välj först en incheckning."
+
+msgid "Reword is available only for commits on the current branch."
+msgstr ""
+"Omformulering är endast tillgänglig för incheckningar på den aktuella grenen."
+
+#, c-format
+msgid "Cannot find coole executable: %s"
+msgstr "Kan inte hitta körbar fil för coole: %s"
 
 msgid "Repository path:"
 msgstr "Sökväg till förråd:"
@@ -6359,7 +7166,7 @@ msgid "Decompiler: %s"
 msgstr "Dekompilator: %s"
 
 msgid "Searching..."
-msgstr "Söker..."
+msgstr "Söker…"
 
 msgid "No uses found"
 msgstr "Inga användningar hittades"
@@ -6473,7 +7280,7 @@ msgid "Save bytes #%d"
 msgstr "Spara byte nr %d"
 
 msgid "To a &file..."
-msgstr "Till en &fil..."
+msgstr "Till en &fil…"
 
 #, c-format
 msgid "%s: %lld bytes at %08llX from file:"
@@ -6484,7 +7291,7 @@ msgid "Read bytes into %s (%s): %lld bytes at %08llX"
 msgstr "Läs in byte i %s (%s): %lld byte vid %08llX"
 
 msgid "      ... a file"
-msgstr "      ... en fil"
+msgstr "      … en fil"
 
 msgid "This field cannot be edited"
 msgstr "Detta fält kan inte redigeras"
@@ -6573,9 +7380,6 @@ msgstr "block"
 msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr "Aktuell rad saknar byte; markera ett block i hexområdet"
 
-msgid "Save"
-msgstr "Spara"
-
 msgid "File was modified. Save changes?"
 msgstr "Filen har ändrats. Spara ändringar?"
 
@@ -6599,13 +7403,13 @@ msgid "ButtonBar|Struct"
 msgstr "Strukt"
 
 msgid "ButtonBar|Goto"
-msgstr "ButtonBar|GåTill"
+msgstr "GåTill"
 
 msgid "ButtonBar|DefFil"
 msgstr "DefFil"
 
 msgid "ButtonBar|Hex"
-msgstr "ButtonBar|Hex"
+msgstr "Hex"
 
 msgid "ButtonBar|Errors"
 msgstr "Fel"
@@ -6632,6 +7436,20 @@ msgstr "En anslutning med namnet ”%s” finns redan."
 msgid "Cannot save connection: %s"
 msgstr "Kan inte spara anslutning: %s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+"Installera coole för frågeredigeraren, eller mongosh. Sökvägarna kan anges i "
+"MongoDB-inställningarna."
+
+#, c-format
+msgid "Cannot start %s."
+msgstr "Kan inte starta %s."
+
+msgid "This build of mc has no terminal for coole."
+msgstr "Den här mc-versionen har ingen terminal för coole."
+
 #, c-format
 msgid "Cannot fetch document: %s"
 msgstr "Kan inte hämta dokument: %s"
@@ -6645,6 +7463,14 @@ msgstr "Kan inte öppna temporär fil: %s"
 
 msgid "Failed to write temp file."
 msgstr "Kunde inte skriva temporär fil."
+
+#, c-format
+msgid "Loading %s..."
+msgstr "Läser in %s..."
+
+#, c-format
+msgid "Cannot list documents in '%s': %s"
+msgstr "Kan inte lista dokument i ”%s”: %s"
 
 #, c-format
 msgid "Cannot read edited file: %s"
@@ -6705,14 +7531,14 @@ msgstr "Klustret ”%s” hittades inte i mongo.ini."
 
 #, c-format
 msgid "Connecting to '%s'..."
-msgstr "Ansluter till ”%s”..."
+msgstr "Ansluter till ”%s”…"
 
 #, c-format
 msgid "Cannot connect to '%s': %s"
 msgstr "Kan inte ansluta till ”%s”: %s"
 
 msgid "Listing databases..."
-msgstr "Listar databaser..."
+msgstr "Listar databaser…"
 
 #, c-format
 msgid "Cannot list databases: %s"
@@ -6723,7 +7549,7 @@ msgstr "Inte ansluten till ett kluster."
 
 #, c-format
 msgid "Listing collections in '%s'..."
-msgstr "Listar samlingar i ”%s”..."
+msgstr "Listar samlingar i ”%s”…"
 
 #, c-format
 msgid "Cannot list collections in '%s': %s"
@@ -6736,19 +7562,15 @@ msgid "Loading %s (%"
 msgstr "Läser in %s (%"
 
 #, c-format
-msgid "Cannot list documents in '%s': %s"
-msgstr "Kan inte lista dokument i ”%s”: %s"
-
-#, c-format
 msgid "Counting documents in '%s'..."
-msgstr "Räknar dokument i ”%s”..."
+msgstr "Räknar dokument i ”%s”…"
 
 #, c-format
 msgid "Cannot count documents in '%s': %s"
 msgstr "Kan inte räkna dokument i ”%s”: %s"
 
 msgid "Building bucket view..."
-msgstr "Bygger bucketvy..."
+msgstr "Bygger bucketvy…"
 
 #, c-format
 msgid "Bucket '%s' not found."
@@ -6808,6 +7630,12 @@ msgstr "Uttag (ms):"
 
 msgid "Op max time (ms):"
 msgstr "Max. åtgärdstid (ms):"
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr "coole, frågeredigeraren (tomt: från PATH):"
+
+msgid "mongosh (empty: from PATH):"
+msgstr "mongosh (tomt: från PATH):"
 
 msgid "MongoDB settings"
 msgstr "MongoDB-inställningar"
@@ -6903,9 +7731,6 @@ msgstr "Operator"
 msgid "Field"
 msgstr "Fält"
 
-msgid "Type"
-msgstr "Typ"
-
 msgid "Value"
 msgstr "Värde"
 
@@ -6978,31 +7803,219 @@ msgstr "&Ta bort"
 msgid "Command"
 msgstr "Kommando"
 
+msgid "PostgreSQL"
+msgstr "PostgreSQL"
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+"Panelen visar bara databasens objekt: ändra dem med SQL i frågeredigeraren "
+"(Alt-F3)."
+
+#, c-format
+msgid "%s: databases"
+msgstr "%s: databaser"
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr "%s/%s: scheman"
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr "%s/%s/%s: relationer"
+
+msgid "PostgreSQL connections"
+msgstr "PostgreSQL-anslutningar"
+
+#, c-format
+msgid "Cannot open %s for writing"
+msgstr "Kan inte öppna %s för skrivning"
+
+#, c-format
+msgid "Cannot write %s: %s"
+msgstr "Kan inte skriva %s: %s"
+
+msgid "Cannot write postgres.ini"
+msgstr "Kan inte skriva postgres.ini"
+
+msgid "Invalid connection name"
+msgstr "Ogiltigt anslutningsnamn"
+
+msgid "Out of memory"
+msgstr "Slut på minne"
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr "Inget svar från servern inom %d s."
+
+#, c-format
+msgid "Password for \"%s\":"
+msgstr "Lösenord för \"%s\":"
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr "Ansluter till \"%s\"..."
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr "Servern kör PostgreSQL %s: panelen kräver version 10 eller senare."
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr "Kan inte spara lösenordet i ~/.pgpass: %s"
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr "Avbruten. Servern svarade inte: anslutningen är stängd."
+
+msgid "Cancelled."
+msgstr "Avbruten."
+
+msgid "The server returned nothing."
+msgstr "Servern returnerade ingenting."
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr "PostgreSQL %s, databas \"%s\" som \"%s\" på %s:%s"
+
+msgid "PostgreSQL connection"
+msgstr "PostgreSQL-anslutning"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+"Namnet på en anslutning får inte vara tomt eller innehålla '[' eller ']'."
+
+#, c-format
+msgid "Connected: %s"
+msgstr "Ansluten: %s"
+
+msgid "&Host"
+msgstr "&Värd"
+
+msgid "&URL"
+msgstr "&URL"
+
+msgid "&Service"
+msgstr "&Tjänst"
+
+msgid "Connect by:"
+msgstr "Anslut med:"
+
+msgid "URL:"
+msgstr "URL:"
+
+msgid "Service:"
+msgstr "Tjänst:"
+
+msgid "Database:"
+msgstr "Databas:"
+
+msgid "SSL mode:"
+msgstr "SSL-läge:"
+
+msgid "Username:"
+msgstr "Användarnamn:"
+
+msgid "Description:"
+msgstr "Beskrivning:"
+
+msgid "Show all d&atabases"
+msgstr "Visa alla d&atabaser"
+
+msgid "Sa&ve password"
+msgstr "Spara &lösenord"
+
+msgid "New PostgreSQL connection"
+msgstr "Ny PostgreSQL-anslutning"
+
+msgid "Edit PostgreSQL connection"
+msgstr "Redigera PostgreSQL-anslutning"
+
+msgid " Authentication "
+msgstr " Autentisering "
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr "&Skrivskyddad: frågeredigeraren öppnar skrivskyddade transaktioner"
+
+msgid "&Test connection"
+msgstr "&Testa anslutning"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr "En anslutning med namnet \"%s\" finns redan."
+
+#, c-format
+msgid "Cannot save the connection: %s"
+msgstr "Kan inte spara anslutningen: %s"
+
+#, c-format
+msgid "Cannot delete the connection: %s"
+msgstr "Kan inte ta bort anslutningen: %s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+"Installera coole för frågeredigeraren, eller psql. Sökvägarna kan anges i "
+"PostgreSQL-inställningarna."
+
+#, c-format
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr ""
+"Kan inte ansluta till \"%s\":\n"
+"%s"
+
+msgid "Default connection:"
+msgstr "Standardanslutning:"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr "Tidsgräns för anslutning (s, 0: ingen):"
+
+msgid "Statement timeout (s, 0: none):"
+msgstr "Satsens tidsgräns (s, 0: ingen):"
+
+msgid "Rows shown by F3 (0: none):"
+msgstr "Rader som visas med F3 (0: inga):"
+
+msgid "Show &system schemas"
+msgstr "Visa &systemscheman"
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr "psql, utan coole (tomt: från PATH):"
+
+msgid "PostgreSQL settings"
+msgstr "PostgreSQL-inställningar"
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr "Tidsgränsen och antalet rader ska vara heltal; 0 betyder ingen gräns."
+
 msgid "S3"
 msgstr "S3"
 
 msgid "Preparing signed request..."
-msgstr "Förbereder signerad begäran..."
+msgstr "Förbereder signerad begäran…"
 
 msgid "Failed to initialize network session."
 msgstr "Kunde inte initiera nätverkssession."
 
 msgid "Signing request and contacting endpoint..."
-msgstr "Signerar begäran och kontaktar ändpunkt..."
+msgstr "Signerar begäran och kontaktar ändpunkt…"
 
 #, c-format
 msgid "HTTP error %ld"
 msgstr "HTTP-fel %ld"
 
 msgid "Reading bucket list..."
-msgstr "Läser bucketlista..."
+msgstr "Läser bucketlista…"
 
 msgid "S3 connection"
 msgstr "S3-anslutning"
 
 #, c-format
 msgid "Connecting to %s..."
-msgstr "Ansluter till %s..."
+msgstr "Ansluter till %s…"
 
 msgid "Using pre-configured bucket list."
 msgstr "Använder förkonfigurerad bucketlista."
@@ -7078,25 +8091,8 @@ msgstr "SMB-anslutning"
 msgid "Cannot resolve %s: %s"
 msgstr "Kan inte slå upp %s: %s"
 
-msgid "SFTP connection"
-msgstr "SFTP-anslutning"
-
-#, c-format
-msgid "Cannot create an SSH session for %s:%d"
-msgstr "Kan inte skapa en SSH-session för %s:%d"
-
-msgid "SSH handshake..."
-msgstr "SSH-handskakning..."
-
-#, c-format
-msgid "SSH handshake with %s:%d failed"
-msgstr "SSH-handskakning med %s:%d misslyckades"
-
-msgid "Authenticating via ssh-agent..."
-msgstr "Autentiserar via ssh-agent..."
-
-msgid "Authenticating with public key..."
-msgstr "Autentiserar med publik nyckel..."
+msgid "SFTP authentication"
+msgstr "SFTP-autentisering"
 
 #, c-format
 msgid "Enter passphrase for key %s"
@@ -7105,14 +8101,40 @@ msgstr "Ange lösenfras för nyckeln %s"
 msgid "SFTP key passphrase"
 msgstr "Lösenfras för SFTP-nyckel"
 
+msgid "SFTP connection"
+msgstr "SFTP-anslutning"
+
+#, c-format
+msgid "Cannot create an SSH session for %s:%d"
+msgstr "Kan inte skapa en SSH-session för %s:%d"
+
+msgid "SSH handshake..."
+msgstr "SSH-handskakning…"
+
+#, c-format
+msgid "SSH handshake with %s:%d failed"
+msgstr "SSH-handskakning med %s:%d misslyckades"
+
+msgid "Authenticating via ssh-agent..."
+msgstr "Autentiserar via ssh-agent…"
+
+msgid "Authenticating with public key..."
+msgstr "Autentiserar med publik nyckel…"
+
+msgid "Authenticating with a default key..."
+msgstr "Autentiserar med en standardnyckel..."
+
+msgid "Authenticating with keyboard-interactive..."
+msgstr "Autentiserar med tangentbordsinteraktiv metod..."
+
 msgid "Authenticating with password..."
-msgstr "Autentiserar med lösenord..."
+msgstr "Autentiserar med lösenord…"
 
 msgid "SFTP password"
 msgstr "SFTP-lösenord"
 
 msgid "Initializing SFTP session..."
-msgstr "Initierar SFTP-session..."
+msgstr "Initierar SFTP-session…"
 
 #, c-format
 msgid "Cannot start the SFTP session with %s:%d"
@@ -7371,9 +8393,6 @@ msgstr "hjälpprogram för %s"
 
 msgid "helpers (no host selected)"
 msgstr "hjälpprogram (ingen värd vald)"
-
-msgid "Create a directory"
-msgstr "Skapa en katalog"
 
 msgid "shell: cannot create the directory"
 msgstr "shell: kan inte skapa katalogen"
@@ -7781,6 +8800,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr "Vald post i listan med fokus, t.ex. sökresultat eller temalistan"
 
+msgid "Check box under the cursor"
+msgstr "Kryssruta under markören"
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr "Kryssruta under markören på den markerade raden i en tabell"
+
 msgid "Title"
 msgstr "Rubrik"
 
@@ -7936,6 +8961,23 @@ msgstr "Ändrad rad, utfyllnad"
 
 msgid "The rest of a changed line and its counterpart"
 msgstr "Resten av en ändrad rad och dess motsvarighet"
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+"Rader på båda sidor av en sammanslagning har ändrats; färgen för borttaget "
+"när den saknas"
+
+msgid "Line mark"
+msgstr "Radmarkering"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr "Markeringen på ramen vid raden som tangenterna påverkar"
+
+msgid "Inactive frame"
+msgstr "Inaktiv ram"
+
+msgid "The frame of the file that is not active"
+msgstr "Ramen för den inaktiva filen"
 
 msgid "Structured view of JSON, YAML and the like"
 msgstr "Strukturerad vy av JSON, YAML och liknande"
@@ -8134,26 +9176,44 @@ msgstr "Redigerare: kod utvikt"
 msgid "Editor: fold closed"
 msgstr "Redigerare: kod invikt"
 
-msgid "Up"
-msgstr "Upp"
+msgid "Vertical: top arrow"
+msgstr "Lodrätt: övre pil"
 
-msgid "Not read by mc today"
-msgstr "Läses för närvarande inte av mc"
+msgid "Vertical: bottom arrow"
+msgstr "Lodrätt: nedre pil"
 
-msgid "Down"
-msgstr "Ned"
+msgid "Vertical: track"
+msgstr "Lodrätt: spår"
 
-msgid "Left"
-msgstr "Vänster"
+msgid "Default: vert of the lines"
+msgstr "Standard: lodrät linje"
 
-msgid "Right"
-msgstr "Höger"
+msgid "Vertical: thumb"
+msgstr "Lodrätt: rullningsknapp"
 
-msgid "Thumb"
-msgstr "Handtag"
+msgid "Vertical: thumb length"
+msgstr "Lodrätt: rullningsknappens längd"
 
-msgid "Track"
-msgstr "Spår"
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr "Rullningsknappens celler när den ryms, annars halva spåret"
+
+msgid "Horizontal: left arrow"
+msgstr "Vågrätt: vänsterpil"
+
+msgid "Horizontal: right arrow"
+msgstr "Vågrätt: högerpil"
+
+msgid "Horizontal: track"
+msgstr "Vågrätt: spår"
+
+msgid "Default: horiz of the lines"
+msgstr "Standard: vågrät linje"
+
+msgid "Horizontal: thumb"
+msgstr "Vågrätt: rullningsknapp"
+
+msgid "Horizontal: thumb length"
+msgstr "Vågrätt: rullningsknappens längd"
 
 msgid "Spinner frames"
 msgstr "Aktivitetsindikatorns bildrutor"
@@ -8215,8 +9275,8 @@ msgstr "Panelmarkeringar"
 msgid "Find and editor marks"
 msgstr "Sök- och redigerarmarkeringar"
 
-msgid "Scrollbar (unused)"
-msgstr "Rullningslist (oanvänd)"
+msgid "Scrollbar"
+msgstr "Rullningslist"
 
 msgid "Spinner"
 msgstr "Aktivitetsindikator"
@@ -8224,10 +9284,8 @@ msgstr "Aktivitetsindikator"
 msgid "Skin &editor"
 msgstr "Tema&redigerare"
 
-#, fuzzy
-#| msgid "S&kin editor..."
 msgid "Ski&n editor..."
-msgstr "Te&maredigerare..."
+msgstr "Tema&redigerare…"
 
 msgid "Skin editor"
 msgstr "Temaredigerare"
@@ -8274,7 +9332,7 @@ msgid "Foreground"
 msgstr "Förgrund"
 
 msgid "&Inherit"
-msgstr "&Ärv"
+msgstr "Ä&rv"
 
 msgid "&Terminal default"
 msgstr "&Terminalens standard"
@@ -8339,9 +9397,6 @@ msgstr "Värde (tomt = inbyggt):"
 
 msgid "One character is expected here"
 msgstr "Ett tecken förväntas här"
-
-msgid "Description:"
-msgstr "Beskrivning:"
 
 msgid "Save skin as"
 msgstr "Spara tema som"
@@ -8437,6 +9492,124 @@ msgstr "Välj teckenkodning"
 
 msgid "-  < No translation >"
 msgstr "-  < Ingen översättning >"
+
+msgid "this one"
+msgstr "den här"
+
+msgid "detached"
+msgstr "frånkopplad"
+
+msgid "looks lost"
+msgstr "verkar borttappad"
+
+msgid "attached"
+msgstr "ansluten"
+
+msgid "Sessions"
+msgstr "Sessioner"
+
+msgid "&Switch"
+msgstr "&Byt"
+
+msgid "&Detach"
+msgstr "&Koppla från"
+
+msgid "State        Start  Directory"
+msgstr "Status       Start  Katalog"
+
+msgid "That session was started in another kind of terminal."
+msgstr "Den sessionen startades i en annan typ av terminal."
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr "Den sessionen används i en annan terminal. Ta över den?"
+
+msgid "This is the session you are in: F10 ends it."
+msgstr "Det här är sessionen du är i: F10 avslutar den."
+
+msgid "That session is in use in another terminal. End it?"
+msgstr "Den sessionen används i en annan terminal. Avsluta den?"
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+"Den sessionen har en redigerare, visare eller dialogruta öppen: byt till den "
+"och avsluta den där."
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr "Sessionen avslutades inte: %s"
+
+msgid "Sessions..."
+msgstr "Sessioner..."
+
+msgid "another version of M-Commander"
+msgstr "en annan version av M-Commander"
+
+msgid "another kind of terminal (TERM)"
+msgstr "en annan typ av terminal (TERM)"
+
+msgid "M-Commander sessions"
+msgstr "M-Commander-sessioner"
+
+msgid "attached, looks lost"
+msgstr "ansluten, verkar borttappad"
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr "TERM=%s, kan inte tas över här"
+
+msgid "new session"
+msgstr "ny session"
+
+msgid "end session N"
+msgstr "avsluta session N"
+
+msgid "refresh"
+msgstr "uppdatera"
+
+msgid "shell"
+msgstr "skal"
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr "Session %u används i en annan terminal. Avsluta den?"
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr "Session %u har avslutats.\n"
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+"Session %u har en redigerare, visare eller dialogruta öppen: ta över den och "
+"avsluta den där.\n"
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr "Session %u avslutades inte: %s.\n"
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr "Nummer att ta över, Retur, k N, r eller q: "
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr "Session %u används i en annan terminal. Ta över den?"
+
+msgid "detached; run M-Commander again to take it back"
+msgstr "frånkopplad; kör M-Commander igen för att ta tillbaka den"
+
+msgid "the session was taken by another terminal"
+msgstr "sessionen togs över av en annan terminal"
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr "Sessionen kan inte tas över: %s\n"
+
+msgid "The session is gone."
+msgstr "Sessionen finns inte längre."
 
 msgid "%b %e  %Y"
 msgstr "%e %b  %Y"
@@ -8569,9 +9742,6 @@ msgstr "Sant:"
 msgid "False:"
 msgstr "Falskt:"
 
-msgid "Error calling program"
-msgstr "Kunde inte anropa programmet"
-
 msgid "Warning -- ignoring file"
 msgstr "Varning - ignorerar fil"
 
@@ -8602,6 +9772,112 @@ msgid "User menu"
 msgstr "Användarmeny"
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr "%s, rad %d: %s"
+
+msgid "the first line is not \""
+msgstr "den första raden är inte \""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr "[%s] finns redan på rad %d"
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+"inte ett key=value, en [group] eller en kommentar:\n"
+"%s"
+
+msgid "a key before the first [group]"
+msgstr "en nyckel före den första [group]"
+
+msgid "a value without a key"
+msgstr "ett värde utan en nyckel"
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr "%s= finns redan på rad %d"
+
+msgid "the block opened here has no closing line"
+msgstr "blocket som öppnades här saknar avslutande rad"
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr "[%s]: %s= tar true eller false"
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+"[%s]: %s=%s: inte ett reguljärt uttryck:\n"
+"%s"
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+"[%s]: %s=%s: \"%s\" är ingen typ.\n"
+"Typer: file, dir, link, broken, char, block, fifo, socket"
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+"Menyfilen\n"
+"%s\n"
+"har inte \"# mc menu format 2\" som första rad: en äldre version\n"
+"av mc skrev den, eller så skrevs den för hand.\n"
+"\n"
+"Vill du konvertera den till formatet? Filen i sitt nuvarande skick\n"
+"behålls som %s.old."
+
+msgid "&Convert"
+msgstr "&Konvertera"
+
+#, c-format
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr ""
+"Kan inte konvertera menyfilen\n"
+"%s\n"
+"\n"
+"%s"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+"Kan inte läsa menyfilen\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Dess poster visas inte, och menyn skriver inte till den\n"
+"förrän den har rättats."
+
+msgid "&Edit the file"
+msgstr "&Redigera filen"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -8618,10 +9894,90 @@ msgstr ""
 #, c-format
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
-"Kan inte skriva fil\n"
+"Kan inte skriva filen\n"
+"%s\n"
+"\n"
 "%s"
+
+msgid "always"
+msgstr "alltid"
+
+msgid "Conditions"
+msgstr "Villkor"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+"De här villkoren granskar båda panelerna, och dialogrutan visar en av dem.\n"
+"Ändra dem i filen: knappen Redigerare öppnar den."
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+"De här villkoren har både masker och ett reguljärt uttryck,\n"
+"och dialogrutan visar en av dem. Ändra dem i filen: knappen\n"
+"Redigerare öppnar den."
+
+msgid "C&urrent panel"
+msgstr "A&ktuell panel"
+
+msgid "Ot&her panel"
+msgstr "An&nan panel"
+
+msgid "N&ever"
+msgstr "A&ldrig"
+
+msgid "&Always"
+msgstr "A&lltid"
+
+msgid "&When:"
+msgstr "&När:"
+
+msgid "Where the menu opens on it"
+msgstr "Där menyn öppnas för den"
+
+msgid "Path mask:"
+msgstr "Sökvägsmask:"
+
+msgid "Show on (none checked = any):"
+msgstr "Visa för (inget markerat = valfritt):"
+
+msgid "Fifo"
+msgstr "Fifo"
+
+msgid "Socket"
+msgstr "Uttag"
+
+msgid "Broken link"
+msgstr "Bruten länk"
+
+msgid "Char device"
+msgstr "Teckenenhet"
+
+msgid "Block device"
+msgstr "Blockenhet"
+
+msgid "E&xecutable only"
+msgstr "Endast &körbara"
+
+msgid "Only when files are &marked"
+msgstr "Endast när filer är &markerade"
+
+msgid "Needs program:"
+msgstr "Kräver program:"
+
+msgid "The menu opens on it:"
+msgstr "Menyn öppnas för den:"
+
+msgid "Con&ditions"
+msgstr "Vi&llkor"
 
 msgid "Add a submenu"
 msgstr "Lägg till en undermeny"
@@ -8647,6 +10003,9 @@ msgstr "Visa utdata i &visaren"
 msgid "Run without the &shell of the panel"
 msgstr "Kör utan panelens &skal"
 
+msgid "Show when:"
+msgstr "Visa när:"
+
 msgid "The entry needs a label"
 msgstr "Posten behöver en etikett"
 
@@ -8666,14 +10025,27 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
 msgstr ""
 "Hämtat till\n"
 "%s\n"
 "\n"
-"Poster: %u. Ursprungliga filen ligger kvar,\n"
-"och villkor och masker togs bort."
+"Poster: %u. Filen de kom från ligger kvar där den är."
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
+msgstr ""
+"Hämtat till\n"
+"%s\n"
+"\n"
+"Poster: %u. Filen de kom från ligger kvar där den är.\n"
+"Villkor som inte konverterades: %u, bevarades som kommentarer ovanför sina "
+"poster."
 
 msgid "Import a menu file"
 msgstr "Importera en menyfil"
@@ -8710,6 +10082,20 @@ msgstr ""
 
 msgid "&Add an entry"
 msgstr "&Lägg till en post"
+
+msgid "(all entries)"
+msgstr "(alla poster)"
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr "(%u dolda, Alt-A)"
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
+"Villkoren för den här posten gäller inte här,\n"
+"så den körs inte. F4 redigerar dem."
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr "Lägg till ett kommando eller en undermeny för andra poster?"
@@ -8843,35 +10229,41 @@ msgstr "&Decimal position"
 msgid "He&xadecimal offset"
 msgstr "He&xadecimal position"
 
+msgid "ButtonBar|Syntax"
+msgstr "Syntax"
+
+msgid "ButtonBar|Ansi"
+msgstr "Ansi"
+
 msgid "ButtonBar|Text"
 msgstr "Text"
 
 msgid "ButtonBar|Ascii"
-msgstr "ButtonBar|Ascii"
+msgstr "Ascii"
 
 msgid "ButtonBar|HxSrch"
-msgstr "ButtonBar|HexSök"
+msgstr "HexSök"
 
 msgid "ButtonBar|UnWrap"
-msgstr "ButtonBar|BrytEj"
+msgstr "BrytEj"
 
 msgid "ButtonBar|Wrap"
-msgstr "ButtonBar|BrytRd"
+msgstr "BrytRd"
 
 msgid "ButtonBar|Raw"
-msgstr "ButtonBar|Rå"
+msgstr "Rå"
 
 msgid "ButtonBar|Parse"
-msgstr "ButtonBar|Tolkad"
+msgstr "Tolkad"
 
 msgid "ButtonBar|Unform"
-msgstr "ButtonBar|Oform"
+msgstr "Oform"
 
 msgid "ButtonBar|Term mode"
 msgstr "Term"
 
 msgid "ButtonBar|Format"
-msgstr "ButtonBar|Format"
+msgstr "Format"
 
 #, c-format
 msgid "Filter: %s  %u matches"
@@ -8879,7 +10271,7 @@ msgstr "Filter: %s  %u träffar"
 
 #, c-format
 msgid "Filter: %s  %u matches  scanning..."
-msgstr "Filter: %s  %u träffar  söker..."
+msgstr "Filter: %s  %u träffar  söker…"
 
 #, c-format
 msgid "Filter: %s  %u matches  FOLLOW"
@@ -8979,15 +10371,13 @@ msgid "Continue from beginning?"
 msgstr "Fortsätt från början?"
 
 msgid "Not found in the text rendered so far."
-msgstr ""
+msgstr "Hittades inte i den text som har renderats hittills."
 
 msgid "Source spec must set either command or file."
 msgstr "Källspecifikationen måste ange antingen kommando eller fil."
 
-#, fuzzy
-#| msgid "Cannot open source."
 msgid "Cannot open source pipe."
-msgstr "Kan inte öppna källa."
+msgstr "Kan inte öppna källrör."
 
 msgid "Cannot open source process."
 msgstr "Kan inte öppna källprocess."
@@ -9042,6 +10432,30 @@ msgstr "Kan inte bygga strukturerad vy"
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr "Kan inte hämta en lokal kopia av /ftp://some.host/editme.txt"
 
+#~ msgid "ButtonBar|Merge"
+#~ msgstr "Fläta"
+
+#~ msgid "Up"
+#~ msgstr "Upp"
+
+#~ msgid "Not read by mc today"
+#~ msgstr "Läses för närvarande inte av mc"
+
+#~ msgid "Down"
+#~ msgstr "Ned"
+
+#~ msgid "Left"
+#~ msgstr "Vänster"
+
+#~ msgid "Thumb"
+#~ msgstr "Handtag"
+
+#~ msgid "Track"
+#~ msgstr "Spår"
+
+#~ msgid "Error calling program"
+#~ msgstr "Kunde inte anropa programmet"
+
 #~ msgid "Timeout for freeing VFSs (sec):"
 #~ msgstr "Tidsgräns för att frigöra alla VFS (sek):"
 
@@ -9053,9 +10467,6 @@ msgstr "Kan inte hämta en lokal kopia av /ftp://some.host/editme.txt"
 
 #~ msgid "&Virtual FS..."
 #~ msgstr "&Virtuellt FS..."
-
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "Rensa"
 
 #~ msgid "Lua editor scripts"
 #~ msgstr "Lua-skript för redigeraren"
@@ -9335,9 +10746,6 @@ msgstr "Kan inte hämta en lokal kopia av /ftp://some.host/editme.txt"
 
 #~ msgid "&Free VFSs now"
 #~ msgstr "&Frigör alla VFS"
-
-#~ msgid "&Refresh"
-#~ msgstr "U&ppdatera"
 
 #~ msgid "&Add current"
 #~ msgstr "Lägg till nu&varande"
@@ -9790,9 +11198,6 @@ msgstr "Kan inte hämta en lokal kopia av /ftp://some.host/editme.txt"
 
 #~ msgid "vfs_info is not fs!"
 #~ msgstr "vfs_info är skilt från fs!"
-
-#~ msgid "You have to chdir to extract files first"
-#~ msgstr "Du måste byta katalog med chdir för att extrahera filer först"
 
 #~ msgid "while iterating over blocks"
 #~ msgstr "under iterering över block"

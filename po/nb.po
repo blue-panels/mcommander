@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
 "Language-Team: Norwegian Bokmål <https://translate.codeberg.org/projects/mc6/"
@@ -615,6 +615,20 @@ msgid "Toggle right panel in terminal mode"
 msgstr "Veksle h&øyre marg"
 
 #, fuzzy
+#| msgid "shell: storing file"
+msgid "Apply command to the files"
+msgstr "skall: lagrer fil"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot create target hardlink\n"
+#| "%s"
+msgid "Clear the command line"
+msgstr ""
+"Klarte ikke opprette den harde lenkas målfil\n"
+"%s"
+
+#, fuzzy
 #| msgid "S&hell patterns"
 msgid "Select files by pattern"
 msgstr "Skallm&ønstre"
@@ -626,6 +640,11 @@ msgstr "Bruk skallm&ønstre"
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "Ignore tab &expansion"
+msgid "Unselect by extension"
+msgstr "Ignorer endringer som skyldes &tabulator-utvidelse"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -681,6 +700,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -724,7 +746,94 @@ msgstr "Vis datamappe"
 msgid "Cycle listing format"
 msgstr "Utlistingsformat"
 
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 1"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 2"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 3"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 4"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 5"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 6"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 7"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 8"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 9"
+msgstr "&Panelets sorteringsrekkef."
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 10"
+msgstr "&Panelets sorteringsrekkef."
+
+msgid "Keep files unsorted"
+msgstr ""
+
+#, fuzzy
+#| msgid "C&hange time"
+msgid "Sort by change time"
+msgstr "&Statusendret"
+
+#, fuzzy
+#| msgid "&Access time"
+msgid "Sort by access time"
+msgstr "&Tilgang"
+
+#, fuzzy
+#| msgid "Compare directories"
+msgid "Go to the root directory"
+msgstr "Sammenlign mapper"
+
+#, fuzzy
+#| msgid "Select"
+msgid "Select all files"
+msgstr "Velg"
+
+#, fuzzy
+#| msgid "Unselect"
+msgid "Unselect all files"
+msgstr "Fravelg"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -1207,6 +1316,25 @@ msgstr ""
 msgid "Merge from other file"
 msgstr ""
 
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Next conflict"
+msgstr "Be om bekreftelse før"
+
+#, fuzzy
+#| msgid "&Previous"
+msgid "Previous conflict"
+msgstr "F&orrige"
+
 #, c-format
 msgid ""
 "File \"%s\" is already being edited.\n"
@@ -1642,6 +1770,9 @@ msgstr ""
 msgid "Shift"
 msgstr "Shift"
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1783,6 +1914,73 @@ msgstr "Passord:"
 msgid "Screens"
 msgstr "Moduler"
 
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "Klarte ikke lese mappeinnhold"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+"stat() mislyktes for\n"
+"%s"
+
+#, fuzzy
+#| msgid "&Save"
+msgid "Save"
+msgstr "&Lagre"
+
+#, fuzzy
+#| msgid "A file already exists with this name"
+msgid "The file exists. Overwrite it?"
+msgstr "Det finnes allerede en fil som heter dette"
+
+msgid "&Yes"
+msgstr "&Ja"
+
+msgid "&No"
+msgstr "&Nei"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "%s\n"
+#| "is a directory"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr ""
+"%s\n"
+"er en mappe"
+
+msgid "UP--DIR"
+msgstr "OVERMAP"
+
+#, fuzzy
+#| msgid "SUB-DIR"
+msgid "DIR"
+msgstr "SUB-DIR"
+
+msgid "Name"
+msgstr "Navn"
+
+msgid "Size"
+msgstr "Størrelse"
+
+#, fuzzy
+#| msgid "Modified:   %s"
+msgid "Modified"
+msgstr "Endret:     %s"
+
+msgid "&OK"
+msgstr "&OK"
+
+msgid "&Cancel"
+msgstr "&Avbryt"
+
 msgid "History"
 msgstr "Historikk"
 
@@ -1794,12 +1992,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "&Ja"
-
-msgid "&No"
-msgstr "&Nei"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr "DialogTitle|Tøm historikk"
@@ -1807,11 +1999,10 @@ msgstr "DialogTitle|Tøm historikk"
 msgid "Do you want clean this history?"
 msgstr "Vil du tømme denne historikken?"
 
-msgid "&OK"
-msgstr "&OK"
-
-msgid "&Cancel"
-msgstr "&Avbryt"
+#, fuzzy
+#| msgid "Filter"
+msgid "Filter:"
+msgstr "Filtrer"
 
 msgid "Background process:"
 msgstr "Bakgrunnsprosess:"
@@ -1859,6 +2050,12 @@ msgstr "Rediger filer"
 
 msgid "<file> ..."
 msgstr "<fil> ..."
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
+msgstr ""
 
 msgid "Forces xterm features"
 msgstr "Tving bruk av xterm-funksjonalitet"
@@ -1910,6 +2107,12 @@ msgstr "fil"
 msgid "file1 file2"
 msgstr "fil1 fil2"
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr "[denne mappa] [mappa i det andre panelet]"
 
@@ -1953,6 +2156,12 @@ msgstr "Filviseren fikk ingen argumenter."
 
 msgid "Two files are required to invoke the diffviewer."
 msgstr "Diffviseren trenger to filnavn for å starte."
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
+msgstr ""
 
 msgid "Background protocol error"
 msgstr "Feil i bakgrunnsprotokoll"
@@ -2003,6 +2212,14 @@ msgstr "Søk er slått av"
 msgid "Cannot create temporary diff file"
 msgstr "Klarte ikke opprette midlertidig diff-fil"
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -2013,6 +2230,41 @@ msgstr ""
 
 msgid "Cannot create temporary merge file"
 msgstr "Klarte ikke opprette midlertidig flettefil"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write target file\n"
+#| "%s"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"Klarte ikke skrive til målfila\n"
+"%s"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid ""
+"Cannot save the merge result\n"
+"%s"
+msgstr ""
+"Klarte ikke lagre fila %s:\n"
+"%s"
 
 msgid "&Fastest (Assume large files)"
 msgstr "&Raskeste (anta store filer)"
@@ -2044,6 +2296,12 @@ msgstr "&Fjern etterfølgende linjeskift-tegn"
 msgid "Diff Options"
 msgstr "Diff-innstillinger"
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr "Redigere"
 
@@ -2056,8 +2314,46 @@ msgstr "Gå til linje (venstre)"
 msgid "Goto line (right)"
 msgstr "Gå til linje (høyre)"
 
+#, fuzzy
+#| msgid "Goto line (right)"
+msgid "Goto line (merged)"
+msgstr "Gå til linje (høyre)"
+
 msgid "Enter line:"
 msgstr "Angi linje:"
+
+msgid "ButtonBar|Edit"
+msgstr "ButtonBar|Redig"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|<-Copy"
+msgstr "ButtonBar|Kopier"
+
+#, fuzzy
+#| msgid "ButtonBar|Parse"
+msgid "ButtonBar|Base"
+msgstr "ButtonBar|Tolket"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Next"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Copy->"
+msgstr "ButtonBar|Kopier"
+
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|-Left"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|-Right"
+msgstr "ButtonBar|Redig"
 
 msgid "ButtonBar|Help"
 msgstr "ButtonBar|Hjelp"
@@ -2065,11 +2361,15 @@ msgstr "ButtonBar|Hjelp"
 msgid "ButtonBar|Save"
 msgstr "ButtonBar|Lagre"
 
-msgid "ButtonBar|Edit"
-msgstr "ButtonBar|Redig"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|+Left"
+msgstr "ButtonBar|Hex"
 
-msgid "ButtonBar|Merge"
-msgstr "ButtonBar|Flett"
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|+Right"
+msgstr "ButtonBar|Redig"
 
 msgid "ButtonBar|Search"
 msgstr "ButtonBar|Søk"
@@ -2079,6 +2379,12 @@ msgstr "ButtonBar|Innst"
 
 msgid "ButtonBar|Quit"
 msgstr "ButtonBar|Avslut"
+
+msgid "Quit"
+msgstr "Avslutt"
+
+msgid "The merge result is not saved. Save it?"
+msgstr ""
 
 msgid "File(s) was modified. Save with exit?"
 msgstr ""
@@ -2093,11 +2399,54 @@ msgstr ""
 "%s avsluttes.\n"
 "En eller flere filer er endret. Lagre?"
 
-msgid "Quit"
-msgstr "Avslutt"
+#, fuzzy
+#| msgid "You have to chdir to extract files first"
+msgid "Save the changes of the two files first."
+msgstr "Du må bytte mappe for å pakke ut filer"
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create target file\n"
+#| "%s"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr ""
+"Klarte ikke opprette målfila\n"
+"%s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"Klarte ikke åpne fila %s for skriving:\n"
+"%s\n"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr "Diff:"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot move file\n"
+#| "%s\n"
+#| "to\n"
+#| "%s"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"Klarte ikke flytte tila\n"
+"%s\n"
+"til\n"
+"%s"
 
 msgid "File name is empty!"
 msgstr "Filnavnet er tomt!"
@@ -2109,14 +2458,6 @@ msgid ""
 msgstr ""
 "%s\n"
 "er en mappe"
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
-msgstr ""
-"stat() mislyktes for\n"
-"%s"
 
 msgid "Diff viewer: invalid mode"
 msgstr "Diffviser: Ugyldig modus"
@@ -2734,6 +3075,17 @@ msgstr "&Lagre"
 msgid "Load"
 msgstr "Åpne"
 
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create link\n"
+#| "%s"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr ""
+"Klarte ikke opprette lenke\n"
+"%s"
+
 msgid "Syntax file edit"
 msgstr "Redigering av syntaksfil"
 
@@ -3245,11 +3597,29 @@ msgstr "Åpne filer"
 msgid "Edit: "
 msgstr "Rediger:"
 
-msgid "ButtonBar|Mark"
-msgstr "ButtonBar|Marker"
+msgid "ButtonBar|Menu"
+msgstr "ButtonBar|Meny"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|SaveAs"
+msgstr "ButtonBar|Lagre"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Column"
+msgstr "ButtonBar|Kopier"
 
 msgid "ButtonBar|Replac"
 msgstr "ButtonBar|Erstat"
+
+#, fuzzy
+#| msgid "ButtonBar|Index"
+msgid "ButtonBar|Insert"
+msgstr "ButtonBar|Indeks"
+
+msgid "ButtonBar|Mark"
+msgstr "ButtonBar|Marker"
 
 msgid "ButtonBar|Copy"
 msgstr "ButtonBar|Kopier"
@@ -3471,6 +3841,12 @@ msgstr "Sikker overskrivin&g"
 
 msgid "A&uto save setup"
 msgstr "Autolagre o&ppsettet"
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
+msgstr ""
 
 msgid "Configure options"
 msgstr "Sett opp innstillinger"
@@ -3855,17 +4231,11 @@ msgstr "Sett &grupper"
 msgid "Set &users"
 msgstr "Sett br&ukere"
 
-msgid "Name"
-msgstr "Navn"
-
 msgid "Owner name"
 msgstr "Eiers navn"
 
 msgid "Group name"
 msgstr "Gruppenavn"
-
-msgid "Size"
-msgstr "Størrelse"
 
 msgid "Chown command"
 msgstr "Chown-kommando"
@@ -3937,6 +4307,22 @@ msgstr "Filtrert visning"
 
 msgid "Filter command and arguments:"
 msgstr "Filterkommando og argumenter:"
+
+#, fuzzy
+#| msgid "Chmod command"
+msgid "Apply command"
+msgstr "Chmod-kommando"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4893,14 +5279,66 @@ msgstr "&Nederst"
 msgid "&Right"
 msgstr "&Høyre"
 
-msgid "ButtonBar|Menu"
-msgstr "ButtonBar|Meny"
+#, fuzzy
+#| msgid "ButtonBar|Hex"
+msgid "ButtonBar|Left"
+msgstr "ButtonBar|Hex"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Right"
+msgstr "ButtonBar|Redig"
+
+#, fuzzy
+#| msgid "ButtonBar|Search"
+msgid "ButtonBar|Console"
+msgstr "ButtonBar|Søk"
 
 msgid "ButtonBar|View"
 msgstr "ButtonBar|Vis"
 
 msgid "ButtonBar|RenMov"
 msgstr "ButtonBar|Flytt"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Name"
+msgstr "ButtonBar|Lagre"
+
+#, fuzzy
+#| msgid "ButtonBar|Rescan"
+msgid "ButtonBar|Version"
+msgstr "ButtonBar|Oppdat"
+
+#, fuzzy
+#| msgid "ButtonBar|Edit"
+msgid "ButtonBar|Ext"
+msgstr "ButtonBar|Redig"
+
+#, fuzzy
+#| msgid "ButtonBar|Save"
+msgid "ButtonBar|Size"
+msgstr "ButtonBar|Lagre"
+
+#, fuzzy
+#| msgid "ButtonBar|Move"
+msgid "ButtonBar|MTime"
+msgstr "ButtonBar|Flytt"
+
+#, fuzzy
+#| msgid "ButtonBar|Unform"
+msgid "ButtonBar|Unsort"
+msgstr "ButtonBar|IkForm"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|CTime"
+msgstr "ButtonBar|Vis"
+
+#, fuzzy
+#| msgid "ButtonBar|View"
+msgid "ButtonBar|ATime"
+msgstr "ButtonBar|Vis"
 
 msgid "ButtonBar|Mkdir"
 msgstr "ButtonBar|Mkdir"
@@ -5366,9 +5804,6 @@ msgstr "Eier"
 msgid "[dev]"
 msgstr "[enh]"
 
-msgid "UP--DIR"
-msgstr "OVERMAP"
-
 #, fuzzy
 #| msgid "Filter"
 msgid "Filter: "
@@ -5630,6 +6065,13 @@ msgstr ""
 "%s"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5649,6 +6091,11 @@ msgstr "&Statusendret"
 
 msgid "No plugins with drive menu support are loaded."
 msgstr ""
+
+#, fuzzy
+#| msgid "Tabulation"
+msgid "Plugin action"
+msgstr "Tabulasjon"
 
 #, c-format
 msgid ""
@@ -5799,6 +6246,15 @@ msgstr "Shift"
 msgid "Edit &term file"
 msgstr "Rediger men&yfil"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5821,6 +6277,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -6021,6 +6480,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "Trykk en tast for å fortsette ..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -6171,6 +6639,510 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose group"
+msgstr "Velg tegnkoding"
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose user"
+msgstr "Velg tegnkoding"
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Overwrite"
+msgid "&Write"
+msgstr "&Overskriv"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecute"
+msgstr "&Kjørbare først"
+
+#, fuzzy
+#| msgid "Group"
+msgid "&Group"
+msgstr "Gruppe"
+
+#, fuzzy
+#| msgid "Name:"
+msgid "Names:"
+msgstr "Navn:"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "Add entry"
+msgstr "Legg til ny"
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "other"
+msgid "Other"
+msgstr "andre"
+
+#, fuzzy
+#| msgid "New hotlist entry"
+msgid "Edit entry"
+msgstr "Ny oppføring i favorittlista"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+#, fuzzy
+#| msgid "< Default >"
+msgid "Default ACL"
+msgstr "< Standard >"
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+#, fuzzy
+#| msgid "A&sk new file name"
+msgid "&New files inside"
+msgstr "Spør etter n&ytt filnavn"
+
+#, fuzzy
+#| msgid "&List..."
+msgid "List"
+msgstr "&Vindusliste ..."
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write"
+msgstr "An&dre kan skrive"
+
+msgid "Exec"
+msgstr ""
+
+#, fuzzy
+#| msgid "directories"
+msgid "Effective"
+msgstr "mapper"
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "&Add"
+msgstr "Legg til ny"
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "Delete"
+msgid "De&lete"
+msgstr "Delete"
+
+#, fuzzy
+#| msgid "Set &all"
+msgid "Set a&ll"
+msgstr "Sett &alle"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "Endringer i filen gikk tapt"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+#, fuzzy
+#| msgid "Casefolded file"
+msgid "This folder and files"
+msgstr "Ikke versalsensitiv"
+
+#, fuzzy
+#| msgid "Re&verse files only"
+msgid "Subfolders and files only"
+msgstr "&Inverter kun filer"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Subfolders only"
+msgstr "Kun &filer"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Files only"
+msgstr "Kun &filer"
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "allow"
+msgstr "Følg &lenker"
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Follow &links"
+msgid "Allow"
+msgstr "Følg &lenker"
+
+msgid "Deny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Copies to"
+msgid "Applies to:"
+msgstr "Kopimottaker(e)"
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Advanced rights"
+msgstr "&Avansert chown"
+
+#, fuzzy
+#| msgid "A&ll"
+msgid "A&llow"
+msgstr "A&lle"
+
+msgid "De&ny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Save file"
+msgid "&Special"
+msgstr "Lagre fil"
+
+#, fuzzy
+#| msgid "&Advanced chown"
+msgid "Ad&vanced..."
+msgstr "&Avansert chown"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+#, fuzzy
+#| msgid "File"
+msgid "File:"
+msgstr "Fil"
+
+#, fuzzy
+#| msgid "Owner"
+msgid "Owner:"
+msgstr "Eier"
+
+#, fuzzy
+#| msgid "Group"
+msgid "Group:"
+msgstr "Gruppe"
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Right"
+msgid "Rights"
+msgstr "&Høyre"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modify"
+msgstr "&Endret"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "&Modify"
+msgstr "&Endret"
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "Execute file"
+msgstr "&Kjørbare først"
+
+#, fuzzy
+#| msgid "Sort order"
+msgid "Traverse folder"
+msgstr "Sorteringsrekkefølge"
+
+#, fuzzy
+#| msgid "User data"
+msgid "Read data"
+msgstr "Brukerdata"
+
+#, fuzzy
+#| msgid "Listing format"
+msgid "List folder"
+msgstr "Utlistingsformat"
+
+#, fuzzy
+#| msgid "read &by others"
+msgid "Read attributes"
+msgstr "A&ndre kan lese"
+
+#, fuzzy
+#| msgid "Preserve e&xt2 attributes"
+msgid "Read extended attributes"
+msgstr "Bevar ext&2-attributter"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write data"
+msgstr "An&dre kan skrive"
+
+#, fuzzy
+#| msgid "Open files"
+msgid "Create files"
+msgstr "Åpne filer"
+
+#, fuzzy
+#| msgid "&Append"
+msgid "Append data"
+msgstr "&Legg til"
+
+#, fuzzy
+#| msgid "Cache directory:"
+msgid "Create folders"
+msgstr "Hurtiglagermappe:"
+
+#, fuzzy
+#| msgid "wr&ite by others"
+msgid "Write attributes"
+msgstr "An&dre kan skrive"
+
+#, fuzzy
+#| msgid "Preserve e&xt2 attributes"
+msgid "Write extended attributes"
+msgstr "Bevar ext&2-attributter"
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "Henter fil"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Read permissions"
+msgstr "Retti&gheter"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Change permissions"
+msgstr "Retti&gheter"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot stat\n"
+#| "%s"
+msgid "Cannot stat"
+msgstr ""
+"stat() mislyktes for\n"
+"%s"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the access control list of"
+msgstr "Klarte ikke lese mappeinnhold"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the default access control list of"
+msgstr "Klarte ikke lese mappeinnhold"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid "Reading failed"
+msgid "Reading archive"
+msgstr "Lesing mislyktes"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -6438,9 +7410,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6876,8 +7845,122 @@ msgstr ""
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create a directory"
+msgstr "Opprett en ny mappe"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot chown\n"
+#| "%s"
+msgid "Cannot fetch %s at %.10s."
+msgstr ""
+"Chown mislyktes for\n"
+"%s"
+
+#, fuzzy
+#| msgid "Cannot open file %s"
+msgid "Cannot open the diff viewer."
+msgstr "Klarte ikke åpne fila %s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot remove file\n"
+#| "%s"
+msgid "Cannot run %s: %s"
+msgstr ""
+"Klarte ikke slette fila\n"
+"%s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open\n"
+#| "%s"
+msgid "Cannot open the browser"
+msgstr ""
+"Klarte ikke åpne\n"
+"%s"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Added to favorites."
+msgstr "Legg til i favorittliste"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Already in favorites."
+msgstr "Legg til i favorittliste"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Add to favorites"
+msgstr "Legg til i favorittliste"
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot get ext2 attributes of\n"
+#| "%s"
+msgid "Change the favorite"
+msgstr ""
+"Klarte ikke hente ext2-attributtene til\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid "Cannot fetch a local copy of %s"
+msgid "The local clone of %s/%s:"
+msgstr "Klarte ikke hente en lokal kopi av %s"
+
+#, fuzzy
+#| msgid "Extension file edit"
+msgid "Open in Git"
+msgstr "Rediger utvidelsesfil"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Time: %s"
+msgid "Showing: %s"
+msgstr "Tid: %s"
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6897,9 +7980,17 @@ msgid "&Reset"
 msgstr "Endre &størrelse"
 
 #, fuzzy
-#| msgid "Add to hotlist"
-msgid "Add to favorites"
-msgstr "Legg til i favorittliste"
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "Endringer i filen gikk tapt"
+
+msgid "Reword is available only for commits on the current branch."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open file %s"
+msgid "Cannot find coole executable: %s"
+msgstr "Klarte ikke åpne fila %s"
 
 #, fuzzy
 #| msgid "Directory path:"
@@ -7332,11 +8423,6 @@ msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
 #, fuzzy
-#| msgid "&Save"
-msgid "Save"
-msgstr "&Lagre"
-
-#, fuzzy
 #| msgid "File was modified. Save with exit?"
 msgid "File was modified. Save changes?"
 msgstr "Fila er endret. Lagre før avslutning?"
@@ -7411,6 +8497,23 @@ msgstr ""
 "Klarte ikke lagre fil:\n"
 "%s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot stat\n"
+#| "%s"
+msgid "Cannot start %s."
+msgstr ""
+"stat() mislyktes for\n"
+"%s"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, fuzzy, c-format
 #| msgid ""
 #| "Cannot chown\n"
@@ -7432,6 +8535,20 @@ msgstr "Klarte ikke åpne fila %s"
 #| msgid "Unable to save to file"
 msgid "Failed to write temp file."
 msgstr "Klarte ikke lagre til fil"
+
+#, fuzzy, c-format
+#| msgid "Loading..."
+msgid "Loading %s..."
+msgstr "Laster ..."
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid "Cannot list documents in '%s': %s"
+msgstr ""
+"Klarte ikke lagre fila %s:\n"
+"%s"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -7556,15 +8673,6 @@ msgstr ""
 msgid "Loading %s (%"
 msgstr "Laster: %3d%%"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-"Klarte ikke lagre fila %s:\n"
-"%s"
-
 #, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
@@ -7639,6 +8747,12 @@ msgstr ""
 #| msgid "Repeat times:"
 msgid "Op max time (ms):"
 msgstr "Antall gjentakelser:"
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
+msgstr ""
 
 msgid "MongoDB settings"
 msgstr ""
@@ -7742,9 +8856,6 @@ msgstr "Esperanto"
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -7826,6 +8937,254 @@ msgstr "&Fjern"
 
 msgid "Command"
 msgstr "Kommando"
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "&Listing format..."
+msgid "%s: databases"
+msgstr "&Utlistingsformat ..."
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connections"
+msgstr "Koble til SFTP"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open file\n"
+#| "%s\n"
+#| "for writing"
+msgid "Cannot open %s for writing"
+msgstr ""
+"Klarte ikke åpne skrivetilgang til fil\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot remove file\n"
+#| "%s"
+msgid "Cannot write %s: %s"
+msgstr ""
+"Klarte ikke slette fila\n"
+"%s"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot write postgres.ini"
+msgstr ""
+"Klarte ikke skrive til fila %s:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid "Invalid token number %d"
+msgid "Invalid connection name"
+msgstr "Ugyldig symbolnummer %d"
+
+#, fuzzy
+#| msgid "not enough memory"
+msgid "Out of memory"
+msgstr "ikke nok minne"
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter password for %s "
+msgid "Password for \"%s\":"
+msgstr "sftp: Skriv inn passord for %s"
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled."
+msgstr "Avbryt"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connection"
+msgstr "Koble til SFTP"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Confirmation"
+msgid "Connected: %s"
+msgstr "Be om bekreftelse før"
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "&Service"
+msgstr "Enhet:      %s"
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Connect by:"
+msgstr "Be om bekreftelse før"
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "Service:"
+msgstr "Enhet:      %s"
+
+#, fuzzy
+#| msgid "Save file"
+msgid "Database:"
+msgstr "Lagre fil"
+
+msgid "SSL mode:"
+msgstr ""
+
+#, fuzzy
+#| msgid "User name"
+msgid "Username:"
+msgstr "Brukernavn"
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "Passord:"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "New PostgreSQL connection"
+msgstr "Koble til SFTP"
+
+#, fuzzy
+#| msgid "Editor options"
+msgid "Edit PostgreSQL connection"
+msgstr "Redigeringsinnstillinger"
+
+#, fuzzy
+#| msgid "shell: storing file"
+msgid " Authentication "
+msgstr "skall: lagrer fil"
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "&Test connection"
+msgstr "Koble til SFTP"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot save the connection: %s"
+msgstr ""
+"Klarte ikke lagre fil:\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot delete the connection: %s"
+msgstr ""
+"Klarte ikke lagre fil:\n"
+"%s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot change directory to\n"
+#| "%s"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr ""
+"Kan ikke endre mappe til\n"
+"%s"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "Default connection:"
+msgstr "Koble til SFTP"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr ""
 
 msgid "S3"
 msgstr ""
@@ -7938,6 +9297,19 @@ msgstr ""
 
 #, fuzzy
 #| msgid "SFTP to machine"
+msgid "SFTP authentication"
+msgstr "Koble til SFTP"
+
+#, fuzzy, c-format
+#| msgid "sftp: Enter passphrase for %s "
+msgid "Enter passphrase for key %s"
+msgstr "sftp: Skriv inn passfrase for %s"
+
+msgid "SFTP key passphrase"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
 msgid "SFTP connection"
 msgstr "Koble til SFTP"
 
@@ -7963,13 +9335,15 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, fuzzy, c-format
-#| msgid "sftp: Enter passphrase for %s "
-msgid "Enter passphrase for key %s"
-msgstr "sftp: Skriv inn passfrase for %s"
+#, fuzzy
+#| msgid "shell: Sending password..."
+msgid "Authenticating with a default key..."
+msgstr "skall: Sender passord ..."
 
-msgid "SFTP key passphrase"
-msgstr ""
+#, fuzzy
+#| msgid "shell: Sending password..."
+msgid "Authenticating with keyboard-interactive..."
+msgstr "skall: Sender passord ..."
 
 #, fuzzy
 #| msgid "shell: Sending password..."
@@ -8325,11 +9699,6 @@ msgstr "Etikett for «%s»:"
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Create a new Directory"
-msgid "Create a directory"
-msgstr "Opprett en ny mappe"
 
 #, fuzzy
 #| msgid "Cannot create %s directory"
@@ -8877,6 +10246,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -9066,6 +10441,25 @@ msgid "Changed line, filler"
 msgstr "Klarte ikke sette inn fil"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Line number"
+msgid "Line mark"
+msgstr "&Linjenummer"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+#, fuzzy
+#| msgid "Panelize"
+msgid "Inactive frame"
+msgstr "Lagt til i panel"
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -9303,33 +10697,53 @@ msgstr "Redigeringsinnstillinger"
 msgid "Editor: fold closed"
 msgstr "Redigeringsinnstillinger"
 
-#, fuzzy
-#| msgid "&Up"
-msgid "Up"
-msgstr "&Opp"
+msgid "Vertical: top arrow"
+msgstr ""
 
-msgid "Not read by mc today"
+msgid "Vertical: bottom arrow"
 msgstr ""
 
 #, fuzzy
-#| msgid "Page Down"
-msgid "Down"
-msgstr "Page Down"
+#| msgid "&Vertical"
+msgid "Vertical: track"
+msgstr "&Loddrett"
 
-#, fuzzy
-#| msgid "&Left"
-msgid "Left"
-msgstr "&Venstre"
-
-#, fuzzy
-#| msgid "&Right"
-msgid "Right"
-msgstr "&Høyre"
-
-msgid "Thumb"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Track"
+#, fuzzy
+#| msgid "&Vertical"
+msgid "Vertical: thumb"
+msgstr "&Loddrett"
+
+msgid "Vertical: thumb length"
+msgstr ""
+
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: left arrow"
+msgstr "&Vannrett"
+
+msgid "Horizontal: right arrow"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: track"
+msgstr "&Vannrett"
+
+msgid "Default: horiz of the lines"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: thumb"
+msgstr "&Vannrett"
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -9412,7 +10826,7 @@ msgstr "Paneler:"
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -9559,9 +10973,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 #, fuzzy
 #| msgid "Save As"
 msgid "Save skin as"
@@ -9685,6 +11096,130 @@ msgstr "Velg tegnkoding"
 
 msgid "-  < No translation >"
 msgstr "- < Ingen oversettelse >"
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions"
+msgstr "Retti&gheter"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "State        Start  Directory"
+msgstr "Opprett en ny mappe"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions..."
+msgstr "Retti&gheter"
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Compress"
+msgid "M-Commander sessions"
+msgstr "Komprimer"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Refresh"
+msgid "refresh"
+msgstr "&Oppdater"
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
+msgstr ""
 
 msgid "%b %e  %Y"
 msgstr "%b %e %Y"
@@ -9825,9 +11360,6 @@ msgstr "Sann:"
 msgid "False:"
 msgstr "Usann:"
 
-msgid "Error calling program"
-msgstr "Klarte ikke kalle program"
-
 msgid "Warning -- ignoring file"
 msgstr "Advarsel -- ignorerer fil"
 
@@ -9858,6 +11390,106 @@ msgid "User menu"
 msgstr "Brukermeny"
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "%s\n"
+#| "is not a regular file"
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+"%s\n"
+"er ikke en vanlig fil"
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+#, fuzzy
+#| msgid "&Continue copy"
+msgid "&Convert"
+msgstr "Fortsett &kopiering"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot move file\n"
+#| "%s\n"
+#| "to\n"
+#| "%s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr ""
+"Klarte ikke flytte tila\n"
+"%s\n"
+"til\n"
+"%s"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit file"
+msgid "&Edit the file"
+msgstr "Rediger fil"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -9872,10 +11504,97 @@ msgstr ""
 #| "%s"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
 "Klarte ikke overskrive fila\n"
 "%s"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Conditions"
+msgstr "Be om bekreftelse før"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "Other options"
+msgid "Ot&her panel"
+msgstr "Andre innstillinger"
+
+#, fuzzy
+#| msgid "&Never"
+msgid "N&ever"
+msgstr "Aldr&i"
+
+#, fuzzy
+#| msgid "Alwa&ys"
+msgid "&Always"
+msgstr "A&lltid"
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+#, fuzzy
+#| msgid "Block Size"
+msgid "Block device"
+msgstr "Blokkstørrelse"
+
+#, fuzzy
+#| msgid "Executable &first"
+msgid "E&xecutable only"
+msgstr "&Kjørbare først"
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Con&tinue"
+msgid "Con&ditions"
+msgstr "&Fortsett"
 
 msgid "Add a submenu"
 msgstr ""
@@ -9903,6 +11622,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -9920,8 +11642,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 #, fuzzy
@@ -9956,6 +11686,18 @@ msgstr ""
 #| msgid "&Add new"
 msgid "&Add an entry"
 msgstr "Legg til ny"
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr ""
@@ -10092,6 +11834,16 @@ msgstr "&Desimal posisjon"
 
 msgid "He&xadecimal offset"
 msgstr "&Heksadesimal posisjon"
+
+#, fuzzy
+#| msgid "ButtonBar|Static"
+msgid "ButtonBar|Syntax"
+msgstr "ButtonBar|Statik"
+
+#, fuzzy
+#| msgid "ButtonBar|Ascii"
+msgid "ButtonBar|Ansi"
+msgstr "ButtonBar|ASCII"
 
 #, fuzzy
 #| msgid "ButtonBar|Hex"
@@ -10350,6 +12102,27 @@ msgstr "Klarte ikke sette inn fil"
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr "Klarte ikke hente en lokal kopi av /ftp://some.host/editme.txt"
 
+#~ msgid "ButtonBar|Merge"
+#~ msgstr "ButtonBar|Flett"
+
+#, fuzzy
+#~| msgid "&Up"
+#~ msgid "Up"
+#~ msgstr "&Opp"
+
+#, fuzzy
+#~| msgid "Page Down"
+#~ msgid "Down"
+#~ msgstr "Page Down"
+
+#, fuzzy
+#~| msgid "&Left"
+#~ msgid "Left"
+#~ msgstr "&Venstre"
+
+#~ msgid "Error calling program"
+#~ msgstr "Klarte ikke kalle program"
+
 #~ msgid "Timeout for freeing VFSs (sec):"
 #~ msgstr "Tidsavbrudd for VFS-frakobling (sek):"
 
@@ -10361,11 +12134,6 @@ msgstr "Klarte ikke hente en lokal kopi av /ftp://some.host/editme.txt"
 
 #~ msgid "&Virtual FS..."
 #~ msgstr "&Virtuelt FS ..."
-
-#, fuzzy
-#~| msgid "ButtonBar|Search"
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "ButtonBar|Søk"
 
 #, fuzzy
 #~| msgid "shell: Reading directory %s..."
@@ -10634,9 +12402,6 @@ msgstr "Klarte ikke hente en lokal kopi av /ftp://some.host/editme.txt"
 
 #~ msgid "&Free VFSs now"
 #~ msgstr "&Koble fra VFS"
-
-#~ msgid "&Refresh"
-#~ msgstr "&Oppdater"
 
 #~ msgid "&Add current"
 #~ msgstr "Legg til &gjeldende"
@@ -11034,9 +12799,6 @@ msgstr "Klarte ikke hente en lokal kopi av /ftp://some.host/editme.txt"
 #~ msgid "&Undelete files (ext2fs only)"
 #~ msgstr "Gjenopprett filer (kun ext2fs)"
 
-#~ msgid "not enough memory"
-#~ msgstr "ikke nok minne"
-
 #~ msgid "while allocating block buffer"
 #~ msgstr "under reservering av blokkbuffer"
 
@@ -11087,9 +12849,6 @@ msgstr "Klarte ikke hente en lokal kopi av /ftp://some.host/editme.txt"
 
 #~ msgid "vfs_info is not fs!"
 #~ msgstr "vfs_info er ikke lik fs"
-
-#~ msgid "You have to chdir to extract files first"
-#~ msgstr "Du må bytte mappe for å pakke ut filer"
 
 #~ msgid "while iterating over blocks"
 #~ msgstr "under iterasjon over blokker"

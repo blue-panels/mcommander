@@ -17,11 +17,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-09-25 20:52+0000\n"
+"POT-Creation-Date: 2026-11-08 16:54+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
-"Language-Team: Japanese <https://translate.codeberg.org/projects/mc6/mc6/ja/>"
-"\n"
+"Language-Team: Japanese <https://translate.codeberg.org/projects/mc6/mc6/ja/"
+">\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -588,6 +588,16 @@ msgstr ""
 msgid "Toggle right panel in terminal mode"
 msgstr ""
 
+#, fuzzy
+#| msgid "Cannot insert file"
+msgid "Apply command to the files"
+msgstr "ファイルの挿入ができません"
+
+#, fuzzy
+#| msgid "Great than"
+msgid "Clear the command line"
+msgstr "以上"
+
 msgid "Select files by pattern"
 msgstr ""
 
@@ -598,6 +608,11 @@ msgstr "シェルパターンを使用(&U)"
 
 msgid "Select by extension"
 msgstr ""
+
+#, fuzzy
+#| msgid "&Using shell patterns"
+msgid "Unselect by extension"
+msgstr "シェルパターンを使用(&U)"
 
 msgid "Scroll panel left"
 msgstr ""
@@ -653,6 +668,9 @@ msgstr ""
 msgid "Drive menu (right panel)"
 msgstr ""
 
+msgid "Console of the panel plugin"
+msgstr ""
+
 msgid "Sync other panel"
 msgstr ""
 
@@ -694,7 +712,94 @@ msgstr "データディレクトリを印刷"
 msgid "Cycle listing format"
 msgstr "一覧形式編集(&L)"
 
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 1"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 2"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 3"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 4"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 5"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 6"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 7"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 8"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 9"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+#, fuzzy
+#| msgid "Use panel sort mo&de"
+msgid "Far listing mode 10"
+msgstr "パネルの並び替えモードを使う(&D)"
+
+msgid "Keep files unsorted"
+msgstr ""
+
+#, fuzzy
+#| msgid "C&hange time"
+msgid "Sort by change time"
+msgstr "時間の変更(&H)"
+
+#, fuzzy
+#| msgid "&Access time"
+msgid "Sort by access time"
+msgstr "アクセス時刻(&A)"
+
+#, fuzzy
+#| msgid "Compare directories"
+msgid "Go to the root directory"
+msgstr "ディレクトリーの比較"
+
+#, fuzzy
+#| msgid "Select"
+msgid "Select all files"
+msgstr "選択"
+
+#, fuzzy
+#| msgid "Unselect"
+msgid "Unselect all files"
+msgstr "選択解除"
+
+msgid "Focus the default button"
+msgstr ""
+
 msgid "Yank (paste kill buffer)"
+msgstr ""
+
+msgid "Insert the file name from the active panel"
+msgstr ""
+
+msgid "Insert the file name from the passive panel"
 msgstr ""
 
 msgid "Help index"
@@ -1147,6 +1252,25 @@ msgstr ""
 msgid "Merge from other file"
 msgstr ""
 
+msgid "Add the right file to the merge"
+msgstr ""
+
+msgid "Take the right file out of the merge"
+msgstr ""
+
+msgid "Merge the two files against a base file"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Next conflict"
+msgstr "確認"
+
+#, fuzzy
+#| msgid "&Previous"
+msgid "Previous conflict"
+msgstr "前(&P)"
+
 #, c-format
 msgid ""
 "File \"%s\" is already being edited.\n"
@@ -1577,6 +1701,9 @@ msgstr ""
 msgid "Shift"
 msgstr "Shift"
 
+msgid "Super"
+msgstr ""
+
 #, c-format
 msgid ""
 "\n"
@@ -1708,6 +1835,71 @@ msgstr "パスワード:"
 msgid "Screens"
 msgstr "スクリーン"
 
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid ""
+"Cannot read directory contents\n"
+"%s"
+msgstr "ディレクトリの内容を読み取れません"
+
+#, c-format
+msgid ""
+"Cannot stat\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Save"
+msgid "Save"
+msgstr "保存(&S)"
+
+#, fuzzy
+#| msgid "A file already exists with this name"
+msgid "The file exists. Overwrite it?"
+msgstr "この名称のファイルは既に存在します"
+
+msgid "&Yes"
+msgstr "はい(&Y)"
+
+msgid "&No"
+msgstr "いいえ(&N)"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "%s\n"
+#| "is a directory"
+msgid ""
+"%s\n"
+"is not a directory"
+msgstr ""
+"%s\n"
+" はディレクトリです"
+
+msgid "UP--DIR"
+msgstr "UP--DIR"
+
+#, fuzzy
+#| msgid "SUB-DIR"
+msgid "DIR"
+msgstr "SUB-DIR"
+
+msgid "Name"
+msgstr "名前"
+
+msgid "Size"
+msgstr "サイズ"
+
+#, fuzzy
+#| msgid "Modified:   %s"
+msgid "Modified"
+msgstr "最終変更日時:  %s"
+
+msgid "&OK"
+msgstr "はい(&O)"
+
+msgid "&Cancel"
+msgstr "キャンセル(&C)"
+
 msgid "History"
 msgstr "履歴"
 
@@ -1719,12 +1911,6 @@ msgid ""
 "Paste it?"
 msgstr ""
 
-msgid "&Yes"
-msgstr "はい(&Y)"
-
-msgid "&No"
-msgstr "いいえ(&N)"
-
 #. TRANSLATORS: no need to translate 'DialogTitle', it's just a context prefix
 msgid "DialogTitle|History cleanup"
 msgstr "DialogTitle |歴史のクリーンアップ"
@@ -1732,11 +1918,10 @@ msgstr "DialogTitle |歴史のクリーンアップ"
 msgid "Do you want clean this history?"
 msgstr "この履歴を消去しますか？"
 
-msgid "&OK"
-msgstr "はい(&O)"
-
-msgid "&Cancel"
-msgstr "キャンセル(&C)"
+#, fuzzy
+#| msgid "Filter"
+msgid "Filter:"
+msgstr "フィルター"
 
 msgid "Background process:"
 msgstr "バックグラウンド処理:"
@@ -1781,6 +1966,12 @@ msgid "Edit files"
 msgstr "ファイル編集"
 
 msgid "<file> ..."
+msgstr ""
+
+msgid "Diff viewer: save the merge of three files into this file"
+msgstr ""
+
+msgid "Diff viewer: merge the two files against this common base"
 msgstr ""
 
 msgid "Forces xterm features"
@@ -1831,6 +2022,12 @@ msgstr "ファイル"
 msgid "file1 file2"
 msgstr ""
 
+msgid "local base remote [-o output]"
+msgstr ""
+
+msgid "local remote -B base [-o output]"
+msgstr ""
+
 msgid "[this_dir] [other_panel_dir]"
 msgstr ""
 
@@ -1866,6 +2063,12 @@ msgid "No arguments given to the viewer."
 msgstr ""
 
 msgid "Two files are required to invoke the diffviewer."
+msgstr ""
+
+msgid "The -B option needs two files: local remote."
+msgstr ""
+
+msgid "The -o option needs three files: local base remote."
 msgstr ""
 
 msgid "Background protocol error"
@@ -1915,6 +2118,14 @@ msgstr ""
 msgid "Cannot create temporary diff file"
 msgstr ""
 
+msgid "Merge"
+msgstr ""
+
+msgid ""
+"This side is a copy to look at:\n"
+"changes to it would be lost."
+msgstr ""
+
 #, c-format
 msgid ""
 "Cannot create backup file\n"
@@ -1923,6 +2134,40 @@ msgstr ""
 
 msgid "Cannot create temporary merge file"
 msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot write the merge result\n"
+"%s"
+msgstr ""
+"ファイル %s に書き込めません:\n"
+"%s\n"
+
+#, c-format
+msgid ""
+"%d conflict is left.\n"
+"Save the merge anyway?"
+msgid_plural ""
+"%d conflicts are left.\n"
+"Save the merge anyway?"
+msgstr[0] ""
+
+msgid "Save the merge into:"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid ""
+"Cannot save the merge result\n"
+"%s"
+msgstr ""
+"ファイル%s: \n"
+"%sを保存できません"
 
 msgid "&Fastest (Assume large files)"
 msgstr ""
@@ -1954,6 +2199,12 @@ msgstr ""
 msgid "Diff Options"
 msgstr ""
 
+msgid "Result:"
+msgstr ""
+
+msgid "Base:"
+msgstr ""
+
 msgid "Edit"
 msgstr "編集"
 
@@ -1966,8 +2217,46 @@ msgstr ""
 msgid "Goto line (right)"
 msgstr ""
 
+#, fuzzy
+#| msgid "Goto line"
+msgid "Goto line (merged)"
+msgstr "行移動"
+
 msgid "Enter line:"
 msgstr ""
+
+msgid "ButtonBar|Edit"
+msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|<-Copy"
+msgstr "ボタンバー|コピー"
+
+#, fuzzy
+#| msgid "ButtonBar|Mark"
+msgid "ButtonBar|Base"
+msgstr "ボタンバー|マーク"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Next"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Copy->"
+msgstr "ボタンバー|コピー"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|-Left"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|-Right"
+msgstr "ButtonBar |削除"
 
 msgid "ButtonBar|Help"
 msgstr ""
@@ -1975,11 +2264,15 @@ msgstr ""
 msgid "ButtonBar|Save"
 msgstr ""
 
-msgid "ButtonBar|Edit"
-msgstr ""
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|+Left"
+msgstr "ButtonBar |削除"
 
-msgid "ButtonBar|Merge"
-msgstr ""
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|+Right"
+msgstr "ButtonBar |削除"
 
 msgid "ButtonBar|Search"
 msgstr ""
@@ -1988,6 +2281,12 @@ msgid "ButtonBar|Options"
 msgstr ""
 
 msgid "ButtonBar|Quit"
+msgstr ""
+
+msgid "Quit"
+msgstr "終了"
+
+msgid "The merge result is not saved. Save it?"
 msgstr ""
 
 msgid "File(s) was modified. Save with exit?"
@@ -1999,11 +2298,44 @@ msgid ""
 "Save modified file(s)?"
 msgstr ""
 
-msgid "Quit"
-msgstr "終了"
+msgid "Save the changes of the two files first."
+msgstr ""
+
+msgid "The common base of the two files"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot create pipe streams"
+msgid ""
+"Cannot read the base file\n"
+"%s"
+msgstr "パイプストリームを作成できません"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot compare the files to merge"
+msgstr ""
+"書き出しのために %s をオープンすることができません:\n"
+"%s\n"
+
+msgid "Merge:"
+msgstr ""
 
 msgid "Diff:"
 msgstr "差異:"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open file\n"
+#| "%s"
+msgid ""
+"Cannot merge the files into\n"
+"%s"
+msgstr ""
+"ファイル %s\n"
+"を開くことができません"
 
 msgid "File name is empty!"
 msgstr "ファイル名が空欄です!"
@@ -2015,12 +2347,6 @@ msgid ""
 msgstr ""
 "%s\n"
 " はディレクトリです"
-
-#, c-format
-msgid ""
-"Cannot stat\n"
-"%s"
-msgstr ""
 
 msgid "Diff viewer: invalid mode"
 msgstr ""
@@ -2597,6 +2923,15 @@ msgstr "保存(&S)"
 msgid "Load"
 msgstr "読み込み"
 
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create link\n"
+#| "%s"
+msgid ""
+"Cannot create %s:\n"
+"%s"
+msgstr "link %s を作成できません"
+
 msgid "Syntax file edit"
 msgstr "文法ファイルを編集"
 
@@ -3100,11 +3435,29 @@ msgstr "ファイルを開く"
 msgid "Edit: "
 msgstr "編集: "
 
-msgid "ButtonBar|Mark"
-msgstr "ボタンバー|マーク"
+msgid "ButtonBar|Menu"
+msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Move"
+msgid "ButtonBar|SaveAs"
+msgstr "ボタンバー|移動"
+
+#, fuzzy
+#| msgid "ButtonBar|Copy"
+msgid "ButtonBar|Column"
+msgstr "ボタンバー|コピー"
 
 msgid "ButtonBar|Replac"
 msgstr "ボタンバー|交換"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Insert"
+msgstr "ButtonBar |削除"
+
+msgid "ButtonBar|Mark"
+msgstr "ボタンバー|マーク"
 
 msgid "ButtonBar|Copy"
 msgstr "ボタンバー|コピー"
@@ -3311,6 +3664,12 @@ msgstr ""
 
 msgid "A&uto save setup"
 msgstr "自動保存の設定(&U)"
+
+msgid "Far Manager keys"
+msgstr ""
+
+msgid "Alt-letter fast find"
+msgstr ""
 
 msgid "Configure options"
 msgstr "設定オプション"
@@ -3681,17 +4040,11 @@ msgstr "グループを設定(&g)"
 msgid "Set &users"
 msgstr "ユーザを設定(&u)"
 
-msgid "Name"
-msgstr "名前"
-
 msgid "Owner name"
 msgstr "所有者名"
 
 msgid "Group name"
 msgstr "グループ名"
-
-msgid "Size"
-msgstr "サイズ"
 
 msgid "Chown command"
 msgstr "chown コマンド"
@@ -3758,6 +4111,21 @@ msgstr "フィルタリングビュー"
 
 msgid "Filter command and arguments:"
 msgstr "フィルターのコマンドと引数:"
+
+#, fuzzy
+#| msgid "Chmod command"
+msgid "Apply command"
+msgstr "chmod コマンド"
+
+#, c-format
+msgid ""
+"Command for the files (%f name, %n name without extension, %x extension):"
+msgstr ""
+
+#, c-format
+msgid "%d file is skipped: its name has a line break"
+msgid_plural "%d files are skipped: their names have a line break"
+msgstr[0] ""
 
 msgid "This plugin does not support file editing"
 msgstr ""
@@ -4595,14 +4963,66 @@ msgstr "下(&B)"
 msgid "&Right"
 msgstr "右(&R)"
 
-msgid "ButtonBar|Menu"
-msgstr ""
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Left"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Right"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Mark"
+msgid "ButtonBar|Console"
+msgstr "ボタンバー|マーク"
 
 msgid "ButtonBar|View"
 msgstr ""
 
 msgid "ButtonBar|RenMov"
 msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Mark"
+msgid "ButtonBar|Name"
+msgstr "ボタンバー|マーク"
+
+#, fuzzy
+#| msgid "ButtonBar|Mark"
+msgid "ButtonBar|Version"
+msgstr "ボタンバー|マーク"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Ext"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Size"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Move"
+msgid "ButtonBar|MTime"
+msgstr "ボタンバー|移動"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Unsort"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|CTime"
+msgstr "ButtonBar |削除"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|ATime"
+msgstr "ButtonBar |削除"
 
 msgid "ButtonBar|Mkdir"
 msgstr ""
@@ -5063,9 +5483,6 @@ msgstr "所有者"
 msgid "[dev]"
 msgstr ""
 
-msgid "UP--DIR"
-msgstr "UP--DIR"
-
 #, fuzzy
 #| msgid "Filter"
 msgid "Filter: "
@@ -5311,6 +5728,13 @@ msgstr ""
 "を開くことができません"
 
 #, c-format
+msgid "No plugin opens %s."
+msgstr ""
+
+msgid "The other half of the screen shows no panel to open it in."
+msgstr ""
+
+#, c-format
 msgid "%s produced nothing to view for %s"
 msgstr ""
 
@@ -5330,6 +5754,11 @@ msgstr "時間の変更(&H)"
 
 msgid "No plugins with drive menu support are loaded."
 msgstr ""
+
+#, fuzzy
+#| msgid "Navigation"
+msgid "Plugin action"
+msgstr "ナビゲーション"
 
 #, c-format
 msgid ""
@@ -5470,6 +5899,15 @@ msgstr "Shift"
 msgid "Edit &term file"
 msgstr "メニューファイル編集(&M)"
 
+msgid "Release:"
+msgstr ""
+
+msgid "Then:"
+msgstr ""
+
+msgid "(modifier key)"
+msgstr ""
+
 msgid "(not recognized)"
 msgstr ""
 
@@ -5492,6 +5930,9 @@ msgid "Raw:"
 msgstr ""
 
 msgid "Keycode:"
+msgstr ""
+
+msgid "Kitty:"
 msgstr ""
 
 msgid "&Capture key"
@@ -5684,6 +6125,15 @@ msgstr ""
 msgid "No plugins loaded."
 msgstr ""
 
+#, c-format
+msgid "%s has exited with code %d. Press any key to close"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Press any key to continue..."
+msgid "%s has exited. Press any key to close"
+msgstr "なにかキーを押せば続行します..."
+
 msgid "JSON parse error at byte %"
 msgstr ""
 
@@ -5825,6 +6275,492 @@ msgstr ""
 
 msgid "unexpected indentation"
 msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose group"
+msgstr "コードページの選択"
+
+#, fuzzy
+#| msgid "Choose codepage"
+msgid "Choose user"
+msgstr "コードページの選択"
+
+msgid "Show &system accounts"
+msgstr ""
+
+msgid "&Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Overwrite"
+msgid "&Write"
+msgstr "上書き(&O)"
+
+#, fuzzy
+#| msgid "Immutable"
+msgid "E&xecute"
+msgstr "不変"
+
+#, fuzzy
+#| msgid "Group"
+msgid "&Group"
+msgstr "グループ"
+
+#, fuzzy
+#| msgid "Name:"
+msgid "Names:"
+msgstr "名前:"
+
+msgid "C&hoose..."
+msgstr ""
+
+#, c-format
+msgid "There is no group \"%s\""
+msgstr ""
+
+#, c-format
+msgid "There is no user \"%s\""
+msgstr ""
+
+msgid "An entry is changed one at a time: give one name."
+msgstr ""
+
+msgid "  masked"
+msgstr ""
+
+msgid "Read only: you are not the owner."
+msgstr ""
+
+msgid "None: new files get the mode from umask."
+msgstr ""
+
+msgid "Mas&k"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "Add entry"
+msgstr "新規追加(&A)"
+
+msgid "Mask"
+msgstr ""
+
+#, fuzzy
+#| msgid "other"
+msgid "Other"
+msgstr "その他"
+
+#, fuzzy
+#| msgid "New hotlist entry"
+msgid "Edit entry"
+msgstr "新規ホットリストエントリ"
+
+msgid "The owner, the group of the file and other cannot be removed."
+msgstr ""
+
+msgid "Remove the marked users and groups?"
+msgstr ""
+
+msgid "Remove the user and group entries before removing the mask."
+msgstr ""
+
+msgid "Remove the user and group entries of the default ACL first."
+msgstr ""
+
+msgid "Default ACL"
+msgstr ""
+
+msgid "Remove the whole default ACL?"
+msgstr ""
+
+msgid "There is no mask yet: it comes with the first user or group entry."
+msgstr ""
+
+msgid "The most that users and groups get:"
+msgstr ""
+
+msgid "&Set it from the entries"
+msgstr ""
+
+msgid "Access control list (read only)"
+msgstr ""
+
+msgid "Access control list"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "This fol&der"
+msgstr ""
+
+msgid "&New files inside"
+msgstr ""
+
+msgid "List"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+#, fuzzy
+#| msgid "&write by owner"
+msgid "Write"
+msgstr "所有者書込み権限(&W)"
+
+msgid "Exec"
+msgstr ""
+
+#, fuzzy
+#| msgid "directories"
+msgid "Effective"
+msgstr "ディレクトリ"
+
+#, fuzzy
+#| msgid "&Add new"
+msgid "&Add"
+msgstr "新規追加(&A)"
+
+msgid "Ed&it"
+msgstr ""
+
+#, fuzzy
+#| msgid "Delete"
+msgid "De&lete"
+msgstr "Delete"
+
+#, fuzzy
+#| msgid "Set &all"
+msgid "Set a&ll"
+msgstr "すべて設定(&a)"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "C&hanges to all"
+msgstr "紛失したファイルに変更します"
+
+msgid "This folder only"
+msgstr ""
+
+msgid "This folder, subfolders and files"
+msgstr ""
+
+msgid "This folder and subfolders"
+msgstr ""
+
+#, fuzzy
+#| msgid "Casefolded file"
+msgid "This folder and files"
+msgstr "ケースフォールドファイル"
+
+msgid "Subfolders and files only"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Subfolders only"
+msgstr "ファイルのみ(&F)"
+
+#, fuzzy
+#| msgid "&Files only"
+msgid "Files only"
+msgstr "ファイルのみ(&F)"
+
+msgid "allow"
+msgstr ""
+
+msgid "deny"
+msgstr ""
+
+msgid "  (inside only)"
+msgstr ""
+
+msgid "  (inherited)"
+msgstr ""
+
+msgid "Who:"
+msgstr ""
+
+msgid "SID:"
+msgstr ""
+
+msgid "Type:"
+msgstr ""
+
+msgid "Allow"
+msgstr ""
+
+msgid "Deny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Copies to"
+msgid "Applies to:"
+msgstr "以下に複写"
+
+msgid "Inherited:"
+msgstr ""
+
+msgid "yes"
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "Mask:"
+msgstr ""
+
+msgid "no rights"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Advanced rights"
+msgstr "キャンセル(&C)"
+
+#, fuzzy
+#| msgid "A&ll"
+msgid "A&llow"
+msgstr "全部(&L)"
+
+msgid "De&ny"
+msgstr ""
+
+#, fuzzy
+#| msgid "Save file"
+msgid "&Special"
+msgstr "ファイルの保存"
+
+#, fuzzy
+#| msgid "&Cancel"
+msgid "Ad&vanced..."
+msgstr "キャンセル(&C)"
+
+#, c-format
+msgid "There is no user or group \"%s\""
+msgstr ""
+
+msgid ""
+"This entry is inherited from the folder above.\n"
+"Change it there."
+msgstr ""
+
+msgid ""
+"This kind of entry cannot be edited here.\n"
+"Its data is kept when other entries change."
+msgstr ""
+
+msgid "Access control list (Windows)"
+msgstr ""
+
+#, fuzzy
+#| msgid "File"
+msgid "File:"
+msgstr "ファイル"
+
+#, fuzzy
+#| msgid "Owner"
+msgid "Owner:"
+msgstr "所有者"
+
+#, fuzzy
+#| msgid "Group"
+msgid "Group:"
+msgstr "グループ"
+
+msgid "From:"
+msgstr ""
+
+msgid "Who"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Right"
+msgid "Rights"
+msgstr "右(&R)"
+
+msgid "F3 shows the rights of an entry one by one."
+msgstr ""
+
+msgid "Full control"
+msgstr ""
+
+msgid "&Full control"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "Modify"
+msgstr "更新時刻(&M)"
+
+#, fuzzy
+#| msgid "&Modify time"
+msgid "&Modify"
+msgstr "更新時刻(&M)"
+
+msgid "Read & execute"
+msgstr ""
+
+msgid "Read and e&xecute"
+msgstr ""
+
+#, fuzzy
+#| msgid "Immutable"
+msgid "Execute file"
+msgstr "不変"
+
+#, fuzzy
+#| msgid "Sort order"
+msgid "Traverse folder"
+msgstr "並び変える"
+
+#, fuzzy
+#| msgid "User data"
+msgid "Read data"
+msgstr "ユーザーのデータ"
+
+msgid "List folder"
+msgstr ""
+
+#, fuzzy
+#| msgid "read &by others"
+msgid "Read attributes"
+msgstr "他者の読み込みを許可(&b)"
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Read extended attributes"
+msgstr "紛失したファイルに変更します"
+
+#, fuzzy
+#| msgid "&write by owner"
+msgid "Write data"
+msgstr "所有者書込み権限(&W)"
+
+#, fuzzy
+#| msgid "Open files"
+msgid "Create files"
+msgstr "ファイルを開く"
+
+#, fuzzy
+#| msgid "&Append"
+msgid "Append data"
+msgstr "追加(&A)"
+
+#, fuzzy
+#| msgid "Cache directory:"
+msgid "Create folders"
+msgstr "キャッシュのディレクトリー:"
+
+#, fuzzy
+#| msgid "&write by owner"
+msgid "Write attributes"
+msgstr "所有者書込み権限(&W)"
+
+msgid "Write extended attributes"
+msgstr ""
+
+#, fuzzy
+#| msgid "Getting file"
+msgid "Delete subfolders and files"
+msgstr "ファイル取得中"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Read permissions"
+msgstr "権限(&P)"
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Change permissions"
+msgstr "権限(&P)"
+
+msgid "Take ownership"
+msgstr ""
+
+msgid "Nothing"
+msgstr ""
+
+msgid "The list is not valid"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"The access control list changed while the dialog was open.\n"
+"Open it again before saving."
+msgstr ""
+
+#, fuzzy
+#| msgid ""
+#| "Cannot chattr\n"
+#| "%s"
+msgid "Cannot stat"
+msgstr "%s への chattr ができません"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the access control list of"
+msgstr "ディレクトリの内容を読み取れません"
+
+#, fuzzy
+#| msgid "Cannot read directory contents"
+msgid "Cannot read the default access control list of"
+msgstr "ディレクトリの内容を読み取れません"
+
+#, c-format
+msgid ""
+"%s\n"
+"The server stored the list in a form of its own.\n"
+"Open the dialog again to see it."
+msgstr ""
+
+msgid "Cannot set the access control list of"
+msgstr ""
+
+#, c-format
+msgid ""
+"%s\n"
+"has an NFSv4 access control list (%s).\n"
+"M-Commander does not show these yet; nfs4_getfacl does."
+msgstr ""
+
+#, c-format
+msgid "Access control lists are not supported on this file system (%s)"
+msgstr ""
+
+msgid "Cannot set the default access control list of"
+msgstr ""
+
+msgid "Cannot set a POSIX access control list on"
+msgstr ""
+
+msgid "Access control lists work only on local files"
+msgstr ""
+
+msgid "There is no file under the cursor"
+msgstr ""
+
+msgid "Access control &list..."
+msgstr ""
+
+#, fuzzy
+#| msgid "Open files"
+msgid "Reading archive"
+msgstr "ファイルを開く"
 
 msgid ""
 "Encrypted 7z needs the external tool, it is off in the archiver settings"
@@ -6084,9 +7020,6 @@ msgstr ""
 
 #, c-format
 msgid "Found in PATH: %s"
-msgstr ""
-
-msgid "no"
 msgstr ""
 
 msgid "Pack"
@@ -6503,8 +7436,117 @@ msgstr "%s への chattr ができません"
 msgid "Connection successful, loading entries..."
 msgstr ""
 
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "Create a directory"
+msgstr "新規ディレクトリの作成"
+
 #, c-format
 msgid "Copy of %s"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot chattr\n"
+#| "%s"
+msgid "Cannot fetch %s at %.10s."
+msgstr "%s への chattr ができません"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open file\n"
+#| "%s"
+msgid "Cannot open the diff viewer."
+msgstr ""
+"ファイル %s\n"
+"を開くことができません"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create link\n"
+#| "%s"
+msgid "Cannot run %s: %s"
+msgstr "link %s を作成できません"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot open tar archive\n"
+#| "%s"
+msgid "Cannot open the browser"
+msgstr ""
+"tarアーカイブ%sを\n"
+"開けません"
+
+msgid "GitHub"
+msgstr ""
+
+msgid "gh failed with no message"
+msgstr ""
+
+msgid "Owner, or a path below it:"
+msgstr ""
+
+#, c-format
+msgid ""
+"Neither an owner, a path below one\n"
+"nor a GitHub address:\n"
+"%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Added to favorites."
+msgstr "ホットリストへ追加"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Already in favorites."
+msgstr "ホットリストへ追加"
+
+#, fuzzy
+#| msgid "Add to hotlist"
+msgid "Add to favorites"
+msgstr "ホットリストへ追加"
+
+msgid "Only a favorite can be changed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Changes to file lost"
+msgid "Change the favorite"
+msgstr "紛失したファイルに変更します"
+
+#, c-format
+msgid "The local clone of %s/%s:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Extension file edit"
+msgid "Open in Git"
+msgstr "拡張ファイルの編集"
+
+#, c-format
+msgid "%s is a clone of %s/%s, not of %s/%s."
+msgstr ""
+
+#, c-format
+msgid "%s is no clone of a GitHub repository."
+msgstr ""
+
+msgid "This mc cannot open another plugin from a panel."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Size:       %s"
+msgid "Showing: %s"
+msgstr "サイズ:    %s"
+
+#, c-format
+msgid "the first %u files, base %.7s"
+msgstr ""
+
+#, c-format
+msgid "%u files, base %.7s"
 msgstr ""
 
 msgid "Git panel"
@@ -6524,9 +7566,19 @@ msgid "&Reset"
 msgstr "リサイズ(&R)"
 
 #, fuzzy
-#| msgid "Add to hotlist"
-msgid "Add to favorites"
-msgstr "ホットリストへ追加"
+#| msgid "Changes to file lost"
+msgid "Select a commit first."
+msgstr "紛失したファイルに変更します"
+
+msgid "Reword is available only for commits on the current branch."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create link\n"
+#| "%s"
+msgid "Cannot find coole executable: %s"
+msgstr "link %s を作成できません"
 
 #, fuzzy
 #| msgid "Directory path:"
@@ -6942,11 +7994,6 @@ msgid "The current row has no bytes; in the hex zone mark a block"
 msgstr ""
 
 #, fuzzy
-#| msgid "&Save"
-msgid "Save"
-msgstr "保存(&S)"
-
-#, fuzzy
 #| msgid "File(s) was modified. Save with exit?"
 msgid "File was modified. Save changes?"
 msgstr "ファイルが変更されています。保存して終了しますか?"
@@ -7016,6 +8063,21 @@ msgstr ""
 "ファイルの保存ができません:\n"
 "%s"
 
+msgid ""
+"Install coole for the query editor, or mongosh. Their paths can be given in "
+"the MongoDB settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot chattr\n"
+#| "%s"
+msgid "Cannot start %s."
+msgstr "%s への chattr ができません"
+
+msgid "This build of mc has no terminal for coole."
+msgstr ""
+
 #, c-format
 msgid "Cannot fetch document: %s"
 msgstr ""
@@ -7036,6 +8098,20 @@ msgstr ""
 #| msgid "Unable to save to file"
 msgid "Failed to write temp file."
 msgstr "ファイルの保存に失敗しました"
+
+#, fuzzy, c-format
+#| msgid "Loading..."
+msgid "Loading %s..."
+msgstr "読み込み中..."
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file %s:\n"
+#| "%s"
+msgid "Cannot list documents in '%s': %s"
+msgstr ""
+"ファイル%s: \n"
+"%sを保存できません"
 
 #, fuzzy, c-format
 #| msgid ""
@@ -7154,15 +8230,6 @@ msgstr ""
 msgid "Loading %s (%"
 msgstr "%s を移動中"
 
-#, fuzzy, c-format
-#| msgid ""
-#| "Cannot save file %s:\n"
-#| "%s"
-msgid "Cannot list documents in '%s': %s"
-msgstr ""
-"ファイル%s: \n"
-"%sを保存できません"
-
 #, c-format
 msgid "Counting documents in '%s'..."
 msgstr ""
@@ -7237,6 +8304,12 @@ msgstr ""
 #| msgid "Repeat times:"
 msgid "Op max time (ms):"
 msgstr "繰り返し回数:"
+
+msgid "coole, the query editor (empty: from PATH):"
+msgstr ""
+
+msgid "mongosh (empty: from PATH):"
+msgstr ""
 
 msgid "MongoDB settings"
 msgstr ""
@@ -7340,9 +8413,6 @@ msgstr "エスペラント語"
 msgid "Field"
 msgstr ""
 
-msgid "Type"
-msgstr ""
-
 msgid "Value"
 msgstr ""
 
@@ -7424,6 +8494,245 @@ msgstr "削除(&R)"
 
 msgid "Command"
 msgstr "コマンド"
+
+msgid "PostgreSQL"
+msgstr ""
+
+msgid ""
+"The panel only shows the objects of the database: change them with SQL in "
+"the query editor (Alt-F3)."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Aborting transfer..."
+msgid "%s: databases"
+msgstr "転送を中断します..."
+
+#, c-format
+msgid "%s/%s: schemas"
+msgstr ""
+
+#, c-format
+msgid "%s/%s/%s: relations"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connections"
+msgstr "機器とのSFTP"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open the %s file for writing:\n"
+#| "%s\n"
+msgid "Cannot open %s for writing"
+msgstr ""
+"書き出しのために %s をオープンすることができません:\n"
+"%s\n"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create link\n"
+#| "%s"
+msgid "Cannot write %s: %s"
+msgstr "link %s を作成できません"
+
+#, fuzzy
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid "Cannot write postgres.ini"
+msgstr ""
+"ファイル %s に書き込めません:\n"
+"%s\n"
+
+#, fuzzy
+#| msgid "Invalid token number %d"
+msgid "Invalid connection name"
+msgstr "トークン番号 %d が正しくありません"
+
+msgid "Out of memory"
+msgstr ""
+
+#, c-format
+msgid "No answer from the server in %d s."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Label for \"%s\":"
+msgid "Password for \"%s\":"
+msgstr "\"%s\" のラベル:"
+
+#, c-format
+msgid "Connecting to \"%s\"..."
+msgstr ""
+
+#, c-format
+msgid "The server is PostgreSQL %s: the panel needs 10 or newer."
+msgstr ""
+
+#, c-format
+msgid "Cannot save the password to ~/.pgpass: %s"
+msgstr ""
+
+msgid "Cancelled. The server did not answer: the connection is closed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled."
+msgstr "キャンセル"
+
+msgid "The server returned nothing."
+msgstr ""
+
+#, c-format
+msgid "PostgreSQL %s, database \"%s\" as \"%s\" on %s:%s"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "PostgreSQL connection"
+msgstr "機器とのSFTP"
+
+msgid "The name of a connection must not be empty nor contain '[' or ']'."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Confirmation"
+msgid "Connected: %s"
+msgstr "確認"
+
+msgid "&Host"
+msgstr ""
+
+msgid "&URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "&Service"
+msgstr "デバイス: %s"
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Connect by:"
+msgstr "確認"
+
+msgid "URL:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Device:     %s"
+msgid "Service:"
+msgstr "デバイス: %s"
+
+#, fuzzy
+#| msgid "Save file"
+msgid "Database:"
+msgstr "ファイルの保存"
+
+msgid "SSL mode:"
+msgstr ""
+
+#, fuzzy
+#| msgid "User name"
+msgid "Username:"
+msgstr "ユーザーの名前"
+
+msgid "Description:"
+msgstr ""
+
+msgid "Show all d&atabases"
+msgstr ""
+
+#, fuzzy
+#| msgid "Password:"
+msgid "Sa&ve password"
+msgstr "パスワード:"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "New PostgreSQL connection"
+msgstr "機器とのSFTP"
+
+#, fuzzy
+#| msgid "Editor options"
+msgid "Edit PostgreSQL connection"
+msgstr "編集のオプション"
+
+msgid " Authentication "
+msgstr ""
+
+msgid "&Read-only: the query editor opens read-only transactions"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "&Test connection"
+msgstr "機器とのSFTP"
+
+#, c-format
+msgid "A connection named \"%s\" already exists."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot save the connection: %s"
+msgstr ""
+"ファイルの保存ができません:\n"
+"%s"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot save file:\n"
+#| "%s"
+msgid "Cannot delete the connection: %s"
+msgstr ""
+"ファイルの保存ができません:\n"
+"%s"
+
+msgid ""
+"Install coole for the query editor, or psql. Their paths can be given in the "
+"PostgreSQL settings."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot chattr\n"
+#| "%s"
+msgid ""
+"Cannot connect to \"%s\":\n"
+"%s"
+msgstr "%s への chattr ができません"
+
+#, fuzzy
+#| msgid "SFTP to machine"
+msgid "Default connection:"
+msgstr "機器とのSFTP"
+
+msgid "Connect timeout (s, 0: none):"
+msgstr ""
+
+msgid "Statement timeout (s, 0: none):"
+msgstr ""
+
+msgid "Rows shown by F3 (0: none):"
+msgstr ""
+
+msgid "Show &system schemas"
+msgstr ""
+
+msgid "psql, without coole (empty: from PATH):"
+msgstr ""
+
+msgid "PostgreSQL settings"
+msgstr ""
+
+msgid "A timeout and the rows are whole numbers, 0 for none."
+msgstr ""
 
 msgid "S3"
 msgstr ""
@@ -7534,6 +8843,18 @@ msgstr "link %s を作成できません"
 
 #, fuzzy
 #| msgid "SFTP to machine"
+msgid "SFTP authentication"
+msgstr "機器とのSFTP"
+
+#, c-format
+msgid "Enter passphrase for key %s"
+msgstr ""
+
+msgid "SFTP key passphrase"
+msgstr ""
+
+#, fuzzy
+#| msgid "SFTP to machine"
 msgid "SFTP connection"
 msgstr "機器とのSFTP"
 
@@ -7557,11 +8878,10 @@ msgstr ""
 msgid "Authenticating with public key..."
 msgstr ""
 
-#, c-format
-msgid "Enter passphrase for key %s"
+msgid "Authenticating with a default key..."
 msgstr ""
 
-msgid "SFTP key passphrase"
+msgid "Authenticating with keyboard-interactive..."
 msgstr ""
 
 msgid "Authenticating with password..."
@@ -7860,11 +9180,6 @@ msgstr "\"%s\" のラベル:"
 
 msgid "helpers (no host selected)"
 msgstr ""
-
-#, fuzzy
-#| msgid "Create a new Directory"
-msgid "Create a directory"
-msgstr "新規ディレクトリの作成"
 
 #, fuzzy
 #| msgid "Cannot create %s directory"
@@ -8343,6 +9658,12 @@ msgid ""
 "Selected item of the focused list, e.g. Find File results or the skin list"
 msgstr ""
 
+msgid "Check box under the cursor"
+msgstr ""
+
+msgid "Check box under the cursor in the selected row of a table"
+msgstr ""
+
 msgid "Title"
 msgstr ""
 
@@ -8526,6 +9847,25 @@ msgid "Changed line, filler"
 msgstr "ファイルの挿入ができません"
 
 msgid "The rest of a changed line and its counterpart"
+msgstr ""
+
+msgid "Lines both sides of a merge changed; the removed color when absent"
+msgstr ""
+
+#, fuzzy
+#| msgid "Panels:"
+msgid "Line mark"
+msgstr "パネル:"
+
+msgid "The mark on the frame at the line the keys act on"
+msgstr ""
+
+#, fuzzy
+#| msgid "Panelize"
+msgid "Inactive frame"
+msgstr "パネル化"
+
+msgid "The frame of the file that is not active"
 msgstr ""
 
 msgid "Structured view of JSON, YAML and the like"
@@ -8761,33 +10101,53 @@ msgstr "編集のオプション"
 msgid "Editor: fold closed"
 msgstr "編集のオプション"
 
-#, fuzzy
-#| msgid "&Up"
-msgid "Up"
-msgstr "上へ(&U)"
+msgid "Vertical: top arrow"
+msgstr ""
 
-msgid "Not read by mc today"
+msgid "Vertical: bottom arrow"
 msgstr ""
 
 #, fuzzy
-#| msgid "Page Down"
-msgid "Down"
-msgstr "Page Down"
+#| msgid "&Vertical"
+msgid "Vertical: track"
+msgstr "垂直(&V)"
 
-#, fuzzy
-#| msgid "&Left"
-msgid "Left"
-msgstr "左(&L)"
-
-#, fuzzy
-#| msgid "&Right"
-msgid "Right"
-msgstr "右(&R)"
-
-msgid "Thumb"
+msgid "Default: vert of the lines"
 msgstr ""
 
-msgid "Track"
+#, fuzzy
+#| msgid "&Vertical"
+msgid "Vertical: thumb"
+msgstr "垂直(&V)"
+
+msgid "Vertical: thumb length"
+msgstr ""
+
+msgid "Cells of the thumb when it fits, else half the track"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: left arrow"
+msgstr "水平(&H)"
+
+msgid "Horizontal: right arrow"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: track"
+msgstr "水平(&H)"
+
+msgid "Default: horiz of the lines"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Horizontal"
+msgid "Horizontal: thumb"
+msgstr "水平(&H)"
+
+msgid "Horizontal: thumb length"
 msgstr ""
 
 msgid "Spinner frames"
@@ -8866,7 +10226,7 @@ msgstr "パネル:"
 msgid "Find and editor marks"
 msgstr ""
 
-msgid "Scrollbar (unused)"
+msgid "Scrollbar"
 msgstr ""
 
 msgid "Spinner"
@@ -9002,9 +10362,6 @@ msgstr ""
 msgid "One character is expected here"
 msgstr ""
 
-msgid "Description:"
-msgstr ""
-
 #, fuzzy
 #| msgid "Save As"
 msgid "Save skin as"
@@ -9122,6 +10479,130 @@ msgstr "コードページの選択"
 
 msgid "-  < No translation >"
 msgstr "-  < 翻訳がありません >"
+
+msgid "this one"
+msgstr ""
+
+msgid "detached"
+msgstr ""
+
+msgid "looks lost"
+msgstr ""
+
+msgid "attached"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions"
+msgstr "権限(&P)"
+
+msgid "&Switch"
+msgstr ""
+
+msgid "&Detach"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create a new Directory"
+msgid "State        Start  Directory"
+msgstr "新規ディレクトリの作成"
+
+msgid "That session was started in another kind of terminal."
+msgstr ""
+
+msgid "That session is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "This is the session you are in: F10 ends it."
+msgstr ""
+
+msgid "That session is in use in another terminal. End it?"
+msgstr ""
+
+msgid ""
+"That session has an editor, a viewer or a dialog open: switch to it and end "
+"it there."
+msgstr ""
+
+#, c-format
+msgid "The session did not end: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Permissions"
+msgid "Sessions..."
+msgstr "権限(&P)"
+
+msgid "another version of M-Commander"
+msgstr ""
+
+msgid "another kind of terminal (TERM)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Compress"
+msgid "M-Commander sessions"
+msgstr "圧縮"
+
+msgid "attached, looks lost"
+msgstr ""
+
+#, c-format
+msgid "TERM=%s, cannot be taken here"
+msgstr ""
+
+msgid "new session"
+msgstr ""
+
+msgid "end session N"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Refresh"
+msgid "refresh"
+msgstr "再表示(&R)"
+
+msgid "shell"
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. End it?"
+msgstr ""
+
+#, c-format
+msgid "Session %u is ended.\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Session %u has an editor, a viewer or a dialog open: take it and end it "
+"there.\n"
+msgstr ""
+
+#, c-format
+msgid "Session %u did not end: %s.\n"
+msgstr ""
+
+msgid "Number to take, Enter, k N, r or q: "
+msgstr ""
+
+#, c-format
+msgid "Session %u is in use in another terminal. Take it?"
+msgstr ""
+
+msgid "detached; run M-Commander again to take it back"
+msgstr ""
+
+msgid "the session was taken by another terminal"
+msgstr ""
+
+#, c-format
+msgid "The session cannot be taken: %s\n"
+msgstr ""
+
+msgid "The session is gone."
+msgstr ""
 
 msgid "%b %e  %Y"
 msgstr "%b %e  %Y"
@@ -9260,9 +10741,6 @@ msgstr "真:"
 msgid "False:"
 msgstr "偽:"
 
-msgid "Error calling program"
-msgstr ""
-
 msgid "Warning -- ignoring file"
 msgstr ""
 
@@ -9293,6 +10771,97 @@ msgid "User menu"
 msgstr "ユーザーのメニュー"
 
 #, c-format
+msgid "%s, line %d: %s"
+msgstr ""
+
+msgid "the first line is not \""
+msgstr ""
+
+#, c-format
+msgid "[%s] is already at line %d"
+msgstr ""
+
+#, c-format
+msgid ""
+"not a key=value, a [group] or a comment:\n"
+"%s"
+msgstr ""
+
+msgid "a key before the first [group]"
+msgstr ""
+
+msgid "a value without a key"
+msgstr ""
+
+#, c-format
+msgid "%s= is already at line %d"
+msgstr ""
+
+msgid "the block opened here has no closing line"
+msgstr ""
+
+#, c-format
+msgid "[%s]: %s= takes true or false"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: not a regular expression:\n"
+"%s"
+msgstr ""
+
+#, c-format
+msgid ""
+"[%s]: %s=%s: \"%s\" is not a type.\n"
+"Types: file, dir, link, broken, char, block, fifo, socket"
+msgstr ""
+
+#, c-format
+msgid ""
+"The menu file\n"
+"%s\n"
+"has no first line \"# mc menu format 2\": an older version\n"
+"of mc wrote it, or it was written by hand.\n"
+"\n"
+"Convert it to the format? The file as it is now\n"
+"is kept as %s.old."
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "&Convert"
+msgstr "確認"
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot open file\n"
+#| "%s"
+msgid ""
+"Cannot convert the menu file\n"
+"%s\n"
+"\n"
+"%s"
+msgstr ""
+"ファイル %s\n"
+"を開くことができません"
+
+#, c-format
+msgid ""
+"Cannot read the menu file\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"Its entries are not shown, and the menu does not write into it\n"
+"until it is fixed."
+msgstr ""
+
+#, fuzzy
+#| msgid "Edit file"
+msgid "&Edit the file"
+msgstr "ファイル編集"
+
+#, c-format
 msgid ""
 "This entry comes from\n"
 "%s\n"
@@ -9307,10 +10876,97 @@ msgstr ""
 #| "%s"
 msgid ""
 "Cannot write file\n"
+"%s\n"
+"\n"
 "%s"
 msgstr ""
 "ファイル %s\n"
 "を開くことができません"
+
+msgid "always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Confirmation"
+msgid "Conditions"
+msgstr "確認"
+
+msgid ""
+"These conditions look at both panels, and the dialog shows one.\n"
+"Change them in the file: the Editor button opens it."
+msgstr ""
+
+msgid ""
+"These conditions have masks and a regular expression together,\n"
+"and the dialog shows one of them. Change them in the file: the\n"
+"Editor button opens it."
+msgstr ""
+
+msgid "C&urrent panel"
+msgstr ""
+
+#, fuzzy
+#| msgid "Other options"
+msgid "Ot&her panel"
+msgstr "その他のオプション"
+
+#, fuzzy
+#| msgid "&Never"
+msgid "N&ever"
+msgstr "一時停止しない(&N)"
+
+#, fuzzy
+#| msgid "Alwa&ys"
+msgid "&Always"
+msgstr "常に停止(&Y)"
+
+msgid "&When:"
+msgstr ""
+
+msgid "Where the menu opens on it"
+msgstr ""
+
+msgid "Path mask:"
+msgstr ""
+
+msgid "Show on (none checked = any):"
+msgstr ""
+
+msgid "Fifo"
+msgstr ""
+
+msgid "Socket"
+msgstr ""
+
+msgid "Broken link"
+msgstr ""
+
+msgid "Char device"
+msgstr ""
+
+#, fuzzy
+#| msgid "Block Size"
+msgid "Block device"
+msgstr "ブロック サイズ"
+
+#, fuzzy
+#| msgid "Immutable"
+msgid "E&xecutable only"
+msgstr "不変"
+
+msgid "Only when files are &marked"
+msgstr ""
+
+msgid "Needs program:"
+msgstr ""
+
+msgid "The menu opens on it:"
+msgstr ""
+
+#, fuzzy
+#| msgid "Con&tinue"
+msgid "Con&ditions"
+msgstr "続行(&t)"
 
 msgid "Add a submenu"
 msgstr ""
@@ -9338,6 +10994,9 @@ msgstr ""
 msgid "Run without the &shell of the panel"
 msgstr ""
 
+msgid "Show when:"
+msgstr ""
+
 msgid "The entry needs a label"
 msgstr ""
 
@@ -9355,8 +11014,16 @@ msgid ""
 "Taken into\n"
 "%s\n"
 "\n"
-"Entries: %u. The file they came from is left where it is,\n"
-"and conditions and masks were dropped."
+"Entries: %u. The file they came from is left where it is."
+msgstr ""
+
+#, c-format
+msgid ""
+"Taken into\n"
+"%s\n"
+"\n"
+"Entries: %u. The file they came from is left where it is.\n"
+"Conditions not converted: %u, kept as comments above their entries."
 msgstr ""
 
 #, fuzzy
@@ -9391,6 +11058,18 @@ msgstr ""
 #| msgid "&Add new"
 msgid "&Add an entry"
 msgstr "新規追加(&A)"
+
+msgid "(all entries)"
+msgstr ""
+
+#, c-format
+msgid "(%u hidden, Alt-A)"
+msgstr ""
+
+msgid ""
+"The conditions of this entry do not hold here,\n"
+"so it is not run. F4 edits them."
+msgstr ""
 
 msgid "Add a command, or a submenu to hold other entries?"
 msgstr ""
@@ -9510,6 +11189,16 @@ msgstr ""
 
 msgid "He&xadecimal offset"
 msgstr ""
+
+#, fuzzy
+#| msgid "ButtonBar|Mark"
+msgid "ButtonBar|Syntax"
+msgstr "ボタンバー|マーク"
+
+#, fuzzy
+#| msgid "ButtonBar|Delete"
+msgid "ButtonBar|Ansi"
+msgstr "ButtonBar |削除"
 
 #, fuzzy
 #| msgid "ButtonBar|Delete"
@@ -9762,16 +11451,26 @@ msgstr "ファイルの挿入ができません"
 msgid "Cannot fetch a local copy of /ftp://some.host/editme.txt"
 msgstr ""
 
+#, fuzzy
+#~| msgid "&Up"
+#~ msgid "Up"
+#~ msgstr "上へ(&U)"
+
+#, fuzzy
+#~| msgid "Page Down"
+#~ msgid "Down"
+#~ msgstr "Page Down"
+
+#, fuzzy
+#~| msgid "&Left"
+#~ msgid "Left"
+#~ msgstr "左(&L)"
+
 #~ msgid "Edit &menu file"
 #~ msgstr "メニューファイル編集(&M)"
 
 #~ msgid "&Virtual FS..."
 #~ msgstr "仮想FS(&V)..."
-
-#, fuzzy
-#~| msgid "ButtonBar|Mark"
-#~ msgid "ButtonBar|Clear"
-#~ msgstr "ボタンバー|マーク"
 
 #~ msgid "Enables subshell support (default)"
 #~ msgstr "サブシェルのサポート (デフォルト)"
@@ -9880,9 +11579,6 @@ msgstr ""
 
 #~ msgid "Change &to"
 #~ msgstr "次に変更する(&T):"
-
-#~ msgid "&Refresh"
-#~ msgstr "再表示(&R)"
 
 #~ msgid "&Add current"
 #~ msgstr "追加(&A)"
