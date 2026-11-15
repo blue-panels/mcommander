@@ -135,6 +135,18 @@ edit_buffer_get_byte_ptr (const edit_buffer_t *buf, off_t byte_index)
 }
 
 /* --------------------------------------------------------------------------------------------- */
+/* How many bytes follow byte_index in memory: the rest of its chunk, not past the cursor. */
+
+static gssize
+edit_buffer_bytes_in_chunk (const edit_buffer_t *buf, off_t byte_index)
+{
+    if (byte_index >= buf->curs1)
+        return ((buf->curs1 + buf->curs2 - byte_index - 1) & M_EDIT_BUF_SIZE) + 1;
+
+    return MIN (EDIT_BUF_SIZE - (byte_index & M_EDIT_BUF_SIZE), buf->curs1 - byte_index);
+}
+
+/* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 /**
@@ -229,7 +241,7 @@ edit_buffer_get_utf (const edit_buffer_t *buf, off_t byte_index, int *char_lengt
         return 0;
     }
 
-    res = g_utf8_get_char_validated (str, -1);
+    res = g_utf8_get_char_validated (str, edit_buffer_bytes_in_chunk (buf, byte_index));
     if (res == (gunichar) (-2) || res == (gunichar) (-1))
     {
         // Retry with explicit bytes to make sure it's not a buffer boundary

@@ -661,9 +661,12 @@ group_default_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, v
         return MSG_HANDLED;
 
     case MSG_DESTROY:
-        g_list_foreach (g->widgets, (GFunc) widget_destroy, NULL);
-        g_list_free (g->widgets);
-        g->widgets = NULL;
+        // who walks the list from a destroyed widget must not meet those destroyed before it
+        while (g->widgets != NULL)
+        {
+            widget_destroy (WIDGET (g->widgets->data));
+            g->widgets = g_list_delete_link (g->widgets, g->widgets);
+        }
         return MSG_HANDLED;
 
     default:
