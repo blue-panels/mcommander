@@ -565,6 +565,11 @@ jobs:
           while IFS= read -r -d '' plugin; do
               bundle_args+=(-x "$plugin")
           done < <(find "$stage_prefix/lib/mcommander/panel-plugins" -name '*.so' -type f -print0)
+          # The session plugin and its helper link glib as well.
+          while IFS= read -r -d '' file; do
+              bundle_args+=(-x "$file")
+          done < <(find "$stage_prefix/lib/mcommander/runtime-plugins" -name '*.so' -type f -print0 2>/dev/null
+                   find "$stage_prefix/libexec/mcommander" -name session_helper -type f -print0 2>/dev/null)
           # dylibbundler asks on stdin for a library it cannot find, and with
           # no answer it asks again forever. Give it no stdin and five minutes,
           # and show what it asked for.
@@ -617,6 +622,12 @@ jobs:
           while IFS= read -r -d '' plugin; do
               add_rpath "$plugin" '@loader_path/../../..'
           done < <(find "$stage_prefix/lib/mcommander/panel-plugins" -name '*.so' -type f -print0)
+          while IFS= read -r -d '' plugin; do
+              add_rpath "$plugin" '@loader_path/../..'
+          done < <(find "$stage_prefix/lib/mcommander/runtime-plugins" -name '*.so' -type f -print0 2>/dev/null)
+          while IFS= read -r -d '' helper; do
+              add_rpath "$helper" '@loader_path/../../lib'
+          done < <(find "$stage_prefix/libexec/mcommander" -name session_helper -type f -print0 2>/dev/null)
           while IFS= read -r -d '' library; do
               add_rpath "$library" '@loader_path'
           done < <(find "$bundled_libs" -maxdepth 1 -name '*.dylib' -type f -print0)
