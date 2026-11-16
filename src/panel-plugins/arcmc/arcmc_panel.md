@@ -6,6 +6,10 @@ Opens an archive in a panel, creates one, extracts and tests one. libarchive
 reads and writes the formats it knows; for the rest the plugin calls the
 archiver of the system or an extfs helper, and both can be chosen per format.
 
+RPM packages open directly into their payload through libarchive, including
+source packages (`.src.rpm` and `.spm`). Their files can be viewed and copied
+out; the plugin does not change or create RPM packages.
+
 **Opening an archive**
 
 **Enter**

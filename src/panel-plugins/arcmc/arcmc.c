@@ -308,6 +308,7 @@ arcmc_detect_format (const char *filename)
         { ".tar.lzma", "tar.lzma" }, { ".tlz", "tar.lzma" },  { ".tar", "tar" },
         { ".zip", "zip" },           { ".jar", "zip" },       { ".war", "zip" },
         { ".ear", "zip" },           { ".7z", "7z" },         { ".cpio", "cpio" },
+        { ".rpm", "rpm" },           { ".spm", "rpm" },
     };
 
     size_t i;
@@ -1586,13 +1587,15 @@ static mc_pp_result_t
 arcmc_put_file (void *plugin_data, const char *local_path, const char *dest_name)
 {
     arcmc_data_t *data = (arcmc_data_t *) plugin_data;
+    const arcmc_builtin_format_t *fmt;
     char *archive_name;
     arcmc_progress_t *progress;
     off_t total_size;
     struct stat st;
     gboolean ok;
 
-    if (data->input_stream != NULL)
+    fmt = arcmc_find_builtin_format (data->archive_path);
+    if (data->input_stream != NULL || (fmt != NULL && !fmt->lib_pack && fmt->pack_bin == NULL))
         return MC_PPR_NOT_SUPPORTED;
 
     // the cache holds files of the archive as it was, whatever the reread gives
@@ -1652,13 +1655,15 @@ static mc_pp_result_t
 arcmc_delete_items (void *plugin_data, const char **names, int count)
 {
     arcmc_data_t *data = (arcmc_data_t *) plugin_data;
+    const arcmc_builtin_format_t *fmt;
     char **full_paths;
     int i;
     gboolean ok;
     arcmc_progress_t *progress;
     off_t total_size;
 
-    if (data->input_stream != NULL)
+    fmt = arcmc_find_builtin_format (data->archive_path);
+    if (data->input_stream != NULL || (fmt != NULL && !fmt->lib_pack && fmt->pack_bin == NULL))
         return MC_PPR_NOT_SUPPORTED;
 
     arcmc_data_drop_cache (data);

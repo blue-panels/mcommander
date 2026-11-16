@@ -45,6 +45,7 @@ enum
     ARCMC_FMT_ISO = 10,
     ARCMC_FMT_XAR = 11,
     ARCMC_FMT_CAB = 12,
+    ARCMC_FMT_RPM = 13,
     ARCMC_FMT_OTHER_COUNT = 5 /* number of "Other" formats (tar.gz .. cpio) */
 };
 

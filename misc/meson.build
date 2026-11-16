@@ -39,7 +39,7 @@ configure_file(
 # so "\\." lands in the file as it stands, as in the rules of the file itself
 magic_rules = {}
 magic_rules += {'MAGIC_ARCMC_RULES': not libarchive.found() ? '' : '''[arcmc.archive]
-Regex=\\.(tar|tar\\.gz|tgz|tar\\.bz2|tbz2|tar\\.xz|txz|tar\\.zst|tzst|zip|jar|war|ear|7z|cpio)$
+Regex=\\.(tar|tar\\.gz|tgz|tar\\.bz2|tbz2|tar\\.xz|txz|tar\\.zst|tzst|zip|jar|war|ear|7z|cpio|rpm|spm)$
 RegexIgnoreCase=true
 Open=%plugin{arcmc:open}
 View=%plugin{arcmc:view}'''}
