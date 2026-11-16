@@ -69,7 +69,6 @@ static const arcmc_ext_archiver_default_t ext_archiver_defaults[] = {
     { "LHA", ".lha", "lha", "a", "lha", "x", "lha", "t", "ulha", "@%s" },
     { "LZH", ".lzh", "lha", "a", "lha", "x", "lha", "t", "ulha", "@%s" },
     { "DEB", ".deb", NULL, NULL, "dpkg-deb", "-x", NULL, NULL, "deb", NULL },
-    { "RPM", ".rpm", NULL, NULL, NULL, NULL, NULL, NULL, "rpm", NULL },
     { "INO", ".exe", NULL, NULL, NULL, NULL, "innoextract", "--test --silent", "uinno", NULL },
 };
 

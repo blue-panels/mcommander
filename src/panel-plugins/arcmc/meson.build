@@ -1,5 +1,5 @@
 arcmc_plugin_dir = panel_plugins_dir / 'arcmc'
-shared_module('mc-panel-arcmc',
+arcmc_module = shared_module('mc-panel-arcmc',
   'arcmc.c',
   'arcmc-config.c',
   'arcmc-ext.c',

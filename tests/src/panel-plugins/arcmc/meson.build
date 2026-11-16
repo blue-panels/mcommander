@@ -15,3 +15,18 @@ foreach name, extra : arcmc_tests
     workdir: meson.current_build_dir(),
     suite: 'src/panel-plugins/arcmc')
 endforeach
+
+if libarchive.found() and have_gmodule
+  test('arcmc_rpm',
+    executable('arcmc_rpm', 'arcmc_rpm.c',
+      c_args: test_c_args + [
+        '-DTEST_ARCMC_MODULE="@0@"'.format(arcmc_module.full_path()),
+        '-DTEST_MAGIC_DIR="@0@"'.format(meson.project_build_root() / 'misc'),
+      ],
+      dependencies: [test_src_deps, libarchive],
+      link_whole: get_option('mclib') ? [] : libmc,
+      export_dynamic: true),
+    depends: arcmc_module,
+    workdir: meson.current_build_dir(),
+    suite: 'src/panel-plugins/arcmc')
+endif

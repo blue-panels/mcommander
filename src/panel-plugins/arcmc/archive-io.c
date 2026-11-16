@@ -104,6 +104,8 @@ arcmc_builtin_format_t arcmc_builtin_formats[] = {
       ARCMC_BACKEND_BUILTIN, TRUE },
     { "CAB", "cab", ".cab", FALSE, TRUE, NULL, NULL, NULL, NULL, ARCMC_BACKEND_OFF,
       ARCMC_BACKEND_BUILTIN, TRUE },
+    { "RPM", "rpm", ".rpm", FALSE, TRUE, NULL, NULL, NULL, NULL, ARCMC_BACKEND_OFF,
+      ARCMC_BACKEND_BUILTIN, TRUE },
 };
 
 const size_t arcmc_builtin_formats_count = G_N_ELEMENTS (arcmc_builtin_formats);
@@ -118,7 +120,7 @@ static const struct
 } builtin_ext_aliases[] = {
     { ".tgz", ARCMC_FMT_TAR_GZ },   { ".tbz2", ARCMC_FMT_TAR_BZ2 }, { ".txz", ARCMC_FMT_TAR_XZ },
     { ".jar", ARCMC_FMT_ZIP },      { ".war", ARCMC_FMT_ZIP },      { ".ear", ARCMC_FMT_ZIP },
-    { ".tzst", ARCMC_FMT_TAR_ZST }, { ".tlz", ARCMC_FMT_TAR_LZ },
+    { ".tzst", ARCMC_FMT_TAR_ZST }, { ".tlz", ARCMC_FMT_TAR_LZ },   { ".spm", ARCMC_FMT_RPM },
 };
 
 /*** forward declarations (file scope functions) *************************************************/
