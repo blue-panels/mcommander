@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>M-Commander - Based on GNU Midnight Commander</title>
-  <meta name="description" content="M-Commander (mc6) is based on GNU Midnight Commander 4.8.33 with panel plugins (Git, Docker, Kubernetes, S3, archives, mcstruct), Lua scripting, an embedded terminal, and an extended viewer and editor. Packages for Debian, Ubuntu, Fedora, Arch and macOS.">
+  <meta name="description" content="M-Commander (mcommander) is based on GNU Midnight Commander 4.8.33 with panel plugins (Git, GitHub, Docker, Kubernetes, PostgreSQL, S3, archives, duplicates, mcstruct), Lua scripting, an embedded terminal, a Markdown viewer and a three-way merge. Packages for Debian, Ubuntu, Fedora, Arch and macOS.">
   <meta name="theme-color" content="#0b1220">
   <meta property="og:title" content="M-Commander - Based on GNU Midnight Commander">
-  <meta property="og:description" content="M-Commander (mc6), based on GNU Midnight Commander, with panel plugins, Lua scripting, an embedded terminal, and an extended viewer and editor.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/panels-gruvbox.png">
+  <meta property="og:description" content="M-Commander (mcommander), based on GNU Midnight Commander, with panel plugins, Lua scripting, an embedded terminal, and an extended viewer and editor.">
+  <meta property="og:image" content="https://blue-panels.github.io/mcommander/assets/panels-gruvbox.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/bp16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/bp32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/bp64.png">
@@ -485,7 +485,7 @@
 
   <header class="top">
     <div class="wrap">
-      <a class="brand" href="https://blue-panels.github.io/mc6/">
+      <a class="brand" href="https://blue-panels.github.io/mcommander/">
         <img src="assets/bp64.png" alt="" width="32" height="32">
         <span>M-Commander</span>
       </a>
@@ -495,10 +495,11 @@
         <a href="#viewer">Viewer</a>
         <a href="#editor">Editor</a>
         <a href="#terminal">Terminal</a>
+        <a href="#compare">Compare</a>
         <a href="#releases">Releases</a>
-        <a href="https://github.com/blue-panels/mc6/wiki">Wiki</a>
-        <a href="https://github.com/blue-panels/mc6/wiki/Home-ru" lang="ru">По-русски</a>
-        <a class="gh" href="https://github.com/blue-panels/mc6">
+        <a href="https://github.com/blue-panels/mcommander/wiki">Wiki</a>
+        <a href="https://github.com/blue-panels/mcommander/wiki/Home-ru" lang="ru">По-русски</a>
+        <a class="gh" href="https://github.com/blue-panels/mcommander">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
@@ -510,27 +511,28 @@
     <div class="hero">
       <div class="wrap">
         <div>
-          <span class="tag">v6.0.4 · based on GNU mc 4.8.33</span>
+          <span class="tag">v6.2.0, based on GNU mc 4.8.33</span>
           <h1>M-Commander</h1>
           <p class="lead" style="font-size:22px;color:#ffd804;margin-bottom:10px">Based on GNU Midnight Commander</p>
           <p class="lead">
-            The package is called mc6. It grows outside the core: panel
-            contents come from loadable plugins, scripts talk to mc through a
-            versioned host ABI, and the shell runs in an embedded terminal.
+            The package is called mcommander and installs next to the
+            distribution's mc. It grows outside the core: panel contents come
+            from loadable plugins, scripts talk to it through a versioned host
+            ABI, and the shell runs in an embedded terminal.
           </p>
           <div class="cta">
             <a class="btn primary" href="#install">Install</a>
-            <a class="btn" href="https://github.com/blue-panels/mc6/releases/latest">Download packages</a>
-            <a class="btn" href="https://github.com/blue-panels/mc6/wiki">Read the wiki</a>
+            <a class="btn" href="https://github.com/blue-panels/mcommander/releases/latest">Download packages</a>
+            <a class="btn" href="https://github.com/blue-panels/mcommander/wiki">Read the wiki</a>
           </div>
           <div class="hero-facts">
             <span><b>Debian</b> · <b>Ubuntu</b> · <b>Fedora</b> · <b>Arch</b> · <b>macOS</b></span>
-            <span>Commands stay <code>mc</code>, <code>mcedit</code>, <code>mcview</code>, <code>mcdiff</code></span>
+            <span>Commands: <code>mcommander</code> (or <code>mc6</code>), <code>mcedit6</code>, <code>mview</code>, <code>mcdiff6</code></span>
           </div>
         </div>
         <figure>
           <div class="shot">
-            <img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/panels-gruvbox.png" alt="Two panels in the gruvbox256 skin with the Plugin panel list open" width="1200" height="700">
+            <img src="assets/panels-gruvbox.png" alt="Two panels in the gruvbox256 skin with the Plugin panel list open" width="1200" height="700">
           </div>
           <figcaption>Two panels in the gruvbox256 skin and the Plugin panel list.</figcaption>
         </figure>
@@ -548,7 +550,7 @@
         <div class="dirs">
           <div class="card">
             <h3><a href="#plugins">Panel plugins</a></h3>
-            <p>A panel can show anything: Git history, containers, pods, buckets, an archive on a remote host. Plugins pass streams to each other.</p>
+            <p>A panel can show anything: Git history, pull requests, containers, pods, database tables, buckets, duplicate files, an archive on a remote host. Plugins pass streams to each other.</p>
           </div>
           <div class="card">
             <h3><a href="#scripting">Lua scripting</a></h3>
@@ -556,15 +558,15 @@
           </div>
           <div class="card">
             <h3><a href="#viewer">Viewer</a></h3>
-            <p>Tree mode for JSON, YAML, XML and HTML, images, ELF and Java classes, live logs with a filter, ANSI and terminal replay.</p>
+            <p>Markdown with diagrams, PDF, tree mode for JSON, YAML, XML and HTML, images, live logs with a filter, a reading cursor and syntax highlighting.</p>
           </div>
           <div class="card">
             <h3><a href="#editor">Editor</a></h3>
-            <p>Editor plugins, box drawing, line filter, code folding, undo history, macro explorer, saving through sudo.</p>
+            <p>Editor plugins, nested syntaxes, box drawing, line filter, code folding, undo history, saving through sudo.</p>
           </div>
           <div class="card">
             <h3><a href="#terminal">Embedded terminal</a></h3>
-            <p>mcterm replaces the old subshell: real prompt, scrollback, selection, line filter, sixel graphics.</p>
+            <p>mcterm replaces the old subshell: real prompt, scrollback, search, kitty keyboard protocol, sessions, sixel graphics.</p>
           </div>
         </div>
       </div>
@@ -576,45 +578,51 @@
         <h2>Packages for every release</h2>
         <p class="intro">
           Packages for Debian, Ubuntu, Fedora, Arch and macOS are attached to every
-          <a href="https://github.com/blue-panels/mc6/releases">GitHub release</a>.
-          The package is called <code>mc6</code> and replaces the distribution's <code>mc</code>.
+          <a href="https://github.com/blue-panels/mcommander/releases">GitHub release</a>.
+          The package is called <code>mcommander</code> and installs next to the distribution's
+          <code>mc</code> instead of replacing it.
         </p>
         <div class="install">
           <div class="card">
-            <h3>Ubuntu (PPA)</h3>
-            <pre>sudo add-apt-repository ppa:il-smind/mc6
+            <h3>Ubuntu 24.04 and 26.04 (PPA)</h3>
+            <pre>sudo add-apt-repository ppa:bluepanels/mcommander
 sudo apt update
-sudo apt install mc6 mc6-plugins</pre>
+sudo apt install mcommander mcommander-plugins mcommander-lua</pre>
           </div>
           <div class="card">
             <h3>macOS (Homebrew)</h3>
-            <pre>brew install blue-panels/tap/mc6</pre>
+            <pre>brew install blue-panels/tap/mcommander</pre>
             <p style="margin-top:10px">A <code>.dmg</code> and a <code>.pkg</code> for Apple silicon are attached to the release as well.</p>
           </div>
           <div class="card">
             <h3>Debian, Fedora, Arch</h3>
-            <p>Take the file for your system from the <a href="https://github.com/blue-panels/mc6/releases/latest">latest release</a>:</p>
+            <p>Take the files for your system from the <a href="https://github.com/blue-panels/mcommander/releases/latest">latest release</a>:</p>
             <ul class="plain">
               <li><code>.deb</code> for Debian 13 and Ubuntu 26.04, amd64 and arm64</li>
               <li><code>.rpm</code> for Fedora, x86_64 and aarch64</li>
               <li><code>.pkg.tar.zst</code> for Arch, x86_64</li>
             </ul>
-            <p style="margin-top:10px">Install <code>mc6</code> together with <code>mc6-plugins</code>.</p>
+            <p style="margin-top:10px">Install <code>mcommander</code>, <code>mcommander-plugins</code> and <code>mcommander-lua</code> together, through the package manager:</p>
+            <pre>sudo apt install ./mcommander{,-plugins,-lua}_*debian13*_amd64.deb
+sudo dnf install ./mcommander{,-plugins,-lua}-6*.x86_64.rpm
+sudo pacman -U ./mcommander{,-plugins,-lua}-6*-x86_64.pkg.tar.zst</pre>
           </div>
           <div class="card">
             <h3>From source</h3>
-            <pre>git clone https://github.com/blue-panels/mc6.git
-cd mc6
-./autogen.sh
-./configure
-make
-sudo make install</pre>
-            <p style="margin-top:10px">See <a href="https://github.com/blue-panels/mc6/blob/master/INSTALL">INSTALL</a> for dependencies and <a href="https://github.com/blue-panels/mc6/wiki/Local-build-check">Local build check</a> to run the CI build locally.</p>
+            <pre>git clone https://github.com/blue-panels/mcommander.git
+cd mcommander
+meson setup build --prefix=/usr --sysconfdir=/etc
+meson compile -C build
+sudo meson install -C build</pre>
+            <p style="margin-top:10px">See <a href="https://github.com/blue-panels/mcommander/blob/master/INSTALL">INSTALL</a> for dependencies and <a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a> to run the CI build locally.</p>
           </div>
         </div>
         <div class="note">
-          The commands keep their names: <code>mc</code>, <code>mcedit</code>, <code>mcview</code>, <code>mcdiff</code>.
-          What mc6 does not share with mc are its directories: <code>~/.config/mc6</code>,
+          The main command is <code>mcommander</code>, with <code>mc6</code> as a short alias. The editor,
+          viewer and compare view are <code>mcedit6</code>, <code>mview</code> and <code>mcdiff6</code>, and
+          <code>mctree</code> and <code>mcstruct</code> start the structured views. None of them takes the
+          names of GNU mc, so both can be installed at once.
+          The user directories are <code>~/.config/mc6</code>,
           <code>~/.local/share/mc6</code> and <code>~/.cache/mc6</code>. On first start the matching
           <code>mc</code> directory is copied into each new one, and the original is left untouched.
         </div>
@@ -640,16 +648,21 @@ sudo make install</pre>
               <tr><th>Plugin</th><th>What it does</th></tr>
             </thead>
             <tbody>
-              <tr><td>arcmc</td><td>Archives in a panel, on libarchive. Browse nested archives, add and delete files, create ZIP, 7z, TAR and CPIO, set compression, passwords and encryption, extract in bulk with progress, speed and remaining time. Paths are checked on extraction so an archive cannot escape the target directory. <a href="https://github.com/blue-panels/mc6/wiki/Arcmc">Guide</a></td></tr>
-              <tr><td>mcstruct</td><td>Structured binary viewer and editor. A text def-file (STL5, compatible with the DOS Struct Look) turns a firmware image, a header or a table file into a tree of named fields synced with a hex dump. Ships def-files for ELF, PE, ZIP, DBF, MBR, FAT, uImage, DTB, PNG, BMP and WAV. <a href="https://github.com/blue-panels/mc6/wiki/Mcstruct">Guide</a></td></tr>
-              <tr><td>Git</td><td>Commits, branches and changed files with the built-in diff viewer. Repositories can be saved as favourites. Selecting a changed file moves the other panel to it in the working directory.</td></tr>
+              <tr><td>arcmc</td><td>Archives in a panel, on libarchive. Browse nested archives, add and delete files, create ZIP, 7z, TAR and CPIO, set compression, passwords and encryption, extract in bulk with progress, speed and remaining time. Paths are checked on extraction so an archive cannot escape the target directory. <a href="https://github.com/blue-panels/mcommander/wiki/Arcmc">Guide</a></td></tr>
+              <tr><td>mcstruct</td><td>Structured binary viewer and editor. A text def-file (STL5, compatible with the DOS Struct Look) turns a firmware image, a header or a table file into a tree of named fields synced with a hex dump. Ships def-files for ELF, PE, ZIP, DBF, MBR, FAT, uImage, DTB, PNG, BMP and WAV. <a href="https://github.com/blue-panels/mcommander/wiki/Mcstruct">Guide</a></td></tr>
+              <tr><td>duplicates</td><td>Finds copies of files in a directory, and in the other panel too, by size, name or content. Files are compared by size, then by a hash of their first and last 4 KiB, then by a hash of the whole file, and the hashes are kept for the next search. "Similar content" also groups pictures that look the same and texts that differ only in line endings and spaces. The other panel can be a reference directory whose files are never moved or deleted.</td></tr>
+              <tr><td>Git</td><td>Commits, branches and changed files with the built-in diff viewer. All the changes of a branch in one folder, merge conflicts resolved in the three-way merge on <kbd>Shift-F3</kbd>. Repositories can be saved as favourites.</td></tr>
+              <tr><td>GitHub</td><td>The pull requests and issues of a repository, with the description in Quick View.</td></tr>
+              <tr><td>PostgreSQL</td><td>Servers, databases, schemas and tables. <kbd>F3</kbd> on a table shows its SQL and its first rows as a table, <kbd>Alt-F3</kbd> opens a query console.</td></tr>
+              <tr><td>mcpeek</td><td>.NET assemblies as trees of references, namespaces, types and members. Decompiled C# or IL, usages across assemblies, export of namespaces as projects.</td></tr>
               <tr><td>Docker</td><td>Containers, their files, images, volumes, networks, mounts, command execution and logs. Local and SSH profiles. Log fetch parameters and a formatting pipe are set right in the viewer; a formatter for .NET and Serilog logs is included.</td></tr>
               <tr><td>Kubernetes</td><td>Pods, nodes, services and workloads through <code>kubectl</code>. Contexts, namespaces, describe, YAML, exec, resource deletion and log viewing.</td></tr>
-              <tr><td>MongoDB</td><td>Connections, databases, collections and documents. Filtering, projection, sorting, limits, paged reading of large collections and document editing.</td></tr>
+              <tr><td>MongoDB</td><td>Connections, databases, collections and documents. Filtering, projection, sorting, limits, paged reading of large collections and document editing. <kbd>F3</kbd> on a collection shows its documents as a table, <kbd>Alt-F3</kbd> opens a query console.</td></tr>
               <tr><td>S3</td><td>Upload, download and delete objects, create buckets, view metadata, stream objects into the viewer. Works with MinIO, Ceph and Cloudflare R2.</td></tr>
-              <tr><td>SQLite</td><td>A database as a panel of tables, columns and rows. Read only.</td></tr>
+              <tr><td>SQLite</td><td>A database as a panel of tables, views and rows. <kbd>F3</kbd> shows a table, a view or a page of rows as a table. Read only.</td></tr>
               <tr><td>FTP / SFTP</td><td>FTP and FTPS with active and passive mode, proxies, keepalive and IP version settings. SFTP with password and key authentication, compression, progress and streaming. These replace the old <code>ftpfs</code> and <code>sftpfs</code>.</td></tr>
               <tr><td>Samba</td><td>SMB servers and their shares.</td></tr>
+              <tr><td>ACL editor</td><td>POSIX and Windows access control lists, from the Attributes menu.</td></tr>
               <tr><td>systemd, shell, External Panelize</td><td>Units, shell connections, and a panel filled by a command's output.</td></tr>
             </tbody>
           </table>
@@ -657,18 +670,34 @@ sudo make install</pre>
 
         <div class="feature" style="margin-top:32px">
           <div class="text">
-            <h3>Creating an archive from tagged files</h3>
-            <p>Tag files, open the pack dialog, pick the format and compression, watch the progress. The built-in tar and cpio filesystems are gone; arcmc does that job now.</p>
+            <h3>Finding duplicates</h3>
+            <p>Command &gt; Find duplicates... runs the search in the background, and "Show found" opens a panel with the groups. Similar pictures are grouped by a perceptual hash, Quick View shows the one under the cursor, and <kbd>F8</kbd> asks before a group loses its last copy.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/arcmc.gif" alt="Creating a 7z archive from tagged files in the arcmc panel" loading="lazy"></div>
+          <div class="shot"><img src="assets/duplicates.gif" alt="Find duplicates: similar pictures in groups, a picture in the quick view, F8 asking before a group loses its last copy" loading="lazy"></div>
         </div>
 
         <div class="feature flip">
           <div class="text">
-            <h3>Git panel with a file diff</h3>
-            <p>Browse the status, open a file's diff in the built-in viewer, jump to a hunk.</p>
+            <h3>A database as a panel</h3>
+            <p>Tables, views and the schema of an SQLite file, each shown as a table on <kbd>F3</kbd>. MongoDB and PostgreSQL work the same way.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/git-panel.gif" alt="The Git panel plugin showing changed files and a diff" loading="lazy"></div>
+          <div class="shot"><img src="assets/sqlite-tables.gif" alt="A SQLite database as a panel: tables, a view and the schema shown as tables on F3" loading="lazy"></div>
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <h3>GitHub pull requests</h3>
+            <p>The merged pull requests of the repository, one of them in Quick View.</p>
+          </div>
+          <div class="shot"><img src="assets/github-panel.gif" alt="The GitHub panel: the merged pull requests of the repository, one of them in the quick view" loading="lazy"></div>
+        </div>
+
+        <div class="feature flip">
+          <div class="text">
+            <h3>Creating an archive from tagged files</h3>
+            <p>Tag files, open the pack dialog, pick the format and compression, watch the progress. The built-in tar and cpio filesystems are gone; arcmc does that job now.</p>
+          </div>
+          <div class="shot"><img src="assets/arcmc.gif" alt="Creating a 7z archive from tagged files in the arcmc panel" loading="lazy"></div>
         </div>
 
         <div class="feature">
@@ -676,12 +705,13 @@ sudo make install</pre>
             <h3>mcstruct on a DBF file</h3>
             <p>Header fields with the hex dump and the def-file in sync, and the records as a grid. Start it with <code>mcstruct FILE</code>, <kbd>Shift-F4</kbd> in the viewer, or <kbd>F3</kbd> on a file that <code>magic.ini</code> hands to it.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/mcstruct.gif" alt="mcstruct showing a DBF file as a tree of fields next to a hex dump" loading="lazy"></div>
+          <div class="shot"><img src="assets/mcstruct.gif" alt="mcstruct showing a DBF file as a tree of fields next to a hex dump" loading="lazy"></div>
         </div>
 
         <p style="color:var(--muted);font-size:14px;margin-top:20px">
+          A plugin module is opened the first time it is used, so the plugins do not slow down the start.
           User plugins are loaded from <code>~/.local/lib/mc6/panel-plugins</code>.
-          The plugins are tried in a Docker sandbox described on the <a href="https://github.com/blue-panels/mc6/wiki/QA-Testing">QA testing</a> page.
+          The plugins are tried in a Docker sandbox described on the <a href="https://github.com/blue-panels/mcommander/wiki/QA-Testing">QA testing</a> page.
         </p>
       </div>
     </section>
@@ -699,17 +729,19 @@ sudo make install</pre>
               of widgets, run processes and answer events.
             </p>
             <p style="color:var(--fg-2)">
-              Scripts are managed in the Manage Plugins dialog. Several of the viewers on this page,
-              the image renderer among them, are Lua scripts themselves.
+              Scripts are managed in the Manage Plugins dialog, where a Lua package can also have its own
+              settings dialog. Scripts can use the syntax engine of the editor through
+              <code>mc.syntax.scan()</code>. Several of the viewers on this page, the Markdown, PDF and
+              image renderers among them, are Lua scripts themselves.
             </p>
             <p style="margin-top:14px">
-              <a href="https://github.com/blue-panels/mc6/wiki/LUA_PLUGINS">Lua plugins</a> ·
-              <a href="https://github.com/blue-panels/mc6/wiki/LUA_API_REFERENCE">Lua API reference</a> ·
-              <a href="https://github.com/blue-panels/mc6/wiki/Lua-domain-model">Domain model</a>
+              <a href="https://github.com/blue-panels/mcommander/wiki/LUA_PLUGINS">Lua plugins</a> ·
+              <a href="https://github.com/blue-panels/mcommander/wiki/LUA_API_REFERENCE">Lua API reference</a> ·
+              <a href="https://github.com/blue-panels/mcommander/wiki/Lua-domain-model">Domain model</a>
             </p>
           </div>
           <figure>
-            <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/draw-table.gif" alt="Drawing a table with box-drawing characters in mcedit" loading="lazy"></div>
+            <div class="shot"><img src="assets/draw-table.gif" alt="Drawing a table with box-drawing characters in mcedit" loading="lazy"></div>
             <figcaption>The <code>draw-table</code> editor script: <kbd>Shift</kbd>+arrows draw lines, corners and crossings are computed on their own.</figcaption>
           </figure>
         </div>
@@ -719,37 +751,58 @@ sudo make install</pre>
     <section id="viewer">
       <div class="wrap">
         <p class="kicker">Viewer</p>
-        <h2>mcview reads structure, images, logs and terminals</h2>
+        <h2>mcview reads Markdown, structure, images and logs</h2>
 
         <div class="feature">
+          <div class="text">
+            <h3>Markdown</h3>
+            <p>Headings, lists, tables, links, footnotes and fenced code with the editor's syntax highlighting. Mermaid flowcharts, sequence and class diagrams and display math are drawn in the terminal. Links use OSC 8 where the terminal supports it.</p>
+            <p>A large document is rendered in parts, so the first screen appears at once and the rest follows while the viewer stays responsive.</p>
+          </div>
+          <div class="shot"><img src="assets/md-view.gif" alt="A Markdown file with a table and a Mermaid diagram rendered in mcview" loading="lazy"></div>
+        </div>
+
+        <div class="feature flip">
           <div class="text">
             <h3>Tree mode</h3>
             <p>JSON, YAML, XML, HTML, and the metadata of PNG and JPEG open as a tree, in the fullscreen viewer and in Quick View. Expand and collapse nodes, set the depth, search the whole structure, and copy the path of the selected element in a <code>jq</code>-like form.</p>
             <p>The <code>mcview_structured_auto</code> option makes supported files open in tree mode by default.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/viewer-tree.gif" alt="A JSON file shown as a collapsible tree in mcview" loading="lazy"></div>
+          <div class="shot"><img src="assets/viewer-tree.gif" alt="A JSON file shown as a collapsible tree in mcview" loading="lazy"></div>
         </div>
 
-        <div class="feature flip">
+        <div class="feature">
           <div class="text">
             <h3>Live logs with a filter</h3>
             <p>The viewer works with commands that never finish, such as <code>docker logs -f</code> or <code>journalctl -f</code>. Data is read without blocking the interface and shown as it arrives.</p>
             <p>The filter offers plain search, regular expressions, case sensitivity, whole words and charset selection, and applies to the current source: only matching lines are shown, with no second file or process.</p>
             <p>For Docker and Kubernetes logs, the number of records, the time range, the previous instance and continuous refresh are set in the viewer, and the stream can be piped through an external formatter.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/viewer-filter.gif" alt="Filtering a log file live in mcview" loading="lazy"></div>
+          <div class="shot"><img src="assets/viewer-filter.gif" alt="Filtering a log file live in mcview" loading="lazy"></div>
         </div>
 
-        <div class="feature">
+        <div class="feature flip">
           <div class="text">
             <h3>Images and generated views</h3>
             <p>PNG, JPEG and other raster images are rendered by <a href="https://hpjansson.org/chafa/">Chafa</a> into terminal characters and redrawn on resize. Where the terminal draws sixel graphics, the real picture is shown instead.</p>
-            <p>The same mechanism gives other files a readable form: ELF binaries through <code>readelf</code>, Java classes decompiled by Procyon, dBase, FoxPro and Clipper tables as pageable grids. <kbd>F8</kbd> switches between the generated view and the bytes.</p>
+            <p>The same mechanism gives other files a readable form: PDF pages as searchable text with their pictures, ELF binaries through <code>readelf</code>, Java classes decompiled by Procyon, dBase, FoxPro and Clipper tables as pageable grids. <kbd>F8</kbd> switches between the generated view and the bytes.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/pla2.png" alt="A PNG image rendered as terminal characters in mcview" loading="lazy"></div>
+          <div class="shot"><img src="assets/pla2.png" alt="A PNG image rendered as terminal characters in mcview" loading="lazy"></div>
         </div>
 
         <div class="grid" style="margin-top:24px">
+          <div class="card">
+            <h3>Reading cursor and selection</h3>
+            <p>A visible cursor, selection with the keyboard or the mouse, word and line selection, copy to the clipboard. ANSI and nroff formatting is stripped from the copied text.</p>
+          </div>
+          <div class="card">
+            <h3>Syntax highlighting</h3>
+            <p>The viewer and the compare view use the editor's syntax rules. Search for plain text or hex in large files is many times faster than before.</p>
+          </div>
+          <div class="card">
+            <h3>Manual pages</h3>
+            <p>nroff mode reads SGR styles, OSC 8 links and overstrike sequences, and formats in the charset of the locale.</p>
+          </div>
           <div class="card">
             <h3>ANSI colours</h3>
             <p>Standard and bright colours, the 256-colour palette, True Color, bold, underline, italics and reverse video. <kbd>Shift-F9</kbd> toggles rendering.</p>
@@ -776,13 +829,25 @@ sudo make install</pre>
             <h3>Code folding</h3>
             <p>Multi-line blocks fold by their <code>{}</code>, <code>[]</code> and <code>()</code> brackets, through the gutter indicator, the Command menu or <kbd>Alt+Shift+F</kbd>. The command uses the selection or the nearest enclosing block.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/fold.gif" alt="Folding and unfolding a block in mcedit" loading="lazy"></div>
+          <div class="shot"><img src="assets/fold.gif" alt="Folding and unfolding a block in mcedit" loading="lazy"></div>
         </div>
 
         <div class="grid" style="margin-top:8px">
           <div class="card">
             <h3>Editor plugins</h3>
-            <p>A plugin can register actions, add menu entries and handle keys. Three ship with the editor: the spell checker, etags support, and a new ctags navigator with jumps to definitions, references, symbol search, completion and a jump history. User plugins load from <code>~/.local/lib/mc6/editor-plugins</code>.</p>
+            <p>A plugin can register actions, add menu entries and handle keys. Three ship with the editor: the spell checker, etags support, and a ctags navigator with jumps to definitions, references, symbol search, completion and a jump history. User plugins load from <code>~/.local/lib/mc6/editor-plugins</code>.</p>
+          </div>
+          <div class="card">
+            <h3>Nested syntaxes</h3>
+            <p>One syntax can be embedded in another: scripts and style sheets in HTML, code blocks in Markdown by the language they name, awk, Python and SQL inside shell scripts. New rules for Jinja2, Smarty, Mermaid and git commit messages.</p>
+          </div>
+          <div class="card">
+            <h3>Paste and clipboard</h3>
+            <p>A bracketed paste comes in as one block and is undone in one step. The clipboard remembers the codeset of the copied text, and a paste into a file with another codeset recodes it.</p>
+          </div>
+          <div class="card">
+            <h3>Control characters</h3>
+            <p>Shown in caret notation or hidden. Hidden characters take no screen cell, and the cursor moves over them together with the text around them.</p>
           </div>
           <div class="card">
             <h3>Line filter</h3>
@@ -817,17 +882,34 @@ sudo make install</pre>
             <p>The shell runs inside the file manager. A command typed on the command line goes to the shell already running there, and the command line shows that shell's own prompt, colours and cursor. <kbd>Ctrl+O</kbd> toggles the terminal; it starts in the directory of the active panel and follows it, tracking the prompt, the running command, the exit status and the directory through OSC 133 and OSC 7.</p>
             <ul class="plain">
               <li>Bounded scrollback: <kbd>PgUp</kbd>/<kbd>PgDn</kbd>, <kbd>Shift</kbd>+arrows, <kbd>Home</kbd>, <kbd>End</kbd> and the wheel. Typing returns to the live output.</li>
-              <li>Selection with the mouse or <kbd>Shift</kbd>+arrows, copy with <kbd>Ctrl+Insert</kbd>.</li>
-              <li><kbd>Alt+Shift+S</kbd> keeps only the rows with the selected text, <kbd>Alt+S</kbd> lifts the filter.</li>
-              <li>Long lines wrap and the history is laid out again when the width changes.</li>
-              <li>Sixel graphics in the terminal and in the viewer.</li>
+              <li>Selection with the mouse or <kbd>Shift</kbd>+arrows, copy with <kbd>Ctrl+Insert</kbd>. The OSC 52 clipboard of a program reaches the clipboard too.</li>
+              <li><kbd>Alt+S</kbd> searches the scrollback, <kbd>Alt+Shift+S</kbd> keeps only the matching rows.</li>
+              <li>The full kitty keyboard protocol, for the panels and for the programs in mcterm. While a modifier is held, the key bar can show the commands of the F keys with it.</li>
+              <li>Sessions: with the session plugin, mc survives a closed terminal or a dropped connection, and the next start returns to the same session.</li>
+              <li>Wide characters, long lines that wrap and are laid out again when the width changes, sixel graphics.</li>
+              <li>bash and fish start with the integration of M-Commander; <kbd>F7</kbd>, <kbd>Shift-F4</kbd> and other file manager keys work with the panels hidden.</li>
             </ul>
             <p style="margin-top:12px">Terminal emulation is done by the viewer's own engine, without an external library.</p>
           </div>
           <figure>
-            <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/mcterm.gif" alt="The embedded terminal in mc6" loading="lazy"></div>
+            <div class="shot"><img src="assets/mcterm.gif" alt="The embedded terminal in M-Commander" loading="lazy"></div>
             <figcaption>Toggle the terminal with <kbd>Ctrl+O</kbd>, run commands, come back to the panels.</figcaption>
           </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="compare">
+      <div class="wrap">
+        <p class="kicker">Compare view</p>
+        <h2>Three-way merge with git's xdiff</h2>
+        <div class="feature" style="border-top:0;padding-top:8px">
+          <div class="text">
+            <p>The compare view (<code>mcdiff6</code>, or <kbd>Ctrl-X f</kbd> in the panels) compares files with the xdiff code of git inside the program instead of running <code>diff</code>.</p>
+            <p>It merges three files: pick the base of the merge, see which file is active and in which direction a change is copied. The git panel shows the files in conflict and opens this merge on <kbd>Shift-F3</kbd>; the result can be added to the index right there.</p>
+            <p>Syntax highlighting works here too, on top of the diff backgrounds and changed-word marks.</p>
+          </div>
+          <div class="shot"><img src="assets/merge.gif" alt="A file in conflict in the git panel, merged in the compare view and added to the index" loading="lazy"></div>
         </div>
       </div>
     </section>
@@ -858,8 +940,20 @@ sudo make install</pre>
             <p><kbd>Alt+Shift+S</kbd> filters the panel as you type, <kbd>Ctrl+G</kbd> removes the filter. <kbd>Alt+C</kbd> asks for a directory in the mini status, with completion above the input.</p>
           </div>
           <div class="card">
-            <h3>49 skins</h3>
-            <p>Every shipped skin has colours for all screens, including mcterm, the tree view and mcstruct. <code>-thin</code>, <code>-defbg</code> and <code>root</code> variants. <a href="https://github.com/blue-panels/mc6/wiki/Skins">Skins</a></p>
+            <h3>51 skins</h3>
+            <p>Every shipped skin has colours for all screens, including mcterm, the tree view and mcstruct. Mashdark and Tokyo Night are among them, with <code>-thin</code>, <code>-defbg</code> and <code>root</code> variants. <a href="https://github.com/blue-panels/mcommander/wiki/Skins">Skins</a></p>
+          </div>
+          <div class="card">
+            <h3>Hotlist and User Menu</h3>
+            <p>The Hotlist keeps plugin locations as well: a Git repository, a container, an archive. The User Menu edits itself: entries and submenus are added, moved and imported in a dialog, and entries can have conditions.</p>
+          </div>
+          <div class="card">
+            <h3>Directory watching</h3>
+            <p>Local panels follow changes on disk through inotify. Marking ten thousand files by a mask takes a fraction of a second.</p>
+          </div>
+          <div class="card">
+            <h3>Far mode</h3>
+            <p>An opt-in mode with the keys of Far Manager, including the fast find on Alt with a character. Windows Terminal's Win32 input mode is read too.</p>
           </div>
         </div>
         <div class="feature" style="margin-top:24px">
@@ -868,10 +962,10 @@ sudo make install</pre>
             <p>Changes the colours and the frame characters of a skin from inside mc and shows the result as it goes. The left half lists every key of the skin by the part of the screen it paints, the right half is a sample drawn with the colours as they are now.</p>
             <p>The Color dialog has the 16 named colours, the 256-colour picker and RGB input, plus bold, italic, underline, reverse and blink. Every change goes to the screen at once. Saving writes a copy to your skins directory and makes it the running skin. Opened from Command, Plugin panel or Manage Plugins.</p>
           </div>
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/skineditor.gif" alt="The skin editor: picking colours for the file under the cursor and for marked files, then saving the skin" loading="lazy"></div>
+          <div class="shot"><img src="assets/skineditor.gif" alt="The skin editor: picking colours for the file under the cursor and for marked files, then saving the skin" loading="lazy"></div>
         </div>
         <figure style="margin-top:24px">
-          <div class="shot"><img src="https://raw.githubusercontent.com/wiki/blue-panels/mc6/assets/bindings.png" alt="The Key Bindings dialog with bindings grouped into tabs" loading="lazy"></div>
+          <div class="shot"><img src="assets/bindings.png" alt="The Key Bindings dialog with bindings grouped into tabs" loading="lazy"></div>
           <figcaption>The Key Bindings dialog.</figcaption>
         </figure>
       </div>
@@ -883,33 +977,43 @@ sudo make install</pre>
         <h2>Own version line, from v6.0.1</h2>
         <p class="intro">
           Version numbers are independent of upstream. MINOR is bumped for feature releases, PATCH for fix-only ones.
-          Every release page lists each change with its pull request, and <code>apt changelog mc6</code> says the same.
+          Every release page lists each change with its pull request, and <code>apt changelog mcommander</code> says the same.
         </p>
         <div class="releases">
           <div class="rel">
-            <a class="v" href="https://github.com/blue-panels/mc6/wiki/Release-v6.0.4">v6.0.4</a>
+            <a class="v" href="https://github.com/blue-panels/mcommander/wiki/Release-v6.2.0">v6.2.0</a>
+            <span class="d">2026-11-15</span>
+            <span class="s">Duplicates, PostgreSQL and GitHub panels; kitty keyboard protocol; three-way merge on git's xdiff; sessions; optional Far mode</span>
+          </div>
+          <div class="rel">
+            <a class="v" href="https://github.com/blue-panels/mcommander/wiki/Release-v6.1.0">v6.1.0</a>
+            <span class="d">2026-09-26</span>
+            <span class="s">Renamed to mcommander, installs next to mc; Markdown and PDF in the viewer; mcpeek; skin editor; help written in Markdown</span>
+          </div>
+          <div class="rel">
+            <a class="v" href="https://github.com/blue-panels/mcommander/wiki/Release-v6.0.4">v6.0.4</a>
             <span class="d">2026-09-01</span>
             <span class="s">mc grows outside its core: Lua, mcstruct and plugin streams; mcterm for the subshell</span>
           </div>
           <div class="rel">
-            <a class="v" href="https://github.com/blue-panels/mc6/wiki/Release-v6.0.3">v6.0.3</a>
+            <a class="v" href="https://github.com/blue-panels/mcommander/wiki/Release-v6.0.3">v6.0.3</a>
             <span class="d">2026-08-02</span>
             <span class="s">Packaging and plugins (spell engine and panel Quick View)</span>
           </div>
           <div class="rel">
-            <a class="v" href="https://github.com/blue-panels/mc6/wiki/Release-v6.0.2">v6.0.2</a>
+            <a class="v" href="https://github.com/blue-panels/mcommander/wiki/Release-v6.0.2">v6.0.2</a>
             <span class="d">2026-07-31</span>
             <span class="s">Packaging and CI; panel plugins</span>
           </div>
           <div class="rel">
-            <a class="v" href="https://github.com/blue-panels/mc6/wiki/Release-v6.0.1">v6.0.1</a>
+            <a class="v" href="https://github.com/blue-panels/mcommander/wiki/Release-v6.0.1">v6.0.1</a>
             <span class="d">2026-07-19</span>
             <span class="s">First tagged release: panel plugin framework and 12 plugins, mcview filter/terminal/tree modes, mcedit undo history and column blocks, FAR-style panel view modes</span>
           </div>
         </div>
         <p style="margin-top:18px;color:var(--fg-2)">
-          All notes: <a href="https://github.com/blue-panels/mc6/wiki/Releases">Releases</a> ·
-          <a href="https://github.com/blue-panels/mc6/blob/master/CHANGELOG.md">CHANGELOG.md</a>
+          All notes: <a href="https://github.com/blue-panels/mcommander/wiki/Releases">Releases</a> ·
+          <a href="https://github.com/blue-panels/mcommander/blob/master/CHANGELOG.md">CHANGELOG.md</a>
         </p>
       </div>
     </section>
@@ -920,19 +1024,19 @@ sudo make install</pre>
         <h2>Building, testing, coding style</h2>
         <div class="grid">
           <div class="card">
-            <h3><a href="https://github.com/blue-panels/mc6/wiki/Coding-style">Coding style</a></h3>
+            <h3><a href="https://github.com/blue-panels/mcommander/wiki/Coding-style">Coding style</a></h3>
             <p>How the code is written and formatted, and what a pull request is expected to look like.</p>
           </div>
           <div class="card">
-            <h3><a href="https://github.com/blue-panels/mc6/wiki/QA-Testing">QA testing</a></h3>
+            <h3><a href="https://github.com/blue-panels/mcommander/wiki/QA-Testing">QA testing</a></h3>
             <p>A Docker sandbox that builds mc from the working tree and runs it against sftp, ssh, ftp and samba servers, by hand or from a script.</p>
           </div>
           <div class="card">
-            <h3><a href="https://github.com/blue-panels/mc6/wiki/Local-build-check">Local build check</a></h3>
+            <h3><a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a></h3>
             <p>Runs the CI build locally before a push.</p>
           </div>
           <div class="card">
-            <h3><a href="https://github.com/blue-panels/mc6/wiki/Demos">Demo recordings</a></h3>
+            <h3><a href="https://github.com/blue-panels/mcommander/wiki/Demos">Demo recordings</a></h3>
             <p>The GIFs on this page are rendered from VHS tapes against a pinned mc revision.</p>
           </div>
         </div>
@@ -942,12 +1046,12 @@ sudo make install</pre>
 
   <footer>
     <div class="wrap">
-      <span>M-Commander (mc6) is based on <a href="https://midnight-commander.org">GNU Midnight Commander</a> and not an official GNU package. Report issues <a href="https://github.com/blue-panels/mc6/issues">here</a>, not upstream.</span>
+      <span>M-Commander (mcommander) is based on <a href="https://midnight-commander.org">GNU Midnight Commander</a> and not an official GNU package. Report issues <a href="https://github.com/blue-panels/mcommander/issues">here</a>, not upstream.</span>
       <span class="links">
-        <a href="https://github.com/blue-panels/mc6">Source</a>
-        <a href="https://github.com/blue-panels/mc6/wiki">Wiki</a>
-        <a href="https://github.com/blue-panels/mc6/releases">Releases</a>
-        <a href="https://github.com/blue-panels/mc6/wiki/Home-ru" lang="ru">Русская версия</a>
+        <a href="https://github.com/blue-panels/mcommander">Source</a>
+        <a href="https://github.com/blue-panels/mcommander/wiki">Wiki</a>
+        <a href="https://github.com/blue-panels/mcommander/releases">Releases</a>
+        <a href="https://github.com/blue-panels/mcommander/wiki/Home-ru" lang="ru">Русская версия</a>
       </span>
     </div>
   </footer>
