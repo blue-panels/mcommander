@@ -82,10 +82,10 @@ whose distribution suffix matches your system.  The recipes carry no version
 of their own: `packaging/prepare.sh <version>` generates the version-bearing
 files from the release tag, and every build starts with it.
 
-- Debian Trixie: `sudo apt install ./mcommander_*~debian13*.deb ./mcommander-plugins_*~debian13*.deb ./mcommander-lua_*~debian13*.deb`
-- Ubuntu 26.04: `sudo apt install ./mcommander_*~ubuntu26*.deb ./mcommander-plugins_*~ubuntu26*.deb ./mcommander-lua_*~ubuntu26*.deb`
-- RHEL/Fedora: `sudo dnf install ./mcommander-*.rpm ./mcommander-plugins-*.rpm ./mcommander-lua-*.rpm`
-- Arch: `sudo pacman -U ./mcommander-*.pkg.tar.zst ./mcommander-plugins-*.pkg.tar.zst ./mcommander-lua-*.pkg.tar.zst`
+- Debian Trixie: `sudo apt install ./mcommander_*debian13*_$(dpkg --print-architecture).deb ./mcommander-plugins_*debian13*_$(dpkg --print-architecture).deb ./mcommander-lua_*debian13*_$(dpkg --print-architecture).deb`
+- Ubuntu 26.04: `sudo apt install ./mcommander_*ubuntu26*_$(dpkg --print-architecture).deb ./mcommander-plugins_*ubuntu26*_$(dpkg --print-architecture).deb ./mcommander-lua_*ubuntu26*_$(dpkg --print-architecture).deb`
+- RHEL/Fedora: `sudo dnf install ./mcommander-6*.$(uname -m).rpm ./mcommander-plugins-6*.$(uname -m).rpm ./mcommander-lua-6*.$(uname -m).rpm`
+- Arch: `sudo pacman -U ./mcommander-6*.pkg.tar.zst ./mcommander-plugins-6*.pkg.tar.zst ./mcommander-lua-6*.pkg.tar.zst`
 - Gentoo: copy `packaging/gentoo` into a local overlay as `app-misc/mcommander`,
   then `emerge app-misc/mcommander`
 
