@@ -24,11 +24,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-11-08 16:54+0000\n"
+"POT-Creation-Date: 2026-11-15 02:04+0000\n"
 "PO-Revision-Date: 2026-11-09 11:01+0000\n"
 "Last-Translator: yeager <yeager@noreply.codeberg.org>\n"
-"Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/>"
-"\n"
+"Language-Team: Swedish <https://translate.codeberg.org/projects/mc6/mc6/sv/"
+">\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1023,6 +1023,22 @@ msgstr "Döpte om %s till %s\n"
 
 msgid "FATAL: not a directory:"
 msgstr "ALLVARLIGT FEL: inte en katalog:"
+
+msgid "the module is the one of another plugin"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Skin %s not found"
+msgid "symbol %s not found"
+msgstr "Temat %s hittades inte"
+
+msgid "the module was replaced after mc started; restart mc"
+msgstr ""
+
+#, fuzzy
+#| msgid "%s: the copy does not match the source"
+msgid "the module does not match what is known about it"
+msgstr "%s: kopian stämmer inte överens med källan"
 
 msgid ""
 "Number out of range (should be in byte range, 0 <= n <= 0xFF, expressed in "
@@ -4713,6 +4729,17 @@ msgstr "Denna åtgärd stöds inte för insticksmodulpaneler"
 msgid "No file given"
 msgstr "Ingen fil angiven"
 
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot read skin file %s:\n"
+#| "%s"
+msgid ""
+"Cannot load plugin %s:\n"
+"%s"
+msgstr ""
+"Kan inte läsa temafilen %s:\n"
+"%s"
+
 #, c-format
 msgid "Plugin %s is not available"
 msgstr "Insticksmodulen %s är inte tillgänglig"
@@ -6764,6 +6791,287 @@ msgstr "En profil med denna etikett finns redan."
 msgid "New Connection"
 msgstr "Ny anslutning"
 
+#, fuzzy, c-format
+#| msgid "Cache directory:"
+msgid "No such directory: %s"
+msgstr "Cachekatalog:"
+
+#, fuzzy
+#| msgid "Cannot run external panelize in a non-local directory"
+msgid "The other panel shows no local directory"
+msgstr "Extern panelisering kan inte köras på en icke-lokal katalog"
+
+msgid "The reference directory is the start directory"
+msgstr ""
+
+msgid "This build reads no images: libjpeg and libpng were not found"
+msgstr ""
+
+msgid "The similarity is a percent from 1 to 100"
+msgstr ""
+
+msgid "Choose what the duplicates have in common"
+msgstr ""
+
+msgid "Malformed size"
+msgstr ""
+
+msgid "The lower size limit is above the upper one"
+msgstr ""
+
+msgid "Malformed date"
+msgstr ""
+
+#, fuzzy
+#| msgid "The line state column at the left"
+msgid "The first date is after the last one"
+msgstr "Radstatuskolumnen till vänster"
+
+#, c-format
+msgid "Malformed file name pattern: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "File types"
+msgid "By &file type"
+msgstr "Filtyper"
+
+msgid "Ima&ges: perceptual hash"
+msgstr ""
+
+msgid "Te&xt: ignore line endings and spaces"
+msgstr ""
+
+#, c-format
+msgid "Also in the other &panel (%s)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Sync other panel"
+msgid "Also in the other &panel"
+msgstr "Synkronisera andra panelen"
+
+msgid "    The other panel is a &reference: never move or delete there"
+msgstr ""
+
+#, fuzzy
+#| msgid "Ena&ble ignore directories:"
+msgid "Enable &ignore directories:"
+msgstr "&Ignorera dessa kataloger:"
+
+#, fuzzy
+#| msgid "File name:"
+msgid "File mask:"
+msgstr "Filnamn:"
+
+#, fuzzy
+#| msgid "&Case sensitive"
+msgid "Case sensi&tive"
+msgstr "&Skiftlägeskänsligt"
+
+#, fuzzy
+#| msgid "S&kip hidden"
+msgid "Skip h&idden"
+msgstr "Ignorera &dolda"
+
+msgid "Size from (e.g. 10M):"
+msgstr ""
+
+msgid "Modified from (e.g. 2024-01-01 or 30d):"
+msgstr ""
+
+#, fuzzy
+#| msgid "Paneli&ze"
+msgid "Same si&ze"
+msgstr "Pa&nelisera"
+
+#, fuzzy
+#| msgid "File name:"
+msgid "Same na&me"
+msgstr "Filnamn:"
+
+#, fuzzy
+#| msgid "Sea&rch for content"
+msgid "Same co&ntent"
+msgstr "Sök efter &innehåll"
+
+#, fuzzy
+#| msgid "&Case sensitive"
+msgid "Name case sensiti&ve"
+msgstr "&Skiftlägeskänsligt"
+
+msgid "Simi&lar content, not only the same bytes"
+msgstr ""
+
+msgid "Similarity (e.g. 90%):"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Find recursively"
+msgid "Find &recursively"
+msgstr "Sök i &underkataloger"
+
+msgid "Find duplicates"
+msgstr ""
+
+#, fuzzy
+#| msgid "Not found"
+msgid "&Show found"
+msgstr "Hittades inte"
+
+#, fuzzy
+#| msgid "Packing: %s"
+msgid "Walking: "
+msgstr "Packar: %s"
+
+#, c-format
+msgid "Files: %u   taken: %u (%s)"
+msgstr ""
+
+#, c-format
+msgid "Hashing %u / %u files, %s / %s"
+msgstr ""
+
+#, c-format
+msgid "Found so far: %u group, %s can be freed"
+msgid_plural "Found so far: %u groups, %s can be freed"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Find &duplicates..."
+msgstr ""
+
+msgid "Stop the search for duplicates"
+msgstr ""
+
+#, fuzzy
+#| msgid "Group"
+msgid "Grp"
+msgstr "Grupp"
+
+msgid "Ref"
+msgstr ""
+
+msgid "Sim"
+msgstr ""
+
+msgid "Duplicates"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Found: %lu in %lu files"
+msgid "walking, %u files"
+msgstr "Hittade: %lu i %lu filer"
+
+#, c-format
+msgid "%u/%u hashed, %u group"
+msgid_plural "%u/%u hashed, %u groups"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "stopped, %u group, %s"
+msgid_plural "stopped, %u groups, %s"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy, c-format
+#| msgid "Set &groups"
+msgid "%u group, %s"
+msgid_plural "%u groups, %s"
+msgstr[0] "Sätt &grupper"
+msgstr[1] "Sätt &grupper"
+
+#, c-format
+msgid ", %u unread"
+msgstr ""
+
+msgid ""
+"A search for duplicates is running.\n"
+"Stop it and start a new one?"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot create %s:\n"
+#| "%s"
+msgid ""
+"Cannot create a pipe:\n"
+"%s"
+msgstr ""
+"Kan inte skapa %s:\n"
+"%s"
+
+msgid "No group was complete when stopped."
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "No tags found for the current file."
+msgid "No duplicates found among %u file."
+msgid_plural "No duplicates found among %u files."
+msgstr[0] "Inga taggar hittades för den aktuella filen."
+msgstr[1] "Inga taggar hittades för den aktuella filen."
+
+#, c-format
+msgid ""
+"%s\n"
+"%u file could not be read, it was not compared."
+msgid_plural ""
+"%s\n"
+"%u files could not be read, they were not compared."
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid ""
+"%s\n"
+"%u directory could not be read, its files were not seen."
+msgid_plural ""
+"%s\n"
+"%u directories could not be read, their files were not seen."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "No search for duplicates is running."
+msgstr ""
+
+#, fuzzy
+#| msgid "refresh"
+msgid "ref"
+msgstr "uppdatera"
+
+#, c-format
+msgid ""
+"No copy of %u group is left after this.\n"
+"Delete the files anyway?"
+msgid_plural ""
+"No copy of %u groups is left after this.\n"
+"Delete the files anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%u file of the reference directory is kept."
+msgid_plural "%u files of the reference directory are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%u file changed since the search and is kept."
+msgid_plural "%u files changed since the search and are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy, c-format
+#| msgid "Cannot delete %s"
+msgid ""
+"Cannot delete\n"
+"%s"
+msgstr "Kan inte ta bort %s"
+
+msgid "The files of the reference directory are not moved."
+msgstr ""
+
 msgid "FTP"
 msgstr "FTP"
 
@@ -7018,8 +7326,9 @@ msgid "Reword is available only for commits on the current branch."
 msgstr ""
 "Omformulering är endast tillgänglig för incheckningar på den aktuella grenen."
 
-#, c-format
-msgid "Cannot find coole executable: %s"
+#, fuzzy, c-format
+#| msgid "Cannot find coole executable: %s"
+msgid "Cannot find bluerig executable: %s"
 msgstr "Kan inte hitta körbar fil för coole: %s"
 
 msgid "Repository path:"
@@ -7436,9 +7745,13 @@ msgstr "En anslutning med namnet ”%s” finns redan."
 msgid "Cannot save connection: %s"
 msgstr "Kan inte spara anslutning: %s"
 
+#, fuzzy
+#| msgid ""
+#| "Install coole for the query editor, or mongosh. Their paths can be given "
+#| "in the MongoDB settings."
 msgid ""
-"Install coole for the query editor, or mongosh. Their paths can be given in "
-"the MongoDB settings."
+"Install bluerig for the query editor, or mongosh. Their paths can be given "
+"in the MongoDB settings."
 msgstr ""
 "Installera coole för frågeredigeraren, eller mongosh. Sökvägarna kan anges i "
 "MongoDB-inställningarna."
@@ -7447,7 +7760,9 @@ msgstr ""
 msgid "Cannot start %s."
 msgstr "Kan inte starta %s."
 
-msgid "This build of mc has no terminal for coole."
+#, fuzzy
+#| msgid "This build of mc has no terminal for coole."
+msgid "This build of mc has no terminal for bluerig."
 msgstr "Den här mc-versionen har ingen terminal för coole."
 
 #, c-format
@@ -7631,7 +7946,9 @@ msgstr "Uttag (ms):"
 msgid "Op max time (ms):"
 msgstr "Max. åtgärdstid (ms):"
 
-msgid "coole, the query editor (empty: from PATH):"
+#, fuzzy
+#| msgid "coole, the query editor (empty: from PATH):"
+msgid "bluerig, the query editor (empty: from PATH):"
 msgstr "coole, frågeredigeraren (tomt: från PATH):"
 
 msgid "mongosh (empty: from PATH):"
@@ -7952,9 +8269,13 @@ msgstr "Kan inte spara anslutningen: %s"
 msgid "Cannot delete the connection: %s"
 msgstr "Kan inte ta bort anslutningen: %s"
 
+#, fuzzy
+#| msgid ""
+#| "Install coole for the query editor, or psql. Their paths can be given in "
+#| "the PostgreSQL settings."
 msgid ""
-"Install coole for the query editor, or psql. Their paths can be given in the "
-"PostgreSQL settings."
+"Install bluerig for the query editor, or psql. Their paths can be given in "
+"the PostgreSQL settings."
 msgstr ""
 "Installera coole för frågeredigeraren, eller psql. Sökvägarna kan anges i "
 "PostgreSQL-inställningarna."
@@ -7982,7 +8303,9 @@ msgstr "Rader som visas med F3 (0: inga):"
 msgid "Show &system schemas"
 msgstr "Visa &systemscheman"
 
-msgid "psql, without coole (empty: from PATH):"
+#, fuzzy
+#| msgid "psql, without coole (empty: from PATH):"
+msgid "psql, without bluerig (empty: from PATH):"
 msgstr "psql, utan coole (tomt: från PATH):"
 
 msgid "PostgreSQL settings"
@@ -10792,9 +11115,6 @@ msgstr "Kan inte hämta en lokal kopia av /ftp://some.host/editme.txt"
 #~ msgstr ""
 #~ "Extern panelize:\n"
 #~ "misslyckades med att läsa data från barnets stdout:"
-
-#~ msgid "Cannot run external panelize in a non-local directory"
-#~ msgstr "Extern panelisering kan inte köras på en icke-lokal katalog"
 
 #~ msgid "Teach me a key"
 #~ msgstr "Lär mig en tangent"

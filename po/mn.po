@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-11-08 16:54+0000\n"
+"POT-Creation-Date: 2026-11-15 02:04+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
 "Language-Team: Mongolian <https://translate.codeberg.org/projects/mc6/mc6/mn/"
@@ -1173,6 +1173,19 @@ msgid "Renamed %s to %s\n"
 msgstr "%s аас %s руу хөрвүүлж чадсангүй"
 
 msgid "FATAL: not a directory:"
+msgstr ""
+
+msgid "the module is the one of another plugin"
+msgstr ""
+
+#, c-format
+msgid "symbol %s not found"
+msgstr ""
+
+msgid "the module was replaced after mc started; restart mc"
+msgstr ""
+
+msgid "the module does not match what is known about it"
 msgstr ""
 
 msgid ""
@@ -4735,6 +4748,17 @@ msgstr ""
 msgid "No file given"
 msgstr ""
 
+#, fuzzy, c-format
+#| msgid ""
+#| "Cannot write to the %s file:\n"
+#| "%s\n"
+msgid ""
+"Cannot load plugin %s:\n"
+"%s"
+msgstr ""
+" %s файл руу бичиж чадсангүй:\n"
+"%s\n"
+
 #, c-format
 msgid "Plugin %s is not available"
 msgstr ""
@@ -6969,6 +6993,257 @@ msgstr ""
 msgid "New Connection"
 msgstr ""
 
+#, fuzzy, c-format
+#| msgid "Cannot read directory contents"
+msgid "No such directory: %s"
+msgstr "Хавтасны доторхыг уншиж чадсангүй"
+
+msgid "The other panel shows no local directory"
+msgstr ""
+
+msgid "The reference directory is the start directory"
+msgstr ""
+
+msgid "This build reads no images: libjpeg and libpng were not found"
+msgstr ""
+
+msgid "The similarity is a percent from 1 to 100"
+msgstr ""
+
+msgid "Choose what the duplicates have in common"
+msgstr ""
+
+msgid "Malformed size"
+msgstr ""
+
+msgid "The lower size limit is above the upper one"
+msgstr ""
+
+msgid "Malformed date"
+msgstr ""
+
+msgid "The first date is after the last one"
+msgstr ""
+
+#, c-format
+msgid "Malformed file name pattern: %s"
+msgstr ""
+
+#, fuzzy
+#| msgid "File: %s"
+msgid "By &file type"
+msgstr "Файл: %s"
+
+msgid "Ima&ges: perceptual hash"
+msgstr ""
+
+msgid "Te&xt: ignore line endings and spaces"
+msgstr ""
+
+#, c-format
+msgid "Also in the other &panel (%s)"
+msgstr ""
+
+msgid "Also in the other &panel"
+msgstr ""
+
+msgid "    The other panel is a &reference: never move or delete there"
+msgstr ""
+
+#, fuzzy
+#| msgid "&Compare directories"
+msgid "Enable &ignore directories:"
+msgstr "&Хавсралт файлийг харьцуулах"
+
+#, fuzzy
+#| msgid "File: %s"
+msgid "File mask:"
+msgstr "Файл: %s"
+
+msgid "Case sensi&tive"
+msgstr ""
+
+msgid "Skip h&idden"
+msgstr ""
+
+msgid "Size from (e.g. 10M):"
+msgstr ""
+
+msgid "Modified from (e.g. 2024-01-01 or 30d):"
+msgstr ""
+
+#, fuzzy
+#| msgid "Paneli&ze"
+msgid "Same si&ze"
+msgstr "&Панелиз"
+
+msgid "Same na&me"
+msgstr ""
+
+msgid "Same co&ntent"
+msgstr ""
+
+msgid "Name case sensiti&ve"
+msgstr ""
+
+msgid "Simi&lar content, not only the same bytes"
+msgstr ""
+
+msgid "Similarity (e.g. 90%):"
+msgstr ""
+
+msgid "Find &recursively"
+msgstr ""
+
+msgid "Find duplicates"
+msgstr ""
+
+msgid "&Show found"
+msgstr ""
+
+msgid "Walking: "
+msgstr ""
+
+#, c-format
+msgid "Files: %u   taken: %u (%s)"
+msgstr ""
+
+#, c-format
+msgid "Hashing %u / %u files, %s / %s"
+msgstr ""
+
+#, c-format
+msgid "Found so far: %u group, %s can be freed"
+msgid_plural "Found so far: %u groups, %s can be freed"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Find &duplicates..."
+msgstr ""
+
+msgid "Stop the search for duplicates"
+msgstr ""
+
+#, fuzzy
+#| msgid "Group"
+msgid "Grp"
+msgstr "Бүлэг"
+
+msgid "Ref"
+msgstr ""
+
+msgid "Sim"
+msgstr ""
+
+msgid "Duplicates"
+msgstr ""
+
+#, c-format
+msgid "walking, %u files"
+msgstr ""
+
+#, c-format
+msgid "%u/%u hashed, %u group"
+msgid_plural "%u/%u hashed, %u groups"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "stopped, %u group, %s"
+msgid_plural "stopped, %u groups, %s"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy, c-format
+#| msgid "Set &groups"
+msgid "%u group, %s"
+msgid_plural "%u groups, %s"
+msgstr[0] "&Бүлгүүдийг тодорхойлох"
+msgstr[1] "&Бүлгүүдийг тодорхойлох"
+
+#, c-format
+msgid ", %u unread"
+msgstr ""
+
+msgid ""
+"A search for duplicates is running.\n"
+"Stop it and start a new one?"
+msgstr ""
+
+#, fuzzy, c-format
+#| msgid "Cannot parse:"
+msgid ""
+"Cannot create a pipe:\n"
+"%s"
+msgstr "Анализ хийж чадсангүй:"
+
+msgid "No group was complete when stopped."
+msgstr ""
+
+#, c-format
+msgid "No duplicates found among %u file."
+msgid_plural "No duplicates found among %u files."
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid ""
+"%s\n"
+"%u file could not be read, it was not compared."
+msgid_plural ""
+"%s\n"
+"%u files could not be read, they were not compared."
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid ""
+"%s\n"
+"%u directory could not be read, its files were not seen."
+msgid_plural ""
+"%s\n"
+"%u directories could not be read, their files were not seen."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "No search for duplicates is running."
+msgstr ""
+
+msgid "ref"
+msgstr ""
+
+#, c-format
+msgid ""
+"No copy of %u group is left after this.\n"
+"Delete the files anyway?"
+msgid_plural ""
+"No copy of %u groups is left after this.\n"
+"Delete the files anyway?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%u file of the reference directory is kept."
+msgid_plural "%u files of the reference directory are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%u file changed since the search and is kept."
+msgid_plural "%u files changed since the search and are kept."
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy, c-format
+#| msgid "Cannot open named pipe %s\n"
+msgid ""
+"Cannot delete\n"
+"%s"
+msgstr "%s гэж нэрлэгдсэн урсгалыг нээж чадсангүй\n"
+
+msgid "The files of the reference directory are not moved."
+msgstr ""
+
 msgid "FTP"
 msgstr ""
 
@@ -7258,7 +7533,7 @@ msgstr ""
 
 #, fuzzy, c-format
 #| msgid "Cannot open named pipe %s\n"
-msgid "Cannot find coole executable: %s"
+msgid "Cannot find bluerig executable: %s"
 msgstr "%s гэж нэрлэгдсэн урсгалыг нээж чадсангүй\n"
 
 #, fuzzy
@@ -7714,8 +7989,8 @@ msgid "Cannot save connection: %s"
 msgstr "ftpfs: %s руу холболт үүсгэж байна"
 
 msgid ""
-"Install coole for the query editor, or mongosh. Their paths can be given in "
-"the MongoDB settings."
+"Install bluerig for the query editor, or mongosh. Their paths can be given "
+"in the MongoDB settings."
 msgstr ""
 
 #, fuzzy, c-format
@@ -7723,7 +7998,7 @@ msgstr ""
 msgid "Cannot start %s."
 msgstr "Анализ хийж чадсангүй:"
 
-msgid "This build of mc has no terminal for coole."
+msgid "This build of mc has no terminal for bluerig."
 msgstr ""
 
 #, c-format
@@ -7926,7 +8201,7 @@ msgstr ""
 msgid "Op max time (ms):"
 msgstr ""
 
-msgid "coole, the query editor (empty: from PATH):"
+msgid "bluerig, the query editor (empty: from PATH):"
 msgstr ""
 
 msgid "mongosh (empty: from PATH):"
@@ -8284,8 +8559,8 @@ msgid "Cannot delete the connection: %s"
 msgstr "ftpfs: %s руу холболт үүсгэж байна"
 
 msgid ""
-"Install coole for the query editor, or psql. Their paths can be given in the "
-"PostgreSQL settings."
+"Install bluerig for the query editor, or psql. Their paths can be given in "
+"the PostgreSQL settings."
 msgstr ""
 
 #, fuzzy, c-format
@@ -8312,7 +8587,7 @@ msgstr ""
 msgid "Show &system schemas"
 msgstr ""
 
-msgid "psql, without coole (empty: from PATH):"
+msgid "psql, without bluerig (empty: from PATH):"
 msgstr ""
 
 msgid "PostgreSQL settings"

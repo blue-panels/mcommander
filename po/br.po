@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Midnight Commander\n"
 "Report-Msgid-Bugs-To: https://github.com/blue-panels/mcommander/issues\n"
-"POT-Creation-Date: 2026-11-08 16:54+0000\n"
+"POT-Creation-Date: 2026-11-15 02:04+0000\n"
 "PO-Revision-Date: 2026-09-25 22:53+0000\n"
 "Last-Translator: GitHub webhook <noreply-webhook-github@weblate.org>\n"
 "Language-Team: Breton <https://translate.codeberg.org/projects/mc6/mc6/br/>\n"
@@ -1044,6 +1044,19 @@ msgid "Renamed %s to %s\n"
 msgstr ""
 
 msgid "FATAL: not a directory:"
+msgstr ""
+
+msgid "the module is the one of another plugin"
+msgstr ""
+
+#, c-format
+msgid "symbol %s not found"
+msgstr ""
+
+msgid "the module was replaced after mc started; restart mc"
+msgstr ""
+
+msgid "the module does not match what is known about it"
 msgstr ""
 
 msgid ""
@@ -4502,6 +4515,12 @@ msgid "No file given"
 msgstr ""
 
 #, c-format
+msgid ""
+"Cannot load plugin %s:\n"
+"%s"
+msgstr ""
+
+#, c-format
 msgid "Plugin %s is not available"
 msgstr ""
 
@@ -6554,6 +6573,273 @@ msgstr ""
 msgid "New Connection"
 msgstr ""
 
+#, c-format
+msgid "No such directory: %s"
+msgstr ""
+
+msgid "The other panel shows no local directory"
+msgstr ""
+
+msgid "The reference directory is the start directory"
+msgstr ""
+
+msgid "This build reads no images: libjpeg and libpng were not found"
+msgstr ""
+
+msgid "The similarity is a percent from 1 to 100"
+msgstr ""
+
+msgid "Choose what the duplicates have in common"
+msgstr ""
+
+msgid "Malformed size"
+msgstr ""
+
+msgid "The lower size limit is above the upper one"
+msgstr ""
+
+msgid "Malformed date"
+msgstr ""
+
+msgid "The first date is after the last one"
+msgstr ""
+
+#, c-format
+msgid "Malformed file name pattern: %s"
+msgstr ""
+
+msgid "By &file type"
+msgstr ""
+
+msgid "Ima&ges: perceptual hash"
+msgstr ""
+
+msgid "Te&xt: ignore line endings and spaces"
+msgstr ""
+
+#, c-format
+msgid "Also in the other &panel (%s)"
+msgstr ""
+
+msgid "Also in the other &panel"
+msgstr ""
+
+msgid "    The other panel is a &reference: never move or delete there"
+msgstr ""
+
+msgid "Enable &ignore directories:"
+msgstr ""
+
+msgid "File mask:"
+msgstr ""
+
+msgid "Case sensi&tive"
+msgstr ""
+
+msgid "Skip h&idden"
+msgstr ""
+
+msgid "Size from (e.g. 10M):"
+msgstr ""
+
+msgid "Modified from (e.g. 2024-01-01 or 30d):"
+msgstr ""
+
+msgid "Same si&ze"
+msgstr ""
+
+msgid "Same na&me"
+msgstr ""
+
+msgid "Same co&ntent"
+msgstr ""
+
+msgid "Name case sensiti&ve"
+msgstr ""
+
+msgid "Simi&lar content, not only the same bytes"
+msgstr ""
+
+msgid "Similarity (e.g. 90%):"
+msgstr ""
+
+msgid "Find &recursively"
+msgstr ""
+
+msgid "Find duplicates"
+msgstr ""
+
+msgid "&Show found"
+msgstr ""
+
+msgid "Walking: "
+msgstr ""
+
+#, c-format
+msgid "Files: %u   taken: %u (%s)"
+msgstr ""
+
+#, c-format
+msgid "Hashing %u / %u files, %s / %s"
+msgstr ""
+
+#, c-format
+msgid "Found so far: %u group, %s can be freed"
+msgid_plural "Found so far: %u groups, %s can be freed"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+msgid "Find &duplicates..."
+msgstr ""
+
+msgid "Stop the search for duplicates"
+msgstr ""
+
+msgid "Grp"
+msgstr ""
+
+msgid "Ref"
+msgstr ""
+
+msgid "Sim"
+msgstr ""
+
+msgid "Duplicates"
+msgstr ""
+
+#, c-format
+msgid "walking, %u files"
+msgstr ""
+
+#, c-format
+msgid "%u/%u hashed, %u group"
+msgid_plural "%u/%u hashed, %u groups"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid "stopped, %u group, %s"
+msgid_plural "stopped, %u groups, %s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid "%u group, %s"
+msgid_plural "%u groups, %s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid ", %u unread"
+msgstr ""
+
+msgid ""
+"A search for duplicates is running.\n"
+"Stop it and start a new one?"
+msgstr ""
+
+#, c-format
+msgid ""
+"Cannot create a pipe:\n"
+"%s"
+msgstr ""
+
+msgid "No group was complete when stopped."
+msgstr ""
+
+#, c-format
+msgid "No duplicates found among %u file."
+msgid_plural "No duplicates found among %u files."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid ""
+"%s\n"
+"%u file could not be read, it was not compared."
+msgid_plural ""
+"%s\n"
+"%u files could not be read, they were not compared."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid ""
+"%s\n"
+"%u directory could not be read, its files were not seen."
+msgid_plural ""
+"%s\n"
+"%u directories could not be read, their files were not seen."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+msgid "No search for duplicates is running."
+msgstr ""
+
+msgid "ref"
+msgstr ""
+
+#, c-format
+msgid ""
+"No copy of %u group is left after this.\n"
+"Delete the files anyway?"
+msgid_plural ""
+"No copy of %u groups is left after this.\n"
+"Delete the files anyway?"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid "%u file of the reference directory is kept."
+msgid_plural "%u files of the reference directory are kept."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid "%u file changed since the search and is kept."
+msgid_plural "%u files changed since the search and are kept."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+msgstr[4] ""
+
+#, c-format
+msgid ""
+"Cannot delete\n"
+"%s"
+msgstr ""
+
+msgid "The files of the reference directory are not moved."
+msgstr ""
+
 msgid "FTP"
 msgstr ""
 
@@ -6806,7 +7092,7 @@ msgid "Reword is available only for commits on the current branch."
 msgstr ""
 
 #, c-format
-msgid "Cannot find coole executable: %s"
+msgid "Cannot find bluerig executable: %s"
 msgstr ""
 
 msgid "Repository path:"
@@ -7236,15 +7522,15 @@ msgid "Cannot save connection: %s"
 msgstr ""
 
 msgid ""
-"Install coole for the query editor, or mongosh. Their paths can be given in "
-"the MongoDB settings."
+"Install bluerig for the query editor, or mongosh. Their paths can be given "
+"in the MongoDB settings."
 msgstr ""
 
 #, c-format
 msgid "Cannot start %s."
 msgstr ""
 
-msgid "This build of mc has no terminal for coole."
+msgid "This build of mc has no terminal for bluerig."
 msgstr ""
 
 #, c-format
@@ -7430,7 +7716,7 @@ msgstr ""
 msgid "Op max time (ms):"
 msgstr ""
 
-msgid "coole, the query editor (empty: from PATH):"
+msgid "bluerig, the query editor (empty: from PATH):"
 msgstr ""
 
 msgid "mongosh (empty: from PATH):"
@@ -7760,8 +8046,8 @@ msgid "Cannot delete the connection: %s"
 msgstr ""
 
 msgid ""
-"Install coole for the query editor, or psql. Their paths can be given in the "
-"PostgreSQL settings."
+"Install bluerig for the query editor, or psql. Their paths can be given in "
+"the PostgreSQL settings."
 msgstr ""
 
 #, c-format
@@ -7787,7 +8073,7 @@ msgstr ""
 msgid "Show &system schemas"
 msgstr ""
 
-msgid "psql, without coole (empty: from PATH):"
+msgid "psql, without bluerig (empty: from PATH):"
 msgstr ""
 
 msgid "PostgreSQL settings"
