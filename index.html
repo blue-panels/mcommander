@@ -393,6 +393,25 @@
 
     .feature .shot { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); }
 
+    /* Feature lists */
+    .flist { display: grid; }
+
+    .frow {
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 18px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      align-items: baseline;
+    }
+
+    .frow:last-child { border-bottom: 1px solid var(--line); }
+    .frow span { color: var(--fg-2); }
+
+    @media (max-width: 640px) {
+      .frow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    }
+
     /* Plugins table */
     table {
       width: 100%;
@@ -760,31 +779,13 @@ sudo meson install -C build</pre>
           <div class="shot"><img src="assets/pla2.png" alt="A PNG image rendered as terminal characters in mcview" loading="lazy"></div>
         </div>
 
-        <div class="grid" style="margin-top:24px">
-          <div class="card">
-            <h3>Reading cursor and selection</h3>
-            <p>A visible cursor, selection with the keyboard or the mouse, word and line selection, copy to the clipboard. ANSI and nroff formatting is stripped from the copied text.</p>
-          </div>
-          <div class="card">
-            <h3>Syntax highlighting</h3>
-            <p>The viewer and the compare view use the editor's syntax rules. Search for plain text or hex in large files is many times faster than before.</p>
-          </div>
-          <div class="card">
-            <h3>Manual pages</h3>
-            <p>nroff mode reads SGR styles, OSC 8 links and overstrike sequences, and formats in the charset of the locale.</p>
-          </div>
-          <div class="card">
-            <h3>ANSI colours</h3>
-            <p>Standard and bright colours, the 256-colour palette, True Color, bold, underline, italics and reverse video. <kbd>Shift-F9</kbd> toggles rendering.</p>
-          </div>
-          <div class="card">
-            <h3>Terminal replay</h3>
-            <p>Positioning, screen erasing and scrolling regions are handled, so <code>script(1)</code> recordings and saved output of fullscreen programs can be viewed. <kbd>F9</kbd> switches None, SGR and Term.</p>
-          </div>
-          <div class="card">
-            <h3>Runtime file handlers</h3>
-            <p>A Lua handler can intercept a file in Viewer or Quick View and show a generated representation. The rules live in <code>magic.ini</code> and can be changed by the user.</p>
-          </div>
+        <div class="flist" style="margin-top:24px">
+          <div class="frow"><b>Reading cursor</b><span>Select with the keyboard or the mouse and copy; ANSI and nroff formatting is left out of the copy.</span></div>
+          <div class="frow"><b>Syntax highlighting</b><span>The viewer and the compare view use the editor's rules. Text and hex search in large files is many times faster.</span></div>
+          <div class="frow"><b>Manual pages</b><span>nroff mode reads SGR styles, OSC 8 links and overstrike, in the charset of the locale.</span></div>
+          <div class="frow"><b>ANSI colours</b><span>16, 256 and true colour, bold, italics, underline. <kbd>Shift-F9</kbd> toggles them.</span></div>
+          <div class="frow"><b>Terminal replay</b><span><code>script(1)</code> recordings and saved output of fullscreen programs. <kbd>F9</kbd> switches None, SGR and Term.</span></div>
+          <div class="frow"><b>File handlers</b><span>A Lua handler can show any file its own way; the rules are in <code>magic.ini</code>.</span></div>
         </div>
       </div>
     </section>
@@ -802,43 +803,16 @@ sudo meson install -C build</pre>
           <div class="shot"><img src="assets/fold.gif" alt="Folding and unfolding a block in mcedit" loading="lazy"></div>
         </div>
 
-        <div class="grid" style="margin-top:8px">
-          <div class="card">
-            <h3>Editor plugins</h3>
-            <p>A plugin can register actions, add menu entries and handle keys. Three ship with the editor: the spell checker, etags support, and a ctags navigator with jumps to definitions, references, symbol search, completion and a jump history. User plugins load from <code>~/.local/lib/mc6/editor-plugins</code>.</p>
-          </div>
-          <div class="card">
-            <h3>Nested syntaxes</h3>
-            <p>One syntax can be embedded in another: scripts and style sheets in HTML, code blocks in Markdown by the language they name, awk, Python and SQL inside shell scripts. New rules for Jinja2, Smarty, Mermaid and git commit messages.</p>
-          </div>
-          <div class="card">
-            <h3>Paste and clipboard</h3>
-            <p>A bracketed paste comes in as one block and is undone in one step. The clipboard remembers the codeset of the copied text, and a paste into a file with another codeset recodes it.</p>
-          </div>
-          <div class="card">
-            <h3>Control characters</h3>
-            <p>Shown in caret notation or hidden. Hidden characters take no screen cell, and the cursor moves over them together with the text around them.</p>
-          </div>
-          <div class="card">
-            <h3>Line filter</h3>
-            <p>The Search dialog (<kbd>F7</kbd>) has a Filter action that hides non-matching lines while keeping the original numbers. <kbd>Alt+S</kbd> lifts or restores the filter, <kbd>Alt+Shift+S</kbd> filters by the selection or the word under the cursor.</p>
-          </div>
-          <div class="card">
-            <h3>Undo history</h3>
-            <p><kbd>Alt+Shift+U</kbd> lists undo and redo groups with the line, the operation, the size and a fragment of the change. Jump to any point of the history.</p>
-          </div>
-          <div class="card">
-            <h3>Macro explorer</h3>
-            <p><kbd>Alt+Shift+M</kbd> lists recorded macros. Inspect the action sequence, run, delete, or open the definition in <code>mc.macros</code>.</p>
-          </div>
-          <div class="card">
-            <h3>Saving through sudo</h3>
-            <p>When a file cannot be saved for lack of permissions, the editor offers to repeat through <code>sudo -S tee</code>. A failed attempt keeps the buffer and the editor open.</p>
-          </div>
-          <div class="card">
-            <h3>Long lines</h3>
-            <p>Character positions inside long lines are cached, so logs, CSV and minified data scroll and redraw without delays.</p>
-          </div>
+        <div class="flist" style="margin-top:8px">
+          <div class="frow"><b>Editor plugins</b><span>Spell checker, etags and a ctags navigator ship with it; user plugins go to <code>~/.local/lib/mc6/editor-plugins</code>.</span></div>
+          <div class="frow"><b>Nested syntaxes</b><span>JavaScript and CSS inside HTML, code blocks in Markdown, awk, Python and SQL inside shell scripts.</span></div>
+          <div class="frow"><b>Paste and clipboard</b><span>A paste is one undo step; a paste into a file with another codeset is recoded.</span></div>
+          <div class="frow"><b>Control characters</b><span>Shown in caret notation or hidden.</span></div>
+          <div class="frow"><b>Line filter</b><span><kbd>F7</kbd>, Filter: only the matching lines stay, with their numbers. <kbd>Alt+S</kbd> lifts it.</span></div>
+          <div class="frow"><b>Undo history</b><span><kbd>Alt+Shift+U</kbd> lists the changes; jump to any of them.</span></div>
+          <div class="frow"><b>Macro explorer</b><span><kbd>Alt+Shift+M</kbd> lists the recorded macros: run, delete, open the definition.</span></div>
+          <div class="frow"><b>Saving through sudo</b><span>When permissions are missing, the editor offers <code>sudo -S tee</code>.</span></div>
+          <div class="frow"><b>Long lines</b><span>Logs, CSV and minified data scroll without delays.</span></div>
         </div>
       </div>
     </section>
@@ -888,43 +862,17 @@ sudo meson install -C build</pre>
       <div class="wrap">
         <p class="kicker">Panels, keys and skins</p>
         <h2>Configuration that used to need a text editor</h2>
-        <div class="grid">
-          <div class="card">
-            <h3>Key Bindings</h3>
-            <p>Changes the bindings and finds conflicts between them, grouped by area into tabs.</p>
-          </div>
-          <div class="card">
-            <h3>Learn Keys</h3>
-            <p>Recognises modifiers, so Ctrl, Alt and Shift are captured together with the base key. Settings are stored per <code>$TERM</code> in <code>~/.config/mc6/term/</code>.</p>
-          </div>
-          <div class="card">
-            <h3>Key Sniffer</h3>
-            <p>Shows the escape sequence a terminal sends for a key, with the shortcut, the mapped action and the keycode.</p>
-          </div>
-          <div class="card">
-            <h3>Panel view modes</h3>
-            <p>Users define their own display modes and choose the set and width of the columns. <code>permission_colors</code> colours each permission bit by what it is, the way <code>eza</code> does.</p>
-          </div>
-          <div class="card">
-            <h3>Quick filter</h3>
-            <p><kbd>Alt+Shift+S</kbd> filters the panel as you type, <kbd>Ctrl+G</kbd> removes the filter. <kbd>Alt+C</kbd> asks for a directory in the mini status, with completion above the input.</p>
-          </div>
-          <div class="card">
-            <h3>51 skins</h3>
-            <p>Every shipped skin has colours for all screens, including mcterm, the tree view and mcstruct. Mashdark and Tokyo Night are among them, with <code>-thin</code>, <code>-defbg</code> and <code>root</code> variants. <a href="https://github.com/blue-panels/mcommander/wiki/Skins">Skins</a></p>
-          </div>
-          <div class="card">
-            <h3>Hotlist and User Menu</h3>
-            <p>The Hotlist keeps plugin locations as well: a Git repository, a container, an archive. The User Menu edits itself: entries and submenus are added, moved and imported in a dialog, and entries can have conditions.</p>
-          </div>
-          <div class="card">
-            <h3>Directory watching</h3>
-            <p>Local panels follow changes on disk through inotify. Marking ten thousand files by a mask takes a fraction of a second.</p>
-          </div>
-          <div class="card">
-            <h3>Far mode</h3>
-            <p>An opt-in mode with the keys of Far Manager, including the fast find on Alt with a character. Windows Terminal's Win32 input mode is read too.</p>
-          </div>
+        <div class="flist">
+          <div class="frow"><b>Key Bindings</b><span>Change the bindings and find conflicts, grouped into tabs.</span></div>
+          <div class="frow"><b>Learn Keys</b><span>Captures Ctrl, Alt and Shift with the key; stored per <code>$TERM</code>.</span></div>
+          <div class="frow"><b>Key Sniffer</b><span>Shows what the terminal sends for a key and what it is bound to.</span></div>
+          <div class="frow"><b>Panel view modes</b><span>Your own column sets; <code>permission_colors</code> colours each permission bit.</span></div>
+          <div class="frow"><b>Quick filter</b><span><kbd>Alt+Shift+S</kbd> filters the panel as you type, <kbd>Ctrl+G</kbd> removes the filter.</span></div>
+          <div class="frow"><b>51 skins</b><span>With colours for mcterm, the tree view and mcstruct. <a href="https://github.com/blue-panels/mcommander/wiki/Skins">Skins</a></span></div>
+          <div class="frow"><b>Hotlist</b><span>Keeps plugin locations too: a repository, a container, an archive.</span></div>
+          <div class="frow"><b>User Menu</b><span>Edited in a dialog; entries can have conditions.</span></div>
+          <div class="frow"><b>Directory watching</b><span>Local panels follow changes on disk through inotify.</span></div>
+          <div class="frow"><b>Far mode</b><span>Opt-in keys of Far Manager, with the fast find on Alt.</span></div>
         </div>
         <div class="feature" style="margin-top:24px">
           <div class="text">
@@ -1000,23 +948,11 @@ sudo meson install -C build</pre>
       <div class="wrap">
         <p class="kicker">Contributing</p>
         <h2>Building, testing, coding style</h2>
-        <div class="grid">
-          <div class="card">
-            <h3><a href="https://github.com/blue-panels/mcommander/wiki/Coding-style">Coding style</a></h3>
-            <p>How the code is written and formatted, and what a pull request is expected to look like.</p>
-          </div>
-          <div class="card">
-            <h3><a href="https://github.com/blue-panels/mcommander/wiki/QA-Testing">QA testing</a></h3>
-            <p>A Docker sandbox that builds mc from the working tree and runs it against sftp, ssh, ftp and samba servers, by hand or from a script.</p>
-          </div>
-          <div class="card">
-            <h3><a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a></h3>
-            <p>Runs the CI build locally before a push.</p>
-          </div>
-          <div class="card">
-            <h3><a href="https://github.com/blue-panels/mcommander/wiki/Demos">Demo recordings</a></h3>
-            <p>The GIFs on this page are rendered from VHS tapes against a pinned mc revision.</p>
-          </div>
+        <div class="flist">
+          <div class="frow"><b><a href="https://github.com/blue-panels/mcommander/wiki/Coding-style">Coding style</a></b><span>How the code is written and what a pull request should look like.</span></div>
+          <div class="frow"><b><a href="https://github.com/blue-panels/mcommander/wiki/QA-Testing">QA testing</a></b><span>A Docker sandbox with sftp, ssh, ftp and samba servers.</span></div>
+          <div class="frow"><b><a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a></b><span>The CI build, run locally before a push.</span></div>
+          <div class="frow"><b><a href="https://github.com/blue-panels/mcommander/wiki/Demos">Demo recordings</a></b><span>The GIFs on this page, recorded from VHS tapes.</span></div>
         </div>
       </div>
     </section>
