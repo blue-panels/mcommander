@@ -958,6 +958,14 @@ sudo meson install -C build</pre>
         </div>
         <div class="feature" style="margin-top:24px">
           <div class="text">
+            <h3>Key bar with modifiers</h3>
+            <p>While Shift, Ctrl or Alt is held, the key bar shows what the F keys do with that modifier: sorting on Ctrl, the single-file operations on Shift, the plugin drives, Find and Tree on Alt. Release the key and the usual labels come back.</p>
+            <p>It needs a terminal with the kitty keyboard protocol, such as kitty, and is turned on by <code>keybar_modifiers=true</code> in the settings file.</p>
+          </div>
+          <div class="shot"><img src="assets/keybar_modifiers.gif" alt="The key bar changing its labels while Ctrl, Shift and Alt are held" loading="lazy"></div>
+        </div>
+        <div class="feature flip">
+          <div class="text">
             <h3>Skin editor</h3>
             <p>Changes the colours and the frame characters of a skin from inside mc and shows the result as it goes. The left half lists every key of the skin by the part of the screen it paints, the right half is a sample drawn with the colours as they are now.</p>
             <p>The Color dialog has the 16 named colours, the 256-colour picker and RGB input, plus bold, italic, underline, reverse and blink. Every change goes to the screen at once. Saving writes a copy to your skins directory and makes it the running skin. Opened from Command, Plugin panel or Manage Plugins.</p>
