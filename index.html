@@ -393,27 +393,6 @@
 
     .feature .shot { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); }
 
-    /* Directions */
-    .dirs {
-      counter-reset: dir;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .dirs .card { position: relative; padding-top: 44px; }
-
-    .dirs .card::before {
-      counter-increment: dir;
-      content: "0" counter(dir);
-      position: absolute;
-      top: 14px;
-      left: 20px;
-      font-family: var(--mono);
-      font-size: 13px;
-      color: var(--blue-2);
-    }
-
     /* Plugins table */
     table {
       width: 100%;
@@ -558,39 +537,6 @@
         </figure>
       </div>
     </div>
-
-    <section id="directions">
-      <div class="wrap">
-        <p class="kicker">What the fork is about</p>
-        <h2>Five directions</h2>
-        <p class="intro">
-          The core stays GNU Midnight Commander. Everything below is added around it,
-          most of it as plugins that can be enabled, replaced or written by the user.
-        </p>
-        <div class="dirs">
-          <div class="card">
-            <h3><a href="#plugins">Panel plugins</a></h3>
-            <p>A panel can show anything: Git history, pull requests, containers, pods, database tables, buckets, duplicate files, an archive on a remote host. Plugins pass streams to each other.</p>
-          </div>
-          <div class="card">
-            <h3><a href="#scripting">Lua scripting</a></h3>
-            <p>Lua is itself a plugin over the core ABI. Scripts extend the editor, panels, viewer and UI without touching the core.</p>
-          </div>
-          <div class="card">
-            <h3><a href="#viewer">Viewer</a></h3>
-            <p>Markdown with diagrams, PDF, tree mode for JSON, YAML, XML and HTML, images, live logs with a filter, a reading cursor and syntax highlighting.</p>
-          </div>
-          <div class="card">
-            <h3><a href="#editor">Editor</a></h3>
-            <p>Editor plugins, nested syntaxes, box drawing, line filter, code folding, undo history, saving through sudo.</p>
-          </div>
-          <div class="card">
-            <h3><a href="#terminal">Embedded terminal</a></h3>
-            <p>mcterm replaces the old subshell: real prompt, scrollback, search, kitty keyboard protocol, sessions, sixel graphics.</p>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <section id="install">
       <div class="wrap">
