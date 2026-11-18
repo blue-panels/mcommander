@@ -337,11 +337,31 @@
     /* Install */
     .install {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
 
-    .install .card pre { margin-top: 10px; }
+    .install .wide { grid-column: 1 / -1; }
+
+    .install .card pre {
+      margin-top: 10px;
+      white-space: pre;
+      overflow-wrap: normal;
+    }
+
+    .install .cols {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .install .cols pre { margin-top: 0; }
+
+    @media (max-width: 760px) {
+      .install,
+      .install .cols { grid-template-columns: minmax(0, 1fr); }
+    }
 
     .note {
       margin-top: 22px;
@@ -587,34 +607,44 @@
             <h3>Ubuntu 24.04 and 26.04 (PPA)</h3>
             <pre>sudo add-apt-repository ppa:bluepanels/mcommander
 sudo apt update
-sudo apt install mcommander mcommander-plugins mcommander-lua</pre>
+sudo apt install mcommander \
+    mcommander-plugins mcommander-lua</pre>
           </div>
           <div class="card">
             <h3>macOS (Homebrew)</h3>
             <pre>brew install blue-panels/tap/mcommander</pre>
             <p style="margin-top:10px">A <code>.dmg</code> and a <code>.pkg</code> for Apple silicon are attached to the release as well.</p>
           </div>
-          <div class="card">
+          <div class="card wide">
             <h3>Debian, Fedora, Arch</h3>
-            <p>Take the files for your system from the <a href="https://github.com/blue-panels/mcommander/releases/latest">latest release</a>:</p>
-            <ul class="plain">
-              <li><code>.deb</code> for Debian 13 and Ubuntu 26.04, amd64 and arm64</li>
-              <li><code>.rpm</code> for Fedora, x86_64 and aarch64</li>
-              <li><code>.pkg.tar.zst</code> for Arch, x86_64</li>
-            </ul>
-            <p style="margin-top:10px">Install <code>mcommander</code>, <code>mcommander-plugins</code> and <code>mcommander-lua</code> together, through the package manager:</p>
-            <pre>sudo apt install ./mcommander{,-plugins,-lua}_*debian13*_amd64.deb
+            <div class="cols">
+              <div>
+                <p>Take the files for your system from the <a href="https://github.com/blue-panels/mcommander/releases/latest">latest release</a>:</p>
+                <ul class="plain">
+                  <li><code>.deb</code> for Debian 13 and Ubuntu 26.04, amd64 and arm64</li>
+                  <li><code>.rpm</code> for Fedora, x86_64 and aarch64</li>
+                  <li><code>.pkg.tar.zst</code> for Arch, x86_64</li>
+                </ul>
+                <p style="margin-top:10px">Install <code>mcommander</code>, <code>mcommander-plugins</code> and <code>mcommander-lua</code> together, through the package manager.</p>
+              </div>
+              <pre><span class="c"># Debian 13</span>
+sudo apt install ./mcommander{,-plugins,-lua}_*debian13*_amd64.deb
+<span class="c"># Fedora</span>
 sudo dnf install ./mcommander{,-plugins,-lua}-6*.x86_64.rpm
+<span class="c"># Arch</span>
 sudo pacman -U ./mcommander{,-plugins,-lua}-6*-x86_64.pkg.tar.zst</pre>
+            </div>
           </div>
-          <div class="card">
+          <div class="card wide">
             <h3>From source</h3>
-            <pre>git clone https://github.com/blue-panels/mcommander.git
+            <div class="cols">
+              <p>See <a href="https://github.com/blue-panels/mcommander/blob/master/INSTALL">INSTALL</a> for dependencies and <a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a> to run the CI build locally.</p>
+              <pre>git clone https://github.com/blue-panels/mcommander.git
 cd mcommander
 meson setup build --prefix=/usr --sysconfdir=/etc
 meson compile -C build
 sudo meson install -C build</pre>
-            <p style="margin-top:10px">See <a href="https://github.com/blue-panels/mcommander/blob/master/INSTALL">INSTALL</a> for dependencies and <a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a> to run the CI build locally.</p>
+            </div>
           </div>
         </div>
         <div class="note">
