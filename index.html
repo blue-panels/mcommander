@@ -335,32 +335,32 @@
     }
 
     /* Install */
-    .install {
+    .inst { display: grid; }
+
+    .inst-row {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 18px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      align-items: baseline;
     }
 
-    .install .wide { grid-column: 1 / -1; }
+    .inst-row:last-child { border-bottom: 1px solid var(--line); }
 
-    .install .card pre {
-      margin-top: 10px;
+    .inst-row .os { font-weight: 600; }
+    .inst-row .os small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+
+    .inst-row pre {
       white-space: pre;
       overflow-wrap: normal;
+      padding: 10px 14px;
     }
 
-    .install .cols {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-      gap: 24px;
-      align-items: start;
-    }
+    .inst-more { margin-top: 14px; color: var(--fg-2); font-size: 15px; }
 
-    .install .cols pre { margin-top: 0; }
-
-    @media (max-width: 760px) {
-      .install,
-      .install .cols { grid-template-columns: minmax(0, 1fr); }
+    @media (max-width: 640px) {
+      .inst-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
     }
 
     .note {
@@ -602,51 +602,45 @@
           The package is called <code>mcommander</code> and installs next to the distribution's
           <code>mc</code> instead of replacing it.
         </p>
-        <div class="install">
-          <div class="card">
-            <h3>Ubuntu 24.04 and 26.04 (PPA)</h3>
+        <div class="inst">
+          <div class="inst-row">
+            <span class="os">Ubuntu 24.04, 26.04<small>PPA</small></span>
             <pre>sudo add-apt-repository ppa:bluepanels/mcommander
 sudo apt update
-sudo apt install mcommander \
-    mcommander-plugins mcommander-lua</pre>
+sudo apt install mcommander mcommander-plugins mcommander-lua</pre>
           </div>
-          <div class="card">
-            <h3>macOS (Homebrew)</h3>
+          <div class="inst-row">
+            <span class="os">macOS, Linux<small>Homebrew</small></span>
             <pre>brew install blue-panels/tap/mcommander</pre>
-            <p style="margin-top:10px">A <code>.dmg</code> and a <code>.pkg</code> for Apple silicon are attached to the release as well.</p>
           </div>
-          <div class="card wide">
-            <h3>Debian, Fedora, Arch</h3>
-            <div class="cols">
-              <div>
-                <p>Take the files for your system from the <a href="https://github.com/blue-panels/mcommander/releases/latest">latest release</a>:</p>
-                <ul class="plain">
-                  <li><code>.deb</code> for Debian 13 and Ubuntu 26.04, amd64 and arm64</li>
-                  <li><code>.rpm</code> for Fedora, x86_64 and aarch64</li>
-                  <li><code>.pkg.tar.zst</code> for Arch, x86_64</li>
-                </ul>
-                <p style="margin-top:10px">Install <code>mcommander</code>, <code>mcommander-plugins</code> and <code>mcommander-lua</code> together, through the package manager.</p>
-              </div>
-              <pre><span class="c"># Debian 13</span>
-sudo apt install ./mcommander{,-plugins,-lua}_*debian13*_amd64.deb
-<span class="c"># Fedora</span>
-sudo dnf install ./mcommander{,-plugins,-lua}-6*.x86_64.rpm
-<span class="c"># Arch</span>
-sudo pacman -U ./mcommander{,-plugins,-lua}-6*-x86_64.pkg.tar.zst</pre>
-            </div>
+          <div class="inst-row">
+            <span class="os">Debian 13<small>files from the release</small></span>
+            <pre>sudo apt install ./mcommander{,-plugins,-lua}_*debian13*_amd64.deb</pre>
           </div>
-          <div class="card wide">
-            <h3>From source</h3>
-            <div class="cols">
-              <p>See <a href="https://github.com/blue-panels/mcommander/blob/master/INSTALL">INSTALL</a> for dependencies and <a href="https://github.com/blue-panels/mcommander/wiki/Local-build-check">Local build check</a> to run the CI build locally.</p>
-              <pre>git clone https://github.com/blue-panels/mcommander.git
+          <div class="inst-row">
+            <span class="os">Fedora<small>files from the release</small></span>
+            <pre>sudo dnf install ./mcommander{,-plugins,-lua}-6*.x86_64.rpm</pre>
+          </div>
+          <div class="inst-row">
+            <span class="os">Arch<small>files from the release</small></span>
+            <pre>sudo pacman -U ./mcommander{,-plugins,-lua}-6*-x86_64.pkg.tar.zst</pre>
+          </div>
+          <div class="inst-row">
+            <span class="os">From source<small>meson</small></span>
+            <pre>git clone https://github.com/blue-panels/mcommander.git
 cd mcommander
 meson setup build --prefix=/usr --sysconfdir=/etc
 meson compile -C build
 sudo meson install -C build</pre>
-            </div>
           </div>
         </div>
+        <p class="inst-more">
+          The <a href="https://github.com/blue-panels/mcommander/releases/latest">latest release</a> has <code>.deb</code> files for Debian 13 and Ubuntu 26.04
+          (amd64, arm64), <code>.rpm</code> for Fedora (x86_64, aarch64), <code>.pkg.tar.zst</code> for Arch,
+          and a <code>.dmg</code> and <code>.pkg</code> for macOS. On arm64 (aarch64 for Fedora), change the architecture in the file
+          name. <a href="https://github.com/blue-panels/mcommander/blob/master/INSTALL">INSTALL</a> lists the
+          build dependencies.
+        </p>
         <div class="note">
           The main command is <code>mcommander</code>, with <code>mc6</code> as a short alias. The editor,
           viewer and compare view are <code>mcedit6</code>, <code>mview</code> and <code>mcdiff6</code>, and
