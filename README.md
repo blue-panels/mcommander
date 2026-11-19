@@ -13,6 +13,11 @@ It runs in any terminal, from the Linux console to tmux and a remote session ove
 This fork is not an official GNU package. Report issues here, not upstream.
 Its version numbering starts at `v6.0.1` and is independent of upstream.
 
+Its editor also goes on as a program of its own:
+[bluerig](https://github.com/blue-panels/bluerig), a terminal IDE grown out of
+mcedit, with language servers, a debugger and a Git window. The Git, MongoDB
+and PostgreSQL panels open it.
+
 ![Git panel with inline diff](https://raw.githubusercontent.com/wiki/blue-panels/mcommander/assets/git-panel.gif)
 
 ## What this fork adds
