@@ -26,6 +26,8 @@
 
 #include <unistd.h>
 
+#include "lib/util.h"  // mc_realpath()
+
 #include "src/clipboard.h"
 
 static char *clip;
@@ -119,15 +121,49 @@ START_TEST (test_info_garbage)
     char digest[CLIP_DIGEST_LEN + 1];
     char codeset[CLIP_CODESET_MAX + 1];
     gboolean vertical;
+    char real[MC_MAXPATHLEN];
     char *path;
 
-    path = g_strconcat (clip, CLIP_INFO_SUFFIX, (char *) NULL);
+    // the info is next to the real file, and the temporary directory may be a symlink
+    mctest_assert_not_null (mc_realpath (clip, real));
+    path = g_strconcat (real, CLIP_INFO_SUFFIX, (char *) NULL);
     g_file_set_contents (path, "not an info line\n", -1, NULL);
     mctest_assert_false (clipboard_info_read (clip, digest, &vertical, codeset));
 
     g_file_set_contents (path, "", -1, NULL);
     mctest_assert_false (clipboard_info_read (clip, digest, &vertical, codeset));
     g_free (path);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Two programs share the clipfile by a symlink: they must share its info too */
+START_TEST (test_info_through_symlink)
+{
+    char digest[CLIP_DIGEST_LEN + 1];
+    char codeset[CLIP_CODESET_MAX + 1];
+    gboolean vertical;
+    char *link;
+
+    link = g_strconcat (clip, "-link", (char *) NULL);
+    ck_assert_int_eq (symlink (clip, link), 0);
+
+    clipboard_info_write (clip, digest_a, TRUE, "UTF-8");
+    mctest_assert_true (clipboard_info_read (link, digest, &vertical, codeset));
+    mctest_assert_str_eq (digest, digest_a);
+    mctest_assert_true (vertical);
+
+    clipboard_info_write (link, digest_b, FALSE, "KOI8-R");
+    mctest_assert_true (clipboard_info_read (clip, digest, &vertical, codeset));
+    mctest_assert_str_eq (digest, digest_b);
+    mctest_assert_false (vertical);
+
+    clipboard_info_drop (link);
+    mctest_assert_false (clipboard_info_read (clip, digest, &vertical, codeset));
+
+    unlink (link);
+    g_free (link);
 }
 END_TEST
 
@@ -146,6 +182,7 @@ main (void)
     tcase_add_test (tc_core, test_info_no_codeset);
     tcase_add_test (tc_core, test_info_missing_and_dropped);
     tcase_add_test (tc_core, test_info_garbage);
+    tcase_add_test (tc_core, test_info_through_symlink);
 
     return mctest_run_all (tc_core);
 }

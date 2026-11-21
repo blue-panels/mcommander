@@ -80,9 +80,14 @@ static const mode_t clip_open_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 /*** file scope functions ************************************************************************/
 /* --------------------------------------------------------------------------------------------- */
 
+/* The info is next to the real file: programs that share the clipfile by a symlink share it */
 static char *
 clip_info_path (const char *clip_path)
 {
+    char real[MC_MAXPATHLEN];
+
+    if (mc_realpath (clip_path, real) != NULL)
+        return g_strconcat (real, CLIP_INFO_SUFFIX, (char *) NULL);
     return g_strconcat (clip_path, CLIP_INFO_SUFFIX, (char *) NULL);
 }
 
