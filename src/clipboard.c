@@ -138,6 +138,44 @@ clip_text_for_terminal (const char *clip_path, gsize *len)
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* The text as a terminal may give it back: LF line breaks, no control bytes but the tab, no blanks
+   at the end of a line and no line breaks at the end of the text */
+static GString *
+clip_paste_normalize (const char *text, size_t len)
+{
+    GString *out;
+    size_t i;
+
+    out = g_string_sized_new (len);
+    for (i = 0; i < len; i++)
+    {
+        char c = text[i];
+
+        if (c == '\r')
+        {
+            if (i + 1 < len && text[i + 1] == '\n')
+                continue;
+            c = '\n';
+        }
+        else if (c != '\n' && c != '\t' && ((unsigned char) c < 0x20 || c == 0x7f))
+            continue;
+
+        if (c == '\n')
+            while (out->len != 0
+                   && (out->str[out->len - 1] == ' ' || out->str[out->len - 1] == '\t'))
+                g_string_truncate (out, out->len - 1);
+        g_string_append_c (out, c);
+    }
+    while (out->len != 0
+           && (out->str[out->len - 1] == ' ' || out->str[out->len - 1] == '\t'
+               || out->str[out->len - 1] == '\n'))
+        g_string_truncate (out, out->len - 1);
+
+    return out;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 /* Put the text of the clipfile on the clipboard of the terminal */
 static void
 clip_send_osc52 (const char *clip_path)
@@ -468,6 +506,62 @@ clipboard_info_read (const char *clip_path, char *digest, gboolean *vertical, ch
     g_free (data);
 
     return ok;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* Is the text of a terminal paste the block of the clipfile? The terminal gives only text, so the
+   text is the key and the kind of the block comes from the info. TRUE when the text matches and
+   the info is valid for the clipfile; column gets the kind then. */
+gboolean
+clipboard_paste_is_clip (const char *clip_path, const char *text, size_t len, gboolean *column)
+{
+    char digest[CLIP_DIGEST_LEN + 1];
+    char codeset[CLIP_CODESET_MAX + 1];
+    char *data, *sum, *utf8;
+    gsize data_len, utf8_len;
+    GString *pasted, *clip;
+    gboolean ret = FALSE;
+
+    *column = FALSE;
+
+    if (!clipboard_info_read (clip_path, digest, column, codeset))
+        return FALSE;
+    if (!g_file_get_contents (clip_path, &data, &data_len, NULL))
+        return FALSE;
+
+    sum = g_compute_checksum_for_data (CLIP_DIGEST_TYPE, (const guchar *) data, data_len);
+    if (strcmp (sum, digest) == 0)
+    {
+        pasted = clip_paste_normalize (text, len);
+
+        clip = clip_paste_normalize (data, data_len);
+        ret = g_string_equal (pasted, clip);
+        g_string_free (clip, TRUE);
+
+        // the terminal got the text in UTF-8 by OSC 52
+        if (!ret && codeset[0] != '\0' && !str_isutf8 (codeset))
+        {
+            utf8 = g_convert_with_fallback (data, (gssize) data_len, "UTF-8", codeset, "?", NULL,
+                                            &utf8_len, NULL);
+            if (utf8 != NULL)
+            {
+                clip = clip_paste_normalize (utf8, utf8_len);
+                ret = g_string_equal (pasted, clip);
+                g_string_free (clip, TRUE);
+                g_free (utf8);
+            }
+        }
+
+        g_string_free (pasted, TRUE);
+    }
+    g_free (sum);
+    g_free (data);
+
+    if (!ret)
+        *column = FALSE;
+
+    return ret;
 }
 
 /* --------------------------------------------------------------------------------------------- */
