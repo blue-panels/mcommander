@@ -50,7 +50,7 @@
 
 #include "lib/tty/color.h"
 #include "lib/tty/tty.h"  // attrset()
-#include "lib/tty/key.h"  // is_idle()
+#include "lib/tty/key.h"  // is_idle(), bracketed_pasting_in_progress
 #include "lib/skin.h"     // EDITOR_NORMAL_COLOR
 #include "lib/fileloc.h"  // EDIT_HOME_BLOCK_FILE
 #include "lib/vfs/vfs.h"
@@ -5530,7 +5530,12 @@ edit_execute_cmd (WEdit *edit, long command, int char_for_insertion)
             edit_block_delete_cmd (edit);
         if (edit_options.cursor_beyond_eol && edit->over_col > 0)
             edit_insert_over (edit);
-        edit_paste_from_X_buf_cmd (edit);
+        /* a terminal paste has the text already: the external clipboard command would get the
+           text of something else then */
+        if (bracketed_pasting_in_progress)
+            edit_paste_clip_file (edit);
+        else
+            edit_paste_from_X_buf_cmd (edit);
         if (!edit_options.persistent_selections && edit->mark2 >= 0)
         {
             if (edit->column_highlight != 0)

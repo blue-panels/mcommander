@@ -44,6 +44,7 @@ void clipboard_info_write (const char *clip_path, const char *digest, gboolean v
 gboolean clipboard_info_read (const char *clip_path, char *digest, gboolean *vertical,
                               char *codeset);
 void clipboard_info_drop (const char *clip_path);
+gboolean clipboard_paste_is_column (const char *clip_path, const char *text, size_t len);
 
 /*** inline functions ****************************************************************************/
 
