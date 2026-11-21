@@ -231,6 +231,8 @@ void edit_word_wrap (WEdit *edit);
 gboolean edit_copy_to_X_buf_cmd (WEdit *edit);
 gboolean edit_cut_to_X_buf_cmd (WEdit *edit);
 gboolean edit_paste_from_X_buf_cmd (WEdit *edit);
+gboolean edit_paste_clip_file (WEdit *edit);
+void edit_paste_block (WEdit *edit, gboolean ext_clip);
 
 void edit_select_codepage_cmd (WEdit *edit);
 
