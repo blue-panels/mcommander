@@ -138,6 +138,9 @@ void table_quick_search_stop (WTable *t);
    a group below 0 stays whatever is typed; with letters_filter a letter starts the filter */
 void table_set_quick_filter_fuzzy (WTable *t, gboolean letters_filter,
                                    int (*group_of) (void *data, int row));
+/* Filter the rows by @text as the quick filter does; an empty text shows every row.
+   FALSE when no row is left. */
+gboolean table_set_filter_text (WTable *t, const char *text);
 /* Show the text of a quick search on @label, a line of the dialog, instead of the last line
    of the table */
 void table_set_quick_search_label (WTable *t, WHLine *label);

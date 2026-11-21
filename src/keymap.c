@@ -156,6 +156,7 @@ static const global_keymap_ini_t default_filemanager_keymap[] = {
     { "ViewFiltered", "alt-exclamation" },
     // Find file
     { "Find", "alt-question" },
+    { "CommandPalette", "alt-shift-p" },
     // Panel refresh
     { "Reread", "ctrl-r" },
     // Switch listing between long, user defined and full formats

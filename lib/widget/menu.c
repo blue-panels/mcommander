@@ -1,20 +1,24 @@
 /*
-   Pulldown menu code
+   Pulldown menu code for the M-Commander
 
    Copyright (C) 1994-2025
    Free Software Foundation, Inc.
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
 
    Written by:
    Andrew Borodin <aborodin@vmail.ru>, 2012-2022
+   Ilia Maslakov <il.smind@gmail.com>, 2026
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -81,6 +85,15 @@ struct menu_t
 
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
+/* --------------------------------------------------------------------------------------------- */
+
+static char *
+hotkey_plain_text (const hotkey_t hotkey)
+{
+    return g_strconcat (hotkey.start, hotkey.hotkey != NULL ? hotkey.hotkey : "",
+                        hotkey.end != NULL ? hotkey.end : "", (char *) NULL);
+}
+
 /* --------------------------------------------------------------------------------------------- */
 
 static void
@@ -1311,6 +1324,37 @@ menubar_activate (WMenuBar *menubar, gboolean dropped, int which)
         /* Bring it to the top so it receives all mouse events before any other widget.
          * See also comment in menubar_finish(). */
         widget_select (w);
+    }
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+menubar_foreach_entry (const WMenuBar *menubar, menubar_entry_fn fn, void *data)
+{
+    const GList *i;
+
+    for (i = menubar->menu; i != NULL; i = g_list_next (i))
+    {
+        const menu_t *menu = MENU (i->data);
+        char *menu_name;
+        const GList *e;
+
+        menu_name = hotkey_plain_text (menu->text);
+        for (e = menu->entries; e != NULL; e = g_list_next (e))
+        {
+            const menu_entry_t *entry = MENUENTRY (e->data);
+
+            if (entry != NULL && entry->command != CK_IgnoreKey)
+            {
+                char *name;
+
+                name = hotkey_plain_text (entry->text);
+                fn (menu, menu_name, name, entry->shortcut, entry->command, data);
+                g_free (name);
+            }
+        }
+        g_free (menu_name);
     }
 }
 
