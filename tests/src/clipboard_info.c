@@ -187,24 +187,32 @@ START_TEST (test_paste_column_matches)
 {
     // the terminal sends CR line breaks and drops the blanks that pad the column
     static const char pasted[] = "ab\rgh\rmn";
-    gboolean column = FALSE;
 
     put_clip ("ab  \ngh  \nmn  \n", TRUE, "UTF-8");
-    mctest_assert_true (clipboard_paste_is_clip (clip, pasted, strlen (pasted), &column));
-    mctest_assert_true (column);
+    mctest_assert_true (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
 }
 END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_paste_column_crlf)
+{
+    static const char pasted[] = "ab\r\ngh\r\n";
+
+    put_clip ("ab\ngh\n", TRUE, "UTF-8");
+    mctest_assert_true (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* the text of a text block is no column, whether it matches or not */
 START_TEST (test_paste_text_block)
 {
     static const char pasted[] = "ab\ngh";
-    gboolean column = TRUE;
 
     put_clip ("ab\ngh", FALSE, "UTF-8");
-    mctest_assert_true (clipboard_paste_is_clip (clip, pasted, strlen (pasted), &column));
-    mctest_assert_false (column);
+    mctest_assert_false (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
 }
 END_TEST
 
@@ -213,11 +221,50 @@ END_TEST
 START_TEST (test_paste_other_text)
 {
     static const char pasted[] = "ab\ngx";
-    gboolean column = TRUE;
 
     put_clip ("ab\ngh", TRUE, "UTF-8");
-    mctest_assert_false (clipboard_paste_is_clip (clip, pasted, strlen (pasted), &column));
-    mctest_assert_false (column);
+    mctest_assert_false (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* only the blanks at the end of a line and the line breaks at the end go: the rest counts */
+START_TEST (test_paste_lines_count)
+{
+    static const char *const pasted[] = { "ab gh", "abgh", "ab\n\ngh", "a b\ngh", " ab\ngh" };
+    size_t i;
+
+    put_clip ("ab\ngh\n", TRUE, "UTF-8");
+    for (i = 0; i < G_N_ELEMENTS (pasted); i++)
+        ck_assert_msg (!clipboard_paste_is_column (clip, pasted[i], strlen (pasted[i])),
+                       "\"%s\" matched", pasted[i]);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+/* a column of blanks is empty once the blanks are gone, and so is a paste of a line break */
+START_TEST (test_paste_blank_matches_nothing)
+{
+    static const char *const pasted[] = { "", "\n", "  ", "\n\n", " \r\n " };
+    size_t i;
+
+    put_clip ("   \n   \n", TRUE, "UTF-8");
+    for (i = 0; i < G_N_ELEMENTS (pasted); i++)
+        ck_assert_msg (!clipboard_paste_is_column (clip, pasted[i], strlen (pasted[i])),
+                       "\"%s\" matched", pasted[i]);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
+START_TEST (test_paste_no_info)
+{
+    static const char pasted[] = "ab\ngh";
+
+    g_file_set_contents (clip, "ab\ngh", -1, NULL);
+    mctest_assert_false (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
 }
 END_TEST
 
@@ -226,13 +273,11 @@ END_TEST
 START_TEST (test_paste_stale_info)
 {
     static const char pasted[] = "ab\ngh";
-    gboolean column = TRUE;
 
     // the clipfile was replaced after the info was written
     clipboard_info_write (clip, digest_a, TRUE, "UTF-8");
     g_file_set_contents (clip, "ab\ngh", -1, NULL);
-    mctest_assert_false (clipboard_paste_is_clip (clip, pasted, strlen (pasted), &column));
-    mctest_assert_false (column);
+    mctest_assert_false (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
 }
 END_TEST
 
@@ -242,11 +287,9 @@ START_TEST (test_paste_recoded_clip)
 {
     // "\xd0\xd2" is two Cyrillic letters in KOI8-R; the terminal pastes them in UTF-8
     static const char pasted[] = "\xd0\xbf\xd1\x80\nab";
-    gboolean column = FALSE;
 
     put_clip ("\xd0\xd2\nab", TRUE, "KOI8-R");
-    mctest_assert_true (clipboard_paste_is_clip (clip, pasted, strlen (pasted), &column));
-    mctest_assert_true (column);
+    mctest_assert_true (clipboard_paste_is_column (clip, pasted, strlen (pasted)));
 }
 END_TEST
 
@@ -267,8 +310,12 @@ main (void)
     tcase_add_test (tc_core, test_info_garbage);
     tcase_add_test (tc_core, test_info_through_symlink);
     tcase_add_test (tc_core, test_paste_column_matches);
+    tcase_add_test (tc_core, test_paste_column_crlf);
     tcase_add_test (tc_core, test_paste_text_block);
     tcase_add_test (tc_core, test_paste_other_text);
+    tcase_add_test (tc_core, test_paste_lines_count);
+    tcase_add_test (tc_core, test_paste_blank_matches_nothing);
+    tcase_add_test (tc_core, test_paste_no_info);
     tcase_add_test (tc_core, test_paste_stale_info);
     tcase_add_test (tc_core, test_paste_recoded_clip);
 

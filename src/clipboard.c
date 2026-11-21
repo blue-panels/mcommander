@@ -510,31 +510,35 @@ clipboard_info_read (const char *clip_path, char *digest, gboolean *vertical, ch
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Is the text of a terminal paste the block of the clipfile? The terminal gives only text, so the
-   text is the key and the kind of the block comes from the info. TRUE when the text matches and
-   the info is valid for the clipfile; column gets the kind then. */
+/* Is the text of a terminal paste the column block of the clipfile? The terminal gives only text,
+   so the text is the key and the kind of the block comes from the info. TRUE when the info is
+   valid for the clipfile, says "column" and the text matches. A text that is empty once the blanks
+   are gone matches nothing: it says nothing of the block. */
 gboolean
-clipboard_paste_is_clip (const char *clip_path, const char *text, size_t len, gboolean *column)
+clipboard_paste_is_column (const char *clip_path, const char *text, size_t len)
 {
     char digest[CLIP_DIGEST_LEN + 1];
     char codeset[CLIP_CODESET_MAX + 1];
     char *data, *sum, *utf8;
     gsize data_len, utf8_len;
     GString *pasted, *clip;
+    gboolean column;
     gboolean ret = FALSE;
 
-    *column = FALSE;
+    // only the info is read for a text block: the clipfile may be large
+    if (!clipboard_info_read (clip_path, digest, &column, codeset) || !column)
+        return FALSE;
 
-    if (!clipboard_info_read (clip_path, digest, column, codeset))
+    pasted = clip_paste_normalize (text, len);
+    if (pasted->len == 0 || !g_file_get_contents (clip_path, &data, &data_len, NULL))
+    {
+        g_string_free (pasted, TRUE);
         return FALSE;
-    if (!g_file_get_contents (clip_path, &data, &data_len, NULL))
-        return FALSE;
+    }
 
     sum = g_compute_checksum_for_data (CLIP_DIGEST_TYPE, (const guchar *) data, data_len);
     if (strcmp (sum, digest) == 0)
     {
-        pasted = clip_paste_normalize (text, len);
-
         clip = clip_paste_normalize (data, data_len);
         ret = g_string_equal (pasted, clip);
         g_string_free (clip, TRUE);
@@ -552,14 +556,10 @@ clipboard_paste_is_clip (const char *clip_path, const char *text, size_t len, gb
                 g_free (utf8);
             }
         }
-
-        g_string_free (pasted, TRUE);
     }
     g_free (sum);
     g_free (data);
-
-    if (!ret)
-        *column = FALSE;
+    g_string_free (pasted, TRUE);
 
     return ret;
 }

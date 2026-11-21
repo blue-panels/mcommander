@@ -66,7 +66,7 @@
 #include "src/execute.h"                     // toggle_terminal()
 #include "src/filemanager/mcterm_overlay.h"  // mcterm_overlay_show_terminal()
 #include "src/events_init.h"
-#include "src/clipboard.h"        // clipboard_paste_is_clip()
+#include "src/clipboard.h"        // clipboard_paste_is_column()
 #include "src/filemanager/cmd.h"  // save_setup_cmd()
 #include "src/key_learn.h"        // key_learn()
 #include "src/manage_plugins.h"   // manage_lua_editor_scripts_dialog()
@@ -1460,8 +1460,8 @@ fin:
 /* A bracketed paste: the text goes in as typed, but it is one step for Undo, without auto indent,
    and the screen is drawn once when it is all in. A byte that would be a command is dropped.
    The text of a column block copied here comes back from the terminal without its kind: it is
-   pasted from the clipfile then, as a column. */
-static void
+   pasted from the clipfile then, as a column, by the Paste command. */
+void
 edit_paste_text (WEdit *e, const GString *text)
 {
     size_t i;
@@ -1472,28 +1472,26 @@ edit_paste_text (WEdit *e, const GString *text)
     edit_push_key_press (e);
 
     clip_path = mc_config_get_full_path (EDIT_HOME_CLIP_FILE);
-    if (clipboard_paste_is_clip (clip_path, text->str, text->len, &column) && column)
-    {
-        g_free (clip_path);
-        edit_paste_block (e, FALSE);
-        e->force |= REDRAW_PAGE;
-        return;
-    }
+    column = clipboard_paste_is_column (clip_path, text->str, text->len);
     g_free (clip_path);
-    bracketed_pasting_in_progress = TRUE;
-    for (i = 0; i < text->len; i++)
-    {
-        const unsigned char c = (unsigned char) text->str[i];
-        int cmd, ch;
 
-        // A line break and a tab are text here, whatever the keys are bound to
-        if (c == '\n')
-            edit_execute_cmd (e, CK_Enter, -1);
-        else if (c == '\t')
-            edit_execute_cmd (e, CK_Tab, -1);
-        else if (edit_translate_key (e, c, &cmd, &ch) && cmd == CK_InsertChar)
-            edit_execute_cmd (e, cmd, ch);
-    }
+    bracketed_pasting_in_progress = TRUE;
+    if (column)
+        edit_execute_cmd (e, CK_Paste, -1);
+    else
+        for (i = 0; i < text->len; i++)
+        {
+            const unsigned char c = (unsigned char) text->str[i];
+            int cmd, ch;
+
+            // A line break and a tab are text here, whatever the keys are bound to
+            if (c == '\n')
+                edit_execute_cmd (e, CK_Enter, -1);
+            else if (c == '\t')
+                edit_execute_cmd (e, CK_Tab, -1);
+            else if (edit_translate_key (e, c, &cmd, &ch) && cmd == CK_InsertChar)
+                edit_execute_cmd (e, cmd, ch);
+        }
     bracketed_pasting_in_progress = FALSE;
     e->charpoint = 0;
     // The text may run over many lines: all of them are drawn again, not the last one only

@@ -50,7 +50,7 @@
 
 #include "lib/tty/color.h"
 #include "lib/tty/tty.h"  // attrset()
-#include "lib/tty/key.h"  // is_idle()
+#include "lib/tty/key.h"  // is_idle(), bracketed_pasting_in_progress
 #include "lib/skin.h"     // EDITOR_NORMAL_COLOR
 #include "lib/fileloc.h"  // EDIT_HOME_BLOCK_FILE
 #include "lib/vfs/vfs.h"
@@ -4923,30 +4923,6 @@ edit_execute_key_command (WEdit *edit, long command, int char_for_insertion)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* Paste the block of the clipfile at the cursor. ext_clip: get the clipfile from the external
-   clipboard command first. */
-void
-edit_paste_block (WEdit *edit, gboolean ext_clip)
-{
-    // if non persistent selection and text selected
-    if (!edit_options.persistent_selections && edit->mark1 != edit->mark2)
-        edit_block_delete_cmd (edit);
-    if (edit_options.cursor_beyond_eol && edit->over_col > 0)
-        edit_insert_over (edit);
-    if (ext_clip)
-        edit_paste_from_X_buf_cmd (edit);
-    else
-        edit_paste_clip_file (edit);
-    if (!edit_options.persistent_selections && edit->mark2 >= 0)
-    {
-        if (edit->column_highlight != 0)
-            edit_push_undo_action (edit, COLUMN_ON);
-        edit->column_highlight = 0;
-        edit_mark_cmd (edit, TRUE);
-    }
-}
-
-/* --------------------------------------------------------------------------------------------- */
 /**
    This executes a command at a lower level than macro recording.
    It also does not push a key_press onto the undo stack. This means
@@ -5549,7 +5525,24 @@ edit_execute_cmd (WEdit *edit, long command, int char_for_insertion)
         edit_cut_to_X_buf_cmd (edit);
         break;
     case CK_Paste:
-        edit_paste_block (edit, TRUE);
+        // if non persistent selection and text selected
+        if (!edit_options.persistent_selections && edit->mark1 != edit->mark2)
+            edit_block_delete_cmd (edit);
+        if (edit_options.cursor_beyond_eol && edit->over_col > 0)
+            edit_insert_over (edit);
+        /* a terminal paste has the text already: the external clipboard command would get the
+           text of something else then */
+        if (bracketed_pasting_in_progress)
+            edit_paste_clip_file (edit);
+        else
+            edit_paste_from_X_buf_cmd (edit);
+        if (!edit_options.persistent_selections && edit->mark2 >= 0)
+        {
+            if (edit->column_highlight != 0)
+                edit_push_undo_action (edit, COLUMN_ON);
+            edit->column_highlight = 0;
+            edit_mark_cmd (edit, TRUE);
+        }
         break;
     case CK_History:
         edit_paste_from_history (edit);
