@@ -627,6 +627,10 @@ command.
 [Find file](#find-file)
 command.
 
+**Alt-P**
+: pops up the
+[command palette](#command-palette).
+
 **Alt-c**
 : pops up the
 [quick cd](#quick-cd)
@@ -1563,6 +1567,11 @@ those flags.
 ## Command Menu
 
 The
+["Command palette"](#command-palette)
+command finds any command of the menus, or a directory of the hotlist, by a
+few letters of its name.
+
+The
 [Directory tree](#directory-tree)
 command shows a tree figure of the directories.
 
@@ -1605,6 +1614,23 @@ internal editors, viewers and other M-Commander modules that support this mode.
 The "Sessions..." command is there in a
 [session](#sessions)
 only.
+
+### Command palette
+
+The command palette (Alt-P, that is Alt-Shift-p) lists in one window every
+command of the menus and every directory of the
+[hotlist](#hotlist).
+Each line shows the name, the menu it comes from, and its key.
+
+Type a few letters in the line at the top to narrow the list: the letters
+must appear in the name in their order, not side by side, and the best match
+comes first. The English description of a command in the keymap finds it
+too, whatever the language of the menus: "re-read directory" finds Rescan. Up, Down, PgUp and PgDn move in the list while you
+type. Enter runs the command or changes to the directory, Esc clears the
+line, a second Esc closes the window.
+
+A command runs as it does from its menu. Of the Left and Right menus only the
+one of the active panel is in the list. The commands you ran last come first.
 
 ### Directory Tree
 

@@ -9,6 +9,10 @@
 
 #include "panel.h"
 
+/* A directory of the hotlist: its label, its path and the group it is in ("" at the top) */
+typedef void (*hotlist_entry_fn) (const char *label, const char *directory, const char *group,
+                                  void *data);
+
 /*** enums ***************************************************************************************/
 
 typedef enum
@@ -27,6 +31,7 @@ void add2hotlist_cmd (WPanel *panel);
 char *hotlist_show (WPanel *panel, gboolean *to_other);
 gboolean save_hotlist (void);
 void done_hotlist (void);
+void hotlist_foreach (hotlist_entry_fn fn, void *data);
 
 /*** inline functions ****************************************************************************/
 #endif

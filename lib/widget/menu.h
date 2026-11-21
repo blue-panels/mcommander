@@ -25,6 +25,11 @@ typedef struct menu_entry_t menu_entry_t;
 struct menu_t;
 typedef struct menu_t menu_t;
 
+/* An entry that runs a command: its menu, the names without the hotkey marks, the shortcut
+   (NULL: none) */
+typedef void (*menubar_entry_fn) (const menu_t *menu, const char *menu_name, const char *name,
+                                  const char *shortcut, long command, void *data);
+
 /* The button bar menu */
 typedef struct WMenuBar
 {
@@ -59,6 +64,7 @@ void menubar_arrange (WMenuBar *menubar);
 void menubar_update_shortcuts (WMenuBar *menubar);
 
 WMenuBar *menubar_find (const WDialog *h);
+void menubar_foreach_entry (const WMenuBar *menubar, menubar_entry_fn fn, void *data);
 
 void menubar_activate (WMenuBar *menubar, gboolean dropped, int which);
 

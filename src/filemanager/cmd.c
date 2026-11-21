@@ -1671,12 +1671,20 @@ edit_fhl_cmd (void)
 void
 hotlist_cmd (WPanel *panel)
 {
-    char *target, *path;
+    char *target;
     gboolean to_other = FALSE;
 
     target = hotlist_show (panel, &to_other);
-    if (target == NULL)
-        return;
+    if (target != NULL)
+        hotlist_go (target, to_other);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+hotlist_go (char *target, gboolean to_other)
+{
+    char *path;
 
     // a plugin address goes as it is, a path through the parser of the old VFS syntax
     if (panel_plugin_find_by_path (target) != NULL)

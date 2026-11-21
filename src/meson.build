@@ -57,6 +57,7 @@ libinternal_sources = files(
   'filemanager/mcmagic.c',
   'filemanager/mcterm_overlay.c',
   'filemanager/mountlist.c',
+  'filemanager/palette.c',
   'filemanager/panel.c',
   'filemanager/panel_modes.c',
   'filemanager/panel_plugin_ops.c',
