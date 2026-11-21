@@ -54,6 +54,8 @@ void ext_cmd (void);
 void edit_mc_menu_cmd (void);
 void edit_fhl_cmd (void);
 void hotlist_cmd (WPanel *panel);
+/* Go to a directory of the hotlist (taken), on the other panel with to_other */
+void hotlist_go (char *target, gboolean to_other);
 void compare_dirs_cmd (void);
 #ifdef USE_DIFF_VIEW
 void diff_view_cmd (void);

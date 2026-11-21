@@ -1586,6 +1586,40 @@ table_set_quick_filter_fuzzy (WTable *t, gboolean letters_filter,
 
 /* --------------------------------------------------------------------------------------------- */
 
+gboolean
+table_set_filter_text (WTable *t, const char *text)
+{
+    gboolean found = TRUE;
+
+    if (t->qs_text == NULL)
+        t->qs_text = g_string_new (NULL);
+    g_string_assign (t->qs_text, text != NULL ? text : "");
+
+    if (t->qs_text->len == 0)
+    {
+        if (t->qs_rows != NULL)
+            g_array_free (t->qs_rows, TRUE);
+        t->qs_rows = NULL;
+        t->top = 0;
+        t->current = 0;
+    }
+    else if (!table_qs_filter (t))
+    {
+        if (t->qs_rows != NULL)
+            g_array_free (t->qs_rows, TRUE);
+        t->qs_rows = g_array_new (FALSE, FALSE, sizeof (int));
+        t->top = 0;
+        t->current = 0;
+        found = FALSE;
+    }
+
+    if (WIDGET (t)->owner != NULL)
+        widget_draw (WIDGET (t));
+    return found;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
 void
 table_set_quick_search_label (WTable *t, WHLine *label)
 {

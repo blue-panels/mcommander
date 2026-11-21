@@ -180,6 +180,7 @@ static name_keymap_t command_names[] = {
     ADD_KEYMAP_NAME_DESC (CompareFiles, N_ ("Compare files (diff)")),
 #endif
     ADD_KEYMAP_NAME_DESC (OptionsConfirm, N_ ("Confirmation settings")),
+    ADD_KEYMAP_NAME_DESC (CommandPalette, N_ ("Command palette")),
     ADD_KEYMAP_NAME_DESC (EditExtensionsFile, N_ ("Edit extensions file")),
     ADD_KEYMAP_NAME_DESC (EditFileHighlightFile, N_ ("Edit syntax highlighting")),
     ADD_KEYMAP_NAME_DESC (LinkSymbolicEdit, N_ ("Edit symbolic link")),

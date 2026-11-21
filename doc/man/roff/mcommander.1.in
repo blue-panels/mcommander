@@ -715,6 +715,11 @@ Find file
 command.
 
 .TP
+\fBAlt\-P\fP
+pops up the
+command palette\&.
+
+.TP
 \fBAlt\-c\fP
 pops up the
 quick cd
@@ -1824,6 +1829,12 @@ those flags.
 .SH Command Menu
 .PP
 The
+"Command palette"
+command finds any command of the menus, or a directory of the hotlist, by a
+few letters of its name.
+
+.PP
+The
 Directory tree
 command shows a tree figure of the directories.
 
@@ -1875,6 +1886,25 @@ internal editors, viewers and other M\-Commander modules that support this mode.
 The "Sessions..." command is there in a
 session
 only.
+
+.SS Command palette
+.PP
+The command palette (Alt\-P, that is Alt\-Shift\-p) lists in one window every
+command of the menus and every directory of the
+hotlist\&.
+Each line shows the name, the menu it comes from, and its key.
+
+.PP
+Type a few letters in the line at the top to narrow the list: the letters
+must appear in the name in their order, not side by side, and the best match
+comes first. The English description of a command in the keymap finds it
+too, whatever the language of the menus: "re\-read directory" finds Rescan. Up, Down, PgUp and PgDn move in the list while you
+type. Enter runs the command or changes to the directory, Esc clears the
+line, a second Esc closes the window.
+
+.PP
+A command runs as it does from its menu. Of the Left and Right menus only the
+one of the active panel is in the list. The commands you ran last come first.
 
 .SS Directory Tree
 .PP

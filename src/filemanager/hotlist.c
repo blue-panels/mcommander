@@ -1,8 +1,10 @@
 /*
-   Hotlist -- for the Midnight Commander
+   Hotlist -- for the M-Commander
 
    Copyright (C) 1994-2025
    Free Software Foundation, Inc.
+   Copyright (C) 2026
+   Ilia Maslakov <il.smind@gmail.com>
 
    Written by:
    Radek Doulik, 1994
@@ -10,19 +12,21 @@
    Andrej Borsenkow, 1996
    Norbert Warmuth, 1997
    Andrew Borodin <aborodin@vmail.ru>, 2012-2022
+   Ilia Maslakov <il.smind@gmail.com>, 2026
 
    Janne did the original Hotlist code, Andrej made the groupable
    hotlist; the move hotlist and revamped the file format and made
    it stronger.
 
-   This file is part of the Midnight Commander.
+   This file is part of the M-Commander
+   a fork of GNU Midnight Commander.
 
-   The Midnight Commander is free software: you can redistribute it
+   M-Commander is free software: you can redistribute it
    and/or modify it under the terms of the GNU General Public License as
    published by the Free Software Foundation, either version 3 of the License,
    or (at your option) any later version.
 
-   The Midnight Commander is distributed in the hope that it will be useful,
+   M-Commander is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
@@ -2190,6 +2194,40 @@ save_hotlist (void)
     }
 
     return saved;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+static void
+hotlist_walk (const struct hotlist *grp, hotlist_entry_fn fn, void *data)
+{
+    const struct hotlist *h;
+
+    for (h = grp->head; h != NULL; h = h->next)
+        if (h->type == HL_TYPE_GROUP)
+            hotlist_walk (h, fn, data);
+        else if (h->type == HL_TYPE_ENTRY)
+            fn (h->label, h->directory, grp == hotlist ? "" : grp->label, data);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+hotlist_foreach (hotlist_entry_fn fn, void *data)
+{
+    // only a hotlist that is there: loading makes the file and may ask about it
+    if (!hotlist_state.loaded)
+    {
+        char *name = mc_config_get_full_path (MC_HOTLIST_FILE);
+        const gboolean there = access (name, R_OK) == 0;
+
+        g_free (name);
+        if (!there)
+            return;
+    }
+    load_hotlist ();
+    if (hotlist != NULL)
+        hotlist_walk (hotlist, fn, data);
 }
 
 /* --------------------------------------------------------------------------------------------- */

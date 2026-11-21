@@ -73,6 +73,7 @@ src/filemanager/info.c
 src/filemanager/layout.c
 src/filemanager/mcterm_overlay.c
 src/filemanager/mountlist.c
+src/filemanager/palette.c
 src/filemanager/panel.c
 src/filemanager/panel_modes.c
 src/filemanager/panel_plugin_ops.c

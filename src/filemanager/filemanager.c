@@ -80,6 +80,7 @@
 #include "layout.h"
 #include "cmd.h"  // commands
 #include "hotlist.h"
+#include "palette.h"
 #include "command.h"  // cmdline
 #include "dir.h"      // dir_list_clean()
 
@@ -313,6 +314,7 @@ create_command_menu (void)
     GList *entries = NULL;
 
     entries = g_list_prepend (entries, menu_entry_new (_ ("&User menu"), CK_UserMenu));
+    entries = g_list_prepend (entries, menu_entry_new (_ ("Command p&alette"), CK_CommandPalette));
     entries = g_list_prepend (entries, menu_entry_new (_ ("&Directory tree"), CK_Tree));
     entries = g_list_prepend (entries, menu_entry_new (_ ("&Find file"), CK_Find));
     entries = g_list_prepend (entries, menu_entry_new (_ ("S&wap panels"), CK_Swap));
@@ -1601,6 +1603,37 @@ midnight_execute_cmd (Widget *sender, long command)
     case CK_HotList:
         hotlist_cmd (current_panel);
         break;
+    case CK_CommandPalette:
+    {
+        palette_choice_t choice;
+        gboolean right;
+
+        // the side of the focus: a tree or an info view there leaves current_panel on the other
+        if (widget_get_state (get_panel_widget (0), WST_FOCUSED))
+            right = FALSE;
+        else if (widget_get_state (get_panel_widget (1), WST_FOCUSED))
+            right = TRUE;
+        else
+            right = get_current_index () != 0;
+
+        // only the panel menu of the active side: the other one would be a second copy
+        if (command_palette_run (the_menubar, right ? left_menu : right_menu, &choice))
+        {
+            if (choice.directory != NULL)
+                hotlist_go (choice.directory, FALSE);
+            else
+            {
+                // as if the entry were picked in its menu
+                const int idx = g_list_index (the_menubar->menu, choice.menu);
+
+                if (idx >= 0)
+                    the_menubar->current = (guint) idx;
+                mc_global.widget.is_right = the_menubar->current != 0;
+                res = midnight_execute_cmd (WIDGET (the_menubar), choice.command);
+            }
+        }
+        break;
+    }
     case CK_PanelQuickView:
         if (sender == WIDGET (the_menubar))
             quick_view_cmd ();  // menu
