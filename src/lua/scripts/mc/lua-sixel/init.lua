@@ -57,24 +57,25 @@ if [ "$mode" = sixel ]; then
     # chafa with no terminal to ask has a cell of its own size (10x20 in
     # 1.18, 8x8 in older ones under --font-ratio=1/1). A picture one cell
     # big is that cell exactly: a 1x1 PNG drawn so tells the size.
-    cell=
-    tmp=$(mktemp 2>/dev/null) && {
+    cell=$(
+        tmp=$(mktemp 2>/dev/null) || exit 0
+        trap 'rm -f "$tmp"' EXIT HUP INT TERM
         printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000\000\001\000\000\000\001\010\000\000\000\000\072\176\233\125\000\000\000\012\111\104\101\124\170\332\143\140\000\000\000\002\000\001\345\047\336\374\000\000\000\000\111\105\116\104\256\102\140\202' > "$tmp"
-        cell=$(chafa --format=sixel --font-ratio=1/1 --size=1x1 -- "$tmp" 2>/dev/null \
-            | sed -n 's/.*"1;1;\([0-9][0-9]*\);\([0-9][0-9]*\).*/\1 \2/p' | head -n 1)
-        rm -f "$tmp"
-    }
+        chafa --format=sixel --font-ratio=1/1 --size=1x1 -- "$tmp" 2>/dev/null \
+            | sed -n 's/.*"1;1;\([0-9][0-9]*\);\([0-9][0-9]*\).*/\1 \2/p' | head -n 1
+    )
     chafa_w=${cell% *}
     chafa_h=${cell#* }
-    if [ -z "$cell" ] || [ "$chafa_w" -le 0 ] || [ "$chafa_h" -le 0 ]; then
-        chafa_w=8
-        chafa_h=8
+    size_w=0
+    size_h=0
+    if [ -n "$cell" ] && [ "$chafa_w" -gt 0 ] && [ "$chafa_h" -gt 0 ]; then
+        size_w=$((cols * cell_w / chafa_w))
+        size_h=$((rows * cell_h / chafa_h))
     fi
-    size_w=$((cols * cell_w / chafa_w))
-    size_h=$((rows * cell_h / chafa_h))
 fi
 
-# Less room than one cell of chafa: a picture would not fit, the characters do
+# Less room than one cell of chafa, or its cell not known: a picture would
+# not fit, the characters do
 if [ "$mode" = sixel ] && { [ "$size_w" -lt 1 ] || [ "$size_h" -lt 1 ]; }; then
     mode=symbols
     set -- --colors=256

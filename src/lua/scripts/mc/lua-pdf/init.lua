@@ -170,12 +170,13 @@ end
 -- big is that cell exactly: a 1x1 PNG drawn so tells the size.
 local CHAFA_CELL_SCRIPT = [[
 tmp=$(mktemp) || exit 1
+trap 'rm -f "$tmp"' EXIT HUP INT TERM
 printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000\000\001\000\000\000\001\010\000\000\000\000\072\176\233\125\000\000\000\012\111\104\101\124\170\332\143\140\000\000\000\002\000\001\345\047\336\374\000\000\000\000\111\105\116\104\256\102\140\202' > "$tmp"
 chafa --format=sixel --font-ratio=1/1 --size=1x1 -- "$tmp" 2>/dev/null
-rm -f "$tmp"
 ]]
 
--- Asked once a session; a probe that failed is tried again the next time
+-- Asked once a session. The probe draws a picture of its own, so when it
+-- fails it fails for every picture: false then, and no sixel from chafa.
 local function chafa_cell(session)
     local cell = session.tools.chafa_cell
 
@@ -187,20 +188,22 @@ local function chafa_cell(session)
             w, h = result.stdout:match('"1;1;(%d+);(%d+)')
         end
         w, h = tonumber(w), tonumber(h)
-        if w ~= nil and h ~= nil and w > 0 and h > 0 then
-            cell = { w = w, h = h }
-            session.tools.chafa_cell = cell
-        else
-            cell = { w = 8, h = 8 }
-        end
+        cell = w ~= nil and h ~= nil and w > 0 and h > 0 and { w = w, h = h } or false
+        session.tools.chafa_cell = cell
     end
-    return cell
+    return cell or nil
 end
 
 -- The picture in chafa's cells: the most that fits in its place, which chafa
--- fills keeping the proportions. Nil when not even one cell fits.
+-- fills keeping the proportions. Nil when not even one cell fits, or when the
+-- size of a chafa cell is not known.
 local function chafa_size(session, image)
     local cell = chafa_cell(session)
+
+    if cell == nil then
+        return nil
+    end
+
     local cols = image.width // cell.w
     local rows = image.height // cell.h
 
@@ -251,7 +254,7 @@ local function picture_data(session, image, sixel)
     if sixel and session.tools.encoder == nil then
         return nil
     end
-    -- smaller than a cell of chafa: drawn in its characters
+    -- smaller than a cell of chafa, or its cell not known: drawn in its characters
     if sixel and session.tools.encoder == "chafa" and chafa_size(session, image) == nil then
         return picture_data(session, image, false), "symbols"
     end
@@ -259,8 +262,8 @@ local function picture_data(session, image, sixel)
         return nil
     end
 
-    local key = string.format("%s|%d|%d|%s", image.src, image.width, image.height,
-                              sixel and "s" or "c")
+    local key = string.format("%s|%d|%d|%d|%d|%s", image.src, image.width, image.height,
+                              image.cols, image.rows, sixel and "s" or "c")
     local cached = session.sixels[key]
 
     if cached ~= nil then
@@ -268,6 +271,13 @@ local function picture_data(session, image, sixel)
     end
 
     local data = picture_bytes(run(picture_command(session, image, sixel), MAX_SIXEL_BYTES), sixel)
+
+    -- chafa draws in whole cells of its own and may come out lower than the
+    -- place; the raster attributes say the place, so the picture takes all its
+    -- rows and the text below goes where the page puts it
+    if data ~= nil and sixel and session.tools.encoder == "chafa" then
+        data = data:gsub('^(\27P[^q]*q"%d+;%d+;%d+;)%d+', "%1" .. image.height, 1)
+    end
 
     session.sixels[key] = data ~= nil and data or false
     return data, sixel and "sixel" or "symbols"
