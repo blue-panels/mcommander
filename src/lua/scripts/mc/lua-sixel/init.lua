@@ -54,12 +54,13 @@ if ! command -v chafa >/dev/null 2>&1; then
 fi
 
 if [ "$mode" = sixel ]; then
-    # chafa takes the cell size from the terminal; a 1x1 picture shows it
+    # chafa takes the cell size from the terminal; a picture 6x6 cells big shows
+    # it, 6 cells high are whole sixel bands
     cell=$(
         tmp=$(mktemp 2>/dev/null) || exit 0
         trap 'rm -f "$tmp"' EXIT HUP INT TERM
         printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000\000\001\000\000\000\001\010\000\000\000\000\072\176\233\125\000\000\000\012\111\104\101\124\170\332\143\140\000\000\000\002\000\001\345\047\336\374\000\000\000\000\111\105\116\104\256\102\140\202' > "$tmp"
-        chafa --format=sixel --font-ratio=1/1 --size=1x1 -- "$tmp" 2>/dev/null \
+        chafa --format=sixel --font-ratio=1/1 --scale=max --size=6x6 -- "$tmp" 2>/dev/null \
             | sed -n 's/.*"1;1;\([0-9][0-9]*\);\([0-9][0-9]*\).*/\1 \2/p' | head -n 1
     )
     chafa_w=${cell% *}
@@ -67,8 +68,8 @@ if [ "$mode" = sixel ]; then
     size_w=0
     size_h=0
     if [ -n "$cell" ] && [ "$chafa_w" -gt 0 ] && [ "$chafa_h" -gt 0 ]; then
-        size_w=$((cols * cell_w / chafa_w))
-        size_h=$((rows * cell_h / chafa_h))
+        size_w=$((cols * cell_w * 6 / chafa_w))
+        size_h=$((rows * cell_h * 6 / chafa_h))
     fi
 fi
 
