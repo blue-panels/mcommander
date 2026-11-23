@@ -167,23 +167,47 @@ end
 
 -- The size in pixels of a cell of chafa, which has no terminal to ask:
 -- 10x20 in 1.18, 8x8 in older ones under --font-ratio=1/1. A picture one cell
--- big is that cell exactly; asked once a session.
-local function chafa_cell(session, path)
-    if session.tools.chafa_cell == nil then
-        local result = run("chafa --format=sixel --font-ratio=1/1 --size=1x1 -- " .. path
-                           .. " 2>/dev/null")
+-- big is that cell exactly: a 1x1 PNG drawn so tells the size.
+local CHAFA_CELL_SCRIPT = [[
+tmp=$(mktemp) || exit 1
+printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000\000\001\000\000\000\001\010\000\000\000\000\072\176\233\125\000\000\000\012\111\104\101\124\170\332\143\140\000\000\000\002\000\001\345\047\336\374\000\000\000\000\111\105\116\104\256\102\140\202' > "$tmp"
+chafa --format=sixel --font-ratio=1/1 --size=1x1 -- "$tmp" 2>/dev/null
+rm -f "$tmp"
+]]
+
+-- Asked once a session; a probe that failed is tried again the next time
+local function chafa_cell(session)
+    local cell = session.tools.chafa_cell
+
+    if cell == nil then
+        local result = run(CHAFA_CELL_SCRIPT)
         local w, h
 
         if result ~= nil then
             w, h = result.stdout:match('"1;1;(%d+);(%d+)')
         end
         w, h = tonumber(w), tonumber(h)
-        if w == nil or h == nil or w <= 0 or h <= 0 then
-            w, h = 8, 8
+        if w ~= nil and h ~= nil and w > 0 and h > 0 then
+            cell = { w = w, h = h }
+            session.tools.chafa_cell = cell
+        else
+            cell = { w = 8, h = 8 }
         end
-        session.tools.chafa_cell = { w = w, h = h }
     end
-    return session.tools.chafa_cell
+    return cell
+end
+
+-- The picture in chafa's cells: the most that fits in its place, which chafa
+-- fills keeping the proportions. Nil when not even one cell fits.
+local function chafa_size(session, image)
+    local cell = chafa_cell(session)
+    local cols = image.width // cell.w
+    local rows = image.height // cell.h
+
+    if cols < 1 or rows < 1 then
+        return nil
+    end
+    return cols, rows
 end
 
 -- The bytes of one picture, in the size it takes on the screen: sixel where
@@ -199,11 +223,10 @@ local function picture_command(session, image, sixel)
         return string.format("img2sixel -w %d -h %d -- %s 2>/dev/null",
                              image.width, image.height, path)
     end
-    local cell = chafa_cell(session, path)
+    local cols, rows = chafa_size(session, image)
 
-    return string.format(
-        "chafa --format=sixel --font-ratio=1/1 --stretch --size=%dx%d -- %s 2>/dev/null",
-        math.max(1, image.width // cell.w), math.max(1, image.height // cell.h), path)
+    return string.format("chafa --format=sixel --font-ratio=1/1 --size=%dx%d -- %s 2>/dev/null",
+                         cols, rows, path)
 end
 
 -- Only the picture itself: chafa wraps what it draws in sequences of its
@@ -228,6 +251,10 @@ local function picture_data(session, image, sixel)
     if sixel and session.tools.encoder == nil then
         return nil
     end
+    -- smaller than a cell of chafa: drawn in its characters
+    if sixel and session.tools.encoder == "chafa" and chafa_size(session, image) == nil then
+        return picture_data(session, image, false), "symbols"
+    end
     if not sixel and not session.tools.chafa then
         return nil
     end
@@ -237,13 +264,13 @@ local function picture_data(session, image, sixel)
     local cached = session.sixels[key]
 
     if cached ~= nil then
-        return cached ~= false and cached or nil
+        return cached ~= false and cached or nil, sixel and "sixel" or "symbols"
     end
 
     local data = picture_bytes(run(picture_command(session, image, sixel), MAX_SIXEL_BYTES), sixel)
 
     session.sixels[key] = data ~= nil and data or false
-    return data
+    return data, sixel and "sixel" or "symbols"
 end
 
 ------------------------------------------------------------------------
@@ -622,12 +649,12 @@ local viewer = mc.viewer_source.define {
             local plan = render.plan(page, view, params)
 
             body = render.compose(plan, view, function(image)
-                local data = picture_data(session, image, view.sixel)
+                local data, kind = picture_data(session, image, view.sixel)
 
                 if data == nil then
                     return nil
                 end
-                return data, view.sixel and "sixel" or "symbols"
+                return data, kind
             end)
             title = status_text(session, params, plan, view)
             -- A match below the first screen is scrolled to, with a few rows
