@@ -54,10 +54,23 @@ if ! command -v chafa >/dev/null 2>&1; then
 fi
 
 if [ "$mode" = sixel ]; then
-    # chafa with no terminal to ask takes a cell for 8x8 pixels under
-    # --font-ratio=1/1: the size in its cells is the size in pixels over 8.
-    size=$((cols * cell_w / 8))x$((rows * cell_h / 8))
+    # chafa with no terminal to ask has a cell of its own size (10x20 in
+    # 1.18, 8x8 in older ones under --font-ratio=1/1). A picture one cell
+    # big is that cell exactly: its raster attributes say the size.
     set -- --font-ratio=1/1 "$@"
+    cell=$(chafa --format=sixel --animate=off --size=1x1 "$@" -- "$file" 2>/dev/null \
+        | sed -n 's/.*"1;1;\([0-9][0-9]*\);\([0-9][0-9]*\).*/\1 \2/p' | head -n 1)
+    chafa_w=${cell% *}
+    chafa_h=${cell#* }
+    if [ -z "$cell" ] || [ "$chafa_w" -le 0 ] || [ "$chafa_h" -le 0 ]; then
+        chafa_w=8
+        chafa_h=8
+    fi
+    size_w=$((cols * cell_w / chafa_w))
+    size_h=$((rows * cell_h / chafa_h))
+    [ "$size_w" -lt 1 ] && size_w=1
+    [ "$size_h" -lt 1 ] && size_h=1
+    size=${size_w}x${size_h}
 else
     size=${cols}x${rows}
 fi

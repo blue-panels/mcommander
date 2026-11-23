@@ -165,6 +165,27 @@ local function image_path(session, src)
     return session.dir .. "/" .. src
 end
 
+-- The size in pixels of a cell of chafa, which has no terminal to ask:
+-- 10x20 in 1.18, 8x8 in older ones under --font-ratio=1/1. A picture one cell
+-- big is that cell exactly; asked once a session.
+local function chafa_cell(session, path)
+    if session.tools.chafa_cell == nil then
+        local result = run("chafa --format=sixel --font-ratio=1/1 --size=1x1 -- " .. path
+                           .. " 2>/dev/null")
+        local w, h
+
+        if result ~= nil then
+            w, h = result.stdout:match('"1;1;(%d+);(%d+)')
+        end
+        w, h = tonumber(w), tonumber(h)
+        if w == nil or h == nil or w <= 0 or h <= 0 then
+            w, h = 8, 8
+        end
+        session.tools.chafa_cell = { w = w, h = h }
+    end
+    return session.tools.chafa_cell
+end
+
 -- The bytes of one picture, in the size it takes on the screen: sixel where
 -- the terminal draws it, and chafa's characters where it does not.
 local function picture_command(session, image, sixel)
@@ -178,9 +199,11 @@ local function picture_command(session, image, sixel)
         return string.format("img2sixel -w %d -h %d -- %s 2>/dev/null",
                              image.width, image.height, path)
     end
+    local cell = chafa_cell(session, path)
+
     return string.format(
         "chafa --format=sixel --font-ratio=1/1 --stretch --size=%dx%d -- %s 2>/dev/null",
-        math.max(1, image.width // 8), math.max(1, image.height // 8), path)
+        math.max(1, image.width // cell.w), math.max(1, image.height // cell.h), path)
 end
 
 -- Only the picture itself: chafa wraps what it draws in sequences of its
