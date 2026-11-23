@@ -28,8 +28,7 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-/* The kitty graphics query: a 1x1 RGB picture with the query action. Any APC G answer
-   with this id, OK or an error, says the protocol is known. */
+/* Any answer with this id, OK or an error, means the terminal knows kitty graphics */
 #define TTY_GRAPHICS_KITTY_ID "31"
 #define TTY_GRAPHICS_KITTY_QUERY                                                                   \
     ESC_STR "_Gi=" TTY_GRAPHICS_KITTY_ID ",s=1,v=1,a=q,t=d,f=24;AAAA" ESC_STR "\\"
@@ -41,7 +40,7 @@ typedef enum
     TTY_GRAPHICS_NONE = 0,
     TTY_GRAPHICS_SIXEL,
     TTY_GRAPHICS_KITTY,
-    TTY_GRAPHICS_AUTO  // only in a request: ask the terminal
+    TTY_GRAPHICS_AUTO  // in a request only: ask the terminal
 } tty_graphics_t;
 
 /*** structures declarations (and typedefs of structures)*****************************************/
@@ -50,25 +49,20 @@ typedef enum
 
 /*** declarations of public functions ************************************************************/
 
-/* What the user asked for: MC_GRAPHICS=auto|sixel|kitty|none, or MC_SIXEL=0|1, its old
-   name. Behind screen or tmux the answer is NONE unless a protocol is named. */
+/* MC_GRAPHICS, or the old MC_SIXEL; NONE in screen or tmux unless a protocol is set */
 tty_graphics_t tty_graphics_request (const char *graphics_env, const char *sixel_env,
                                      const char *term);
-/* Send the kitty graphics query: only when the terminal is asked at all, and not on the
-   Linux console, which prints an APC it does not know. */
+/* Not on the Linux console: it prints an APC it does not know */
 gboolean tty_graphics_ask_kitty (tty_graphics_t request, const char *term);
-/* The backend: a named one as it is; for AUTO sixel if DA1 has it, else kitty if the
-   query was answered, else none. */
+/* AUTO: sixel if DA1 has it, else kitty if the query got an answer */
 tty_graphics_t tty_graphics_pick (tty_graphics_t request, gboolean sixel_answer,
                                   gboolean kitty_answer);
 
 void tty_graphics_set_backend (tty_graphics_t backend);
 tty_graphics_t tty_graphics_backend (void);
-/* The backend draws pictures in this build */
 gboolean tty_draws_pictures (void);
 
-/* The terminal may have lost the pictures sent to it: a new screen size, the alternate
-   screen left and entered again, another backend. The number grows each time. */
+/* The terminal may have lost the pictures: resize, alternate screen, new backend */
 void tty_graphics_reset_images (void);
 guint tty_graphics_epoch (void);
 

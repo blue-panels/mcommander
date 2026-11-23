@@ -64,8 +64,7 @@ typedef struct
 
 typedef struct mcview_vterm_struct mcview_vterm_t;
 
-/* A picture the program drew: where it sits on the screen, in cells, and the
-   picture itself. */
+/* A picture the program drew and where it is on the screen */
 typedef struct
 {
     int row; /* top-left cell, screen coordinates */

@@ -39,16 +39,14 @@
 
 /*** declarations of public functions ************************************************************/
 
-/* All commands are quiet (q=2): the terminal answers nothing. */
+/* All commands have q=2: the terminal does not answer */
 
-/* Send RGBA pixels as image @id, zlib compressed when mc is built with zlib */
+/* zlib compressed when mc is built with zlib */
 void tty_kitty_transmit (GString *out, guint32 id, const guint8 *rgba, int width, int height);
-/* Show image @id at the cursor as placement @pid over @rows x @cols cells. The cursor does not
-   move. The same ids again move the placement. */
-void tty_kitty_put (GString *out, guint32 id, guint32 pid, int rows, int cols);
-/* Remove the placement; the image stays with the terminal */
+/* At the cursor, in its own size; the cursor does not move. The same ids move it. */
+void tty_kitty_put (GString *out, guint32 id, guint32 pid);
+/* The image stays with the terminal */
 void tty_kitty_delete_placement (GString *out, guint32 id, guint32 pid);
-/* Remove the image and its placements, and free its data */
 void tty_kitty_free (GString *out, guint32 id);
 
 /*** inline functions ****************************************************************************/

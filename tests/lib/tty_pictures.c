@@ -169,6 +169,25 @@ END_PARAMETRIZED_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+START_TEST (test_decode_repeat_without_sixel)
+{
+    // the '-' after a bare repeat still starts a new band, in the measure and in the pixels
+    static const char six[] = "\033P0;1q#1;2;100;0;0!5-@\033\\";
+    int w, h;
+    guint8 *rgba;
+
+    rgba = DECODE (six, &w, &h);
+    ck_assert_ptr_nonnull (rgba);
+    ck_assert_int_eq (w, 1);
+    ck_assert_int_eq (h, 12);
+    ck_assert_uint_eq (pixel (rgba, w, 0, 0), 0);
+    ck_assert_uint_eq (pixel (rgba, w, 0, 6), 0xff0000ff);
+    g_free (rgba);
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 START_TEST (test_decode_odd_input_does_not_break)
 {
     // a color past the palette, a repeat with no character, garbage in the data
@@ -205,8 +224,8 @@ START_TEST (test_kitty_put_delete_free)
 {
     GString *out = g_string_new (NULL);
 
-    tty_kitty_put (out, 1073741825, 3, 2, 4);
-    ck_assert_str_eq (out->str, "\033_Ga=p,i=1073741825,p=3,r=2,c=4,C=1,q=2\033\\");
+    tty_kitty_put (out, 1073741825, 3);
+    ck_assert_str_eq (out->str, "\033_Ga=p,i=1073741825,p=3,C=1,q=2\033\\");
 
     g_string_truncate (out, 0);
     tty_kitty_delete_placement (out, 7, 3);
@@ -248,7 +267,9 @@ unchunk (const char *s, gboolean *compressed, int *chunks)
             ck_assert (strncmp (s + 3, "a=t,i=9,f=32,s=", 15) == 0);
             *compressed = g_strstr_len (s, semi - s, "o=z") != NULL;
         }
-        more = semi[-1] == '1';
+        // every chunk is quiet: a terminal may take q from any of them
+        ck_assert (g_strstr_len (s, semi - s, "q=2") != NULL);
+        more = g_strstr_len (s, semi - s, "m=1") != NULL;
         ck_assert_int_le (end - semi - 1, TTY_KITTY_CHUNK);
         g_string_append_len (b64, semi + 1, end - semi - 1);
         (*chunks)++;
@@ -314,7 +335,7 @@ START_TEST (test_kitty_transmit_one_chunk)
 
     tty_kitty_transmit (out, 9, rgba, 1, 1);
     ck_assert (g_str_has_prefix (out->str, "\033_Ga=t,i=9,f=32,s=1,v=1,"));
-    ck_assert (strstr (out->str, "q=2,m=0;") != NULL);
+    ck_assert (strstr (out->str, "m=0,q=2;") != NULL);
     ck_assert (g_str_has_suffix (out->str, "\033\\"));
     ck_assert (strstr (out->str + 1, "\033_G") == NULL);
     g_string_free (out, TRUE);
@@ -337,6 +358,7 @@ main (void)
     tcase_add_test (tc_core, test_decode_ground_of_color_0);
     tcase_add_test (tc_core, test_decode_clips_to_raster);
     mctest_add_parameterized_test (tc_core, test_decode_bad, bad_ds);
+    tcase_add_test (tc_core, test_decode_repeat_without_sixel);
     tcase_add_test (tc_core, test_decode_odd_input_does_not_break);
     tcase_add_test (tc_core, test_measure);
     tcase_add_test (tc_core, test_kitty_put_delete_free);

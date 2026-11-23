@@ -382,7 +382,6 @@ gboolean mcview_dialog_goto (WView *view, off_t *offset);
 /* display.c: */
 void mcview_update (WView *view);
 void mcview_display (WView *view);
-/* The tty painter of the sixel pictures; a WView is added at birth. */
 void mcview_display_status (WView *view);
 void mcview_spinner (WView *view);
 void mcview_compute_areas (WView *view);

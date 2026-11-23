@@ -480,8 +480,7 @@ mcview_preload_canvas_colors (const mcview_canvas_colors_t *colors)
 }
 
 /* --------------------------------------------------------------------------------------------- */
-/* The pictures of the terminal mode go to the compositor; one that does not fit
-   the data area whole is left out: a picture cannot be cut. */
+/* A picture that does not fit whole is left out: it cannot be cut */
 static void
 mcview_place_pictures (WView *view, int top_row)
 {

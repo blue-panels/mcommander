@@ -218,10 +218,7 @@ tty_raw_write (const char *data, size_t len)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The answers: CSI ? <attributes> c, where 4 among the attributes is sixel,
-   CSI 6 ; <height> ; <width> t, and APC G i=31 ; ... ST from the kitty graphics query.
-   The sequences are taken out of the buffer as they are found, and what is left is the
-   user's. */
+/* Take the terminal's answers out of @buf; what is left was typed by the user */
 static void
 tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen, gboolean *sixel_answer,
                           gboolean *kitty_answer)
@@ -451,12 +448,8 @@ tty_probe_graphics (void)
 
     if (isatty (STDIN_FILENO) && isatty (STDOUT_FILENO))
     {
-        /* Every terminal answers DA1, and answers in the order it is asked: DA1 goes
-           last, so its answer comes after all the others. The kitty keyboard query, the
-           DECRQM question about mode 9001 (Win32 input mode, Windows Terminal) and the kitty
-           graphics query go first.
-           OSC 11 ends with ST, not BEL: the answer ends the same way, and with S-Lang BEL
-           (Ctrl-G) is the interrupt character, which the tty takes out of the input. */
+        /* Answers come in the order asked, and every terminal answers DA1: it goes last.
+           OSC 11 ends with ST: S-Lang takes BEL (Ctrl-G) out of the input. */
         static const char kitty_query[] = ESC_STR "[?u";
         static const char win32_query[] = ESC_STR "[?9001$p";
         static const char kitty_graphics_query[] = TTY_GRAPHICS_KITTY_QUERY;
@@ -498,8 +491,7 @@ tty_probe_graphics (void)
 
     tty_graphics_set_backend (tty_graphics_pick (request, sixel_answer, kitty_answer));
 
-    /* Pictures with no word on the cell: take the usual 8x16, so that they
-       are placed and sized at all, rather than not drawn. */
+    // the terminal did not say the cell size
     if (tty_graphics_backend () != TTY_GRAPHICS_NONE && (cell_width <= 0 || cell_height <= 0))
     {
         cell_width = 8;

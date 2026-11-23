@@ -86,9 +86,9 @@ tty_kitty_transmit (GString *out, guint32 id, const guint8 *rgba, int width, int
 
         g_string_append (out, APC_START);
         if (pos == 0)
-            g_string_append_printf (out, "a=t,i=%u,f=32,s=%d,v=%d,%sq=2,", id, width, height,
+            g_string_append_printf (out, "a=t,i=%u,f=32,s=%d,v=%d,%s", id, width, height,
                                     compressed ? "o=z," : "");
-        g_string_append_printf (out, "m=%d;", more ? 1 : 0);
+        g_string_append_printf (out, "m=%d,q=2;", more ? 1 : 0);
         g_string_append_len (out, b64 + pos, (gssize) n);
         g_string_append (out, APC_END);
     }
@@ -99,10 +99,9 @@ tty_kitty_transmit (GString *out, guint32 id, const guint8 *rgba, int width, int
 /* --------------------------------------------------------------------------------------------- */
 
 void
-tty_kitty_put (GString *out, guint32 id, guint32 pid, int rows, int cols)
+tty_kitty_put (GString *out, guint32 id, guint32 pid)
 {
-    g_string_append_printf (out, APC_START "a=p,i=%u,p=%u,r=%d,c=%d,C=1,q=2" APC_END, id, pid, rows,
-                            cols);
+    g_string_append_printf (out, APC_START "a=p,i=%u,p=%u,C=1,q=2" APC_END, id, pid);
 }
 
 /* --------------------------------------------------------------------------------------------- */

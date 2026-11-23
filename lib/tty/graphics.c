@@ -76,7 +76,7 @@ tty_graphics_request (const char *graphics_env, const char *sixel_env, const cha
             return TTY_GRAPHICS_SIXEL;
     }
 
-    // a multiplexer answers for itself and keeps the pictures
+    // screen and tmux do not pass the pictures through
     if (term_is (term, "screen") || term_is (term, "tmux"))
         return TTY_GRAPHICS_NONE;
 

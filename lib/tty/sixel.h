@@ -28,7 +28,7 @@
 
 /*** typedefs(not structures) and defined constants **********************************************/
 
-/* A few bytes of raster attributes can declare any size: a bigger picture is not decoded */
+/* Raster attributes can declare any size in a few bytes */
 #define MC_SIXEL_MAX_PIXELS (4096 * 1024)
 
 /*** enums ***************************************************************************************/
@@ -39,14 +39,10 @@
 
 /*** declarations of public functions ************************************************************/
 
-/* The size in pixels of the sixel data after the 'q'. The raster attributes name it outright;
-   without them it is what the data draws: six rows per band, a column per sixel character,
-   repeats counted. */
+/* Data after the 'q': size from the raster attributes, else from what the data draws */
 void mc_sixel_measure (const char *data, gsize len, int *width, int *height);
 
-/* The whole DCS, ESC P ... q ... ESC \, as RGBA, 4 bytes a pixel, rows top down.
-   Pixels the data does not draw are transparent when P2 is 1, else of color 0.
-   NULL for no picture or one over MC_SIXEL_MAX_PIXELS. g_free() the result. */
+/* @dcs is the whole DCS; NULL if empty or too big. g_free() the result. */
 guint8 *mc_sixel_decode (const char *dcs, gsize len, int *width, int *height);
 
 /*** inline functions ****************************************************************************/

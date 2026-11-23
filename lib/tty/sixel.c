@@ -80,8 +80,7 @@ hue_to_channel (double m1, double m2, double h)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Hue in degrees with blue at 0, red at 120 and green at 240; lightness and saturation in
-   percent */
+/* DEC hues: blue 0, red 120, green 240 */
 static guint32
 hls_to_rgb (int hue, int lightness, int saturation)
 {
@@ -107,7 +106,7 @@ hls_to_rgb (int hue, int lightness, int saturation)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Up to @max numbers separated by ';', from @i on; returns how many were given */
+/* Up to @max numbers split by ';'; returns how many were given */
 static int
 read_numbers (const char *data, gsize len, gsize *i, int *out, int max)
 {
@@ -187,6 +186,8 @@ mc_sixel_measure (const char *data, gsize len, int *width, int *height)
                 x += (n > 0) ? n : 1;
                 drew = TRUE;
             }
+            else
+                i--;  // not a sixel: read again
         }
         else if (c == '$' || c == '-')
         {
@@ -198,7 +199,7 @@ mc_sixel_measure (const char *data, gsize len, int *width, int *height)
                 drew = FALSE;
             }
         }
-        // '#' and its parameters, and anything else, take no space
+        // '#' and anything else take no space
     }
 
     w = MAX (w, x);
@@ -313,6 +314,8 @@ mc_sixel_decode (const char *dcs, gsize len, int *width, int *height)
             repeat = MAX (p[0], 1);
             if (i >= data_len)
                 break;
+            if (data[i] < '?' || data[i] > '~')
+                continue;  // not a sixel: read again
         }
 
         if (data[i] >= '?' && data[i] <= '~')

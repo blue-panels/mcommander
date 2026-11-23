@@ -38,22 +38,19 @@ typedef struct mc_picture_struct mc_picture_t;
 
 /*** declarations of public functions ************************************************************/
 
-/* The DCS ESC P ... q ... ESC \ as it came, and its size in pixels. The bytes are copied. */
+/* @data is the whole DCS, ESC P ... ESC \; it is copied */
 mc_picture_t *mc_picture_new_sixel (const char *data, gsize len, int width, int height);
 mc_picture_t *mc_picture_ref (mc_picture_t *pic);
 void mc_picture_unref (mc_picture_t *pic);
 
 int mc_picture_width (const mc_picture_t *pic);
 int mc_picture_height (const mc_picture_t *pic);
-/* The sixel source, whole */
 const char *mc_picture_sixel (const mc_picture_t *pic, gsize *len);
-/* Bytes the picture keeps, for the memory caps */
 gsize mc_picture_bytes (const mc_picture_t *pic);
-/* The pixels as RGBA, decoded anew each time; NULL when they cannot be. g_free() them. */
+/* Decoded on each call; NULL if it cannot be. g_free() the result. */
 guint8 *mc_picture_rgba (const mc_picture_t *pic, int *width, int *height);
 
-/* Called with every picture that is about to be freed: whoever keeps it by its address
-   learns it is gone. One hook for the program. */
+/* Called just before a picture is freed; one hook for the whole program */
 void mc_picture_set_free_hook (void (*hook) (const mc_picture_t *pic));
 
 /*** inline functions ****************************************************************************/

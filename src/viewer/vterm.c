@@ -939,7 +939,7 @@ vterm_finish_sixel (mcview_vterm_t *vt)
     image->cols = cols;
     image->width = width;
     image->height = height;
-    /* Kept also where nothing draws pictures now: a backend may come later. */
+    // kept also when nothing draws pictures: a backend may come later
     image->picture = mc_picture_new_sixel (vt->sixel->str, vt->sixel->len, width, height);
     vt->images_bytes += vt->sixel->len;
     g_string_truncate (vt->sixel, 0);

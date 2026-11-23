@@ -36,17 +36,13 @@
 
 /*** declarations of public functions ************************************************************/
 
-/* A placement lives until its owner replaces or clears it, or the owner is destroyed.
-   After every screen refresh it is shown when it can be seen whole, and hidden whole
-   otherwise. @cells are screen coordinates. */
+/* Lives until cleared or the owner is destroyed; @cells are screen coordinates */
 void widget_picture_set (Widget *owner, guint slot, mc_picture_t *pic, const WRect *cells);
 void widget_picture_clear (Widget *owner, guint slot);
-/* Clear the slots from @first_slot on */
 void widget_picture_trim (Widget *owner, guint first_slot);
 void widget_picture_clear_all (Widget *owner);
 
-/* Nothing covers @cells of @owner: the owner is visible in the top dialog, no widget drawn
-   after it overlaps the cells, and the cells are inside the owner. */
+/* Owner visible in the top dialog, nothing drawn over @cells, @cells inside the owner */
 gboolean widget_picture_visible (const Widget *owner, const WRect *cells);
 
 /*** inline functions ****************************************************************************/

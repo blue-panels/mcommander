@@ -2362,9 +2362,7 @@ mcterm_draw_query (const WMcTerm *t)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The pictures go to the compositor, in the cells of the same geometry the cells are
-   drawn with. None in a snapshot, in a filtered view and after the program is gone;
-   one that does not fit whole is left out: a picture cannot be cut. */
+/* A picture that does not fit whole is left out: it cannot be cut */
 static void
 mcterm_place_pictures (WMcTerm *t)
 {

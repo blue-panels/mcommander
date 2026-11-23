@@ -175,11 +175,7 @@ extern void tty_touch_area (int y, int x, int rows, int cols);
 typedef void (*tty_painter_fn) (void *data);
 extern void tty_painter_add (tty_painter_fn fn, void *data);
 extern void tty_painter_remove (tty_painter_fn fn, void *data);
-/* Ask the terminal how it draws pictures (sixel in Primary Device Attributes, the kitty
-   graphics query) and how big its cells are (XTWINOPS 16), and whether it knows the kitty
-   keyboard protocol. Once, after tty_init(), while nothing else reads the keyboard; a
-   terminal that does not answer within a moment is taken not to know. MC_GRAPHICS
-   overrides the answer, see graphics.h. */
+/* Pictures, cell size, kitty keyboard; after tty_init(), before the keyboard is read */
 extern void tty_probe_graphics (void);
 /* Bytes read past the keyboard's back go back to it, in order. */
 extern void tty_unget_input (const unsigned char *data, size_t len);

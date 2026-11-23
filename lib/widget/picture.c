@@ -42,10 +42,10 @@ typedef struct
 {
     Widget *owner;
     guint slot;
-    guint32 pid;  // the kitty placement id
+    guint32 pid;  // kitty placement id
     mc_picture_t *pic;
     WRect cells;
-    tty_graphics_t shown;  // how it was written after the last refresh; NONE when it was not
+    tty_graphics_t shown;  // how it is on the screen now; NONE if not shown
 } placement_t;
 
 /*** forward declarations (file scope functions) *************************************************/
@@ -55,10 +55,9 @@ typedef struct
 static GList *placements = NULL;
 static gboolean painter_added = FALSE;
 
-/* Kitty: the id of every picture the terminal has, by the address of the picture. Ids come
-   from a high range with a base of its own for each run, so that a program run under Ctrl-O
-   does not meet them. */
+/* Kitty image ids by picture address; a random high base for each run */
 static GHashTable *kitty_images = NULL;
+static GHashTable *kitty_failed = NULL;
 static guint32 kitty_next_id = 0;
 static guint32 kitty_next_pid = 1;
 static guint kitty_epoch = 0;
@@ -90,8 +89,7 @@ kitty_image_id (const mc_picture_t *pic)
 {
     gpointer id;
 
-    /* Also after the terminal may have lost them: a delete for what is gone costs nothing,
-       and the table is emptied before anything is sent again */
+    // also after a reset: to delete what is gone does no harm
     if (kitty_images == NULL)
         return 0;
     id = g_hash_table_lookup (kitty_images, pic);
@@ -100,8 +98,7 @@ kitty_image_id (const mc_picture_t *pic)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The terminal may have lost everything: what it still has goes, and what is needed from
-   now on is sent again */
+/* Free what the terminal still has; what is needed is sent again */
 static void
 kitty_forget (void)
 {
@@ -151,11 +148,13 @@ kitty_picture_freed (const mc_picture_t *pic)
     }
     if (kitty_images != NULL)
         g_hash_table_remove (kitty_images, pic);
+    if (kitty_failed != NULL)
+        g_hash_table_remove (kitty_failed, pic);
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The id of the picture with the terminal, sent now if it was not; 0 when it cannot be */
+/* Sends the picture if needed; 0 when it cannot be decoded */
 static guint32
 kitty_transmit (const mc_picture_t *pic, GString *out)
 {
@@ -167,9 +166,15 @@ kitty_transmit (const mc_picture_t *pic, GString *out)
     if (id != 0)
         return id;
 
+    if (g_hash_table_contains (kitty_failed, pic))
+        return 0;
+
     rgba = mc_picture_rgba (pic, &width, &height);
     if (rgba == NULL)
+    {
+        g_hash_table_add (kitty_failed, (gpointer) pic);
         return 0;
+    }
 
     if (kitty_next_id == 0)
         kitty_next_id = 0x40000000u + (g_random_int () & 0x0fff0000u);
@@ -184,7 +189,7 @@ kitty_transmit (const mc_picture_t *pic, GString *out)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* Take the picture off the screen. Returns TRUE when its cells have to be written again. */
+/* TRUE when the cells under it must be written again */
 static gboolean
 placement_unshow (placement_t *p, GString *out)
 {
@@ -195,9 +200,13 @@ placement_unshow (placement_t *p, GString *out)
     switch (shown)
     {
     case TTY_GRAPHICS_SIXEL:
-        // the pixels stay on the terminal until the cells under them are written again
-        tty_touch_area (p->cells.y, p->cells.x, p->cells.lines, p->cells.cols);
-        return TRUE;
+        // the pixels stay until the cells under them are written again
+        {
+            const WRect *r = &p->owner->rect;
+
+            tty_touch_area (r->y, r->x, r->lines, r->cols);
+            return TRUE;
+        }
 
     case TTY_GRAPHICS_KITTY:
     {
@@ -264,18 +273,14 @@ show_kitty (const placement_t *p, GString *out)
 
     g_string_append (out, ESC_STR "7");
     move_to (out, &p->cells);
-    tty_kitty_put (out, id, p->pid, p->cells.lines, p->cells.cols);
+    tty_kitty_put (out, id, p->pid);
     g_string_append (out, ESC_STR "8");
     return TRUE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* After every refresh, every picture that can be seen whole is shown again. Sixel: any cell
-   the refresh wrote under it has erased that part of it. Kitty: putting the same ids again
-   costs a few bytes, moves nothing that is in place and brings back what the terminal lost.
-   A sixel picture that can no longer be seen gets its cells written again over the pixels;
-   a kitty one is deleted. */
+/* After every refresh: visible pictures are written again, hidden ones are taken off */
 static void
 picture_painter (void *data)
 {
@@ -319,7 +324,7 @@ picture_painter (void *data)
     flush (out);
     g_string_free (out, TRUE);
 
-    // the painters run again after this refresh, over the new screen
+    // the painters run again after this refresh
     if (rewrite)
         tty_refresh ();
 }
@@ -377,6 +382,7 @@ widget_picture_set (Widget *owner, guint slot, mc_picture_t *pic, const WRect *c
     {
         tty_painter_add (picture_painter, NULL);
         kitty_images = g_hash_table_new (g_direct_hash, g_direct_equal);
+        kitty_failed = g_hash_table_new (g_direct_hash, g_direct_equal);
         kitty_epoch = tty_graphics_epoch ();
         mc_picture_set_free_hook (kitty_picture_freed);
         painter_added = TRUE;
@@ -389,8 +395,7 @@ widget_picture_set (Widget *owner, guint slot, mc_picture_t *pic, const WRect *c
         if (p->pic == pic && rects_are_equal (&p->cells, cells))
             return;
 
-        /* Moved or replaced. The old sixel pixels go with the next refresh. A kitty placement
-           that only moved is put again where it is now, with the same ids. */
+        // a kitty placement that only moved is put again with the same ids
         if (p->shown == TTY_GRAPHICS_SIXEL || (p->shown == TTY_GRAPHICS_KITTY && p->pic != pic))
         {
             GString *out = g_string_new (NULL);
@@ -399,7 +404,11 @@ widget_picture_set (Widget *owner, guint slot, mc_picture_t *pic, const WRect *c
             flush (out);
             g_string_free (out, TRUE);
         }
+        mc_picture_ref (pic);
         mc_picture_unref (p->pic);
+        p->pic = pic;
+        p->cells = *cells;
+        return;
     }
     else
     {
@@ -465,7 +474,7 @@ widget_picture_visible (const Widget *owner, const WRect *cells)
         if (!widget_get_state (w, WST_VISIBLE))
             return FALSE;
 
-        // the widgets of the group are drawn in the order of the list
+        // later widgets of the group are drawn over it
         l = g_list_find (w->owner->widgets, w);
         for (l = l != NULL ? g_list_next (l) : NULL; l != NULL; l = g_list_next (l))
         {
@@ -476,7 +485,7 @@ widget_picture_visible (const Widget *owner, const WRect *cells)
         }
     }
 
-    // w is the dialog now: it has to be the top one, and not put aside
+    // w is the dialog now: it must be the top one and not suspended
     return top_dlg != NULL && top_dlg->data == w && !widget_get_state (w, WST_SUSPENDED);
 }
 
