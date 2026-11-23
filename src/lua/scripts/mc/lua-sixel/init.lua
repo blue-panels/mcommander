@@ -54,9 +54,7 @@ if ! command -v chafa >/dev/null 2>&1; then
 fi
 
 if [ "$mode" = sixel ]; then
-    # chafa with no terminal to ask has a cell of its own size (10x20 in
-    # 1.18, 8x8 in older ones under --font-ratio=1/1). A picture one cell
-    # big is that cell exactly: a 1x1 PNG drawn so tells the size.
+    # chafa takes the cell size from the terminal; a 1x1 picture shows it
     cell=$(
         tmp=$(mktemp 2>/dev/null) || exit 0
         trap 'rm -f "$tmp"' EXIT HUP INT TERM
@@ -74,8 +72,7 @@ if [ "$mode" = sixel ]; then
     fi
 fi
 
-# Less room than one cell of chafa, or its cell not known: a picture would
-# not fit, the characters do
+# no chafa cell fits, or its size is unknown: draw characters
 if [ "$mode" = sixel ] && { [ "$size_w" -lt 1 ] || [ "$size_h" -lt 1 ]; }; then
     mode=symbols
     set -- --colors=256

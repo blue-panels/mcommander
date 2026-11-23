@@ -48,6 +48,9 @@ static const struct request_ds
     // MC_GRAPHICS wins over MC_SIXEL
     { "kitty", "1", "xterm", TTY_GRAPHICS_KITTY },
     { "auto", "0", "xterm", TTY_GRAPHICS_AUTO },
+    // a wrong MC_GRAPHICS value: MC_SIXEL decides
+    { "off", "0", "xterm", TTY_GRAPHICS_NONE },
+    { "Kitty", "1", "xterm", TTY_GRAPHICS_SIXEL },
     // multiplexers: none unless a protocol is named
     { NULL, NULL, "screen-256color", TTY_GRAPHICS_NONE },
     { NULL, NULL, "tmux-256color", TTY_GRAPHICS_NONE },

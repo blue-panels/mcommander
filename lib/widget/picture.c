@@ -106,7 +106,8 @@ kitty_forget (void)
 
     if (kitty_images != NULL)
     {
-        if (tty_graphics_backend () == TTY_GRAPHICS_KITTY && g_hash_table_size (kitty_images) > 0)
+        // they went to this terminal, whatever the backend is now
+        if (g_hash_table_size (kitty_images) > 0)
         {
             GString *out = g_string_new (NULL);
             GHashTableIter iter;
@@ -138,7 +139,7 @@ kitty_picture_freed (const mc_picture_t *pic)
 {
     const guint32 id = kitty_image_id (pic);
 
-    if (id != 0 && tty_graphics_backend () == TTY_GRAPHICS_KITTY)
+    if (id != 0)
     {
         GString *out = g_string_new (NULL);
 
@@ -202,9 +203,8 @@ placement_unshow (placement_t *p, GString *out)
     case TTY_GRAPHICS_SIXEL:
         // the pixels stay until the cells under them are written again
         {
-            const WRect *r = &p->owner->rect;
-
-            tty_touch_area (r->y, r->x, r->lines, r->cols);
+            // pixels can run past the counted cells, down and to the right
+            tty_touch_area (p->cells.y, 0, LINES - p->cells.y, COLS);
             return TRUE;
         }
 

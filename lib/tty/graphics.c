@@ -59,16 +59,18 @@ term_is (const char *term, const char *name)
 tty_graphics_t
 tty_graphics_request (const char *graphics_env, const char *sixel_env, const char *term)
 {
-    if (graphics_env != NULL && graphics_env[0] != '\0')
-    {
-        if (strcmp (graphics_env, "none") == 0)
-            return TTY_GRAPHICS_NONE;
-        if (strcmp (graphics_env, "sixel") == 0)
-            return TTY_GRAPHICS_SIXEL;
-        if (strcmp (graphics_env, "kitty") == 0)
-            return TTY_GRAPHICS_KITTY;
-    }
-    else if (sixel_env != NULL)
+    if (graphics_env == NULL)
+        graphics_env = "";
+
+    if (strcmp (graphics_env, "none") == 0)
+        return TTY_GRAPHICS_NONE;
+    if (strcmp (graphics_env, "sixel") == 0)
+        return TTY_GRAPHICS_SIXEL;
+    if (strcmp (graphics_env, "kitty") == 0)
+        return TTY_GRAPHICS_KITTY;
+
+    // an unknown value is ignored: MC_SIXEL decides
+    if (strcmp (graphics_env, "auto") != 0 && sixel_env != NULL)
     {
         if (sixel_env[0] == '0')
             return TTY_GRAPHICS_NONE;

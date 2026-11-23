@@ -165,9 +165,7 @@ local function image_path(session, src)
     return session.dir .. "/" .. src
 end
 
--- The size in pixels of a cell of chafa, which has no terminal to ask:
--- 10x20 in 1.18, 8x8 in older ones under --font-ratio=1/1. A picture one cell
--- big is that cell exactly: a 1x1 PNG drawn so tells the size.
+-- chafa takes the cell size from the terminal; a 1x1 picture shows it
 local CHAFA_CELL_SCRIPT = [[
 tmp=$(mktemp) || exit 1
 trap 'rm -f "$tmp"' EXIT HUP INT TERM
@@ -175,8 +173,7 @@ printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000
 chafa --format=sixel --font-ratio=1/1 --size=1x1 -- "$tmp" 2>/dev/null
 ]]
 
--- Asked once a session. The probe draws a picture of its own, so when it
--- fails it fails for every picture: false then, and no sixel from chafa.
+-- Asked once a session: a failed probe fails for every picture
 local function chafa_cell(session)
     local cell = session.tools.chafa_cell
 
@@ -194,9 +191,7 @@ local function chafa_cell(session)
     return cell or nil
 end
 
--- The picture in chafa's cells: the most that fits in its place, which chafa
--- fills keeping the proportions. Nil when not even one cell fits, or when the
--- size of a chafa cell is not known.
+-- The most chafa cells that fit the place; nil if none fit or the cell is unknown
 local function chafa_size(session, image)
     local cell = chafa_cell(session)
 
@@ -254,7 +249,7 @@ local function picture_data(session, image, sixel)
     if sixel and session.tools.encoder == nil then
         return nil
     end
-    -- smaller than a cell of chafa, or its cell not known: drawn in its characters
+    -- no chafa cell fits, or its size is unknown: draw characters
     if sixel and session.tools.encoder == "chafa" and chafa_size(session, image) == nil then
         return picture_data(session, image, false), "symbols"
     end
@@ -272,9 +267,7 @@ local function picture_data(session, image, sixel)
 
     local data = picture_bytes(run(picture_command(session, image, sixel), MAX_SIXEL_BYTES), sixel)
 
-    -- chafa draws in whole cells of its own and may come out lower than the
-    -- place; the raster attributes say the place, so the picture takes all its
-    -- rows and the text below goes where the page puts it
+    -- the place height in the raster attributes keeps the text below in place
     if data ~= nil and sixel and session.tools.encoder == "chafa" then
         data = data:gsub('^(\27P[^q]*q"%d+;%d+;%d+;)%d+', "%1" .. image.height, 1)
     end
