@@ -5197,7 +5197,7 @@ insert=\ee[Op
 Како се цртају слике: \fIauto\fP, \fIsixel\fP, \fIkitty\fP или \fInone\fP\&. Са \fIauto\fP,
 подразумеваном вредношћу, пита се терминал: sixel ако га има, иначе kitty
 графички протокол. Под screen или tmux слика нема, осим ако се протокол
-не наведе. У kitty се слике још не цртају.
+не наведе.
 
 .TP
 \fBMC_SIXEL\fP

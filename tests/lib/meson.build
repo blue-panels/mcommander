@@ -30,6 +30,13 @@ lib_test_c_args = test_c_args + [
   '-DTEST_LUA_SIXEL_DIR="@0@"'.format(lua_scripts_src / 'lua-sixel'),
 ]
 
+# the test unpacks what the encoder packed
+test('tty_pictures',
+  executable('tty_pictures', 'tty_pictures.c', c_args: lib_test_c_args,
+    dependencies: test_lib_deps + [zlib]),
+  workdir: meson.current_build_dir(),
+  suite: 'lib')
+
 foreach name, source : lib_tests
   test(name,
     executable(name, source, c_args: lib_test_c_args, dependencies: test_lib_deps),

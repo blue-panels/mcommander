@@ -4001,7 +4001,7 @@ wczytywany i nic, co go potrzebuje, nie jest dostępne.
 : Jak rysować obrazy: *auto*, *sixel*, *kitty* lub *none*. Przy *auto*,
 wartości domyślnej, pytany jest terminal: sixel, jeśli go ma, w przeciwnym
 razie protokół graficzny kitty. Pod screen lub tmux obrazów nie ma, chyba że
-protokół zostanie podany. W kitty obrazy nie są jeszcze rysowane.
+protokół zostanie podany.
 
 **MC_SIXEL**
 : Stara nazwa **MC_GRAPHICS**: 0 to *none*, 1 to *sixel*. Jest czytana tylko

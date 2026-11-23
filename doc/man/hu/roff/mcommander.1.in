@@ -4817,8 +4817,7 @@ Lua csomag sem töltődik be, és semmi nem érhető el, aminek szüksége van r
 Hogyan rajzolja a program a képeket: \fIauto\fP, \fIsixel\fP, \fIkitty\fP vagy \fInone\fP\&.
 Az alapértelmezett \fIauto\fP esetén a program a terminált kérdezi meg: sixel, ha
 a terminál tudja, különben a kitty grafikus protokoll. A screen vagy a tmux
-alatt nincsenek képek, hacsak nincs megnevezve egy protokoll. A kittyben a
-képek még nem jelennek meg.
+alatt nincsenek képek, hacsak nincs megnevezve egy protokoll.
 
 .TP
 \fBMC_SIXEL\fP

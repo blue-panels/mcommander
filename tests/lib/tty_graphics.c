@@ -105,17 +105,23 @@ END_TEST
 
 START_TEST (test_draws_pictures)
 {
+    const guint epoch = tty_graphics_epoch ();
+
     tty_graphics_set_backend (TTY_GRAPHICS_SIXEL);
     ck_assert (tty_draws_pictures ());
 
-    // detected, not drawn yet
     tty_graphics_set_backend (TTY_GRAPHICS_KITTY);
     ck_assert_int_eq (tty_graphics_backend (), TTY_GRAPHICS_KITTY);
-    ck_assert (!tty_draws_pictures ());
+    ck_assert (tty_draws_pictures ());
 
     tty_graphics_set_backend (TTY_GRAPHICS_AUTO);
     ck_assert_int_eq (tty_graphics_backend (), TTY_GRAPHICS_NONE);
     ck_assert (!tty_draws_pictures ());
+
+    // every new backend means the pictures are sent again
+    ck_assert_uint_eq (tty_graphics_epoch (), epoch + 3);
+    tty_graphics_reset_images ();
+    ck_assert_uint_eq (tty_graphics_epoch (), epoch + 4);
 }
 END_TEST
 

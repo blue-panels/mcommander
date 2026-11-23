@@ -40,6 +40,7 @@
 /*** file scope variables ************************************************************************/
 
 static tty_graphics_t backend = TTY_GRAPHICS_NONE;
+static guint epoch = 0;
 
 /* --------------------------------------------------------------------------------------------- */
 /*** file scope functions ************************************************************************/
@@ -110,6 +111,7 @@ void
 tty_graphics_set_backend (tty_graphics_t b)
 {
     backend = b == TTY_GRAPHICS_AUTO ? TTY_GRAPHICS_NONE : b;
+    epoch++;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -125,7 +127,23 @@ tty_graphics_backend (void)
 gboolean
 tty_draws_pictures (void)
 {
-    return backend == TTY_GRAPHICS_SIXEL;
+    return backend == TTY_GRAPHICS_SIXEL || backend == TTY_GRAPHICS_KITTY;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+tty_graphics_reset_images (void)
+{
+    epoch++;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+guint
+tty_graphics_epoch (void)
+{
+    return epoch;
 }
 
 /* --------------------------------------------------------------------------------------------- */

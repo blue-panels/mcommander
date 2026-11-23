@@ -5167,7 +5167,7 @@ nothing that needs one is available.
 How pictures are drawn: \fIauto\fP, \fIsixel\fP, \fIkitty\fP or \fInone\fP\&. With \fIauto\fP,
 the default, the terminal is asked: sixel when it has it, else the kitty
 graphics protocol. Behind screen or tmux there are no pictures unless a
-protocol is named. Pictures in kitty are not drawn yet.
+protocol is named.
 
 .TP
 \fBMC_SIXEL\fP

@@ -4457,7 +4457,7 @@ nothing that needs one is available.
 : How pictures are drawn: *auto*, *sixel*, *kitty* or *none*. With *auto*,
 the default, the terminal is asked: sixel when it has it, else the kitty
 graphics protocol. Behind screen or tmux there are no pictures unless a
-protocol is named. Pictures in kitty are not drawn yet.
+protocol is named.
 
 **MC_SIXEL**
 : The old name of **MC_GRAPHICS**: 0 is *none*, 1 is *sixel*. It is read only

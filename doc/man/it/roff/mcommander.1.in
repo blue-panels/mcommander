@@ -4796,8 +4796,7 @@ disponibile.
 Come disegnare le immagini: \fIauto\fP, \fIsixel\fP, \fIkitty\fP o \fInone\fP\&. Con \fIauto\fP,
 il valore predefinito, viene interrogato il terminale: sixel se ce l'ha,
 altrimenti il protocollo grafico di kitty. Sotto screen o tmux non ci sono
-immagini, a meno che non si indichi un protocollo. In kitty le immagini non
-vengono ancora disegnate.
+immagini, a meno che non si indichi un protocollo.
 
 .TP
 \fBMC_SIXEL\fP

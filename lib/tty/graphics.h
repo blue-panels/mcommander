@@ -64,8 +64,13 @@ tty_graphics_t tty_graphics_pick (tty_graphics_t request, gboolean sixel_answer,
 
 void tty_graphics_set_backend (tty_graphics_t backend);
 tty_graphics_t tty_graphics_backend (void);
-/* The backend draws pictures in this build: sixel only for now. */
+/* The backend draws pictures in this build */
 gboolean tty_draws_pictures (void);
+
+/* The terminal may have lost the pictures sent to it: a new screen size, the alternate
+   screen left and entered again, another backend. The number grows each time. */
+void tty_graphics_reset_images (void);
+guint tty_graphics_epoch (void);
 
 /*** inline functions ****************************************************************************/
 

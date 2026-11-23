@@ -4653,7 +4653,7 @@ wczytywany i nic, co go potrzebuje, nie jest dostępne.
 Jak rysować obrazy: \fIauto\fP, \fIsixel\fP, \fIkitty\fP lub \fInone\fP\&. Przy \fIauto\fP,
 wartości domyślnej, pytany jest terminal: sixel, jeśli go ma, w przeciwnym
 razie protokół graficzny kitty. Pod screen lub tmux obrazów nie ma, chyba że
-protokół zostanie podany. W kitty obrazy nie są jeszcze rysowane.
+protokół zostanie podany.
 
 .TP
 \fBMC_SIXEL\fP

@@ -4176,8 +4176,7 @@ Lua csomag sem töltődik be, és semmi nem érhető el, aminek szüksége van r
 : Hogyan rajzolja a program a képeket: *auto*, *sixel*, *kitty* vagy *none*.
 Az alapértelmezett *auto* esetén a program a terminált kérdezi meg: sixel, ha
 a terminál tudja, különben a kitty grafikus protokoll. A screen vagy a tmux
-alatt nincsenek képek, hacsak nincs megnevezve egy protokoll. A kittyben a
-képek még nem jelennek meg.
+alatt nincsenek képek, hacsak nincs megnevezve egy protokoll.
 
 **MC_SIXEL**
 : A **MC_GRAPHICS** régi neve: a 0 a *none*, az 1 a *sixel*. Csak akkor

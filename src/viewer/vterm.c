@@ -26,6 +26,7 @@
 
 #include "lib/global.h"
 #include "lib/tty/picture.h"
+#include "lib/tty/sixel.h"
 
 #include "ansi.h"
 #include "terminal_buffer.h"
@@ -871,86 +872,6 @@ vterm_images_erase_rows (mcview_vterm_t *vt, int from, int to)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* The size of the picture in pixels. The raster attributes name it outright;
-   without them it is what the data draws: six rows per band, a column per
-   sixel character, repeats counted. */
-static void
-vterm_sixel_measure (const char *data, gsize len, int *width, int *height)
-{
-    gsize i = 0;
-    int x = 0, w = 0, bands = 0;
-    gboolean drew = FALSE;
-
-    *width = 0;
-    *height = 0;
-
-    if (i < len && data[i] == '"')
-    {
-        int p[4] = { 0, 0, 0, 0 };
-        int n = 0;
-
-        i++;
-        while (i < len && n < 4 && ((data[i] >= '0' && data[i] <= '9') || data[i] == ';'))
-        {
-            if (data[i] == ';')
-                n++;
-            else if (p[n] < 100000)
-                p[n] = p[n] * 10 + (data[i] - '0');
-            i++;
-        }
-        if (n >= 3 && p[2] > 0 && p[3] > 0)
-        {
-            *width = p[2];
-            *height = p[3];
-            return;
-        }
-    }
-
-    for (; i < len; i++)
-    {
-        const char c = data[i];
-
-        if (c >= '?' && c <= '~')
-        {
-            x++;
-            drew = TRUE;
-        }
-        else if (c == '!')
-        {
-            int n = 0;
-
-            for (i++; i < len && data[i] >= '0' && data[i] <= '9'; i++)
-                if (n < 100000)
-                    n = n * 10 + (data[i] - '0');
-            if (i < len && data[i] >= '?' && data[i] <= '~')
-            {
-                x += (n > 0) ? n : 1;
-                drew = TRUE;
-            }
-        }
-        else if (c == '$' || c == '-')
-        {
-            w = MAX (w, x);
-            x = 0;
-            if (c == '-')
-            {
-                bands++;
-                drew = FALSE;
-            }
-        }
-        /* '#' and its parameters, and anything else, take no space. */
-    }
-
-    w = MAX (w, x);
-    if (drew)
-        bands++;
-
-    *width = w;
-    *height = bands * 6;
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
 /* ESC \ closed the sixel data: it becomes a picture at the cursor, and the
    cursor goes below it, the way a terminal with sixel scrolling does. */
 static void
@@ -974,7 +895,7 @@ vterm_finish_sixel (mcview_vterm_t *vt)
     /* The data starts after the 'q' of the prefix. */
     body = strchr (vt->sixel->str + 2, 'q') + 1;
     body_len = vt->sixel->len - (body - vt->sixel->str);
-    vterm_sixel_measure (body, body_len, &width, &height);
+    mc_sixel_measure (body, body_len, &width, &height);
 
     g_string_append (vt->sixel, ESC_STR "\\");
 

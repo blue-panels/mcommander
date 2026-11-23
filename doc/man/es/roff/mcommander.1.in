@@ -5319,7 +5319,7 @@ carga ningún paquete Lua y nada que lo necesite está disponible.
 Cómo se dibujan las imágenes: \fIauto\fP, \fIsixel\fP, \fIkitty\fP o \fInone\fP\&. Con
 \fIauto\fP, el valor por defecto, se pregunta al terminal: sixel si lo tiene, si
 no el protocolo gráfico de kitty. Bajo screen o tmux no hay imágenes a menos
-que se indique un protocolo. En kitty las imágenes todavía no se dibujan.
+que se indique un protocolo.
 
 .TP
 \fBMC_SIXEL\fP

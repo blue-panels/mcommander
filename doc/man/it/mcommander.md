@@ -4155,8 +4155,7 @@ disponibile.
 : Come disegnare le immagini: *auto*, *sixel*, *kitty* o *none*. Con *auto*,
 il valore predefinito, viene interrogato il terminale: sixel se ce l'ha,
 altrimenti il protocollo grafico di kitty. Sotto screen o tmux non ci sono
-immagini, a meno che non si indichi un protocollo. In kitty le immagini non
-vengono ancora disegnate.
+immagini, a meno che non si indichi un protocollo.
 
 **MC_SIXEL**
 : Il vecchio nome di **MC_GRAPHICS**: 0 vale *none*, 1 vale *sixel*. Viene

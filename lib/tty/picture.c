@@ -26,6 +26,7 @@
 #include "lib/global.h"
 
 #include "picture.h"
+#include "sixel.h"
 
 /*** global variables ****************************************************************************/
 
@@ -44,6 +45,8 @@ struct mc_picture_struct
 /*** forward declarations (file scope functions) *************************************************/
 
 /*** file scope variables ************************************************************************/
+
+static void (*free_hook) (const mc_picture_t *pic) = NULL;
 
 /* --------------------------------------------------------------------------------------------- */
 /*** public functions ****************************************************************************/
@@ -80,6 +83,8 @@ mc_picture_unref (mc_picture_t *pic)
     if (pic == NULL || --pic->refs > 0)
         return;
 
+    if (free_hook != NULL)
+        free_hook (pic);
     g_bytes_unref (pic->sixel);
     g_free (pic);
 }
@@ -114,6 +119,26 @@ gsize
 mc_picture_bytes (const mc_picture_t *pic)
 {
     return g_bytes_get_size (pic->sixel);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+guint8 *
+mc_picture_rgba (const mc_picture_t *pic, int *width, int *height)
+{
+    const char *data;
+    gsize len;
+
+    data = mc_picture_sixel (pic, &len);
+    return mc_sixel_decode (data, len, width, height);
+}
+
+/* --------------------------------------------------------------------------------------------- */
+
+void
+mc_picture_set_free_hook (void (*hook) (const mc_picture_t *pic))
+{
+    free_hook = hook;
 }
 
 /* --------------------------------------------------------------------------------------------- */

@@ -4583,7 +4583,7 @@ carga ningún paquete Lua y nada que lo necesite está disponible.
 : Cómo se dibujan las imágenes: *auto*, *sixel*, *kitty* o *none*. Con
 *auto*, el valor por defecto, se pregunta al terminal: sixel si lo tiene, si
 no el protocolo gráfico de kitty. Bajo screen o tmux no hay imágenes a menos
-que se indique un protocolo. En kitty las imágenes todavía no se dibujan.
+que se indique un protocolo.
 
 **MC_SIXEL**
 : El nombre antiguo de **MC_GRAPHICS**: 0 es *none*, 1 es *sixel*. Solo se lee

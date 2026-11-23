@@ -49,6 +49,12 @@ int mc_picture_height (const mc_picture_t *pic);
 const char *mc_picture_sixel (const mc_picture_t *pic, gsize *len);
 /* Bytes the picture keeps, for the memory caps */
 gsize mc_picture_bytes (const mc_picture_t *pic);
+/* The pixels as RGBA, decoded anew each time; NULL when they cannot be. g_free() them. */
+guint8 *mc_picture_rgba (const mc_picture_t *pic, int *width, int *height);
+
+/* Called with every picture that is about to be freed: whoever keeps it by its address
+   learns it is gone. One hook for the program. */
+void mc_picture_set_free_hook (void (*hook) (const mc_picture_t *pic));
 
 /*** inline functions ****************************************************************************/
 
