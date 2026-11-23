@@ -252,10 +252,6 @@ struct WView
 
     // ANSI terminal replay mode (Alt-F9)
     struct mcview_vterm_struct *vterm;  // non-NULL when terminal mode is active
-    /* Sixel pictures of the terminal mode are written to the terminal after the
-       cells; the cells under them are written every time (see mcterm). */
-    gboolean paint_pending;
-    gboolean pictures_shown;
 
     // line filter (F6 filter mode)
     gchar *filter_pattern;       // Active pattern, or NULL when filter is off
@@ -387,7 +383,6 @@ gboolean mcview_dialog_goto (WView *view, off_t *offset);
 void mcview_update (WView *view);
 void mcview_display (WView *view);
 /* The tty painter of the sixel pictures; a WView is added at birth. */
-void mcview_paint_pictures (void *data);
 void mcview_display_status (WView *view);
 void mcview_spinner (WView *view);
 void mcview_compute_areas (WView *view);

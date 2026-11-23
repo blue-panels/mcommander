@@ -205,11 +205,6 @@ struct WMcTerm
     gboolean cursor_valid;
     gint64 cursor_row;
     int cursor_col;
-    /* Sixel pictures are written to the terminal after the cells, and the
-       cells under them are written every time, so that a picture that moved
-       or went is erased. */
-    gboolean paint_pending;   // the cells were drawn: paint after the refresh
-    gboolean pictures_shown;  // pictures were painted the last time
 };
 
 /* Where the rows of the screen fall in the output as a whole. */
@@ -2367,60 +2362,34 @@ mcterm_draw_query (const WMcTerm *t)
 
 /* --------------------------------------------------------------------------------------------- */
 
-/* After the refresh: the pictures, straight to the terminal, over the cells
-   that were just written. Cell coordinates come from the same geometry the
-   cells were drawn with. */
+/* The pictures go to the compositor, in the cells of the same geometry the cells are
+   drawn with. None in a snapshot, in a filtered view and after the program is gone;
+   one that does not fit whole is left out: a picture cannot be cut. */
 static void
-mcterm_paint_pictures (void *data)
+mcterm_place_pictures (WMcTerm *t)
 {
-    WMcTerm *t = data;
     const WRect *r = &WIDGET (t)->rect;
     mcterm_geom_t g;
-    guint i, shown = 0;
+    guint i, n = 0;
 
-    /* Hidden with pictures on the screen: whatever is drawn over the widget
-       leaves the pixels where no cell changed. Every cell again, then. */
-    if (t->pictures_shown && !widget_get_state (WIDGET (t), WST_VISIBLE))
-    {
-        t->pictures_shown = FALSE;
-        t->paint_pending = FALSE;
-        tty_touch_screen ();
-        tty_refresh ();
-        return;
-    }
+    if (!t->child_dead && mcterm_geometry (t, &g) && !g.snapshot && !g.filtered)
+        for (i = 0; i < mcview_vterm_images_len (t->vterm); i++)
+        {
+            const mcview_vterm_image_t *image = mcview_vterm_image (t->vterm, i);
+            const gint64 abs_row = mcview_vterm_scrolled_rows (t->vterm) + image->row;
+            const gint64 y = r->y + mcterm_geom_screen_row (t, &g, abs_row);
+            WRect cells;
 
-    /* A later screen refresh can rewrite the cells under a picture without
-       drawing this widget. Paint the picture again in that case. */
-    if (!t->paint_pending && !t->pictures_shown)
-        return;
-    t->paint_pending = FALSE;
-    t->pictures_shown = FALSE;
+            if (y < r->y + g.blank_above || y + image->rows > r->y + r->lines
+                || r->x + image->col + image->cols > r->x + r->cols)
+                continue;
 
-    if (!widget_get_state (WIDGET (t), WST_VISIBLE) || t->child_dead || !tty_draws_pictures ()
-        || !mcterm_geometry (t, &g) || g.snapshot || g.filtered)
-        return;
+            rect_init (&cells, (int) y, r->x + image->col, image->rows, image->cols);
+            widget_picture_set (WIDGET (t), n, image->picture, &cells);
+            n++;
+        }
 
-    for (i = 0; i < mcview_vterm_images_len (t->vterm); i++)
-    {
-        const mcview_vterm_image_t *image = mcview_vterm_image (t->vterm, i);
-        const gint64 abs_row = mcview_vterm_scrolled_rows (t->vterm) + image->row;
-        const gint64 y = r->y + mcterm_geom_screen_row (t, &g, abs_row);
-        const int x = r->x + image->col;
-        char move[32];
-
-        /* A picture cannot be cut: one that does not fit is not painted. */
-        if (image->data == NULL || y < r->y + g.blank_above || y + image->rows > r->y + r->lines
-            || x + image->cols > r->x + r->cols)
-            continue;
-
-        g_snprintf (move, sizeof (move), ESC_STR "7" ESC_STR "[%d;%dH", (int) y + 1, x + 1);
-        tty_raw_write (move, strlen (move));
-        tty_raw_write (g_bytes_get_data (image->data, NULL), g_bytes_get_size (image->data));
-        tty_raw_write (ESC_STR "8", 2);
-        shown++;
-    }
-
-    t->pictures_shown = shown > 0;
+    widget_picture_trim (WIDGET (t), n);
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -2450,11 +2419,7 @@ mcterm_do_draw (WMcTerm *t)
 
     (void) mcterm_handle_stalled_internal_sync (t);
 
-    if (t->pictures_shown || mcview_vterm_images_len (t->vterm) > 0)
-    {
-        tty_touch_area (r->y, r->x, r->lines, r->cols);
-        t->paint_pending = TRUE;
-    }
+    mcterm_place_pictures (t);
 
     // a program's last words stay on the screen, where its host says it has gone
     if (t->child_dead && !t->program)
@@ -3045,9 +3010,7 @@ mcterm_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         }
         mcterm_busy_tick_set (t, FALSE);
         g_clear_pointer (&t->shell_rc, mcterm_shell_rc_free);
-        tty_painter_remove (mcterm_paint_pictures, t);
-        if (t->pictures_shown)
-            tty_touch_screen (); /* the pixels go with the next refresh */
+        widget_picture_clear_all (WIDGET (t));
         mcview_vterm_free (t->vterm);
         t->vterm = NULL;
         t->last_osc7_gen = 0;
@@ -3173,7 +3136,6 @@ mcterm_widget_new (const WRect *r, int master, pid_t pid, char *token, mcterm_sh
         mcview_vterm_set_cell_size (t->vterm, cell_width, cell_height);
         mcview_vterm_set_sixel (t->vterm, tty_draws_pictures ());
     }
-    tty_painter_add (mcterm_paint_pictures, t);
 
     {
         struct winsize ws;

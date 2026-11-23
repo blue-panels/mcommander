@@ -43,6 +43,7 @@ typedef struct WGroup WGroup;
 #include "lib/widget/filechooser.h"
 #include "lib/widget/hexstrip.h"
 #include "lib/widget/dialog-switch.h"
+#include "lib/widget/picture.h"
 
 /*** typedefs(not structures) and defined constants **********************************************/
 

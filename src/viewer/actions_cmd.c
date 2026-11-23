@@ -1040,9 +1040,6 @@ mcview_callback (Widget *w, Widget *sender, widget_msg_t msg, int parm, void *da
         return MSG_HANDLED;
 
     case MSG_DESTROY:
-        tty_painter_remove (mcview_paint_pictures, view);
-        if (view->pictures_shown)
-            tty_touch_screen (); /* the pixels go with the next refresh */
         runtime_host_clear_current_viewer (view);
         mc_runtime_handle_invalidate_object (MC_RUNTIME_HANDLE_VIEWER, view);
         if (mcview_is_in_panel (view) && !view->embedded)

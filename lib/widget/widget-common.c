@@ -866,6 +866,7 @@ void
 widget_default_destroy (Widget *w)
 {
     send_message (w, NULL, MSG_DESTROY, 0, NULL);
+    widget_picture_clear_all (w);
     g_free (w);
 }
 

@@ -6,6 +6,7 @@
 #define MC__VIEWER_VTERM_H
 
 #include "lib/global.h"
+#include "lib/tty/picture.h"
 
 #include "ansi.h"
 #include "terminal_buffer.h"
@@ -63,8 +64,8 @@ typedef struct
 
 typedef struct mcview_vterm_struct mcview_vterm_t;
 
-/* A sixel picture the program drew: where it sits on the screen, in cells, and
-   the DCS as it arrived, to be written to the real terminal as is. */
+/* A picture the program drew: where it sits on the screen, in cells, and the
+   picture itself. */
 typedef struct
 {
     int row; /* top-left cell, screen coordinates */
@@ -73,7 +74,7 @@ typedef struct
     int cols;
     int width; /* pixels */
     int height;
-    GBytes *data; /* ESC P ... q ... ESC \ */
+    mc_picture_t *picture;
 } mcview_vterm_image_t;
 
 /*** declarations of public functions ************************************************************/

@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "lib/global.h"
+#include "lib/tty/picture.h"
 
 #include "ansi.h"
 #include "terminal_buffer.h"
@@ -784,8 +785,7 @@ vterm_image_free (gpointer data)
 {
     mcview_vterm_image_t *image = data;
 
-    if (image->data != NULL)
-        g_bytes_unref (image->data);
+    mc_picture_unref (image->picture);
     g_free (image);
 }
 
@@ -835,7 +835,7 @@ vterm_images_shift (mcview_vterm_t *vt, int top, int bottom, int delta)
         if (image->row + image->rows - 1 > bottom
             || (to_history ? image->row + image->rows - 1 < oldest : image->row < top))
         {
-            vt->images_bytes -= image->data != NULL ? g_bytes_get_size (image->data) : 0;
+            vt->images_bytes -= mc_picture_bytes (image->picture);
             g_ptr_array_remove_index (vt->images, i);
         }
         else
@@ -862,7 +862,7 @@ vterm_images_erase_rows (mcview_vterm_t *vt, int from, int to)
             i++;
         else
         {
-            vt->images_bytes -= image->data != NULL ? g_bytes_get_size (image->data) : 0;
+            vt->images_bytes -= mc_picture_bytes (image->picture);
             g_ptr_array_remove_index (vt->images, i);
             vt->images_generation++;
         }
@@ -1018,13 +1018,9 @@ vterm_finish_sixel (mcview_vterm_t *vt)
     image->cols = cols;
     image->width = width;
     image->height = height;
-    /* Where the terminal draws no sixel the bytes have nowhere to go; the
-       place of the picture still matters for the layout. */
-    if (vt->sixel_capable)
-    {
-        image->data = g_bytes_new (vt->sixel->str, vt->sixel->len);
-        vt->images_bytes += vt->sixel->len;
-    }
+    /* Kept also where nothing draws pictures now: a backend may come later. */
+    image->picture = mc_picture_new_sixel (vt->sixel->str, vt->sixel->len, width, height);
+    vt->images_bytes += vt->sixel->len;
     g_string_truncate (vt->sixel, 0);
 
     if (vt->images == NULL)
@@ -1035,7 +1031,7 @@ vterm_finish_sixel (mcview_vterm_t *vt)
     {
         const mcview_vterm_image_t *oldest = g_ptr_array_index (vt->images, 0);
 
-        vt->images_bytes -= oldest->data != NULL ? g_bytes_get_size (oldest->data) : 0;
+        vt->images_bytes -= mc_picture_bytes (oldest->picture);
         g_ptr_array_remove_index (vt->images, 0);
     }
     vt->images_generation++;
@@ -1313,7 +1309,7 @@ vterm_reflow (mcview_vterm_t *vt, int cols)
             }
             else
             {
-                vt->images_bytes -= image->data != NULL ? g_bytes_get_size (image->data) : 0;
+                vt->images_bytes -= mc_picture_bytes (image->picture);
                 g_ptr_array_remove_index (vt->images, u);
             }
         }
