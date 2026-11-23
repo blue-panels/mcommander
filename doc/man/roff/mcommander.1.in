@@ -5163,9 +5163,16 @@ Set to 1 to start without the Lua runtime. No Lua package is loaded, and
 nothing that needs one is available.
 
 .TP
+\fBMC_GRAPHICS\fP
+How pictures are drawn: \fIauto\fP, \fIsixel\fP, \fIkitty\fP or \fInone\fP\&. With \fIauto\fP,
+the default, the terminal is asked: sixel when it has it, else the kitty
+graphics protocol. Behind screen or tmux there are no pictures unless a
+protocol is named. Pictures in kitty are not drawn yet.
+
+.TP
 \fBMC_SIXEL\fP
-Set to 0 to say the terminal has no sixel graphics, or to 1 to say it has.
-Without the variable the terminal itself is asked.
+The old name of \fBMC_GRAPHICS\fP: 0 is \fInone\fP, 1 is \fIsixel\fP\&. It is read only
+when \fBMC_GRAPHICS\fP is not set.
 
 .TP
 \fBKEYBOARD_KEY_TIMEOUT_US\fP

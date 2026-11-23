@@ -509,7 +509,7 @@ mcview_paint_pictures (void *data)
     view->paint_pending = FALSE;
     view->pictures_shown = FALSE;
 
-    if (vt == NULL || !view->mode_flags.terminal || !tty_has_sixel ())
+    if (vt == NULL || !view->mode_flags.terminal || !tty_draws_pictures ())
         return;
 
     /* The rows on the screen are the history followed by the live screen, from
@@ -559,7 +559,7 @@ mcview_display_terminal (WView *view)
 
         tty_cell_size (&cell_width, &cell_height);
         mcview_vterm_set_cell_size (vt, cell_width, cell_height);
-        mcview_vterm_set_sixel (vt, tty_has_sixel ());
+        mcview_vterm_set_sixel (vt, tty_draws_pictures ());
     }
 
     if (mcview_vterm_set_size (vt, r->lines, r->cols))

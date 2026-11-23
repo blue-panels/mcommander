@@ -5193,9 +5193,16 @@ insert=\ee[Op
 не учитава и ништа што га захтева није доступно.
 
 .TP
+\fBMC_GRAPHICS\fP
+Како се цртају слике: \fIauto\fP, \fIsixel\fP, \fIkitty\fP или \fInone\fP\&. Са \fIauto\fP,
+подразумеваном вредношћу, пита се терминал: sixel ако га има, иначе kitty
+графички протокол. Под screen или tmux слика нема, осим ако се протокол
+не наведе. У kitty се слике још не цртају.
+
+.TP
 \fBMC_SIXEL\fP
-Вредност 0 говори да терминал нема sixel графику, а 1 да је има. Без
-променљиве пита се сам терминал.
+Старо име за \fBMC_GRAPHICS\fP: 0 значи \fInone\fP, 1 значи \fIsixel\fP\&. Чита се
+само ако \fBMC_GRAPHICS\fP није постављена.
 
 .TP
 \fBKEYBOARD_KEY_TIMEOUT_US\fP

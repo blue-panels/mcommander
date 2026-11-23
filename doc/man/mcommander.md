@@ -4453,9 +4453,15 @@ See [FILES](#files).
 : Set to 1 to start without the Lua runtime. No Lua package is loaded, and
 nothing that needs one is available.
 
+**MC_GRAPHICS**
+: How pictures are drawn: *auto*, *sixel*, *kitty* or *none*. With *auto*,
+the default, the terminal is asked: sixel when it has it, else the kitty
+graphics protocol. Behind screen or tmux there are no pictures unless a
+protocol is named. Pictures in kitty are not drawn yet.
+
 **MC_SIXEL**
-: Set to 0 to say the terminal has no sixel graphics, or to 1 to say it has.
-Without the variable the terminal itself is asked.
+: The old name of **MC_GRAPHICS**: 0 is *none*, 1 is *sixel*. It is read only
+when **MC_GRAPHICS** is not set.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : How long to wait for the rest of an escape sequence, in microseconds.

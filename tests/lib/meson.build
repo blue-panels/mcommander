@@ -9,6 +9,7 @@ lib_tests = {
   'terminal': 'terminal.c',
   'text_table': 'text_table.c',
   'tty': 'tty.c',
+  'tty_graphics': 'tty_graphics.c',
   'tty_color': 'tty_color.c',
   'utilunix__mc_pread_signal': 'utilunix__mc_pread_signal.c',
   'utilunix__mc_pstream_get_string': 'utilunix__mc_pstream_get_string.c',

@@ -4579,9 +4579,15 @@ integrado. Véase [ARCHIVOS AUXILIARES](#files).
 : Con el valor 1 el programa arranca sin el entorno de ejecución Lua. No se
 carga ningún paquete Lua y nada que lo necesite está disponible.
 
+**MC_GRAPHICS**
+: Cómo se dibujan las imágenes: *auto*, *sixel*, *kitty* o *none*. Con
+*auto*, el valor por defecto, se pregunta al terminal: sixel si lo tiene, si
+no el protocolo gráfico de kitty. Bajo screen o tmux no hay imágenes a menos
+que se indique un protocolo. En kitty las imágenes todavía no se dibujan.
+
 **MC_SIXEL**
-: Con el valor 0 se indica que el terminal no tiene gráficos sixel; con 1, que
-sí los tiene. Sin la variable se pregunta al propio terminal.
+: El nombre antiguo de **MC_GRAPHICS**: 0 es *none*, 1 es *sixel*. Solo se lee
+si **MC_GRAPHICS** no está definida.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Cuánto esperar el resto de una secuencia de escape, en microsegundos.

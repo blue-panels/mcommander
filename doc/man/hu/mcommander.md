@@ -4172,9 +4172,16 @@ olvassa őket, hogy megtudja, hol fut, nem azért, hogy beállítsák vele.
 : Az 1 érték hatására a program Lua futtatókörnyezet nélkül indul. Egyetlen
 Lua csomag sem töltődik be, és semmi nem érhető el, aminek szüksége van rá.
 
+**MC_GRAPHICS**
+: Hogyan rajzolja a program a képeket: *auto*, *sixel*, *kitty* vagy *none*.
+Az alapértelmezett *auto* esetén a program a terminált kérdezi meg: sixel, ha
+a terminál tudja, különben a kitty grafikus protokoll. A screen vagy a tmux
+alatt nincsenek képek, hacsak nincs megnevezve egy protokoll. A kittyben a
+képek még nem jelennek meg.
+
 **MC_SIXEL**
-: A 0 érték azt mondja, hogy a terminál nem tud sixel grafikát, az 1 pedig
-azt, hogy tud. A változó nélkül a program magát a terminált kérdezi meg.
+: A **MC_GRAPHICS** régi neve: a 0 a *none*, az 1 a *sixel*. Csak akkor
+olvassa a program, ha a **MC_GRAPHICS** nincs beállítva.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Mennyit várjon egy vezérlőszekvencia hátralévő részére, mikroszekundumban.

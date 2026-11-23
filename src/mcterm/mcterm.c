@@ -2396,7 +2396,7 @@ mcterm_paint_pictures (void *data)
     t->paint_pending = FALSE;
     t->pictures_shown = FALSE;
 
-    if (!widget_get_state (WIDGET (t), WST_VISIBLE) || t->child_dead || !tty_has_sixel ()
+    if (!widget_get_state (WIDGET (t), WST_VISIBLE) || t->child_dead || !tty_draws_pictures ()
         || !mcterm_geometry (t, &g) || g.snapshot || g.filtered)
         return;
 
@@ -2435,7 +2435,7 @@ mcterm_winsize (const WRect *r, struct winsize *ws)
     memset (ws, 0, sizeof (*ws));
     ws->ws_row = (unsigned short) r->lines;
     ws->ws_col = (unsigned short) r->cols;
-    if (tty_has_sixel ())
+    if (tty_draws_pictures ())
         tty_cell_size (&cell_width, &cell_height);
     ws->ws_xpixel = (unsigned short) (r->cols * cell_width);
     ws->ws_ypixel = (unsigned short) (r->lines * cell_height);
@@ -3171,7 +3171,7 @@ mcterm_widget_new (const WRect *r, int master, pid_t pid, char *token, mcterm_sh
 
         tty_cell_size (&cell_width, &cell_height);
         mcview_vterm_set_cell_size (t->vterm, cell_width, cell_height);
-        mcview_vterm_set_sixel (t->vterm, tty_has_sixel ());
+        mcview_vterm_set_sixel (t->vterm, tty_draws_pictures ());
     }
     tty_painter_add (mcterm_paint_pictures, t);
 

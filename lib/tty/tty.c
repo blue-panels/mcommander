@@ -61,6 +61,7 @@
 
 #include "tty.h"
 #include "tty-internal.h"
+#include "graphics.h"
 #include "color.h"  // tty_set_normal_attrs()
 #include "mouse.h"  // use_mouse_p
 #include "win.h"
@@ -92,7 +93,6 @@ static gboolean repaint_needed = FALSE;
 /* The terminal's own background, as OSC 11 reported it; -1 while unknown. */
 static int background_rgb = -1;
 
-static gboolean has_sixel = FALSE;
 static gboolean has_kitty_keyboard = FALSE;
 static gboolean has_win32_input = FALSE;
 static int cell_width = 0;
@@ -219,10 +219,12 @@ tty_raw_write (const char *data, size_t len)
 /* --------------------------------------------------------------------------------------------- */
 
 /* The answers: CSI ? <attributes> c, where 4 among the attributes is sixel,
-   and CSI 6 ; <height> ; <width> t. The sequences are taken out of the
-   buffer as they are found, and what is left is the user's. */
+   CSI 6 ; <height> ; <width> t, and APC G i=31 ; ... ST from the kitty graphics query.
+   The sequences are taken out of the buffer as they are found, and what is left is the
+   user's. */
 static void
-tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
+tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen, gboolean *sixel_answer,
+                          gboolean *kitty_answer)
 {
     size_t i = 0;
 
@@ -289,6 +291,31 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
             continue;
         }
 
+        if (buf[i] == ESC_CHAR && buf[i + 1] == '_')
+        {
+            const char *q = p;
+
+            while (q < end && *q != ESC_CHAR)
+                q++;
+            if (q + 1 >= end)
+                break;  // still arriving
+
+            if (q[1] == '\\')
+            {
+                static const char id[] = "Gi=" TTY_GRAPHICS_KITTY_ID;
+                const size_t id_len = sizeof (id) - 1;
+
+                if ((size_t) (q - p) > id_len && strncmp (p, id, id_len) == 0
+                    && (p[id_len] == ';' || p[id_len] == ','))
+                    *kitty_answer = TRUE;
+                q += 2;
+            }
+            taken = (size_t) (q - (buf + i));
+            memmove (buf + i, buf + i + taken, *len - i - taken);
+            *len -= taken;
+            continue;
+        }
+
         if (buf[i] != ESC_CHAR || buf[i + 1] != '[')
         {
             i++;
@@ -337,7 +364,7 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
                     have = FALSE;
                     if (*p == 'c')
                     {
-                        has_sixel = sixel;
+                        *sixel_answer = sixel;
                         *sixel_seen = TRUE;
                         taken = (size_t) (p + 1 - (buf + i));
                         break;
@@ -382,23 +409,24 @@ tty_parse_graphics_reply (char *buf, size_t *len, gboolean *sixel_seen)
 void
 tty_probe_graphics (void)
 {
-    const char *env = getenv ("MC_SIXEL");
     const char *kitty_env = getenv ("MC_KITTY_KEYBOARD");
     const char *win32_env = getenv ("MC_WIN32_INPUT");
     const char *term = getenv ("TERM");
     char buf[512];
     size_t len = 0;
     gboolean sixel_seen = FALSE;
-    gboolean forced_off = env != NULL && env[0] == '0';
-    gboolean forced_on = env != NULL && env[0] == '1';
+    gboolean sixel_answer = FALSE;
+    gboolean kitty_answer = FALSE;
     gboolean multiplexer =
         term != NULL && (strncmp (term, "screen", 6) == 0 || strncmp (term, "tmux", 4) == 0);
-    gboolean no_sixel = forced_off || (!forced_on && multiplexer);
+    tty_graphics_t request =
+        tty_graphics_request (getenv ("MC_GRAPHICS"), getenv ("MC_SIXEL"), term);
+    gboolean ask_kitty_graphics = tty_graphics_ask_kitty (request, term);
     gboolean ask_kitty = !multiplexer && (kitty_env == NULL || kitty_env[0] != '0');
     gboolean ask_win32 = !multiplexer && (win32_env == NULL || win32_env[0] != '0');
     int waited_ms = 0;
 
-    has_sixel = FALSE;
+    tty_graphics_set_backend (TTY_GRAPHICS_NONE);
     has_kitty_keyboard = FALSE;
     has_win32_input = FALSE;
     cell_width = 0;
@@ -418,26 +446,28 @@ tty_probe_graphics (void)
     }
 #endif
 
-    /* A multiplexer answers for itself and keeps the DCS: no sixel through it
-       unless the user says so. */
-    if (no_sixel && !ask_kitty && !ask_win32)
+    if (request == TTY_GRAPHICS_NONE && !ask_kitty && !ask_win32)
         return;
 
     if (isatty (STDIN_FILENO) && isatty (STDOUT_FILENO))
     {
         /* Every terminal answers DA1, and answers in the order it is asked: DA1 goes
-           last, so its answer comes after all the others. The kitty keyboard query and the
-           DECRQM question about mode 9001 (Win32 input mode, Windows Terminal) go first.
+           last, so its answer comes after all the others. The kitty keyboard query, the
+           DECRQM question about mode 9001 (Win32 input mode, Windows Terminal) and the kitty
+           graphics query go first.
            OSC 11 ends with ST, not BEL: the answer ends the same way, and with S-Lang BEL
            (Ctrl-G) is the interrupt character, which the tty takes out of the input. */
         static const char kitty_query[] = ESC_STR "[?u";
         static const char win32_query[] = ESC_STR "[?9001$p";
+        static const char kitty_graphics_query[] = TTY_GRAPHICS_KITTY_QUERY;
         static const char query[] = ESC_STR "[16t" ESC_STR "]11;?" ESC_STR "\\" ESC_STR "[c";
 
         if (ask_kitty)
             tty_raw_write (kitty_query, sizeof (kitty_query) - 1);
         if (ask_win32)
             tty_raw_write (win32_query, sizeof (win32_query) - 1);
+        if (ask_kitty_graphics)
+            tty_raw_write (kitty_graphics_query, sizeof (kitty_graphics_query) - 1);
         tty_raw_write (query, sizeof (query) - 1);
 
         /* A terminal that answers nothing costs the whole wait once, at startup. */
@@ -458,7 +488,7 @@ tty_probe_graphics (void)
             if (n <= 0)
                 break;
             len += (size_t) n;
-            tty_parse_graphics_reply (buf, &len, &sixel_seen);
+            tty_parse_graphics_reply (buf, &len, &sixel_seen, &sixel_answer, &kitty_answer);
         }
 
         /* Whatever else came in was typed: it goes back to the keyboard. */
@@ -466,26 +496,15 @@ tty_probe_graphics (void)
             tty_unget_input ((const unsigned char *) buf, len);
     }
 
-    if (no_sixel)
-        has_sixel = FALSE;
-    if (forced_on)
-        has_sixel = TRUE;
+    tty_graphics_set_backend (tty_graphics_pick (request, sixel_answer, kitty_answer));
 
-    /* Sixel with no word on the cell: take the usual 8x16, so that the
-       pictures are placed and sized at all, rather than not drawn. */
-    if (has_sixel && (cell_width <= 0 || cell_height <= 0))
+    /* Pictures with no word on the cell: take the usual 8x16, so that they
+       are placed and sized at all, rather than not drawn. */
+    if (tty_graphics_backend () != TTY_GRAPHICS_NONE && (cell_width <= 0 || cell_height <= 0))
     {
         cell_width = 8;
         cell_height = 16;
     }
-}
-
-/* --------------------------------------------------------------------------------------------- */
-
-gboolean
-tty_has_sixel (void)
-{
-    return has_sixel;
 }
 
 /* --------------------------------------------------------------------------------------------- */
