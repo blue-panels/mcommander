@@ -57,4 +57,13 @@ GString *mc_g_string_append_c_len (GString *s, gchar c, guint len);
 
 /*** inline functions ****************************************************************************/
 
+#if !GLIB_CHECK_VERSION(2, 82, 0)
+static inline void
+g_sort_array (const void *array, size_t n_elements, size_t element_size,
+              GCompareDataFunc compare_func, void *user_data)
+{
+    g_qsort_with_data (array, (gint) n_elements, element_size, compare_func, user_data);
+}
+#endif
+
 #endif

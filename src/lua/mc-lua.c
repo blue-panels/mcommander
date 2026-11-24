@@ -3241,7 +3241,7 @@ mc_lua_panel_rebuild_connection_actions (mc_lua_panel_provider_t *provider)
     lua_pop (lua, 1);
 
     if (actions->len > provider->base_actions_count + 1)
-        g_qsort_with_data (
+        g_sort_array (
             &g_array_index (actions, mc_runtime_panel_action_t, provider->base_actions_count),
             actions->len - provider->base_actions_count, sizeof (mc_runtime_panel_action_t),
             mc_lua_connection_action_compare, NULL);
