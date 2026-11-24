@@ -544,6 +544,16 @@ mcview_stream_ready (int fd, void *info)
     {
         view->dirty++;
 
+        // the stream has ended: draw now, a pending key must not put it off
+        if (view->growbuf_finished)
+        {
+            mcview_stream_remove_redraw (view);
+            mcview_display (view);
+            view->dirty = 0;
+            do_refresh ();
+            return 1;
+        }
+
         if (!view->stream_redraw_queued)
         {
             add_hook (&idle_hook, mcview_stream_redraw_hook, view);
