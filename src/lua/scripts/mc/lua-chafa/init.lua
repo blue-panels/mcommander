@@ -42,7 +42,10 @@ printf '%s\n' "$ident"
 rows=$((lines - 1))
 [ "$rows" -lt 1 ] && rows=1
 
-exec chafa --format=symbols --colors=256 --animate=off --size="${cols}x${rows}" -- "$file"
+# chafa asks the terminal and waits; its answers would come to mc as keys
+probe_off=
+chafa --help 2>/dev/null | grep -q -e '--probe=' && probe_off=--probe=off
+exec chafa --format=symbols --colors=256 --animate=off --size="${cols}x${rows}" $probe_off -- "$file"
 ]]
 
 local viewer = mc.viewer_source.define {
