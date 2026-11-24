@@ -243,8 +243,8 @@ test_condition (const Widget *edit_widget, char *p, gboolean *condition)
     const WEdit *e = CONST_EDIT (edit_widget);
 #endif
 
-    // Handle one condition
-    for (; *p != '\n' && *p != '&' && *p != '|'; p++)
+    // Handle one condition; the last line of the file may have no end
+    for (; *p != '\0' && *p != '\n' && *p != '&' && *p != '|'; p++)
     {
         WPanel *panel = NULL;
 
@@ -288,19 +288,19 @@ test_condition (const Widget *edit_widget, char *p, gboolean *condition)
             }
             break;
         case 'y':  // syntax pattern
+        {
+            // the pattern is passed by with no syntax too, not read as conditions
+            const char *syntax_type = NULL;
+
 #ifdef USE_INTERNAL_EDIT
             if (e != NULL)
-            {
-                const char *syntax_type = edit_get_syntax_type (e);
-
-                if (syntax_type != NULL)
-                {
-                    p = extract_arg (p, arg, sizeof (arg));
-                    *condition = mc_search (arg, NULL, syntax_type, MC_SEARCH_T_NORMAL);
-                }
-            }
+                syntax_type = edit_get_syntax_type (e);
 #endif
+            p = extract_arg (p, arg, sizeof (arg));
+            *condition =
+                syntax_type != NULL && mc_search (arg, NULL, syntax_type, MC_SEARCH_T_NORMAL);
             break;
+        }
         case 'd':
             p = extract_arg (p, arg, sizeof (arg));
             *condition = panel != NULL
@@ -320,6 +320,8 @@ test_condition (const Widget *edit_widget, char *p, gboolean *condition)
         }
         default:
             debug_error = TRUE;
+            // the next character is the loop's: the end of the line, say
+            str_prev_char (&p);
             break;
         }  // switch
     }  // while
