@@ -3335,6 +3335,9 @@ nodelay_try_again:
                     kitty_event_valid = FALSE;
                     goto nodelay_try_again;
                 }
+                // a release with nothing after it: getch_with_delay() lets the dialog draw
+                if (c == -1 && dropped_seq_returns)
+                    dropped_seq = TRUE;
                 return c;
             }
             goto done;
