@@ -516,13 +516,6 @@ mcview_stream_redraw_hook (void *v)
            any covering dialog is repainted on top. */
         do_refresh ();
     }
-
-    // input came first (a key release): draw at the next idle, no new data may come
-    if (view->dirty > 0)
-    {
-        add_hook (&idle_hook, mcview_stream_redraw_hook, view);
-        view->stream_redraw_queued = TRUE;
-    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -543,16 +536,6 @@ mcview_stream_ready (int fd, void *info)
     if (mcview_growbuf_read_available (view))
     {
         view->dirty++;
-
-        // the stream has ended: draw now, a pending key must not put it off
-        if (view->growbuf_finished)
-        {
-            mcview_stream_remove_redraw (view);
-            mcview_display (view);
-            view->dirty = 0;
-            do_refresh ();
-            return 1;
-        }
 
         if (!view->stream_redraw_queued)
         {
