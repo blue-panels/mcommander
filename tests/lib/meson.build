@@ -9,6 +9,7 @@ lib_tests = {
   'terminal': 'terminal.c',
   'text_table': 'text_table.c',
   'tty': 'tty.c',
+  'tty_graphics': 'tty_graphics.c',
   'tty_color': 'tty_color.c',
   'utilunix__mc_pread_signal': 'utilunix__mc_pread_signal.c',
   'utilunix__mc_pstream_get_string': 'utilunix__mc_pstream_get_string.c',
@@ -28,6 +29,13 @@ lib_test_c_args = test_c_args + [
   '-DTEST_LUA_READELF_DIR="@0@"'.format(lua_scripts_src / 'lua-readelf'),
   '-DTEST_LUA_SIXEL_DIR="@0@"'.format(lua_scripts_src / 'lua-sixel'),
 ]
+
+# the test unpacks what the encoder packed
+test('tty_pictures',
+  executable('tty_pictures', 'tty_pictures.c', c_args: lib_test_c_args,
+    dependencies: test_lib_deps + [zlib]),
+  workdir: meson.current_build_dir(),
+  suite: 'lib')
 
 foreach name, source : lib_tests
   test(name,

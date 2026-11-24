@@ -4151,9 +4151,15 @@ incorporata. Vedere [FILE](#files).
 viene caricato alcun pacchetto Lua e niente che ne abbia bisogno è
 disponibile.
 
+**MC_GRAPHICS**
+: Come disegnare le immagini: *auto*, *sixel*, *kitty* o *none*. Con *auto*,
+il valore predefinito, viene interrogato il terminale: sixel se ce l'ha,
+altrimenti il protocollo grafico di kitty. Sotto screen o tmux non ci sono
+immagini, a meno che non si indichi un protocollo.
+
 **MC_SIXEL**
-: Con il valore 0 si dichiara che il terminale non ha la grafica sixel, con 1
-che ce l'ha. Senza la variabile viene interrogato il terminale stesso.
+: Il vecchio nome di **MC_GRAPHICS**: 0 vale *none*, 1 vale *sixel*. Viene
+letta solo se **MC_GRAPHICS** non è impostata.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Quanto attendere il resto di una sequenza di escape, in microsecondi.

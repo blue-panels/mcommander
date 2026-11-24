@@ -1412,9 +1412,9 @@ START_TEST (test_sixel_becomes_a_picture_at_the_cursor)
     ck_assert_int_eq (image->height, 32);
     ck_assert_int_eq (image->cols, 2);
     ck_assert_int_eq (image->rows, 2);
-    ck_assert_uint_eq (g_bytes_get_size (image->data), sizeof (SIXEL_16x32) - 1);
+    ck_assert_uint_eq (mc_picture_bytes (image->picture), sizeof (SIXEL_16x32) - 1);
     ck_assert_int_eq (
-        memcmp (g_bytes_get_data (image->data, NULL), SIXEL_16x32, sizeof (SIXEL_16x32) - 1), 0);
+        memcmp (mc_picture_sixel (image->picture, NULL), SIXEL_16x32, sizeof (SIXEL_16x32) - 1), 0);
 
     /* The cursor is below the picture, in the column it started at. */
     ck_assert_int_eq (mcview_vterm_cursor_row (vt), 4);
@@ -1703,8 +1703,9 @@ START_TEST (test_sixel_keeps_only_what_sixel_is_made_of)
     feed_bytes (vt, with_controls, sizeof (with_controls) - 1);
     ck_assert_uint_eq (mcview_vterm_images_len (vt), 1);
     image = mcview_vterm_image (vt, 0);
-    ck_assert_uint_eq (g_bytes_get_size (image->data), sizeof (clean) - 1);
-    ck_assert_int_eq (memcmp (g_bytes_get_data (image->data, NULL), clean, sizeof (clean) - 1), 0);
+    ck_assert_uint_eq (mc_picture_bytes (image->picture), sizeof (clean) - 1);
+    ck_assert_int_eq (memcmp (mc_picture_sixel (image->picture, NULL), clean, sizeof (clean) - 1),
+                      0);
 
     /* CAN throws the picture away, and the stream goes on. */
     FEED (vt,
@@ -1719,7 +1720,7 @@ END_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
-START_TEST (test_sixel_without_a_terminal_for_it_takes_its_place_only)
+START_TEST (test_sixel_without_a_terminal_for_it_keeps_its_source)
 {
     mcview_vterm_t *vt = mcview_vterm_new ();
 
@@ -1729,7 +1730,9 @@ START_TEST (test_sixel_without_a_terminal_for_it_takes_its_place_only)
 
     FEED (vt, SIXEL_16x32);
     ck_assert_uint_eq (mcview_vterm_images_len (vt), 1);
-    ck_assert_ptr_null (mcview_vterm_image (vt, 0)->data);
+    ck_assert_ptr_nonnull (mcview_vterm_image (vt, 0)->picture);
+    ck_assert_uint_eq (mc_picture_bytes (mcview_vterm_image (vt, 0)->picture),
+                       sizeof (SIXEL_16x32) - 1);
     ck_assert_int_eq (mcview_vterm_cursor_row (vt), 2);
 
     mcview_vterm_free (vt);
@@ -2312,7 +2315,7 @@ main (void)
     tcase_add_test (tc_core, test_sixel_terminal_says_so_when_asked);
     tcase_add_test (tc_core, test_cursor_position_is_reported);
     tcase_add_test (tc_core, test_sixel_keeps_only_what_sixel_is_made_of);
-    tcase_add_test (tc_core, test_sixel_without_a_terminal_for_it_takes_its_place_only);
+    tcase_add_test (tc_core, test_sixel_without_a_terminal_for_it_keeps_its_source);
     tcase_add_test (tc_core, test_sixel_wider_than_the_screen_keeps_its_width);
     tcase_add_test (tc_core, test_the_pictures_kept_are_so_many);
     tcase_add_test (tc_core, test_a_screen_made_taller_brings_the_pictures_down_with_the_rows);

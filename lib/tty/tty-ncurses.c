@@ -377,6 +377,7 @@ tty_change_screen_size (void)
 #endif
     }
 #endif
+    tty_graphics_reset_images ();
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -385,6 +386,7 @@ void
 tty_reset_prog_mode (void)
 {
     reset_prog_mode ();
+    tty_graphics_reset_images ();
 }
 
 /* --------------------------------------------------------------------------------------------- */

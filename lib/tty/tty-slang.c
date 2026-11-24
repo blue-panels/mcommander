@@ -340,6 +340,7 @@ tty_change_screen_size (void)
     SLtt_get_screen_size ();
     if (slsmg_active)
         SLsmg_reinit_smg ();
+    tty_graphics_reset_images ();
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -349,6 +350,7 @@ void
 tty_reset_prog_mode (void)
 {
     tcsetattr (SLang_TT_Read_FD, TCSANOW, &new_mode);
+    tty_graphics_reset_images ();
     SLsmg_init_smg ();
     slsmg_active = TRUE;
     SLsmg_touch_lines (0, LINES);

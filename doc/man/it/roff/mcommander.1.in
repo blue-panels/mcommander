@@ -4792,9 +4792,16 @@ viene caricato alcun pacchetto Lua e niente che ne abbia bisogno è
 disponibile.
 
 .TP
+\fBMC_GRAPHICS\fP
+Come disegnare le immagini: \fIauto\fP, \fIsixel\fP, \fIkitty\fP o \fInone\fP\&. Con \fIauto\fP,
+il valore predefinito, viene interrogato il terminale: sixel se ce l'ha,
+altrimenti il protocollo grafico di kitty. Sotto screen o tmux non ci sono
+immagini, a meno che non si indichi un protocollo.
+
+.TP
 \fBMC_SIXEL\fP
-Con il valore 0 si dichiara che il terminale non ha la grafica sixel, con 1
-che ce l'ha. Senza la variabile viene interrogato il terminale stesso.
+Il vecchio nome di \fBMC_GRAPHICS\fP: 0 vale \fInone\fP, 1 vale \fIsixel\fP\&. Viene
+letta solo se \fBMC_GRAPHICS\fP non è impostata.
 
 .TP
 \fBKEYBOARD_KEY_TIMEOUT_US\fP

@@ -60,9 +60,13 @@ libmc_sources = files(
 
   'tty/color-internal.c',
   'tty/color.c',
+  'tty/graphics.c',
   'tty/key.c',
+  'tty/kitty_graphics.c',
   'tty/keyxdef.c',
   'tty/mouse.c',
+  'tty/picture.c',
+  'tty/sixel.c',
   'tty/tty-internal.c',
   'tty/tty.c',
   'tty/win.c',
@@ -95,6 +99,7 @@ libmc_sources = files(
   'widget/listbox-window.c',
   'widget/listbox.c',
   'widget/menu.c',
+  'widget/picture.c',
   'widget/mouse.c',
   'widget/quick.c',
   'widget/quicksearch.c',
@@ -119,7 +124,7 @@ if get_option('debug')
   libmc_sources += files('logging.c')
 endif
 
-libmc_deps = [glib_dep, screen_deps, gpm, x11_dep, ext2fs_attr, intl]
+libmc_deps = [glib_dep, screen_deps, gpm, x11_dep, ext2fs_attr, intl, zlib]
 
 libmc_args = [
   '-DMC_EDITOR_PLUGINS_DIR="@0@"'.format(editor_plugins_dir),

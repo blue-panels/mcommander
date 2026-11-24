@@ -396,7 +396,7 @@ runtime_viewer_prepare_viewport (void *data, mcview_source_spec_t *draft, guint 
 
     /* The pixels, for a source that draws pictures: only where the terminal
        draws them, so that their absence says so. */
-    if (tty_has_sixel ())
+    if (tty_draws_pictures ())
     {
         int cell_width, cell_height;
 

@@ -3997,9 +3997,15 @@ by rozpoznać środowisko, a nie po to, by się nimi konfigurować.
 : Wartość 1 uruchamia program bez środowiska Lua. Żaden pakiet Lua nie jest
 wczytywany i nic, co go potrzebuje, nie jest dostępne.
 
+**MC_GRAPHICS**
+: Jak rysować obrazy: *auto*, *sixel*, *kitty* lub *none*. Przy *auto*,
+wartości domyślnej, pytany jest terminal: sixel, jeśli go ma, w przeciwnym
+razie protokół graficzny kitty. Pod screen lub tmux obrazów nie ma, chyba że
+protokół zostanie podany.
+
 **MC_SIXEL**
-: Wartość 0 oznacza, że terminal nie ma grafiki sixel, wartość 1 - że ma. Bez
-tej zmiennej pytany jest sam terminal.
+: Stara nazwa **MC_GRAPHICS**: 0 to *none*, 1 to *sixel*. Jest czytana tylko
+wtedy, gdy **MC_GRAPHICS** nie jest ustawiona.
 
 **KEYBOARD_KEY_TIMEOUT_US**
 : Jak długo czekać na resztę sekwencji sterującej, w mikrosekundach.

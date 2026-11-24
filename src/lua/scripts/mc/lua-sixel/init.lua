@@ -53,16 +53,44 @@ if ! command -v chafa >/dev/null 2>&1; then
     exit 0
 fi
 
+# chafa asks the terminal and waits; its answers would come to mc as keys
+probe_off=
+chafa --help 2>/dev/null | grep -q -e '--probe=' && probe_off=--probe=off
+
 if [ "$mode" = sixel ]; then
-    # chafa with no terminal to ask takes a cell for 8x8 pixels under
-    # --font-ratio=1/1: the size in its cells is the size in pixels over 8.
-    size=$((cols * cell_w / 8))x$((rows * cell_h / 8))
+    # chafa takes the cell size from the terminal; a picture stretched over 6x6 cells
+    # shows it, 6 cells high are whole sixel bands
+    cell=$(
+        tmp=$(mktemp 2>/dev/null) || exit 0
+        trap 'rm -f "$tmp"' EXIT HUP INT TERM
+        printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000\000\001\000\000\000\001\010\000\000\000\000\072\176\233\125\000\000\000\012\111\104\101\124\170\332\143\140\000\000\000\002\000\001\345\047\336\374\000\000\000\000\111\105\116\104\256\102\140\202' > "$tmp"
+        chafa --format=sixel --font-ratio=1/1 --stretch --scale=max --size=6x6 $probe_off -- "$tmp" 2>/dev/null \
+            | sed -n 's/.*"1;1;\([0-9][0-9]*\);\([0-9][0-9]*\).*/\1 \2/p' | head -n 1
+    )
+    chafa_w=${cell% *}
+    chafa_h=${cell#* }
+    size_w=0
+    size_h=0
+    if [ -n "$cell" ] && [ "$chafa_w" -gt 0 ] && [ "$chafa_h" -gt 0 ]; then
+        size_w=$((cols * cell_w * 6 / chafa_w))
+        size_h=$((rows * cell_h * 6 / chafa_h))
+    fi
+fi
+
+# no chafa cell fits, or its size is unknown: draw characters
+if [ "$mode" = sixel ] && { [ "$size_w" -lt 1 ] || [ "$size_h" -lt 1 ]; }; then
+    mode=symbols
+    set -- --colors=256
+fi
+
+if [ "$mode" = sixel ]; then
     set -- --font-ratio=1/1 "$@"
+    size=${size_w}x${size_h}
 else
     size=${cols}x${rows}
 fi
 
-exec chafa --format="$mode" --animate=off --size="$size" "$@" -- "$file"
+exec chafa --format="$mode" --animate=off --size="$size" $probe_off "$@" -- "$file"
 ]]
 
 -- Whether the picture is drawn in sixel: by the mode chosen, and by whether

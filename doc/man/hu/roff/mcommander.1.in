@@ -4813,9 +4813,16 @@ Az 1 érték hatására a program Lua futtatókörnyezet nélkül indul. Egyetle
 Lua csomag sem töltődik be, és semmi nem érhető el, aminek szüksége van rá.
 
 .TP
+\fBMC_GRAPHICS\fP
+Hogyan rajzolja a program a képeket: \fIauto\fP, \fIsixel\fP, \fIkitty\fP vagy \fInone\fP\&.
+Az alapértelmezett \fIauto\fP esetén a program a terminált kérdezi meg: sixel, ha
+a terminál tudja, különben a kitty grafikus protokoll. A screen vagy a tmux
+alatt nincsenek képek, hacsak nincs megnevezve egy protokoll.
+
+.TP
 \fBMC_SIXEL\fP
-A 0 érték azt mondja, hogy a terminál nem tud sixel grafikát, az 1 pedig
-azt, hogy tud. A változó nélkül a program magát a terminált kérdezi meg.
+A \fBMC_GRAPHICS\fP régi neve: a 0 a \fInone\fP, az 1 a \fIsixel\fP\&. Csak akkor
+olvassa a program, ha a \fBMC_GRAPHICS\fP nincs beállítva.
 
 .TP
 \fBKEYBOARD_KEY_TIMEOUT_US\fP

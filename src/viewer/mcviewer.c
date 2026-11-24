@@ -446,7 +446,6 @@ mcview_new (const WRect *r, gboolean is_panel)
     view->converter = str_cnv_from_term;
 
     mcview_init (view);
-    tty_painter_add (mcview_paint_pictures, view);
 
     {
         const mcview_mode_flags_t altered = mcview_altered_flags;

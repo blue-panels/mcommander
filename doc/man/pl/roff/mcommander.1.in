@@ -4649,9 +4649,16 @@ Wartość 1 uruchamia program bez środowiska Lua. Żaden pakiet Lua nie jest
 wczytywany i nic, co go potrzebuje, nie jest dostępne.
 
 .TP
+\fBMC_GRAPHICS\fP
+Jak rysować obrazy: \fIauto\fP, \fIsixel\fP, \fIkitty\fP lub \fInone\fP\&. Przy \fIauto\fP,
+wartości domyślnej, pytany jest terminal: sixel, jeśli go ma, w przeciwnym
+razie protokół graficzny kitty. Pod screen lub tmux obrazów nie ma, chyba że
+protokół zostanie podany.
+
+.TP
 \fBMC_SIXEL\fP
-Wartość 0 oznacza, że terminal nie ma grafiki sixel, wartość 1 \- że ma. Bez
-tej zmiennej pytany jest sam terminal.
+Stara nazwa \fBMC_GRAPHICS\fP: 0 to \fInone\fP, 1 to \fIsixel\fP\&. Jest czytana tylko
+wtedy, gdy \fBMC_GRAPHICS\fP nie jest ustawiona.
 
 .TP
 \fBKEYBOARD_KEY_TIMEOUT_US\fP

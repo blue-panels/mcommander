@@ -165,22 +165,68 @@ local function image_path(session, src)
     return session.dir .. "/" .. src
 end
 
+-- chafa takes the cell size from the terminal; a picture stretched over 6x6 cells
+-- shows it, 6 cells high are whole sixel bands
+local CHAFA_CELL_SCRIPT = [[
+tmp=$(mktemp) || exit 1
+trap 'rm -f "$tmp"' EXIT HUP INT TERM
+printf '\211\120\116\107\015\012\032\012\000\000\000\015\111\110\104\122\000\000\000\001\000\000\000\001\010\000\000\000\000\072\176\233\125\000\000\000\012\111\104\101\124\170\332\143\140\000\000\000\002\000\001\345\047\336\374\000\000\000\000\111\105\116\104\256\102\140\202' > "$tmp"
+chafa --format=sixel --font-ratio=1/1 --stretch --scale=max --size=6x6 $1 -- "$tmp" 2>/dev/null
+]]
+
+-- Asked once a session: a failed probe fails for every picture
+local function chafa_cell(session)
+    local cell = session.tools.chafa_cell
+
+    if cell == nil then
+        local result = run("sh -c " .. quote(CHAFA_CELL_SCRIPT) .. " probe " .. session.tools.chafa_flags)
+        local w, h
+
+        if result ~= nil then
+            w, h = result.stdout:match('"1;1;(%d+);(%d+)')
+        end
+        w, h = tonumber(w), tonumber(h)
+        cell = w ~= nil and h ~= nil and w > 0 and h > 0 and { w = w, h = h } or false
+        session.tools.chafa_cell = cell
+    end
+    return cell or nil
+end
+
+-- The most chafa cells that fit the place; nil if none fit or the cell is unknown
+local function chafa_size(session, image)
+    local cell = chafa_cell(session)
+
+    if cell == nil then
+        return nil
+    end
+
+    -- the cell is 6x6 chafa cells
+    local cols = image.width * 6 // cell.w
+    local rows = image.height * 6 // cell.h
+
+    if cols < 1 or rows < 1 then
+        return nil
+    end
+    return cols, rows
+end
+
 -- The bytes of one picture, in the size it takes on the screen: sixel where
 -- the terminal draws it, and chafa's characters where it does not.
 local function picture_command(session, image, sixel)
     local path = quote(image_path(session, image.src))
 
     if not sixel then
-        return string.format("chafa --format=symbols --stretch --size=%dx%d -- %s 2>/dev/null",
-                             image.cols, image.rows, path)
+        return string.format("chafa --format=symbols --stretch --size=%dx%d%s -- %s 2>/dev/null",
+                             image.cols, image.rows, session.tools.chafa_flags, path)
     end
     if session.tools.encoder == "img2sixel" then
         return string.format("img2sixel -w %d -h %d -- %s 2>/dev/null",
                              image.width, image.height, path)
     end
-    return string.format(
-        "chafa --format=sixel --font-ratio=1/1 --stretch --size=%dx%d -- %s 2>/dev/null",
-        math.max(1, image.width // 8), math.max(1, image.height // 8), path)
+    local cols, rows = chafa_size(session, image)
+
+    return string.format("chafa --format=sixel --font-ratio=1/1 --size=%dx%d%s -- %s 2>/dev/null",
+                         cols, rows, session.tools.chafa_flags, path)
 end
 
 -- Only the picture itself: chafa wraps what it draws in sequences of its
@@ -205,22 +251,31 @@ local function picture_data(session, image, sixel)
     if sixel and session.tools.encoder == nil then
         return nil
     end
+    -- no chafa cell fits, or its size is unknown: draw characters
+    if sixel and session.tools.encoder == "chafa" and chafa_size(session, image) == nil then
+        return picture_data(session, image, false), "symbols"
+    end
     if not sixel and not session.tools.chafa then
         return nil
     end
 
-    local key = string.format("%s|%d|%d|%s", image.src, image.width, image.height,
-                              sixel and "s" or "c")
+    local key = string.format("%s|%d|%d|%d|%d|%s", image.src, image.width, image.height,
+                              image.cols, image.rows, sixel and "s" or "c")
     local cached = session.sixels[key]
 
     if cached ~= nil then
-        return cached ~= false and cached or nil
+        return cached ~= false and cached or nil, sixel and "sixel" or "symbols"
     end
 
     local data = picture_bytes(run(picture_command(session, image, sixel), MAX_SIXEL_BYTES), sixel)
 
+    -- the place height in the raster attributes keeps the text below in place
+    if data ~= nil and sixel and session.tools.encoder == "chafa" then
+        data = data:gsub('^(\27P[^q]*q"%d+;%d+;%d+;)%d+', "%1" .. image.height, 1)
+    end
+
     session.sixels[key] = data ~= nil and data or false
-    return data
+    return data, sixel and "sixel" or "symbols"
 end
 
 ------------------------------------------------------------------------
@@ -505,6 +560,15 @@ local viewer = mc.viewer_source.define {
         session.tools.pdftohtml = have("pdftohtml")
         session.tools.pdfinfo = have("pdfinfo")
         session.tools.chafa = have("chafa")
+        -- chafa asks the terminal and waits; its answers would come to mc as keys
+        session.tools.chafa_flags = ""
+        if session.tools.chafa then
+            local help = run("chafa --help 2>/dev/null")
+
+            if help ~= nil and help.stdout:find("--probe=", 1, true) then
+                session.tools.chafa_flags = " --probe=off"
+            end
+        end
         if have("img2sixel") then
             session.tools.encoder = "img2sixel"
         elseif session.tools.chafa then
@@ -599,12 +663,12 @@ local viewer = mc.viewer_source.define {
             local plan = render.plan(page, view, params)
 
             body = render.compose(plan, view, function(image)
-                local data = picture_data(session, image, view.sixel)
+                local data, kind = picture_data(session, image, view.sixel)
 
                 if data == nil then
                     return nil
                 end
-                return data, view.sixel and "sixel" or "symbols"
+                return data, kind
             end)
             title = status_text(session, params, plan, view)
             -- A match below the first screen is scrolled to, with a few rows
