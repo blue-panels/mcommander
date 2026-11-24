@@ -675,7 +675,7 @@ arcmc_target_path (arcmc_data_t *data, const char *name)
 char *
 get_parent_dir (const char *current_dir)
 {
-    char *slash;
+    const char *slash;
 
     if (current_dir == NULL || current_dir[0] == '\0')
         return g_strdup ("");
