@@ -55,6 +55,7 @@ teardown (void)
 {
     dir_list_free_list (&current_panel->dir);
     MC_PTR_FREE (current_panel);
+    debug_error = FALSE;
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -127,6 +128,56 @@ END_PARAMETRIZED_TEST
 
 /* --------------------------------------------------------------------------------------------- */
 
+/* A condition ends at the end of its line, whatever it is: the lines after it, or the memory
+   after the text, are not read as conditions */
+START_TEST (check_test_condition_stays_on_its_line)
+{
+    char *text;
+    char *end;
+    gboolean result;
+
+    setup_charset ("UTF-8", TRUE);
+    current_panel->current = 0;
+
+    // a letter that is no condition, last on its line
+    text = g_strdup ("q\nf .*\n");
+    result = TRUE;
+    end = test_condition (NULL, text, &result);
+    ck_assert_ptr_eq (end, text + 1);
+    ck_assert_str_eq (text, "q\nf .*\n");
+    ck_assert (debug_error);
+    g_free (text);
+    debug_error = FALSE;
+
+    // a syntax pattern with no file edited: false, its pattern no conditions
+    text = g_strdup ("y Python\n");
+    result = TRUE;
+    end = test_condition (NULL, text, &result);
+    ck_assert_ptr_eq (end, text + 8);
+    ck_assert (!result);
+    ck_assert (!debug_error);
+    g_free (text);
+
+    // the last line of a file with no end of line
+    text = g_strdup ("f _spaces$");
+    result = FALSE;
+    end = test_condition (NULL, text, &result);
+    ck_assert_ptr_eq (end, text + strlen ("f _spaces$"));
+    ck_assert_str_eq (text, "f _spaces$");
+    ck_assert (result);
+    g_free (text);
+    text = g_strdup ("q");
+    end = test_condition (NULL, text, &result);
+    ck_assert_ptr_eq (end, text + 1);
+    ck_assert_str_eq (text, "q");
+    g_free (text);
+
+    teardown_charset ();
+}
+END_TEST
+
+/* --------------------------------------------------------------------------------------------- */
+
 int
 main (void)
 {
@@ -138,6 +189,7 @@ main (void)
 
     // Add new tests here: ***************
     mctest_add_parameterized_test (tc_core, check_test_condition, check_test_condition_ds);
+    tcase_add_test (tc_core, check_test_condition_stays_on_its_line);
     // ***********************************
 
     return mctest_run_all (tc_core);
