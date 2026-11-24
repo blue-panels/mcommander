@@ -516,6 +516,13 @@ mcview_stream_redraw_hook (void *v)
            any covering dialog is repainted on top. */
         do_refresh ();
     }
+
+    // input came first (a key release): draw at the next idle, no new data may come
+    if (view->dirty > 0)
+    {
+        add_hook (&idle_hook, mcview_stream_redraw_hook, view);
+        view->stream_redraw_queued = TRUE;
+    }
 }
 
 /* --------------------------------------------------------------------------------------------- */
