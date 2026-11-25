@@ -335,7 +335,9 @@ mcview_update (WView *view)
     if (view->filter_active)
         mcview_filter_update (view);
 
-    if (view->dpy_bbar_dirty)
+    // a quick view takes the bar only with the focus, a screen cell never
+    if (view->dpy_bbar_dirty && !view->embedded
+        && (!mcview_is_in_panel (view) || widget_get_state (WIDGET (view), WST_FOCUSED)))
     {
         view->dpy_bbar_dirty = FALSE;
         mcview_set_buttonbar (view);
